@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+	  <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\Sounds\explosion.wav" />
+    <None Remove="Assets\Sounds\shoot.wav" />
+    <None Remove="Assets\Textures\bazooka.png" />
+    <None Remove="Assets\Textures\evil_monster.png" />
+    <None Remove="Assets\Textures\explosion.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\Sounds\explosion.wav" />
+    <EmbeddedResource Include="Assets\Sounds\shoot.wav" />
+    <EmbeddedResource Include="Assets\Textures\bazooka.png" />
+    <EmbeddedResource Include="Assets\Textures\evil_monster.png" />
+    <EmbeddedResource Include="Assets\Textures\explosion.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Easy2D.Game\Easy2D.Game.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,246 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+	  <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="logo.png" />
+    <None Remove="Maps\Finally\BARIELG.jpg" />
+    <None Remove="Maps\Finally\FINALLY.mp3" />
+    <None Remove="Maps\Finally\map.osu" />
+    <None Remove="Maps\Nanahira\audio.mp3" />
+    <None Remove="Maps\Nanahira\bg.jpg" />
+    <None Remove="Maps\Nanahira\map.osu" />
+    <None Remove="Maps\Porta\bg.png" />
+    <None Remove="Maps\Porta\Hyper Potions - Porta Vista.mp3" />
+    <None Remove="Maps\Porta\map.osu" />
+    <None Remove="Maps\SliderBenchmark\map.osu" />
+    <None Remove="Maps\SliderBenchmark\patrick.jpg" />
+    <None Remove="Maps\SliderBenchmark\preparing for te shakedown_200705155_soundcloud.mp3" />
+    <None Remove="Maps\TestMap\audio.mp3" />
+    <None Remove="Maps\TestMap\do u care.jpg" />
+    <None Remove="Maps\TestMap\map.osu" />
+    <None Remove="Maps\Union\851679.jpg" />
+    <None Remove="Maps\Union\audio.mp3" />
+    <None Remove="Maps\Union\map.osu" />
+    <None Remove="Skin\approachcircle.png" />
+    <None Remove="Skin\arrowexpand.png" />
+    <None Remove="Skin\checkmark.png" />
+    <None Remove="Skin\circular-metre.png" />
+    <None Remove="Skin\click.wav" />
+    <None Remove="Skin\combo-0.png" />
+    <None Remove="Skin\combo-1.png" />
+    <None Remove="Skin\combo-2.png" />
+    <None Remove="Skin\combo-3.png" />
+    <None Remove="Skin\combo-4.png" />
+    <None Remove="Skin\combo-5.png" />
+    <None Remove="Skin\combo-6.png" />
+    <None Remove="Skin\combo-7.png" />
+    <None Remove="Skin\combo-8.png" />
+    <None Remove="Skin\combo-9.png" />
+    <None Remove="Skin\combo-x.png" />
+    <None Remove="Skin\combobreak.wav" />
+    <None Remove="Skin\comboburst.png" />
+    <None Remove="Skin\cursor.png" />
+    <None Remove="Skin\cursortrail.png" />
+    <None Remove="Skin\default-0.png" />
+    <None Remove="Skin\default-1.png" />
+    <None Remove="Skin\default-2.png" />
+    <None Remove="Skin\default-3.png" />
+    <None Remove="Skin\default-4.png" />
+    <None Remove="Skin\default-5.png" />
+    <None Remove="Skin\default-6.png" />
+    <None Remove="Skin\default-7.png" />
+    <None Remove="Skin\default-8.png" />
+    <None Remove="Skin\default-9.png" />
+    <None Remove="Skin\defaultbackground.png" />
+    <None Remove="Skin\dot.png" />
+    <None Remove="Skin\drum-hitclap.wav" />
+    <None Remove="Skin\drum-hitfinish.wav" />
+    <None Remove="Skin\drum-hitnormal.wav" />
+    <None Remove="Skin\drum-hitwhistle.wav" />
+    <None Remove="Skin\followpoint.png" />
+    <None Remove="Skin\hit0.png" />
+    <None Remove="Skin\hit100.png" />
+    <None Remove="Skin\hit300.png" />
+    <None Remove="Skin\hit50.png" />
+    <None Remove="Skin\hitcircle.png" />
+    <None Remove="Skin\hitcircleoverlay.png" />
+    <None Remove="Skin\hover.wav" />
+    <None Remove="Skin\loading.png" />
+    <None Remove="Skin\logo.png" />
+    <None Remove="Skin\logo_dark.png" />
+    <None Remove="Skin\logo_isla.png" />
+    <None Remove="Skin\logo_old.png" />
+    <None Remove="Skin\normal-hitclap.wav" />
+    <None Remove="Skin\normal-hitfinish.wav" />
+    <None Remove="Skin\normal-hitnormal.wav" />
+    <None Remove="Skin\normal-hitwhistle.wav" />
+    <None Remove="Skin\percent.png" />
+    <None Remove="Skin\play-warningarrow.png" />
+    <None Remove="Skin\ranking-panel.png" />
+    <None Remove="Skin\reversearrow.png" />
+    <None Remove="Skin\score-x.png" />
+    <None Remove="Skin\selection-mod-doubletime.png" />
+    <None Remove="Skin\selection-mod-easy.png" />
+    <None Remove="Skin\selection-mod-hardrock.png" />
+    <None Remove="Skin\skin.ini" />
+    <None Remove="Skin\sliderb0.png" />
+    <None Remove="Skin\sliderfollowcircle.png" />
+    <None Remove="Skin\sliderslide.wav" />
+    <None Remove="Skin\sliderstartcircle.png" />
+    <None Remove="Skin\sliderstartcircleoverlay.png" />
+    <None Remove="Skin\smoke.png" />
+    <None Remove="Skin\soft-hitclap.wav" />
+    <None Remove="Skin\soft-hitfinish.wav" />
+    <None Remove="Skin\soft-hitnormal.wav" />
+    <None Remove="Skin\soft-hitwhistle.wav" />
+    <None Remove="Skin\spinner-approachcircle.png" />
+    <None Remove="Skin\spinner-circle.png" />
+    <None Remove="Skin\spinnerbonus.wav" />
+    <None Remove="Skin\star.png" />
+    <None Remove="Skin\visualizer-bar.png" />
+    <None Remove="Skin\welcome.wav" />
+    <None Remove="Sliders\FastSlider.frag" />
+    <None Remove="Sliders\FastSlider.vert" />
+    <None Remove="Sliders\slider.frag" />
+    <None Remove="Sliders\slider.vert" />
+    <None Remove="Sliders\slidergradient.png" />
+    <None Remove="Sliders\sliderPass.frag" />
+    <None Remove="Sliders\sliderPass.vert" />
+    <None Remove="song.mp3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="logo.png" />
+    <EmbeddedResource Include="Maps\Finally\BARIELG.jpg" />
+    <EmbeddedResource Include="Maps\Finally\FINALLY.mp3" />
+    <EmbeddedResource Include="Maps\Finally\map.osu" />
+    <EmbeddedResource Include="Maps\Nanahira\audio.mp3" />
+    <EmbeddedResource Include="Maps\Nanahira\bg.jpg" />
+    <EmbeddedResource Include="Maps\Nanahira\map.osu" />
+    <EmbeddedResource Include="Maps\Porta\bg.png" />
+    <EmbeddedResource Include="Maps\Porta\Hyper Potions - Porta Vista.mp3" />
+    <EmbeddedResource Include="Maps\Porta\map.osu" />
+    <EmbeddedResource Include="Maps\SliderBenchmark\map.osu">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Maps\SliderBenchmark\patrick.jpg">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Maps\SliderBenchmark\preparing for te shakedown_200705155_soundcloud.mp3">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Maps\TestMap\audio.mp3" />
+    <EmbeddedResource Include="Maps\TestMap\do u care.jpg" />
+    <EmbeddedResource Include="Maps\TestMap\map.osu" />
+    <EmbeddedResource Include="Maps\Union\851679.jpg" />
+    <EmbeddedResource Include="Maps\Union\audio.mp3" />
+    <EmbeddedResource Include="Maps\Union\map.osu" />
+    <EmbeddedResource Include="Skin\approachcircle.png" />
+    <EmbeddedResource Include="Skin\arrowexpand.png" />
+    <EmbeddedResource Include="Skin\checkmark.png" />
+    <EmbeddedResource Include="Skin\circular-metre.png" />
+    <EmbeddedResource Include="Skin\click.wav" />
+    <EmbeddedResource Include="Skin\combo-0.png" />
+    <EmbeddedResource Include="Skin\combo-1.png" />
+    <EmbeddedResource Include="Skin\combo-2.png" />
+    <EmbeddedResource Include="Skin\combo-3.png" />
+    <EmbeddedResource Include="Skin\combo-4.png" />
+    <EmbeddedResource Include="Skin\combo-5.png" />
+    <EmbeddedResource Include="Skin\combo-6.png" />
+    <EmbeddedResource Include="Skin\combo-7.png" />
+    <EmbeddedResource Include="Skin\combo-8.png" />
+    <EmbeddedResource Include="Skin\combo-9.png" />
+    <EmbeddedResource Include="Skin\combo-x.png" />
+    <EmbeddedResource Include="Skin\combobreak.wav" />
+    <EmbeddedResource Include="Skin\comboburst.png" />
+    <EmbeddedResource Include="Skin\cursor.png" />
+    <EmbeddedResource Include="Skin\cursortrail.png" />
+    <EmbeddedResource Include="Skin\default-0.png" />
+    <EmbeddedResource Include="Skin\default-1.png" />
+    <EmbeddedResource Include="Skin\default-2.png" />
+    <EmbeddedResource Include="Skin\default-3.png" />
+    <EmbeddedResource Include="Skin\default-4.png" />
+    <EmbeddedResource Include="Skin\default-5.png" />
+    <EmbeddedResource Include="Skin\default-6.png" />
+    <EmbeddedResource Include="Skin\default-7.png" />
+    <EmbeddedResource Include="Skin\default-8.png" />
+    <EmbeddedResource Include="Skin\default-9.png" />
+    <EmbeddedResource Include="Skin\defaultbackground.png" />
+    <EmbeddedResource Include="Skin\dot.png" />
+    <EmbeddedResource Include="Skin\drum-hitclap.wav" />
+    <EmbeddedResource Include="Skin\drum-hitfinish.wav" />
+    <EmbeddedResource Include="Skin\drum-hitnormal.wav" />
+    <EmbeddedResource Include="Skin\drum-hitwhistle.wav" />
+    <EmbeddedResource Include="Skin\followpoint.png" />
+    <EmbeddedResource Include="Skin\hit0.png" />
+    <EmbeddedResource Include="Skin\hit100.png" />
+    <EmbeddedResource Include="Skin\hit300.png" />
+    <EmbeddedResource Include="Skin\hit50.png" />
+    <EmbeddedResource Include="Skin\hitcircle.png" />
+    <EmbeddedResource Include="Skin\hitcircleoverlay.png" />
+    <EmbeddedResource Include="Skin\hover.wav" />
+    <EmbeddedResource Include="Skin\loading.png" />
+    <EmbeddedResource Include="Skin\logo.png" />
+    <EmbeddedResource Include="Skin\logo_dark.png" />
+    <EmbeddedResource Include="Skin\logo_isla.png" />
+    <EmbeddedResource Include="Skin\logo_old.png" />
+    <EmbeddedResource Include="Skin\normal-hitclap.wav" />
+    <EmbeddedResource Include="Skin\normal-hitfinish.wav" />
+    <EmbeddedResource Include="Skin\normal-hitnormal.wav" />
+    <EmbeddedResource Include="Skin\normal-hitwhistle.wav" />
+    <EmbeddedResource Include="Skin\percent.png" />
+    <EmbeddedResource Include="Skin\play-warningarrow.png" />
+    <EmbeddedResource Include="Skin\ranking-panel.png" />
+    <EmbeddedResource Include="Skin\reversearrow.png" />
+    <EmbeddedResource Include="Skin\score-x.png" />
+    <EmbeddedResource Include="Skin\selection-mod-doubletime.png" />
+    <EmbeddedResource Include="Skin\selection-mod-easy.png" />
+    <EmbeddedResource Include="Skin\selection-mod-hardrock.png" />
+    <EmbeddedResource Include="Skin\skin.ini" />
+    <EmbeddedResource Include="Skin\sliderb0.png" />
+    <EmbeddedResource Include="Skin\sliderfollowcircle.png" />
+    <EmbeddedResource Include="Skin\sliderslide.wav" />
+    <EmbeddedResource Include="Skin\sliderstartcircle.png" />
+    <EmbeddedResource Include="Skin\sliderstartcircleoverlay.png" />
+    <EmbeddedResource Include="Skin\smoke.png" />
+    <EmbeddedResource Include="Skin\soft-hitclap.wav" />
+    <EmbeddedResource Include="Skin\soft-hitfinish.wav" />
+    <EmbeddedResource Include="Skin\soft-hitnormal.wav" />
+    <EmbeddedResource Include="Skin\soft-hitwhistle.wav" />
+    <EmbeddedResource Include="Skin\spinner-approachcircle.png" />
+    <EmbeddedResource Include="Skin\spinner-circle.png" />
+    <EmbeddedResource Include="Skin\spinnerbonus.wav" />
+    <EmbeddedResource Include="Skin\star.png" />
+    <EmbeddedResource Include="Skin\visualizer-bar.png" />
+    <EmbeddedResource Include="Skin\welcome.wav" />
+    <EmbeddedResource Include="Sliders\FastSlider.frag" />
+    <EmbeddedResource Include="Sliders\FastSlider.vert" />
+    <EmbeddedResource Include="Sliders\slider.frag" />
+    <EmbeddedResource Include="Sliders\slider.vert" />
+    <EmbeddedResource Include="Sliders\slidergradient.png" />
+    <EmbeddedResource Include="Sliders\sliderPass.frag" />
+    <EmbeddedResource Include="Sliders\sliderPass.vert" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="song.mp3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="OsuParsers" Version="1.7.1" />
+    <PackageReference Include="Realm" Version="10.7.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Easy2D.Game\Easy2D.Game.csproj" />
+  </ItemGroup>
+
+</Project>
