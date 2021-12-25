@@ -10,10 +10,12 @@
   <ItemGroup>
     <None Remove="Shader.frag" />
     <None Remove="Shader.vert" />
+    <None Remove="ShaderPass.frag" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Shader.frag" />
+    <EmbeddedResource Include="ShaderPass.frag" />
     <EmbeddedResource Include="Shader.vert" />
   </ItemGroup>
 

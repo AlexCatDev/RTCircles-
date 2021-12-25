@@ -161,8 +161,9 @@ namespace RTCircles
             if (RuntimeInformation.ProcessArchitecture == Architecture.X86 || RuntimeInformation.ProcessArchitecture == Architecture.X64)
             {
                 PostProcessing.Bloom = true;
-                PostProcessing.MotionBlur = true;
             }
+
+            PostProcessing.MotionBlur = true;
 
             IsMultiThreaded = false;
         }
@@ -180,6 +181,8 @@ namespace RTCircles
 
         public override void OnRender(double delta)
         {
+            PostProcessing.MotionBlurScale =35f;
+
             PostProcessing.Use(new Vector2i((int)WindowWidth, (int)WindowHeight), new Vector2i((int)WindowWidth, (int)WindowHeight));
             ScreenManager.Render(g);
 

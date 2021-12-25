@@ -86,6 +86,9 @@ namespace Easy2D
 
         public void Resize(int width, int height)
         {
+            if (Width == width && Height == height)
+                return;
+
             Width = width;
             Height = height;
 
