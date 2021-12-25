@@ -215,6 +215,8 @@ namespace RTCircles
         private double rollingAcc;
         public override void Render(Graphics g)
         {
+            drawDifficultyGraph(g);
+
             drawURBar(g);
 
             drawComboText(g);
@@ -241,6 +243,82 @@ namespace RTCircles
             drawKeyOverlay(g);
         }
 
+
+        private FrameBuffer strainFB = new FrameBuffer(1, 1);
+        private bool shouldGenGraph = true;
+        private void drawDifficultyGraph(Graphics g)
+        {
+            Vector2 position = new Vector2(0, 0);
+            Vector2 size = new Vector2(MainGame.WindowWidth, 150);
+
+            if (strainFB.Width != size.X || strainFB.Height != size.Y)
+            {
+                strainFB.Resize(size.X, size.Y);
+                shouldGenGraph = true;
+            }
+
+            if (shouldGenGraph)
+            {
+                Utils.Log($"Generating strain graph framebuffer!", LogLevel.Info);
+                g.DrawInFrameBuffer(strainFB, () =>
+                {
+                    List<Vector2> graph = new List<Vector2>();
+
+                    foreach (var item in OsuContainer.Beatmap.DifficultyGraph)
+                    {
+                        graph.Add(new Vector2(0, (float)item));
+                    }
+
+                    graph = PathApproximator.ApproximateCatmull(graph);
+
+                    var vertices = g.VertexBatch.GetTriangleStrip(graph.Count * 2);
+
+                    int vertexIndex = 0;
+
+                    int textureSlot = g.GetTextureSlot(null);
+
+                    float stepX = size.X / graph.Count;
+
+                    Vector4 bottomColor = new Vector4(1f, 1f, 1f, 1f);
+                    Vector4 peakColor = new Vector4(1f, 1f, 1f, 1f);
+
+                    Vector2 movingPos = position;
+
+                    for (int i = 0; i < graph.Count; i++)
+                    {
+                        //float height = graph[i].Y.Map(0, 10, 0, size.Y);
+
+                        float height = graph[i].Y.Map(0, 8000, 0, size.Y);
+
+                        //Grundlinje
+                        vertices[vertexIndex].TextureSlot = textureSlot;
+                        vertices[vertexIndex].Color = bottomColor;
+                        vertices[vertexIndex].Position = movingPos;
+
+                        vertexIndex++;
+
+                        movingPos.Y += height;
+
+                    //TopLinje
+                    vertices[vertexIndex].TextureSlot = textureSlot;
+                        vertices[vertexIndex].Color = peakColor;
+                        vertices[vertexIndex].Position = movingPos;
+
+                        movingPos.Y -= height;
+                        movingPos.X += stepX;
+
+                        vertexIndex++;
+                    }
+                });
+
+                shouldGenGraph = false;
+            }
+            g.DrawFrameBuffer(position, new Vector4(1f, 1f, 1f, 0.5f), strainFB);
+
+            Vector2 songPosPos = new Vector2((float)OsuContainer.SongPosition.Map(OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime, OsuContainer.Beatmap.HitObjects[^1].BaseObject.StartTime, position.X, position.X + size.X), position.Y);
+
+            g.DrawLine(songPosPos, new Vector2(songPosPos.X, songPosPos.Y + size.Y), Colors.Red, 5f);
+        }
         
         public void drawDancer(Graphics g)
         {
@@ -327,6 +405,14 @@ namespace RTCircles
                 key2Size = Vector2.Lerp(key2Size, new Vector2(50), delta * 30f);
                 key2Color = Vector4.Lerp(key2Color, Colors.White, delta * 30f);
             }
+        }
+
+        public HUD()
+        {
+            OsuContainer.BeatmapChanged += () =>
+            {
+                shouldGenGraph = true;
+            };
         }
     }
 }

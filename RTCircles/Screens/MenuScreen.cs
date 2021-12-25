@@ -9,41 +9,6 @@ using System.Threading.Tasks;
 
 namespace RTCircles
 {
-    public class BouncingParticle : Drawable
-    {
-        public override Rectangle Bounds => new Rectangle(position, size);
-
-        private Vector2 position;
-        private Vector2 size = new Vector2(2);
-        private Vector2 velocity;
-
-        public BouncingParticle()
-        {
-            velocity.X = RNG.TryChance() ? -500 : 500;
-            velocity.Y = RNG.TryChance() ? -500 : 500;
-
-            position.X = RNG.Next(0, MainGame.WindowWidth - size.X);
-            position.Y = RNG.Next(0, MainGame.WindowHeight - size.Y);
-        }
-
-        public override void Render(Graphics g)
-        {
-            g.DrawRectangle(position, size, Colors.Red);
-        }
-
-        public override void Update(float delta)
-        {
-            position += velocity * delta;
-
-            if(position.X >= MainGame.WindowWidth - size.X || position.X <= 0)
-                velocity.X *= -1;
-
-
-            if (position.Y >= MainGame.WindowHeight - size.Y || position.Y <= 0)
-                velocity.Y *= -1;
-        }
-    }
-
     public class MenuScreen : Screen
     {
         private SmoothVector4 introFade = new SmoothVector4();
@@ -53,33 +18,35 @@ namespace RTCircles
             //Fade loader in
             introFade.TransformTo(new Vector4(0f, 0f, 0f, 1f), 0.3f, EasingTypes.Out, () =>
             {
-                ScreenManager.GetScreen<MapSelectScreen>().LoadCarouselItems();
-                
-                var carouselItems = BeatmapCarousel.Items;
-                if (BeatmapCarousel.Items.Count > 0)
+                BeatmapMirror.Scheduler.Run(new(() =>
                 {
-                    var item = carouselItems[RNG.Next(0, carouselItems.Count - 1)];
+                   ScreenManager.GetScreen<MapSelectScreen>().LoadCarouselItems();
 
-                    OsuContainer.SetMap(BeatmapMirror.DecodeBeatmap(System.IO.File.OpenRead(item.FullPath)), true, Mods.Auto);
-                    OsuContainer.Beatmap.Song.Volume = 0;
-                    OsuContainer.SongPosition = (OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai))?.Offset - 2500 ?? 0;
-                    OsuContainer.Beatmap.Song.Play(false);
-                }
-                
+                   var carouselItems = BeatmapCarousel.Items;
+                   if (BeatmapCarousel.Items.Count > 0)
+                   {
+                       var item = carouselItems[RNG.Next(0, carouselItems.Count - 1)];
+
+                       OsuContainer.SetMap(BeatmapMirror.DecodeBeatmap(System.IO.File.OpenRead(item.FullPath)), true, Mods.Auto);
+                       OsuContainer.Beatmap.Song.Volume = 0;
+                       OsuContainer.SongPosition = (OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai))?.Offset - 2500 ?? 0;
+                       OsuContainer.Beatmap.Song.Play(false);
+                   }
+
+                    //When everything has been loaded, add the ui items
+                    MapBackground mapBackground = new MapBackground();
+
+                    Add(mapBackground);
+                    Add(new MenuLogo(mapBackground));
+
+                    //and fade the loading animation out
+                    introFade.TransformTo(new Vector4(0f, 0f, 0f, 0f), 0.3f, EasingTypes.Out, () =>
+                    {
+                        //Fade background in
+                        mapBackground.TriggerFadeIn();
+                    });
+                }));
                 //OsuContainer.SetMap(BeatmapMirror.DecodeBeatmap(Utils.GetResource("Maps.SliderBenchmark.map.osu")), true, Mods.Auto);
-
-                //When everything has been loaded, add the ui items
-                MapBackground mapBackground = new MapBackground();
-
-                Add(mapBackground);
-                Add(new MenuLogo(mapBackground));
-
-                //and fade the loading animation out
-                introFade.TransformTo(new Vector4(0f, 0f, 0f, 0f), 0.3f, EasingTypes.Out, () =>
-                {
-                    //Fade background in
-                    mapBackground.TriggerFadeIn();
-                });
             });
         }
 
@@ -117,10 +84,16 @@ namespace RTCircles
         public float Opacity = 0.5f;
         public float KiaiFlash = 2.0f;
 
+        public static Texture menuFlash;
+
+        static MapBackground()
+        {
+            menuFlash = new Texture(Utils.GetResource("Skin.menu-flash.png"));
+        }
+
         public MapBackground()
         {
             Layer = -72727;
-
             OsuContainer.OnKiai += () =>
             {
                 fadeColor.Value = new Vector4(KiaiFlash, KiaiFlash, KiaiFlash, 1f);
@@ -145,6 +118,10 @@ namespace RTCircles
 
         public float Rotation;
 
+        private SmoothFloat beatFlash = new SmoothFloat();
+        private SmoothFloat beatFlash2 = new SmoothFloat();
+        private int previousBeat;
+
         public override void Render(Graphics g)
         {
             if (OsuContainer.Beatmap is null)
@@ -165,12 +142,54 @@ namespace RTCircles
 
             g.DrawRectangleCentered(MainGame.WindowCenter + ParallaxPosition, bgSize, fadeColor, OsuContainer.Beatmap.Background, null, false, Rotation);
 
+            if (OsuContainer.IsKiaiTimeActive)
+            {
+                int beat = (int)Math.Floor(OsuContainer.CurrentBeat);
+
+                if(previousBeat > beat)
+                    previousBeat = beat;
+
+                if (beat - previousBeat > 0)
+                {
+                    float waitTime = 0.1f;
+                    float fadeInTime = 0.12f;
+                    float fadeOutTime = 0.3f;
+
+                    if (beat % 2 == 0)
+                    {
+                        beatFlash2.ClearTransforms();
+                        beatFlash2.TransformTo(0.5f, fadeInTime, EasingTypes.Out);
+                        beatFlash2.Wait(waitTime);
+                        beatFlash2.TransformTo(0f, fadeOutTime, EasingTypes.Out);
+                    }
+                    else
+                    {
+                        beatFlash.ClearTransforms();
+                        beatFlash.TransformTo(0.5f, fadeInTime, EasingTypes.Out);
+                        beatFlash.Wait(waitTime);
+                        beatFlash.TransformTo(0f, fadeOutTime, EasingTypes.Out);
+                    }
+
+                    previousBeat = beat;
+                }
+            }
+
+            if (beatFlash.HasCompleted == false || beatFlash2.HasCompleted == false)
+            {
+                Vector2 flashSize = new Vector2(MainGame.WindowWidth / 6, MainGame.WindowHeight);
+
+                g.DrawRectangle(Vector2.Zero, flashSize, new Vector4(1f, 1f, 1f, beatFlash.Value), menuFlash, new Rectangle(1, 0, -1, 1), true);
+
+                g.DrawRectangle(new Vector2(MainGame.WindowWidth - flashSize.X, 0), flashSize, new Vector4(1f, 1f, 1f, beatFlash2.Value), menuFlash);
+            }
             //if (Input.IsKeyDown(Key.ControlLeft))
             //    g.DrawString(OsuContainer.Beatmap.FileInfo.FullName, Font.DefaultFont, new Vector2(20), Colors.LightGray, 0.25f);
         }
 
         public override void Update(float delta)
         {
+            beatFlash.Update(delta);
+            beatFlash2.Update(delta);
             fadeColor.Update(delta);
             Vector2 mousePosition = Input.MousePosition;
 

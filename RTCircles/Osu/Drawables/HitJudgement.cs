@@ -68,8 +68,8 @@ namespace RTCircles
 
             if (result == HitResult.Miss)
             {
-                pos.Y += 60f * delta;
-                rotation += 45f * delta;
+                pos.Y += 0.060f * delta;
+                rotation += 0.045f * delta;
             }
 
             if (alpha.HasCompleted)

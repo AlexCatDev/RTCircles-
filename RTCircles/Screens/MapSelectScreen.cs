@@ -13,7 +13,7 @@ using Realms;
 
 namespace RTCircles
 {
-    public static class DynamicTexture
+    public static class DynamicTexureCache
     {
         private static Dictionary<string, (Texture, List<Guid>)> textureCache = new Dictionary<string, (Texture, List<Guid>)>();
 
@@ -101,7 +101,7 @@ namespace RTCircles
                 if (string.IsNullOrEmpty(BackgroundPath) == false)
                 {
                     sFloat.TransformTo(1f, 0.5f, EasingTypes.Out);
-                    Texture = DynamicTexture.AquireCache(id, BackgroundPath).Item2;
+                    Texture = DynamicTexureCache.AquireCache(id, BackgroundPath).Item2;
                 }
             }
 
@@ -115,7 +115,7 @@ namespace RTCircles
                 IsVisible = false;
 
                 if (string.IsNullOrEmpty(BackgroundPath) == false)
-                    DynamicTexture.ReleaseCache(id, BackgroundPath);
+                    DynamicTexureCache.ReleaseCache(id, BackgroundPath);
 
                 sFloat.Value = 0;
                 Texture = null;
@@ -207,7 +207,6 @@ namespace RTCircles
 
             frameBuffer.Resize(MainGame.WindowWidth, MainGame.WindowHeight);
 
-            //Dont, lets create a new graphics object lol
             graphics.DrawInFrameBuffer(frameBuffer, () =>
             {
                 ScreenManager.GetScreen<T>().Render(graphics);
@@ -219,12 +218,6 @@ namespace RTCircles
 
         public override void Update(float delta)
         {
-            /*Note to self:
-            * We have to update it in here, because it's here we're faking the window size
-            * Because some things in the update method checks positions based on the window size
-            * We have to manage it
-            */
-
             ScreenManager.GetScreen<T>().Update(delta);
         }
     }
@@ -232,6 +225,18 @@ namespace RTCircles
     public class SongSelector : Drawable
     {
         public override Rectangle Bounds => new Rectangle();
+
+        public static Vector4 SongInfoColor = Colors.From255RGBA(255, 80, 175, 255);
+        public static Vector4 SongInfoTextColor = Colors.White;
+
+        public static Vector4 ItemColor = Colors.From255RGBA(67, 64, 65, 255);
+        public static Vector4 ItemTextColor = Colors.White;
+        public static float ItemHightlight = 1.25f;
+        public static Vector4 ItemSelectedColor = Colors.From255RGBA(255, 80, 175, 255);
+
+        public static Vector4 HeaderColor = Colors.From255RGBA(52, 49, 50, 255);
+        public static Vector4 HeaderTextColor1 = Colors.White;
+        public static Vector4 HeaderTextColor2 = Colors.White;
 
         private float scrollOffset = 0;
         private float scrollMomentum;
@@ -400,10 +405,10 @@ namespace RTCircles
                     continue;
                 }
 
-                Vector4 color = Colors.From255RGBA(67, 64, 65, 255);
+                Vector4 color = ItemColor;
 
                 if (currentItem == selectedItem)
-                    color = Colors.From255RGBA(255, 80, 175, 255);
+                    color = ItemSelectedColor;
 
                 Vector2 bgSize = Vector2.Zero;
 
@@ -417,7 +422,7 @@ namespace RTCircles
 
                 if (bounds.IntersectsWith(new Rectangle(Input.MousePosition, Vector2.One)))
                 {
-                    color = Vector4.Clamp(color * 1.25f, Vector4.Zero, Vector4.One);
+                    color = Vector4.Clamp(color * ItemHightlight, Vector4.Zero, Vector4.One);
 
                     //We clicked on a item
                     if (clickedSomewhere)
@@ -438,12 +443,12 @@ namespace RTCircles
                 float bgPadding = (ElementSize.Y - bgSize.Y) / 2;
 
                 g.DrawRectangle(bounds.Position, bounds.Size, color);
-                g.DrawRectangle(bounds.Position + new Vector2(bgPadding), bgSize, new Vector4(1f,1f,1f, currentItem.TextureAlpha), texture);
+                g.DrawRectangle(bounds.Position + new Vector2(bgPadding), bgSize, new Vector4(1f, 1f, 1f, currentItem.TextureAlpha), texture);
 
                 float textScale = 0.5f * MainGame.Scale;
                 Vector2 textSize = Font.DefaultFont.MessureString(currentItem.Text, textScale);
                 Vector2 textPos = bounds.Position + new Vector2(bgSize.X + bgPadding * 2, ElementSize.Y / 2f - textSize.Y / 2f);
-                g.DrawString(currentItem.Text, Font.DefaultFont, textPos, Colors.White, textScale);
+                g.DrawString(currentItem.Text, Font.DefaultFont, textPos, ItemTextColor, textScale);
 
             incrementYOffset:
                 offset.Y += ElementSize.Y;
@@ -457,12 +462,12 @@ namespace RTCircles
                 }
             }
 
-            g.DrawRectangle(Vector2.Zero, HeaderSize, Colors.From255RGBA(52, 49, 50, 255));
-            g.DrawString("Songs", Font.DefaultFont, new Vector2(20, 20) * MainGame.Scale, Colors.White, 0.75f * MainGame.Scale);
+            g.DrawRectangle(Vector2.Zero, HeaderSize, HeaderColor);
+            g.DrawString("Songs", Font.DefaultFont, new Vector2(20, 20) * MainGame.Scale, HeaderTextColor1, 0.75f * MainGame.Scale);
             string sText = string.IsNullOrEmpty(BeatmapCarousel.SearchQuery) == false ? $"{BeatmapCarousel.SearchItems.Count} searched" : "";
-            g.DrawString($"{BeatmapCarousel.Items.Count} available {sText}", Font.DefaultFont, new Vector2(160, 42) * MainGame.Scale, Colors.White, 0.25f * MainGame.Scale);
+            g.DrawString($"{BeatmapCarousel.Items.Count} available {sText}", Font.DefaultFont, new Vector2(160, 42) * MainGame.Scale, HeaderTextColor2, 0.25f * MainGame.Scale);
 
-            g.DrawRectangle(SongInfoBounds.Position, SongInfoBounds.Size, Colors.From255RGBA(255, 80, 175, 255));
+            g.DrawRectangle(SongInfoBounds.Position, SongInfoBounds.Size, SongInfoColor);
 
             if (selectedItem is not null)
             {
@@ -474,20 +479,17 @@ namespace RTCircles
                 string songInfoText = $"Objects: {OsuContainer.Beatmap?.HitObjects.Count} AR {OsuContainer.Beatmap?.AR} CS {OsuContainer.Beatmap?.CS} OD {OsuContainer.Beatmap?.OD} HP {OsuContainer.Beatmap?.HP}";
                 Vector2 songInfoTextSize = Font.DefaultFont.MessureString(songInfoText, songInfoScale);
 
-                g.DrawString(songInfoTextTitle, Font.DefaultFont, new Vector2(SongInfoBounds.Center.X - songInfoTitleSize.X / 2f, HeaderSize.Y + FloatingPlayScreen.Size.Y), Colors.White, songInfoScale);
+                g.DrawString(songInfoTextTitle, Font.DefaultFont, new Vector2(SongInfoBounds.Center.X - songInfoTitleSize.X / 2f, HeaderSize.Y + FloatingPlayScreen.Size.Y), SongInfoTextColor, songInfoScale);
 
-                g.DrawString(songInfoText, Font.DefaultFont, new Vector2(SongInfoBounds.Center.X - songInfoTextSize.X / 2f, HeaderSize.Y + FloatingPlayScreen.Size.Y + songInfoTitleSize.Y), Colors.White, songInfoScale);
+                g.DrawString(songInfoText, Font.DefaultFont, new Vector2(SongInfoBounds.Center.X - songInfoTextSize.X / 2f, HeaderSize.Y + FloatingPlayScreen.Size.Y + songInfoTitleSize.Y), SongInfoTextColor, songInfoScale);
             }
 
             g.DrawRectangleCentered(Input.MousePosition, new Vector2(96) * Skin.GetScale(Skin.HRModIcon, 64, 128) * MainGame.Scale, Colors.White, Skin.HRModIcon);
 
             clickedSomewhere = false;
 
-            Vector2 previewSize;
-
-            previewSize = new Vector2(SongInfoBounds.Width, SongInfoBounds.Width / MainGame.WindowSize.AspectRatio());
-
-            Vector2 previewPos = SongInfoBounds.Position;//new Vector2(SongInfoBounds.TopRight.X - previewSize.X, SongInfoBounds.Position.Y);
+            Vector2 previewSize = new Vector2(SongInfoBounds.Width, SongInfoBounds.Width / MainGame.WindowSize.AspectRatio());
+            Vector2 previewPos = SongInfoBounds.Position;
 
             previewSize.X = ConfirmPlayAnimation.Value.Map(0f, 1f, previewSize.X, MainGame.WindowWidth);
             previewSize.Y = ConfirmPlayAnimation.Value.Map(0f, 1f, previewSize.Y, MainGame.WindowHeight);
@@ -507,7 +509,7 @@ namespace RTCircles
             OsuContainer.Beatmap.Song.Stop();
             ConfirmPlayAnimation.ClearTransforms();
             ConfirmPlayAnimation.TransformTo(1f, 0.5f, EasingTypes.OutElasticHalf, () => {
-                //OsuContainer.Beatmap.Mods &= ~Mods.Auto;
+                OsuContainer.Beatmap.Mods &= ~Mods.Auto;
                 ScreenManager.GetScreen<OsuScreen>().OnExiting();
                 ScreenManager.SetScreen<OsuScreen>();
             });
@@ -644,6 +646,11 @@ namespace RTCircles
 
         public MapSelectScreen()
         {
+            BeatmapMirror.OnNewBeatmapAvailable += (beatmap) =>
+            {
+                AddBeatmapToCarousel(beatmap);
+            };
+
             Add(songSelector);
             
             searchBox.TextHint = "Type search query";
@@ -714,11 +721,6 @@ namespace RTCircles
                     BeatmapCarousel.FindText(searchBox.Text);
                     searchTimer = -1;
                 }
-            }
-
-            if(BeatmapMirror.NewBeatmaps.TryDequeue(out DBBeatmap result))
-            {
-                AddBeatmapToCarousel(result);
             }
 
             base.Update(delta);

@@ -49,9 +49,9 @@ namespace RTCircles
             if (OsuContainer.SongPosition < spawnTime && alpha == 0)
                 return;
 
-            if (Math.Abs(OsuContainer.CurrentBeat * 2 - lastBeat) >= 1f)
+            if (Math.Abs(OsuContainer.CurrentBeat * 4 - lastBeat) >= 1f)
             {
-                lastBeat = OsuContainer.CurrentBeat * 2;
+                lastBeat = OsuContainer.CurrentBeat * 4;
 
                 if (alpha == 1f)
                     alpha = 0f;

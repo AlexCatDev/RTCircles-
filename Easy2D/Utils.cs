@@ -211,6 +211,23 @@ namespace Easy2D
                 return number.ToString(CultureInfo.InvariantCulture);
         }
 
+        private static Dictionary<string, Stopwatch> benchmarks = new Dictionary<string, Stopwatch>();
+        public static void BeginProfiling(string name)
+        {
+            benchmarks.Add(name, Stopwatch.StartNew());
+        }
+
+        public static double EndProfiling(string name, bool print = true)
+        {
+            var time = ((double)benchmarks[name].ElapsedTicks / Stopwatch.Frequency) * 1000.0;
+            benchmarks.Remove(name);
+
+            if(print)
+                Console.WriteLine($"{name} took {time} milliseconds");
+
+            return time;
+        }
+
         public static double Benchmark(Action a)
         {
             Stopwatch sw = new Stopwatch();

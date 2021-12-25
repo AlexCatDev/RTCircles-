@@ -74,6 +74,7 @@
     <None Remove="Skin\logo_dark.png" />
     <None Remove="Skin\logo_isla.png" />
     <None Remove="Skin\logo_old.png" />
+    <None Remove="Skin\menu-flash.png" />
     <None Remove="Skin\normal-hitclap.wav" />
     <None Remove="Skin\normal-hitfinish.wav" />
     <None Remove="Skin\normal-hitnormal.wav" />
@@ -191,6 +192,7 @@
     <EmbeddedResource Include="Skin\logo_dark.png" />
     <EmbeddedResource Include="Skin\logo_isla.png" />
     <EmbeddedResource Include="Skin\logo_old.png" />
+    <EmbeddedResource Include="Skin\menu-flash.png" />
     <EmbeddedResource Include="Skin\normal-hitclap.wav" />
     <EmbeddedResource Include="Skin\normal-hitfinish.wav" />
     <EmbeddedResource Include="Skin\normal-hitnormal.wav" />

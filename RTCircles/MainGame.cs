@@ -160,8 +160,8 @@ namespace RTCircles
 
             if (RuntimeInformation.ProcessArchitecture == Architecture.X86 || RuntimeInformation.ProcessArchitecture == Architecture.X64)
             {
-                //PostProcessing.Bloom = true;
-                //PostProcessing.MotionBlur = true;
+                PostProcessing.Bloom = true;
+                PostProcessing.MotionBlur = true;
             }
 
             IsMultiThreaded = false;

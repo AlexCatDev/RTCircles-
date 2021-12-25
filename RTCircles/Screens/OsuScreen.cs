@@ -95,15 +95,20 @@ namespace RTCircles
 
             objectIndex = -1;
 
-            for (int i = 1; i < OsuContainer.Beatmap.HitObjects.Count; i++)
+            if (OsuContainer.SongPosition < OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime)
+                objectIndex = 0;
+            else
             {
-                var prevObj = OsuContainer.Beatmap.HitObjects[i - 1];
-                var obj = OsuContainer.Beatmap.HitObjects[i];
-
-                if(obj.BaseObject.StartTime > OsuContainer.SongPosition && prevObj.BaseObject.StartTime < OsuContainer.SongPosition)
+                for (int i = 1; i < OsuContainer.Beatmap.HitObjects.Count; i++)
                 {
-                    objectIndex = i;
-                    break;
+                    var prevObj = OsuContainer.Beatmap.HitObjects[i - 1];
+                    var obj = OsuContainer.Beatmap.HitObjects[i];
+
+                    if (obj.BaseObject.StartTime > OsuContainer.SongPosition && prevObj.BaseObject.StartTime < OsuContainer.SongPosition)
+                    {
+                        objectIndex = i;
+                        break;
+                    }
                 }
             }
 

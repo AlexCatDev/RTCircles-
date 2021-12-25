@@ -44,6 +44,8 @@ namespace RTCircles
 
         public float CircleRadius => (OsuContainer.Playfield.Width / 16f) * (1f - (0.7f * (CS - 5f) / 5f));
 
+        public List<double> DifficultyGraph = new List<double>();
+
         public PlayingBeatmap(Beatmap beatmap)
         {
             string folderPath = $"{BeatmapMirror.SongsFolder}/{beatmap.MetadataSection.BeatmapSetID}";
@@ -109,6 +111,77 @@ namespace RTCircles
                 OD = InternalBeatmap.DifficultySection.OverallDifficulty / 2f;
                 HP = InternalBeatmap.DifficultySection.HPDrainRate / 2f;
             }
+        }
+
+        private void generateStrainGraph()
+        {
+            if (DifficultyGraph.Count > 0)
+                return;
+
+            Utils.BeginProfiling("StrainCalculation");
+
+            //the amount of time between each strain
+            const int CHUNK_DURATION = 1000;
+
+            int objectIndex = 0;
+
+            int currentObjectCount = 0;
+
+            int timer = CHUNK_DURATION;
+
+            //the resolution of a tick
+            int tick = 50;
+
+            System.Numerics.Vector2? prevPos = null;
+
+            float distance = 0;
+
+            for (int i = HitObjects[0].BaseObject.StartTime; i < HitObjects[^1].BaseObject.StartTime; i += tick)
+            {
+                timer -= tick;
+
+                while (i > HitObjects[objectIndex].BaseObject.StartTime - CHUNK_DURATION)
+                {
+                    var pos = HitObjects[objectIndex].BaseObject.Position;
+
+                    if (prevPos is null)
+                        prevPos = pos;
+
+                    distance += System.Numerics.Vector2.Distance(pos, prevPos.Value);
+
+                    prevPos = pos;
+
+                    objectIndex++;
+                    currentObjectCount++;
+
+                    if (objectIndex >= HitObjects.Count)
+                    {
+                        timer = 0;
+                        break;
+                    }
+                }
+
+                if (timer <= 0)
+                {
+                    //Difficulty is:
+                    //The sum of the distances of all objects in that time slice
+                    //The amount of objects that occoured in that time slice
+                    //Add the two together??? profit???
+
+                    DifficultyGraph.Add(MathF.Pow(distance, 1.15f) + MathF.Pow(currentObjectCount * 100, 1.1f));
+
+                    if (objectIndex >= HitObjects.Count)
+                        break;
+
+                    prevPos = null;
+                    distance = 0;
+
+                    timer = CHUNK_DURATION;
+                    currentObjectCount = 0;
+                }
+            }
+
+            Utils.EndProfiling("StrainCalculation");
         }
 
         public void GenerateHitObjects(Mods mods = Mods.NM)
@@ -196,6 +269,8 @@ namespace RTCircles
                         break;
                 }
             }
+
+            generateStrainGraph();
         }
 
         private double mapDifficultyRange(double difficulty, double min, double mid, double max)

@@ -38,10 +38,12 @@ namespace RTCircles.Desktop
                 //Set the full screen mode to the size of the current monitor, todo fix for multiple monitors, but i dont have anything to test with
                 unsafe
                 {
+                    
                     var fullRes = window.Monitor.VideoMode.Resolution.Value;
                     var refreshRate = window.Monitor.VideoMode.RefreshRate.Value;
                     Silk.NET.SDL.DisplayMode k = new Silk.NET.SDL.DisplayMode(null, fullRes.X, fullRes.Y, refreshRate, null);
                     sdl.SetWindowDisplayMode(ref Unsafe.AsRef<Silk.NET.SDL.Window>((void*)window.Native.Sdl.Value), ref k);
+                    
                 }
 
                 input.Keyboards[0].KeyDown += (s, e, x) =>
@@ -51,8 +53,14 @@ namespace RTCircles.Desktop
 
                     if (e == Key.Backspace && shiftDown)
                     {
-                        var val = window.WindowState != WindowState.Fullscreen ? WindowState.Fullscreen : WindowState.Normal;
-                        window.WindowState = val;
+                        //var value = window.WindowState != WindowState.Normal ? 0 : 1;
+
+                        window.WindowState = window.WindowState != WindowState.Normal ? WindowState.Normal : WindowState.Fullscreen;
+
+                        unsafe 
+                        {
+                            //sdl.SetWindowFullscreen(ref Unsafe.AsRef<Silk.NET.SDL.Window>((void*)window.Native.Sdl.Value), (uint)value);
+                        }
                     }
                 };
 

@@ -9,6 +9,7 @@ using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Easy2D;
 using Newtonsoft.Json;
@@ -18,8 +19,114 @@ using Realms;
 
 namespace RTCircles
 {
-    public static class BeatmapMirror
+    public class ScheduledTask : IEquatable<ScheduledTask>
     {
+        public Action Action { get; private set; }
+        public float Delay { get; private set; }
+
+        public bool HasCompleted { get; private set; }
+        public bool IsCancelled { get; private set; }
+
+        public ScheduledTask(Action action, float delay = 0)
+        {
+            Action = action;
+            Delay = delay;
+            HasCompleted = false;
+        }
+
+        public bool Equals(ScheduledTask other)
+        {
+            //I'm really not sure about doing duplicate detection by this it's really sketchy but it seems to work the way i want it to work somehow
+            //C# magic =)
+            return Action.GetHashCode() == other.Action.GetHashCode();
+        }
+
+        private float timer;
+        internal void Update(float delta)
+        {
+            timer += delta;
+            if (timer >= Delay)
+            {
+                timer = 0;
+                Action?.Invoke();
+                HasCompleted = true;
+            }
+        }
+
+        public void Cancel()
+        {
+            IsCancelled = true;
+        }
+    }
+
+    /// <summary>
+    /// Schedule tasks to run
+    /// </summary>
+    public class Scheduler
+    {
+        private readonly List<ScheduledTask> tasks = new List<ScheduledTask>();
+
+        private readonly object mutex = new object();
+
+        /// <summary>
+        /// Schedule a task to be run on the main thread, at the beginning of the next frame or when the time is up
+        /// </summary>
+        /// <param name="action"></param>
+        /// <param name="allowDuplicates"></param>
+        /// <param name="delay"></param>
+        /// <returns>The task to be run or null if unsuccessfull</returns>
+        public ScheduledTask Run(ScheduledTask task, bool allowDuplicates = false)
+        {
+            lock (mutex)
+            {
+                if (allowDuplicates == false)
+                {
+                    if (tasks.Contains(task))
+                    {
+                        Utils.Log($"A duplicate of a task already in the Scheduler tried to be added", LogLevel.Error);
+                        return null;
+                    }
+                }
+
+                tasks.Add(task);
+                return task;
+            }
+        }
+
+        public ScheduledTask RunAsync(Action asyncTask, ScheduledTask onCompletion)
+        {
+            Task.Run(() =>
+            {
+                asyncTask();
+
+                if (onCompletion.IsCancelled == false)
+                    Run(onCompletion, true);
+            });
+
+            return onCompletion;
+        }
+
+        /// <summary>
+        /// Called from the graphics thread
+        /// </summary>
+        /// <param name="delta"></param>
+        public void Update(float delta)
+        {
+            lock (mutex)
+            {
+                for (int i = tasks.Count - 1; i >= 0; i--)
+                {
+                    tasks[i].Update(delta);
+
+                    if (tasks[i].HasCompleted)
+                        tasks.RemoveAt(i);
+                }
+            }
+        }
+    }
+
+        public static class BeatmapMirror
+        {
         public enum RankStatus
         {
             Graveyard = -2,
@@ -76,7 +183,9 @@ namespace RTCircles
         }
 
         public static Realm Realm;
-        public static ConcurrentQueue<DBBeatmap> NewBeatmaps = new ConcurrentQueue<DBBeatmap>();
+
+        public static event Action<DBBeatmap> OnNewBeatmapAvailable;
+        //public static ConcurrentQueue<DBBeatmap> NewBeatmaps = new ConcurrentQueue<DBBeatmap>();
 
         private static MD5 md5;
 
@@ -84,13 +193,28 @@ namespace RTCircles
 
         private static object beatmapDecoderLock = new object();
 
+        private static Thread realmsThread;
+        public static Scheduler Scheduler { get; private set; } = new Scheduler();
+
         static BeatmapMirror()
         {
             SongsFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "/Songs";
 
-            Realm = Realm.GetInstance($"./RTCircles.db");
+            realmsThread = new Thread(() =>
+            {
+                Realm = Realm.GetInstance($"./RTCircles.db");
+                Utils.Log($"Realm Path: {Realm.Config.DatabasePath}", LogLevel.Important);
+                while (MainGame.Instance.View.IsClosing == false)
+                {
+                    Scheduler.Update(0);
+                    Thread.Sleep(1);
+                }
 
-            Utils.Log($"Realm Path: {Realm.Config.DatabasePath}", LogLevel.Important);
+                //Window is closing..
+            });
+
+            realmsThread.Start();
+
             Utils.Log($"SongsFolder: {SongsFolder}", LogLevel.Important);
 
             md5 = MD5.Create();
@@ -102,7 +226,7 @@ namespace RTCircles
             ZipArchive archive = new ZipArchive(oszStream);
 
             var beatmapFiles = archive.Entries.Where((o) => o.FullName.EndsWith(".osu"));
-            Utils.Log($"Found {beatmapFiles.Count()} beatmaps in archive...", LogLevel.Info);
+            Utils.Log($"Importing Beatmap archive, found {beatmapFiles.Count()} beatmaps in archive...", LogLevel.Info);
 
             int setID = -1;
 
@@ -130,6 +254,9 @@ namespace RTCircles
                     }
                     else if (beatmap.MetadataSection.BeatmapID == 0)
                     {
+                        //If the beatmapID is 0?
+                        //This could be due to an old map, and we would have to fetch it from somewhere
+
                         Utils.Log($"\tSkipping ID: {beatmap.MetadataSection.BeatmapID} Beatmap id was 0 which means a beatmap decoder error.", LogLevel.Error);
                         continue;
                     }
@@ -145,6 +272,11 @@ namespace RTCircles
                         } catch (Exception ex)
                         {
                             Utils.Log($"Extracting archive failed due to: {ex.Message} import process aborted :(", LogLevel.Error);
+                            archive.Dispose();
+                            Directory.Delete($"{SongsFolder}/{setID}", true);
+
+                            setID = -1;
+
                             return;
                         }
                     }
@@ -165,13 +297,13 @@ namespace RTCircles
                     else
                         dBBeatmap.Background = null;
 
-                    UpdateScheduler.Run(new (() =>
+                    Scheduler.Run(new (() =>
                     {
                         Realm.Write(() =>
                         {
                             Realm.Add(dBBeatmap, true);
                         });
-                        NewBeatmaps.Enqueue(dBBeatmap);
+                        OnNewBeatmapAvailable?.Invoke(dBBeatmap);
                         Utils.Log("Done!", LogLevel.Success);
                     }));
                 }
@@ -225,78 +357,9 @@ namespace RTCircles
                     }
 
                     Utils.Log($"Finished downloading beatmap: {setID}!", LogLevel.Success);
-
+                    
                     using (MemoryStream oszStream = new MemoryStream(e.Result))
-                    {
-                        Directory.CreateDirectory($"{SongsFolder}/{setID}");
-                        ZipArchive archive = new ZipArchive(oszStream);
-
-                        var beatmapFiles = archive.Entries.Where((o) => o.FullName.EndsWith(".osu"));
-                        Utils.Log($"Found {beatmapFiles.Count()} beatmaps in archive...", LogLevel.Info);
-
-                        try
-                        {
-                            archive.ExtractToDirectory($"{SongsFolder}/{setID}", true);
-                        }
-                        catch (Exception ex)
-                        {
-                            Utils.Log($"Error extracting to directory: {ex.Message}", LogLevel.Error);
-                        }
-
-                        foreach (var item in beatmapFiles)
-                        {
-                            Utils.Log($"Processing beatmap: {item.FullName}", LogLevel.Info);
-                            var stream = item.Open();
-                            using (MemoryStream beatmapStream = new MemoryStream())
-                            {
-                                stream.CopyTo(beatmapStream);
-
-                                var hash = md5.ComputeHash(beatmapStream.ToArray());
-                                var hashString = Convert.ToBase64String(hash);
-                                Utils.Log($"\tHash: {hashString}", LogLevel.Success);
-
-                                //optionally open the beatmap to write extra database entries
-                                beatmapStream.Position = 0;
-                                Beatmap beatmap = DecodeBeatmap(beatmapStream);
-                                Utils.Log($"\tBeatmap ID: {beatmap.MetadataSection.BeatmapID}", LogLevel.Success);
-
-                                if (beatmap.GeneralSection.Mode != OsuParsers.Enums.Ruleset.Standard)
-                                {
-                                    Utils.Log($"\tSkipping ID: {beatmap.MetadataSection.BeatmapID} NOT A STANDARD MAP!!", LogLevel.Warning);
-                                    continue;
-                                }
-                                else if (beatmap.MetadataSection.BeatmapID == 0)
-                                {
-                                    Utils.Log($"\tSkipping ID: {beatmap.MetadataSection.BeatmapID} Beatmap id was 0 which means a beatmap decoder error.", LogLevel.Error);
-                                    continue;
-                                }
-
-                                Utils.Log("Writing to database...", LogLevel.Info);
-                                DBBeatmap dBBeatmap = new DBBeatmap();
-                                dBBeatmap.ID = beatmap.MetadataSection.BeatmapID;
-                                dBBeatmap.SetID = beatmap.MetadataSection.BeatmapSetID;
-                                dBBeatmap.Hash = hashString;
-                                dBBeatmap.Folder = setID.ToString();
-                                dBBeatmap.File = item.FullName;
-                                dBBeatmap.Difficulty = 69;
-
-                                if (File.Exists($"{SongsFolder}/{dBBeatmap.Folder}/{beatmap.EventsSection.BackgroundImage}"))
-                                    dBBeatmap.Background = beatmap.EventsSection.BackgroundImage;
-                                else
-                                    dBBeatmap.Background = null;
-
-                                UpdateScheduler.Run(new (() =>
-                                {
-                                    Realm.Write(() =>
-                                    {
-                                        Realm.Add(dBBeatmap, true);
-                                    });
-                                    NewBeatmaps.Enqueue(dBBeatmap);
-                                    Utils.Log("Done!", LogLevel.Success);
-                                }));
-                            }
-                        }
-                    }
+                        ImportBeatmap(oszStream);
                 };
 
                 wc.DownloadProgressChanged += (sender, e) =>
