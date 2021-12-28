@@ -6,7 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="logo.png" />
     <None Remove="Maps\Finally\BARIELG.jpg" />
     <None Remove="Maps\Finally\FINALLY.mp3" />
     <None Remove="Maps\Finally\map.osu" />
@@ -111,11 +110,9 @@
     <None Remove="Sliders\slidergradient.png" />
     <None Remove="Sliders\sliderPass.frag" />
     <None Remove="Sliders\sliderPass.vert" />
-    <None Remove="song.mp3" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="logo.png" />
     <EmbeddedResource Include="Maps\Finally\BARIELG.jpg" />
     <EmbeddedResource Include="Maps\Finally\FINALLY.mp3" />
     <EmbeddedResource Include="Maps\Finally\map.osu" />
@@ -229,10 +226,6 @@
     <EmbeddedResource Include="Sliders\slidergradient.png" />
     <EmbeddedResource Include="Sliders\sliderPass.frag" />
     <EmbeddedResource Include="Sliders\sliderPass.vert" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="song.mp3" />
   </ItemGroup>
 
   <ItemGroup>

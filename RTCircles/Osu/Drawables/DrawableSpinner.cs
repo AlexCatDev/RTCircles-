@@ -44,6 +44,8 @@ namespace RTCircles
             rotation = 0;
             lastRotation = 0;
             currentRotation = 0;
+            score = 0;
+            spinRPM = 0;
             base.OnAdd();
         }
 
@@ -83,9 +85,18 @@ namespace RTCircles
 
             g.DrawRectangleCentered(position, size, color * colorBoost, Skin.SpinnerCircle, rotDegrees: rotation);
 
+            if (score > 0)
+                Skin.CircleNumbers.DrawCentered(g, OsuContainer.MapToPlayfield(512 / 2, 280), (size.Y / 9) * scoreBonusScale, new Vector4(1f, 1f, 1f, scoreBonusAlpha), score.ToString());
+
             if (OsuContainer.SongPosition >= spinner.EndTime + OsuContainer.Fadeout)
                 IsDead = true;
         }
+
+        private int score;
+        private SmoothFloat scoreBonusAlpha = new SmoothFloat();
+        private SmoothFloat scoreBonusScale = new SmoothFloat();
+
+        private float spinRPM;
 
         public override void Update(float delta)
         {
@@ -97,7 +108,7 @@ namespace RTCircles
 
             position = OsuContainer.MapToPlayfield(spinner.Position.X, spinner.Position.Y);
 
-            //Just complete all spinners with a duration of less than some value thats inhuman to reach
+            //Just complete all spinners with a duration of less than some value thats impossible to complete
 
             if (spinner.EndTime - spinner.StartTime < 250)
                 rotationCounter = 1;
@@ -135,6 +146,12 @@ namespace RTCircles
 
             rotation = (float)Interpolation.Damp(rotation, currentRotation, 0.99, (float)OsuContainer.DeltaSongPosition);
 
+            scoreBonusAlpha.Update((float)OsuContainer.DeltaSongPosition);
+            scoreBonusScale.Update((float)OsuContainer.DeltaSongPosition);
+
+            spinRPM = (float)((MathF.Abs(rotation) / 360f) / (OsuContainer.SongPosition - spinner.StartTime));
+            spinRPM *= 60000;
+
             if (Math.Abs(rotation - lastRotation) >= 360)
             {
                 lastRotation = rotation;
@@ -143,6 +160,13 @@ namespace RTCircles
                 if (rotationCounter > 1)
                 {
                     Skin.SpinnerBonus.Play(true);
+                    scoreBonusAlpha.Value = 1f;
+                    scoreBonusAlpha.TransformTo(0f, 1000f, EasingTypes.None);
+
+                    scoreBonusScale.Value = 1f;
+                    scoreBonusScale.TransformTo(0.6f, 1000, EasingTypes.OutQuad);
+
+                    score += 1000;
                     OsuContainer.Score += 1000;
                 }
             }

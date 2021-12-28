@@ -49,6 +49,8 @@ namespace Easy2D
 
         public LogLevel Level;
 
+        public object Tag;
+
         public void Add(string text, ConsoleColor consoleColor, Vector4 color)
         {
             Log.Add(new LogInfo() { Text = text, ConsoleColor = consoleColor, Color = color});
@@ -65,6 +67,10 @@ namespace Easy2D
 
         private static Assembly easy2dAssembly;
 
+        public static bool WriteToConsole = false;
+
+        public static List<LogLevel> IgnoredLogLevels = new List<LogLevel>();
+
         static Utils()
         {
             BasePath = AppContext.BaseDirectory;
@@ -78,12 +84,13 @@ namespace Easy2D
 
             OnLog += (s) =>
             {
-#if DEBUG
-                foreach (var item in s.Log)
-                {
-                    writeColor(item.Text, item.ConsoleColor);
+                if (WriteToConsole) {
+                    foreach (var item in s.Log)
+                    {
+                        writeColor(item.Text, item.ConsoleColor);
+                    }
                 }
-#endif
+
                 Logs.Add(s);
             };
 
@@ -109,8 +116,11 @@ namespace Easy2D
 
         public static void Log(string message, LogLevel level)
         {
-            if (level == LogLevel.Debug)
-                return;
+            if (IgnoredLogLevels.Contains(level))
+                    return;
+
+            //if (level == LogLevel.Debug)
+            //    return;
 
             var callingMethod = new StackTrace().GetFrame(1).GetMethod();
 
@@ -217,13 +227,16 @@ namespace Easy2D
             benchmarks.Add(name, Stopwatch.StartNew());
         }
 
-        public static double EndProfiling(string name, bool print = true)
+        public static double EndProfiling(string name, bool print = true, bool log = false)
         {
             var time = ((double)benchmarks[name].ElapsedTicks / Stopwatch.Frequency) * 1000.0;
             benchmarks.Remove(name);
 
             if(print)
                 Console.WriteLine($"{name} took {time} milliseconds");
+
+            if (log)
+                Utils.Log($"{name} took {time} milliseconds", LogLevel.Info);
 
             return time;
         }

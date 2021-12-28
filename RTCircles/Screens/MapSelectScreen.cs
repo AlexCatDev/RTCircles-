@@ -526,19 +526,16 @@ namespace RTCircles
             }
             else if (dragging)
             {
-                Vector2 diff = Input.MousePosition - dragLastPosition;
-                dragLastPosition = Input.MousePosition;
+                var now = Input.MousePosition;
 
-                if (diff.X != 0 && diff.Y != 0)
-                    dragMomentumExpireTimer = 0.02f;
-                else
-                    dragMomentumExpireTimer -= delta;
+                Vector2 diff = now - dragLastPosition;
+                dragLastPosition = now;
 
                 var distFromMax = Math.Max(scrollOffset - ScrollMax, 70) / 70;
                 var distFromMin = Math.Max(ScrollMin - scrollOffset, 70) / 70;
                 scrollOffset += diff.Y / (distFromMax * distFromMin);
 
-                scrollMomentum = 0;
+                scrollMomentum = MathHelper.Lerp(scrollMomentum, diff.Y / delta, 10f * delta);
             }
             else
             {
@@ -556,12 +553,22 @@ namespace RTCircles
                 scrollMomentum = MathHelper.Lerp(scrollMomentum, 0, delta * 10f);
             }
             ConfirmPlayAnimation.Update(delta);
+
+            bsTimer -= delta;
+
+            if(bsTimer <= 0)
+            {
+                bsTimer = 0.01f;
+                //var randomBeatmap = BeatmapCarousel.SearchItems[RNG.Next(0, BeatmapCarousel.SearchItems.Count - 1)];
+                //selectMap(randomBeatmap);
+            }
         }
+
+        private float bsTimer = 0.05f;
 
         private bool dragging;
         private Vector2 dragStart;
         private Vector2 dragLastPosition;
-        private float dragMomentumExpireTimer;
         public override bool OnMouseDown(MouseButton args)
         {
             dragging = true;
@@ -579,11 +586,9 @@ namespace RTCircles
 
             if (MathUtils.PositionInsideRadius(dragEnd, dragStart, 100))
                 clickedSomewhere = true;
-            else if (dragMomentumExpireTimer > 0)
-            {
-                Vector2 diff = (dragEnd - dragStart);
-                scrollMomentum += diff.Y.Clamp(-200, 200) * 20;
-            }
+
+            if (MathF.Abs(scrollMomentum) < 600)
+                scrollMomentum = 0;
 
             return false;
         }
@@ -621,6 +626,26 @@ namespace RTCircles
                 var randomBeatmap = BeatmapCarousel.SearchItems[RNG.Next(0, BeatmapCarousel.SearchItems.Count - 1)];
 
                 selectMap(randomBeatmap);
+            }
+
+            if(key == Key.Up && selectedItem is not null)
+            {
+                int newIndex = BeatmapCarousel.SearchItems.IndexOf(selectedItem) - 1;
+
+                if (newIndex < 0)
+                    return false;
+
+                selectMap(BeatmapCarousel.SearchItems[newIndex]);
+            }
+
+            if (key == Key.Down && selectedItem is not null)
+            {
+                int newIndex = BeatmapCarousel.SearchItems.IndexOf(selectedItem) + 1;
+
+                if (newIndex == 0 || newIndex == BeatmapCarousel.SearchItems.Count)
+                    return false;
+
+                selectMap(BeatmapCarousel.SearchItems[newIndex]);
             }
 
             return false;

@@ -181,7 +181,7 @@ namespace RTCircles
                 }
             }
 
-            Utils.EndProfiling("StrainCalculation");
+            Utils.EndProfiling("StrainCalculation", false, true);
         }
 
         public void GenerateHitObjects(Mods mods = Mods.NM)

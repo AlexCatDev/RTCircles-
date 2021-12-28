@@ -205,8 +205,6 @@ namespace RTCircles
 
         public static Sound IntroSound { get; private set; }
 
-        public static Texture Logo { get; private set; }
-
         public static Texture VisualizerBar { get; private set; }
 
         public static OsuTexture Star { get; private set; }
@@ -338,8 +336,6 @@ namespace RTCircles
 
             IntroSound = LoadSound(path, "welcome");
             //IntroSound.Volume = 0.6f;
-
-            Logo = LoadTexture(path, "logo");
 
             Star = LoadTexture(path, "star");
 

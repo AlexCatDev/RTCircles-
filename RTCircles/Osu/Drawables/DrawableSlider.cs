@@ -10,6 +10,8 @@ namespace RTCircles
 {
     public class DrawableSlider : Drawable, IDrawableHitObject
     {
+        public static float SliderResolution = 1f;
+
         public static bool SnakeIn = true;
         public static bool SnakeOut = true;
         public static bool Explode = true;
@@ -98,9 +100,12 @@ namespace RTCircles
             if (fullPath.Count == 0)
                 fullPath.Add(new Vector2(slider.Position.X, slider.Position.Y));
 
+            //The radius in osu pixels
+            float sizeInOsuSpace = 54.4f - 4.48f * OsuContainer.Beatmap.CS;
+
             //Defining the pointsize in path, makes it know how big to calculate the bounding box
             //The pointsize is in osu pixels from the current circlesize
-            sliderPath.SetPoints(fullPath, 54.4f - 4.48f * OsuContainer.Beatmap.CS);
+            sliderPath.SetPoints(fullPath, sizeInOsuSpace);
         }
 
         private float snakeIn = 1f;

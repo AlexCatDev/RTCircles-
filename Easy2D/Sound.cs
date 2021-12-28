@@ -219,10 +219,10 @@ namespace Easy2D
 
         ~Sound()
         {
+            Utils.Log($"Deleting Sound handle -> [{handle}]", LogLevel.Info);
             allHandles.Remove(handle);
             bool success = Bass.StreamFree(handle);
-            Utils.Log($"Deleted Sound handle -> [{handle}]", LogLevel.Debug);
-            if(success == false)
+            if (success == false)
                 Utils.Log($"Bass Sound handle deletion failed! -> {Bass.LastError}", LogLevel.Error);
         }
 
@@ -245,7 +245,7 @@ namespace Easy2D
                 byte[] data = ms.ToArray();
                 if (useFX)
                 {
-                    handle = BassFx.TempoCreate(Bass.CreateStream(data, 0, data.Length, BassFlags.Decode | BassFlags.Prescan), BassFlags.Default);
+                    handle = BassFx.TempoCreate(Bass.CreateStream(data, 0, data.Length, BassFlags.Decode | BassFlags.Prescan), BassFlags.Default | BassFlags.FxFreeSource);
                 }
                 else
                 {

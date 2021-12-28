@@ -273,7 +273,6 @@ namespace RTCircles
                         {
                             Utils.Log($"Extracting archive failed due to: {ex.Message} import process aborted :(", LogLevel.Error);
                             archive.Dispose();
-                            Directory.Delete($"{SongsFolder}/{setID}", true);
 
                             setID = -1;
 

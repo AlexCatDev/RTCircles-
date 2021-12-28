@@ -66,7 +66,7 @@ namespace RTCircles
             float explode = (1f - alpha) * (float)OsuContainer.CircleExplode;
 
             if(alpha > 0f)
-                g.DrawRectangleCentered(MainGame.WindowCenter, new Vector2(800) + new Vector2(800) * explode, new Vector4(1f, 1f, 1f, alpha), Skin.Logo);
+                g.DrawRectangleCentered(MainGame.WindowCenter, new Vector2(800) + new Vector2(800) * explode, new Vector4(1f, 1f, 1f, alpha), MenuLogo.LogoTexture);
         }
 
         public override void OnEnter()
@@ -97,7 +97,7 @@ namespace RTCircles
             OsuContainer.OnKiai += () =>
             {
                 fadeColor.Value = new Vector4(KiaiFlash, KiaiFlash, KiaiFlash, 1f);
-                fadeColor.TransformTo(new Vector4(Opacity, Opacity, Opacity, 1f), 1f, EasingTypes.Out);
+                fadeColor.TransformTo(new Vector4(Opacity, Opacity, Opacity, 1f), 1.5f, EasingTypes.OutSine);
             };
         }
 
@@ -158,14 +158,14 @@ namespace RTCircles
                     if (beat % 2 == 0)
                     {
                         beatFlash2.ClearTransforms();
-                        beatFlash2.TransformTo(0.5f, fadeInTime, EasingTypes.Out);
+                        beatFlash2.TransformTo(0.35f, fadeInTime, EasingTypes.Out);
                         beatFlash2.Wait(waitTime);
                         beatFlash2.TransformTo(0f, fadeOutTime, EasingTypes.Out);
                     }
                     else
                     {
                         beatFlash.ClearTransforms();
-                        beatFlash.TransformTo(0.5f, fadeInTime, EasingTypes.Out);
+                        beatFlash.TransformTo(0.35f, fadeInTime, EasingTypes.Out);
                         beatFlash.Wait(waitTime);
                         beatFlash.TransformTo(0f, fadeOutTime, EasingTypes.Out);
                     }
@@ -203,6 +203,13 @@ namespace RTCircles
 
     public class MenuLogo : Drawable
     {
+        public static Texture LogoTexture { get; private set; }
+
+        static MenuLogo()
+        {
+            LogoTexture = new Texture(Utils.GetResource("Skin.logo.png"));
+        }
+
         private SmoothVector2 positionTransform = new SmoothVector2();
         private SmoothFloat rotationTransform = new SmoothFloat();
         private SmoothVector2 sizeTransform = new SmoothVector2();
@@ -367,7 +374,7 @@ namespace RTCircles
         public override void Render(Graphics g)
         {
             Vector4 beatFlash = new Vector4(0.7f, 0.7f, 0.7f, 0f) * Interpolation.ValueAt(OsuContainer.BeatProgressKiai, 0f, 1f, 0f, 1f, EasingTypes.Out);
-            g.DrawRectangleCentered(visualizer.Position, logoSize, colorTransform + beatFlash, Skin.Logo, null, false, rotationTransform);
+            g.DrawRectangleCentered(visualizer.Position, logoSize, colorTransform + beatFlash, LogoTexture, null, false, rotationTransform);
         }
 
         public override bool OnMouseDown(MouseButton args)

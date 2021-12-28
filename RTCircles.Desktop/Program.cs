@@ -46,6 +46,7 @@ namespace RTCircles.Desktop
                     
                 }
 
+                //silk is pretty buggy
                 input.Keyboards[0].KeyDown += (s, e, x) =>
                 {
                     if (e == Key.ShiftRight)

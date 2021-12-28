@@ -17,7 +17,7 @@ namespace RTCircles
             private Vector2 velocity;
             private float scale;
 
-            public Firework(Vector2 pos)
+            public Firework(Vector2 pos, float speed = 1000f)
             {
                 alpha.Value = 0f;
                 alpha.TransformTo(1f, 0.25f, EasingTypes.Out);
@@ -28,8 +28,8 @@ namespace RTCircles
 
                 scale = RNG.Next(20f, 100f) / 100f;
 
-                velocity.X = MathF.Cos(theta) * 1000f * scale;
-                velocity.Y = MathF.Sin(theta) * 1000f * scale;
+                velocity.X = MathF.Cos(theta) * speed * scale;
+                velocity.Y = MathF.Sin(theta) * speed * scale;
             }
 
             public override void Render(Graphics g)
@@ -259,16 +259,20 @@ namespace RTCircles
 
             if (shouldGenGraph)
             {
+                List<Vector2> graph = new List<Vector2>();
+
+                foreach (var item in OsuContainer.Beatmap.DifficultyGraph)
+                {
+                    graph.Add(new Vector2(0, (float)item));
+                }
+
+                if (graph.Count == 0)
+                    return;
+
                 Utils.Log($"Generating strain graph framebuffer!", LogLevel.Info);
+
                 g.DrawInFrameBuffer(strainFB, () =>
                 {
-                    List<Vector2> graph = new List<Vector2>();
-
-                    foreach (var item in OsuContainer.Beatmap.DifficultyGraph)
-                    {
-                        graph.Add(new Vector2(0, (float)item));
-                    }
-
                     graph = PathApproximator.ApproximateCatmull(graph);
 
                     var vertices = g.VertexBatch.GetTriangleStrip(graph.Count * 2);
@@ -286,12 +290,12 @@ namespace RTCircles
 
                     for (int i = 0; i < graph.Count; i++)
                     {
-                        //float height = graph[i].Y.Map(0, 10, 0, size.Y);
+                            //float height = graph[i].Y.Map(0, 10, 0, size.Y);
 
-                        float height = graph[i].Y.Map(0, 8000, 0, size.Y);
+                            float height = graph[i].Y.Map(0, 8000, 0, size.Y);
 
-                        //Grundlinje
-                        vertices[vertexIndex].TextureSlot = textureSlot;
+                            //Grundlinje
+                            vertices[vertexIndex].TextureSlot = textureSlot;
                         vertices[vertexIndex].Color = bottomColor;
                         vertices[vertexIndex].Position = movingPos;
 
@@ -299,8 +303,8 @@ namespace RTCircles
 
                         movingPos.Y += height;
 
-                    //TopLinje
-                    vertices[vertexIndex].TextureSlot = textureSlot;
+                            //TopLinje
+                            vertices[vertexIndex].TextureSlot = textureSlot;
                         vertices[vertexIndex].Color = peakColor;
                         vertices[vertexIndex].Position = movingPos;
 
@@ -313,6 +317,7 @@ namespace RTCircles
 
                 shouldGenGraph = false;
             }
+
             g.DrawFrameBuffer(position, new Vector4(1f, 1f, 1f, 0.5f), strainFB);
 
             Vector2 songPosPos = new Vector2((float)OsuContainer.SongPosition.Map(OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime, OsuContainer.Beatmap.HitObjects[^1].BaseObject.StartTime, position.X, position.X + size.X), position.Y);

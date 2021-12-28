@@ -161,11 +161,12 @@ namespace RTCircles
             if (RuntimeInformation.ProcessArchitecture == Architecture.X86 || RuntimeInformation.ProcessArchitecture == Architecture.X64)
             {
                 PostProcessing.Bloom = true;
+                PostProcessing.MotionBlur = true;
             }
 
-            PostProcessing.MotionBlur = true;
-
             IsMultiThreaded = false;
+
+            Utils.IgnoredLogLevels.Add(LogLevel.Debug);
         }
 
         private DateTime lastOpened;
@@ -181,8 +182,6 @@ namespace RTCircles
 
         public override void OnRender(double delta)
         {
-            PostProcessing.MotionBlurScale =35f;
-
             PostProcessing.Use(new Vector2i((int)WindowWidth, (int)WindowHeight), new Vector2i((int)WindowWidth, (int)WindowHeight));
             ScreenManager.Render(g);
 
@@ -230,10 +229,59 @@ namespace RTCircles
 
             g.DrawString(text, Font.DefaultFont, new Vector2(20), Colors.Yellow, scale);
 
+            drawLog(g);
+
             g.Projection = shakeMatrix;
             g.EndDraw();
             PostProcessing.PresentFinalResult();
         }
+
+        private void drawLog(Graphics g)
+        {
+            const int MAX_VISIBLE_LOGS = 15;
+
+            //if (DisplayLog == false)
+            //    return;
+
+            Vector2 offset = new Vector2(0, 0);
+            float scale = 0.25f;
+
+            float totalSize = (Font.DefaultFont.Size * scale) * MAX_VISIBLE_LOGS;
+
+            for (int i = Utils.Logs.Count - MAX_VISIBLE_LOGS; i < Utils.Logs.Count; i++)
+            {
+                if (i < 0)
+                    continue;
+
+                Vector2 textOffset = new Vector2(0, WindowHeight - totalSize);
+
+                var log = Utils.Logs[i];
+
+                if(log.Tag is null)
+                {
+                    log.Tag = new SmoothFloat();
+                    (log.Tag as SmoothFloat).Value = 1f;
+                    (log.Tag as SmoothFloat).TransformTo(0f, 0.5f, EasingTypes.OutElasticHalf);
+                }
+
+                (log.Tag as SmoothFloat).Update((float)RenderDeltaTime);
+
+                Vector2 animOffset = new Vector2((log.Tag as SmoothFloat).Value * MainGame.WindowWidth / 3, 0);
+
+                for (int k = 0; k < log.Log.Count; k++)
+                {
+                    var item = log.Log[k];
+
+                    Vector2 size = Font.DefaultFont.MessureString(item.Text, scale, includeLastCharAdvance: true);
+                    g.DrawRectangle(offset + textOffset + animOffset, size, new Vector4(0f, 0f, 0f, 0.5f));
+                    g.DrawString(item.Text, Font.DefaultFont, offset + textOffset + animOffset, item.Color, scale);
+                    textOffset.X += size.X;
+                }
+
+                offset.Y += Font.DefaultFont.Size * scale;
+            }
+        }
+
 
         public static Vector2 WindowSize { get; private set; }
 

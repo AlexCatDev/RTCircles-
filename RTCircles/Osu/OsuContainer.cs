@@ -115,7 +115,7 @@ namespace RTCircles
         public static bool Key1Down { get; private set; }
         public static bool Key2Down { get; private set; }
 
-        public static bool EnableMouseButtons = false;
+        public static bool EnableMouseButtons = true;
 
         static OsuContainer()
         {

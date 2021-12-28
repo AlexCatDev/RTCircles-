@@ -245,7 +245,8 @@ namespace RTCircles
         //Batched slider quads!
         skipSliderCreation:
             Vector2 renderPosition = OsuContainer.MapToPlayfield(bounds.Position.X, bounds.Position.Y);
-            //Convert the size to playfield size, since the points and the radius are in osu pixels
+
+            //Convert the size of the slider from osu pixels to playfield pixels, since the points and the radius are in osu pixels
             Vector2 renderSize = bounds.Size * (OsuContainer.Playfield.Width / 512);
 
             Rectangle texCoords = new Rectangle(0, 1, 1, -1);

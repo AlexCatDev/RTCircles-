@@ -41,16 +41,6 @@ namespace RTCircles
 
             public void Render(Graphics g)
             {
-                /*
-                var tex = Skin.Star;
-                var ar = (float)tex.Width / tex.Height;
-
-                Vector2 s = new Vector2(scaledSize.X, scaledSize.X / ar);
-
-                g.DrawRectangleCentered(pos, s, Colors.White, tex);
-
-                return;
-                */
                 var triangle = g.VertexBatch.GetTriangleStrip(3);
                 
                 int slot = g.GetTextureSlot(Easy2D.Texture.WhiteSquare);
@@ -69,14 +59,6 @@ namespace RTCircles
                 triangle[2].Color = color + parent.TriangleAdditive;
                 triangle[2].TextureSlot = slot;
                 triangle[2].TexCoord = Vector2.Zero;
-
-                /*
-                g.DrawRectangleCentered(triangle[0].Position, new Vector2(4), Colors.White);
-
-                g.DrawRectangleCentered(triangle[1].Position, new Vector2(4), Colors.Red);
-
-                g.DrawRectangleCentered(triangle[2].Position, new Vector2(4), Colors.Green);
-                */
             }
         }
 
@@ -106,7 +88,7 @@ namespace RTCircles
         public override void Render(Graphics g)
         {
             if (graphics is null)
-                graphics = new Graphics();
+                graphics = new Graphics(300, 300);
 
             //Fixed resolution for now..
             triangleFramebuffer.Resize(1000, 1000);

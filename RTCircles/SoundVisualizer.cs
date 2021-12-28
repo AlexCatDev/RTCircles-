@@ -158,7 +158,8 @@ namespace RTCircles
                 }
             }
 
-            var points = PathApproximator.ApproximateBSpline(controlPoints, 6);
+            var points = PathApproximator.ApproximateBezier(controlPoints);
+            //var points = PathApproximator.ApproximateBSpline(controlPoints, 6);
             float theta = -MathF.PI / 2;
             float stepTheta = (MathF.PI * 2) / (points.Count);
 
@@ -387,10 +388,10 @@ namespace RTCircles
             }
 
             //BeatValue = (SmoothBuffer[1] + SmoothBuffer[2] + SmoothBuffer[3]) / 3f;
-
-            float bass = (SmoothBuffer[3] + SmoothBuffer[4] + SmoothBuffer[5] + SmoothBuffer[6]);
+            /*
+            float bass = (SmoothBuffer[0] + SmoothBuffer[1] + SmoothBuffer[2] + SmoothBuffer[3] + SmoothBuffer[4] + SmoothBuffer[5] + SmoothBuffer[6]);
             float kicks = (SmoothBuffer[12] + SmoothBuffer[13] + SmoothBuffer[14] + SmoothBuffer[15] + SmoothBuffer[16]);
-
+            */
             //30% bass, 70% kicks
             //BeatValue = bass * .3f + kicks * .7f;
 
@@ -399,7 +400,7 @@ namespace RTCircles
             {
                 BeatValue += SmoothBuffer[i];
             }
-            BeatValue = (BeatValue / 6);
+            BeatValue = (BeatValue / 8);
 
             freckleSpawnTimer += delta;
 
