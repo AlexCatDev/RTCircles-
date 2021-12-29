@@ -32,6 +32,12 @@ namespace Easy2D
 
         public StreamingBuffer(BufferTargetARB bufferTarget, uint itemCapacity)
         {
+            if (IsSupported == false)
+            {
+                Utils.Log($"This device does not support streaming buffers!", LogLevel.Error);
+                throw new NotSupportedException();
+            }
+
             this.bufferTarget = bufferTarget;
             Capacity = itemCapacity;
         }

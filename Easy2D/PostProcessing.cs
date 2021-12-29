@@ -41,28 +41,11 @@ namespace Easy2D
 
         static PostProcessing()
         {
-            /*
-#if RELEASE
-            bloomShader.AttachShader(ShaderType.VertexShader, new FileInfo("./Shaders/Bloom.vert"));
-            bloomShader.AttachShader(ShaderType.FragmentShader, new FileInfo("./Shaders/Bloom.frag"));
-            motionBlurShader.AttachShader(ShaderType.VertexShader, new FileInfo("./Shaders/MotionBlur.vert"));
-            motionBlurShader.AttachShader(ShaderType.FragmentShader, new FileInfo("./Shaders/MotionBlur.frag"));
-#else
-            */
             bloomShader.AttachShader(ShaderType.VertexShader, Utils.GetInternalResource("Shaders.Bloom.vert"));
             bloomShader.AttachShader(ShaderType.FragmentShader, Utils.GetInternalResource("Shaders.Bloom.frag"));
 
             motionBlurShader.AttachShader(ShaderType.VertexShader, Utils.GetInternalResource("Shaders.MotionBlur.vert"));
             motionBlurShader.AttachShader(ShaderType.FragmentShader, Utils.GetInternalResource("Shaders.MotionBlur.frag"));
-
-            /*
-            bloomShader.AttachShader(ShaderType.VertexShader, new FileInfo(@"C:\Users\user\Desktop\CSharp\RTCircles\Easy2D\Shaders\Bloom.vert"));
-            bloomShader.AttachShader(ShaderType.FragmentShader, new FileInfo(@"C:\Users\user\Desktop\CSharp\RTCircles\Easy2D\Shaders\Bloom.frag"));
-
-            motionBlurShader.AttachShader(ShaderType.VertexShader, new FileInfo(@"C:\Users\user\Desktop\CSharp\RTCircles\Easy2D\Shaders\MotionBlur.vert"));
-            motionBlurShader.AttachShader(ShaderType.FragmentShader, new FileInfo(@"C:\Users\user\Desktop\CSharp\RTCircles\Easy2D\Shaders\MotionBlur.frag"));
-            */
-//#endif
         }
 
         public static void Use(Vector2i windowSize, Vector2i drawSize)

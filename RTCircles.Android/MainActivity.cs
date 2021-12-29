@@ -1,4 +1,4 @@
-﻿using Android.App;
+using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.OS;
@@ -11,9 +11,10 @@ using Silk.NET.OpenGLES;
 using Silk.NET.Windowing;
 using Silk.NET.Windowing.Sdl.Android;
 
-namespace RTCircles.Droid
+namespace RTCircles.Android
 {
-    [Activity(MainLauncher = true,ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize, Theme = "@android:style/Theme.NoTitleBar")]
+
+    [Activity(MainLauncher = true, ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize, Theme = "@android:style/Theme.NoTitleBar")]
     public class MainActivity : SilkActivity
     {
         public SystemUiFlags UIVisibilityFlags
@@ -103,7 +104,7 @@ namespace RTCircles.Droid
                 //down clocks the cpu core???
                 //bad fps, basically halves fps in worst case scenario, my device: 340 fps to 180 yikes,
                 //and on heavy scenes i go from 130 fps to 70 :(
-                Process.SetThreadPriority(ThreadPriority.Foreground);
+                //Process.SetThreadPriority(ThreadPriority.Foreground);
 
                 game.Load(input);
 

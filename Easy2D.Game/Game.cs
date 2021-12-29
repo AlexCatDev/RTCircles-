@@ -185,7 +185,6 @@ namespace Easy2D.Game
             }
 
             OnUpdate(delta);
-            UpdateScheduler.Update((float)delta);
             System.Threading.Monitor.Exit(renderUpdateSyncLock);
 
             ups++;

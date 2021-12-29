@@ -1,26 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Easy2D
 {
-    public class ScheduledUpdateTask : IEquatable<ScheduledUpdateTask>
+    public class ScheduledTask : IEquatable<ScheduledTask>
     {
         public Action Action { get; private set; }
         public float Delay { get; private set; }
 
-        public bool HasCompleted { get; private set; }
+        public bool HasCompleted { get; internal set; }
+        public bool IsCancelled { get; internal set; }
 
-        public bool isCancelled { get; private set; }
-
-        public ScheduledUpdateTask(Action action, float delay = 0)
+        public ScheduledTask(Action action, float delay = 0)
         {
             Action = action;
             Delay = delay;
             HasCompleted = false;
         }
 
-        public bool Equals(ScheduledUpdateTask other)
+        public bool Equals(ScheduledTask other)
         {
             //I'm really not sure about doing duplicate detection by this it's really sketchy but it seems to work the way i want it to work somehow
             //C# magic =)
@@ -41,19 +41,28 @@ namespace Easy2D
 
         public void Cancel()
         {
-            UpdateScheduler.Cancel(this);
-            isCancelled = true;
+            IsCancelled = true;
         }
     }
 
     /// <summary>
-    /// Schedule actions to be run on the update thread
+    /// Schedule tasks to run
     /// </summary>
-    public static class UpdateScheduler
+    public class Scheduler
     {
-        private static readonly List<ScheduledUpdateTask> tasks = new List<ScheduledUpdateTask>();
+        private readonly List<ScheduledTask> tasks = new List<ScheduledTask>();
 
-        private static readonly object mutex = new object();
+        private readonly object mutex = new object();
+
+        private int creationThreadID;
+        private bool IsSameThread => System.Threading.Thread.CurrentThread.ManagedThreadId == creationThreadID;
+
+        public bool ExecuteImmediatelyIfSameThread { get; private set; }
+
+        public Scheduler()
+        {
+            creationThreadID = System.Threading.Thread.CurrentThread.ManagedThreadId;
+        }
 
         /// <summary>
         /// Schedule a task to be run on the main thread, at the beginning of the next frame or when the time is up
@@ -62,8 +71,14 @@ namespace Easy2D
         /// <param name="allowDuplicates"></param>
         /// <param name="delay"></param>
         /// <returns>The task to be run or null if unsuccessfull</returns>
-        public static ScheduledUpdateTask Run(ScheduledUpdateTask task, bool allowDuplicates = false)
+        public ScheduledTask Run(ScheduledTask task, bool allowDuplicates = false)
         {
+            if(ExecuteImmediatelyIfSameThread && IsSameThread)
+            {
+                task.Action.Invoke();
+                return task;
+            }
+
             lock (mutex)
             {
                 if (allowDuplicates == false)
@@ -75,35 +90,31 @@ namespace Easy2D
                     }
                 }
 
+                task.HasCompleted = false;
+                task.IsCancelled = false;
                 tasks.Add(task);
                 return task;
             }
         }
 
-        public static ScheduledUpdateTask RunAsync(Action asyncTask, ScheduledUpdateTask onCompletion)
+        public ScheduledTask RunAsync(Action asyncTask, ScheduledTask onCompletion)
         {
-            Task.Run(() => {
+            Task.Run(() =>
+            {
                 asyncTask();
-                if(onCompletion.isCancelled == false)
+
+                if (onCompletion.IsCancelled == false)
                     Run(onCompletion, true);
             });
 
             return onCompletion;
         }
 
-        public static void Cancel(ScheduledUpdateTask task)
-        {
-            lock (mutex)
-            {
-                tasks.Remove(task);
-            }
-        }
-
         /// <summary>
-        /// Called from the update thread
+        /// Called from the graphics thread
         /// </summary>
         /// <param name="delta"></param>
-        public static void Update(float delta)
+        public void Update(float delta)
         {
             lock (mutex)
             {
@@ -111,7 +122,7 @@ namespace Easy2D
                 {
                     tasks[i].Update(delta);
 
-                    if (tasks[i].HasCompleted)
+                    if (tasks[i].HasCompleted || tasks[i].IsCancelled)
                         tasks.RemoveAt(i);
                 }
             }
