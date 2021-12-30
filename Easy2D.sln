@@ -25,7 +25,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParticleMadness", "Particle
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParticleMadness.Desktop", "ParticleMadness.Desktop\ParticleMadness.Desktop.csproj", "{4E987FF6-A782-418B-ABD5-5CE2B9AE7CD3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RTCircles.Android", "RTCircles.Android\RTCircles.Android.csproj", "{4E3C3B1B-3740-41CD-B06B-D69D2FF86A19}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RTCircles.Android", "RTCircles.Android\RTCircles.Android.csproj", "{4E3C3B1B-3740-41CD-B06B-D69D2FF86A19}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
