@@ -143,6 +143,7 @@ namespace RTCircles
 
         public static bool ShowRenderGraph = false;
         public static bool ShowLogOverlay = false;
+        public static bool ShowFPS = true;
 
         private ulong prevVertices;
         private ulong prevIndices;
@@ -165,50 +166,65 @@ namespace RTCircles
 
         private void drawFPSGraph(Graphics g)
         {
-            if (ShowRenderGraph == false)
-                return;
-
-
-            if (renderTimes.Count == 1000)
-                renderTimes.RemoveAt(0);
-
-            renderTimes.Add(RenderDeltaTime);
-
-            Vector2 offset = Vector2.Zero;
-            float height20MS = 250;
-            for (int i = 0; i < renderTimes.Count; i++)
+            if (ShowRenderGraph)
             {
-                float height = (float)renderTimes[i].Map(0, 0.020, 0, height20MS);
-                Vector2 size = new Vector2((float)WindowWidth / 1000, height);
-                g.DrawRectangle(offset, size, new Vector4(0f, 1f, 0f, 0.5f));
-                offset.X += size.X;
+                if (renderTimes.Count == 1000)
+                    renderTimes.RemoveAt(0);
+
+                renderTimes.Add(RenderDeltaTime);
+
+                Vector2 offset = Vector2.Zero;
+                float height20MS = 250;
+                for (int i = 0; i < renderTimes.Count; i++)
+                {
+                    float height = (float)renderTimes[i].Map(0, 0.020, 0, height20MS);
+                    Vector2 size = new Vector2((float)WindowWidth / 1000, height);
+                    g.DrawRectangle(offset, size, new Vector4(0f, 1f, 0f, 0.5f));
+                    offset.X += size.X;
+                }
+
+                g.DrawLine(new Vector2(WindowWidth - 75, height20MS / 2), new Vector2(WindowWidth, height20MS / 2), Colors.Black, 2f);
+                g.DrawString("10 MS", Font.DefaultFont, new Vector2(WindowWidth - 75, height20MS / 2), Colors.Yellow, 0.35f);
+
+                g.DrawLine(new Vector2(WindowWidth - 75, height20MS), new Vector2(WindowWidth, height20MS), Colors.Black, 2f);
+                g.DrawString("20 MS", Font.DefaultFont, new Vector2(WindowWidth - 75, height20MS), Colors.Red, 0.35f);
             }
 
-            g.DrawLine(new Vector2(WindowWidth - 75, height20MS / 2), new Vector2(WindowWidth, height20MS / 2), Colors.Black, 2f);
-            g.DrawString("10 MS", Font.DefaultFont, new Vector2(WindowWidth - 75, height20MS / 2), Colors.Yellow, 0.35f);
+            if (ShowFPS)
+            {
+                ulong diffVertices = g.VerticesDrawn - prevVertices;
+                prevVertices = g.VerticesDrawn;
 
-            g.DrawLine(new Vector2(WindowWidth - 75, height20MS), new Vector2(WindowWidth, height20MS), Colors.Black, 2f);
-            g.DrawString("20 MS", Font.DefaultFont, new Vector2(WindowWidth - 75, height20MS), Colors.Red, 0.35f);
+                ulong diffIndices = g.IndicesDrawn - prevIndices;
+                prevIndices = g.IndicesDrawn;
 
-            ulong diffVertices = g.VerticesDrawn - prevVertices;
-            prevVertices = g.VerticesDrawn;
+                ulong diffTriangles = g.TrianglesDrawn - prevTriangles;
+                prevTriangles = g.TrianglesDrawn;
 
-            ulong diffIndices = g.IndicesDrawn - prevIndices;
-            prevIndices = g.IndicesDrawn;
+                double verticesPerSecond = (diffVertices) * (1.0 / RenderDeltaTime);
 
-            ulong diffTriangles = g.TrianglesDrawn - prevTriangles;
-            prevTriangles = g.TrianglesDrawn;
+                double indicesPerSecond = (diffIndices) * (1.0 / RenderDeltaTime);
 
-            double verticesPerSecond = (diffVertices) * (1.0 / RenderDeltaTime);
+                double trianglesPerSecond = (diffTriangles) * (1.0 / RenderDeltaTime);
 
-            double indicesPerSecond = (diffIndices) * (1.0 / RenderDeltaTime);
+                const float scale = 0.35f;
+                string text = $"FPS: {FPS}/{1000.0 / FPS:F2}ms UPS: {UPS}/{1000.0 / UPS:F2}ms\nVertices: {Utils.ToKMB(verticesPerSecond)}/s\nIndices: {Utils.ToKMB(indicesPerSecond)}/s\nTris: {Utils.ToKMB(trianglesPerSecond)}/s\nFramework: {RuntimeInformation.FrameworkDescription}\nOS: {RuntimeInformation.OSDescription}\nLast visit: {lastOpened}";
 
-            double trianglesPerSecond = (diffTriangles) * (1.0 / RenderDeltaTime);
+                int pendingTasks = 0;
+                int asyncWorkloads = 0;
+                for (int i = 0; i < Scheduler.AllSchedulers.Count; i++)
+                {
+                    if(Scheduler.AllSchedulers[i].TryGetTarget(out var scheduler))
+                    {
+                        asyncWorkloads += scheduler.AsyncWorkloadsRunning;
+                        pendingTasks += scheduler.PendingTaskCount;
+                    }
+                }
 
-            float scale = 0.35f;
-            string text = $"FPS: {FPS}/{1000.0 / FPS:F2}ms UPS: {UPS}/{1000.0 / UPS:F2}ms\nVertices: {Utils.ToKMB(verticesPerSecond)}/s\nIndices: {Utils.ToKMB(indicesPerSecond)}/s\nTris: {Utils.ToKMB(trianglesPerSecond)}/s\nFramework: {RuntimeInformation.FrameworkDescription}\nOS: {RuntimeInformation.OSDescription}\nLast visit: {lastOpened}";
+                text += $"\nSchedulers Count: {Scheduler.AllSchedulers.Count} [TotalPending: {pendingTasks} TotalAsync: {asyncWorkloads}]";
 
-            g.DrawString(text, Font.DefaultFont, new Vector2(20), Colors.Yellow, scale);
+                g.DrawString(text, Font.DefaultFont, new Vector2(20), Colors.Yellow, scale);
+            }
         }
 
         private void drawLog(Graphics g)

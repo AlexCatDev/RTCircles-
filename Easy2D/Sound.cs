@@ -231,12 +231,13 @@ namespace Easy2D
         /// </summary>
         /// <param name="stream">The input data to the file, which will be read to end and copied internally</param>
         /// <param name="useFX">Allow the usage of fx? this has some drawbacks, forexample, major delay on playing the sound and a lag spike</param>
-        /// <param name="noBuffer">NoBuffer remidies this, but fft is broken among some other stuf probably</param>
+        /// <param name="noBuffer">NoBuffer remedies this, but fft is broken among some other stuf probably</param>
         public Sound(Stream stream, bool useFX = false, bool noBuffer = false)
         {
             if(stream is null)
             {
                 Utils.Log($"Error stream was null!", LogLevel.Error);
+                GC.SuppressFinalize(this);
                 return;
             }
 

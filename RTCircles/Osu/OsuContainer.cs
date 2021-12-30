@@ -225,6 +225,11 @@ namespace RTCircles
             } 
         }
 
+        public static void SetMap(PlayingBeatmap beatmap)
+        {
+            Beatmap = beatmap;
+        }
+
         public static void SetMap(Beatmap beatmap, bool generateHitObjects = true, Mods mods = Mods.NM)
         {
             /*
@@ -345,6 +350,7 @@ namespace RTCircles
             else
             {
                 songPos = Beatmap?.Song.PlaybackPosition + Sound.DeviceLatency ?? 0;
+
                 DeltaSongPosition = songPos - previousSongPos;
                 previousSongPos = songPos;
 

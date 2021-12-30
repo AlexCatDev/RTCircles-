@@ -1,131 +1,159 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace Easy2D
 {
-    public class ScheduledTask : IEquatable<ScheduledTask>
-    {
-        public Action Action { get; private set; }
-        public float Delay { get; private set; }
-
-        public bool HasCompleted { get; internal set; }
-        public bool IsCancelled { get; internal set; }
-
-        public ScheduledTask(Action action, float delay = 0)
-        {
-            Action = action;
-            Delay = delay;
-            HasCompleted = false;
-        }
-
-        public bool Equals(ScheduledTask other)
-        {
-            //I'm really not sure about doing duplicate detection by this it's really sketchy but it seems to work the way i want it to work somehow
-            //C# magic =)
-            return Action.GetHashCode() == other.Action.GetHashCode();
-        }
-
-        private float timer;
-        internal void Update(float delta)
-        {
-            timer += delta;
-            if (timer >= Delay)
-            {
-                timer = 0;
-                Action?.Invoke();
-                HasCompleted = true;
-            }
-        }
-
-        public void Cancel()
-        {
-            IsCancelled = true;
-        }
-    }
-
-    /// <summary>
-    /// Schedule tasks to run
-    /// </summary>
     public class Scheduler
     {
-        private readonly List<ScheduledTask> tasks = new List<ScheduledTask>();
+        private static List<WeakReference<Scheduler>> allSchedulers = new List<WeakReference<Scheduler>>();
+        public static IReadOnlyList<WeakReference<Scheduler>> AllSchedulers => allSchedulers.AsReadOnly();
+
+        private List<Action> tasks = new List<Action>();
+
+        public int PendingTaskCount => tasks.Count;
+        public int AsyncWorkloadsRunning => asyncWorkloadsRunning;
 
         private readonly object mutex = new object();
 
-        private int creationThreadID;
-        private bool IsSameThread => System.Threading.Thread.CurrentThread.ManagedThreadId == creationThreadID;
+        private readonly int mainThreadID;
 
-        public bool ExecuteImmediatelyIfSameThread { get; private set; }
+        private volatile int asyncWorkloadsRunning;
 
+        private bool IsMainThread => mainThreadID == Thread.CurrentThread.ManagedThreadId;
+
+        private readonly WeakReference<Scheduler> weakReference;
         public Scheduler()
         {
-            creationThreadID = System.Threading.Thread.CurrentThread.ManagedThreadId;
+            mainThreadID = Thread.CurrentThread.ManagedThreadId;
+
+            weakReference = new WeakReference<Scheduler>(this);
+            allSchedulers.Add(weakReference);
+        }
+
+        ~Scheduler()
+        {
+            allSchedulers.Remove(weakReference);
         }
 
         /// <summary>
-        /// Schedule a task to be run on the main thread, at the beginning of the next frame or when the time is up
+        /// Schedule an action to be run
         /// </summary>
-        /// <param name="action"></param>
-        /// <param name="allowDuplicates"></param>
-        /// <param name="delay"></param>
-        /// <returns>The task to be run or null if unsuccessfull</returns>
-        public ScheduledTask Run(ScheduledTask task, bool allowDuplicates = false)
+        /// <param name="task">The action to schedule</param>
+        /// <returns><paramref name="task"/></returns>
+        public Action Add(Action task)
         {
-            if(ExecuteImmediatelyIfSameThread && IsSameThread)
-            {
-                task.Action.Invoke();
-                return task;
-            }
-
             lock (mutex)
             {
-                if (allowDuplicates == false)
-                {
-                    if (tasks.Contains(task))
-                    {
-                        Utils.Log($"A duplicate of a task already in the Scheduler tried to be added", LogLevel.Error);
-                        return null;
-                    }
-                }
-
-                task.HasCompleted = false;
-                task.IsCancelled = false;
                 tasks.Add(task);
-                return task;
             }
-        }
-
-        public ScheduledTask RunAsync(Action asyncTask, ScheduledTask onCompletion)
-        {
-            Task.Run(() =>
-            {
-                asyncTask();
-
-                if (onCompletion.IsCancelled == false)
-                    Run(onCompletion, true);
-            });
-
-            return onCompletion;
+            return task;
         }
 
         /// <summary>
-        /// Called from the graphics thread
+        /// Schedule an action to be run but only if it has not been already scheduled in this cycle
         /// </summary>
-        /// <param name="delta"></param>
-        public void Update(float delta)
+        /// <param name="task">The action to schedule</param>
+        /// <returns><paramref name="task"/></returns>
+        public Action AddOnce(Action task)
         {
             lock (mutex)
             {
-                for (int i = tasks.Count - 1; i >= 0; i--)
-                {
-                    tasks[i].Update(delta);
-
-                    if (tasks[i].HasCompleted || tasks[i].IsCancelled)
-                        tasks.RemoveAt(i);
-                }
+                if (!tasks.Contains(task))
+                    tasks.Add(task);
             }
+            return task;
+        }
+
+        /// <summary>
+        /// Complete work on another thread and schedule the result
+        /// </summary>
+        /// <param name="asyncTask">The action to be invoked on another thread</param>
+        /// <param name="onCompletion">The action that gets scheduled</param>
+        public void AddAsync(Action<CancellationTokenSource> asyncTask, Action onCompletion)
+        {
+            ThreadPool.QueueUserWorkItem((obj) => {
+                CancellationTokenSource cancellationToken = new CancellationTokenSource();
+
+                ++asyncWorkloadsRunning;
+                asyncTask.Invoke(cancellationToken);
+                --asyncWorkloadsRunning;
+
+                if (!cancellationToken.IsCancellationRequested)
+                    Add(onCompletion);
+            });
+        }
+
+        /// <summary>
+        /// Complete work on another thread and schedule the result
+        /// </summary>
+        /// <typeparam name="T">The type to send to the scheduled action</typeparam>
+        /// <param name="asyncTask">The action to be invoked on another thread</param>
+        /// <param name="onCompletion">The action that gets scheduled</param>
+        public void AddAsync<T>(Func<CancellationTokenSource, T> asyncAction, Action<T> onCompletion)
+        {
+            ThreadPool.QueueUserWorkItem((obj) => {
+                CancellationTokenSource cancellationToken = new CancellationTokenSource();
+
+                ++asyncWorkloadsRunning;
+                var userObject = asyncAction.Invoke(cancellationToken);
+                --asyncWorkloadsRunning;
+
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    Add(() => {
+                        onCompletion(userObject);
+                    });
+                }
+            });
+        }
+
+        /// <summary>
+        /// Schedule an action to be run or execute immediately if it's on the same thread
+        /// </summary>
+        /// <param name="task">The action to schedule</param>
+        /// <returns><paramref name="task"/></returns>
+        public Action AddOrExecuteImmediately(Action task)
+        {
+            if (IsMainThread)
+                task.Invoke();
+            else
+                Add(task);
+
+            return task;
+        }
+
+        /// <summary>
+        /// Remove a task that has been schedued
+        /// </summary>
+        /// <param name="task">The action to remove</param>
+        /// <returns><paramref name="task"/></returns>
+        public bool Remove(Action task) => tasks.Remove(task);
+
+        /// <summary>
+        /// Execute all scheduled tasks, must only be called from the thread in which this scheduler object was created
+        /// </summary>
+        /// <exception cref="InvalidOperationException"></exception>
+        public void RunPendingTasks()
+        {
+            //if (!IsMainThread)
+            //    throw new InvalidOperationException("This method can only be run in the thread it was created on");
+
+            lock (mutex)
+            {
+                int count = tasks.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    tasks[i].Invoke();
+                }
+
+                tasks.RemoveRange(0, count);
+            }
+        }
+
+        public override string ToString()
+        {
+            return $"Scheduled tasks: {tasks.Count} Async workloads: {asyncWorkloadsRunning}";
         }
     }
 }

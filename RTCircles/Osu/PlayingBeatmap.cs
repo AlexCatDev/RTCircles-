@@ -46,6 +46,16 @@ namespace RTCircles
 
         public List<double> DifficultyGraph = new List<double>();
 
+        public PlayingBeatmap(Beatmap beatmap, Sound song, Texture background = null)
+        {
+            InternalBeatmap = beatmap;
+            Song = song;
+
+            Background = background ?? Skin.DefaultBackground;
+
+            Hitsounds = Skin.Hitsounds;
+        }
+
         public PlayingBeatmap(Beatmap beatmap)
         {
             string folderPath = $"{BeatmapMirror.SongsFolder}/{beatmap.MetadataSection.BeatmapSetID}";

@@ -18,7 +18,7 @@ namespace RTCircles
             //Fade loader in
             introFade.TransformTo(new Vector4(0f, 0f, 0f, 1f), 0.3f, EasingTypes.Out, () =>
             {
-                BeatmapMirror.Scheduler.Run(new(() =>
+                BeatmapMirror.Scheduler.Add(() =>
                 {
                    ScreenManager.GetScreen<MapSelectScreen>().LoadCarouselItems();
 
@@ -45,7 +45,7 @@ namespace RTCircles
                         //Fade background in
                         mapBackground.TriggerFadeIn();
                     });
-                }));
+                });
                 //OsuContainer.SetMap(BeatmapMirror.DecodeBeatmap(Utils.GetResource("Maps.SliderBenchmark.map.osu")), true, Mods.Auto);
             });
         }

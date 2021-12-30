@@ -100,7 +100,7 @@ namespace RTCircles
                 Utils.Log($"Realm Path: {Realm.Config.DatabasePath}", LogLevel.Important);
                 while (MainGame.Instance.View.IsClosing == false)
                 {
-                    Scheduler.Update(0);
+                    Scheduler.RunPendingTasks();
                     Thread.Sleep(1);
                 }
 
@@ -190,7 +190,7 @@ namespace RTCircles
                     else
                         dBBeatmap.Background = null;
 
-                    Scheduler.Run(new (() =>
+                    Scheduler.Add(() =>
                     {
                         Realm.Write(() =>
                         {
@@ -198,7 +198,7 @@ namespace RTCircles
                         });
                         OnNewBeatmapAvailable?.Invoke(dBBeatmap);
                         Utils.Log("Done!", LogLevel.Success);
-                    }));
+                    });
                 }
             }
         }
