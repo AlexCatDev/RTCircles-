@@ -18,6 +18,9 @@
     <None Remove="libs\arm64-v8a\libbass_fx.so" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Realm" Version="10.7.1" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\RTCircles\RTCircles.csproj" />
   </ItemGroup>
 </Project>

@@ -36,37 +36,6 @@ namespace RTCircles
 
         public override void OnLoad()
         {
-            /*
-            var dBBeatmap = new BeatmapSystem.DBBeatmap();
-            dBBeatmap.ID = 443;
-            dBBeatmap.Hash = "420";
-            dBBeatmap.Foldername = "43";
-            dBBeatmap.Filename = "aids.osu";
-
-            BeatmapSystem.BeatmapMirror.realm.Write(() =>
-            {
-                BeatmapSystem.BeatmapMirror.realm.Add(dBBeatmap, true);
-            });
-            */
-            /*
-            BeatmapMirror.Sayobot_DownloadBeatmapSet(1192586);
-            BeatmapMirror.Sayobot_DownloadBeatmapSet(1428874);
-            BeatmapMirror.Sayobot_DownloadBeatmapSet(1158162);
-            BeatmapMirror.Sayobot_DownloadBeatmapSet(1598150);
-            BeatmapMirror.Sayobot_DownloadBeatmapSet(1481341);
-            BeatmapMirror.Sayobot_DownloadBeatmapSet(1604602);
-            */
-            /*
-            var realm = Realms.Realm.GetInstance("./test.db");
-            Console.WriteLine(realm.All<Kek>().ToList().Count);
-
-            realm.Write(() =>
-            {
-                realm.Add(new Kek() { Filename = "cock.osu", Foldername = "penis", Hash = "420" }, true);
-            });
-            realm.Dispose();
-            */
-
             OsuContainer.OnKiai += () =>
             {
                 shakeKiai.Value = 2f;
@@ -173,6 +142,7 @@ namespace RTCircles
 
 
         public static bool ShowRenderGraph = false;
+        public static bool ShowLogOverlay = false;
 
         private ulong prevVertices;
         private ulong prevIndices;
@@ -185,29 +155,40 @@ namespace RTCircles
             PostProcessing.Use(new Vector2i((int)WindowWidth, (int)WindowHeight), new Vector2i((int)WindowWidth, (int)WindowHeight));
             ScreenManager.Render(g);
 
-            if (ShowRenderGraph)
+            drawFPSGraph(g);
+            drawLog(g);
+
+            g.Projection = shakeMatrix;
+            g.EndDraw();
+            PostProcessing.PresentFinalResult();
+        }
+
+        private void drawFPSGraph(Graphics g)
+        {
+            if (ShowRenderGraph == false)
+                return;
+
+
+            if (renderTimes.Count == 1000)
+                renderTimes.RemoveAt(0);
+
+            renderTimes.Add(RenderDeltaTime);
+
+            Vector2 offset = Vector2.Zero;
+            float height20MS = 250;
+            for (int i = 0; i < renderTimes.Count; i++)
             {
-                if (renderTimes.Count == 1000)
-                    renderTimes.RemoveAt(0);
-
-                renderTimes.Add(delta);
-
-                Vector2 offset = Vector2.Zero;
-                float height20MS = 250;
-                for (int i = 0; i < renderTimes.Count; i++)
-                {
-                    float height = (float)renderTimes[i].Map(0, 0.020, 0, height20MS);
-                    Vector2 size = new Vector2((float)WindowWidth / 1000, height);
-                    g.DrawRectangle(offset, size, new Vector4(0f, 1f, 0f, 0.5f));
-                    offset.X += size.X;
-                }
-
-                g.DrawLine(new Vector2(WindowWidth - 75, height20MS / 2), new Vector2(WindowWidth, height20MS / 2), Colors.Black, 2f);
-                g.DrawString("10 MS", Font.DefaultFont, new Vector2(WindowWidth - 75, height20MS / 2), Colors.Yellow, 0.35f);
-
-                g.DrawLine(new Vector2(WindowWidth - 75, height20MS), new Vector2(WindowWidth, height20MS), Colors.Black, 2f);
-                g.DrawString("20 MS", Font.DefaultFont, new Vector2(WindowWidth - 75, height20MS), Colors.Red, 0.35f);
+                float height = (float)renderTimes[i].Map(0, 0.020, 0, height20MS);
+                Vector2 size = new Vector2((float)WindowWidth / 1000, height);
+                g.DrawRectangle(offset, size, new Vector4(0f, 1f, 0f, 0.5f));
+                offset.X += size.X;
             }
+
+            g.DrawLine(new Vector2(WindowWidth - 75, height20MS / 2), new Vector2(WindowWidth, height20MS / 2), Colors.Black, 2f);
+            g.DrawString("10 MS", Font.DefaultFont, new Vector2(WindowWidth - 75, height20MS / 2), Colors.Yellow, 0.35f);
+
+            g.DrawLine(new Vector2(WindowWidth - 75, height20MS), new Vector2(WindowWidth, height20MS), Colors.Black, 2f);
+            g.DrawString("20 MS", Font.DefaultFont, new Vector2(WindowWidth - 75, height20MS), Colors.Red, 0.35f);
 
             ulong diffVertices = g.VerticesDrawn - prevVertices;
             prevVertices = g.VerticesDrawn;
@@ -218,30 +199,24 @@ namespace RTCircles
             ulong diffTriangles = g.TrianglesDrawn - prevTriangles;
             prevTriangles = g.TrianglesDrawn;
 
-            double verticesPerSecond = (diffVertices) * (1.0 / delta);
+            double verticesPerSecond = (diffVertices) * (1.0 / RenderDeltaTime);
 
-            double indicesPerSecond = (diffIndices) * (1.0 / delta);
+            double indicesPerSecond = (diffIndices) * (1.0 / RenderDeltaTime);
 
-            double trianglesPerSecond = (diffTriangles) * (1.0 / delta);
+            double trianglesPerSecond = (diffTriangles) * (1.0 / RenderDeltaTime);
 
             float scale = 0.35f;
-            string text = $"FPS: {MainGame.FPS}/{1000.0 / MainGame.FPS:F2}ms UPS: {MainGame.UPS}/{1000.0 / MainGame.UPS:F2}ms\nVertices: {Utils.ToKMB(verticesPerSecond)}/s\nIndices: {Utils.ToKMB(indicesPerSecond)}/s\nTris: {Utils.ToKMB(trianglesPerSecond)}/s\nFramework: {RuntimeInformation.FrameworkDescription}\nOS: {RuntimeInformation.OSDescription}\nLast visit: {lastOpened}";
+            string text = $"FPS: {FPS}/{1000.0 / FPS:F2}ms UPS: {UPS}/{1000.0 / UPS:F2}ms\nVertices: {Utils.ToKMB(verticesPerSecond)}/s\nIndices: {Utils.ToKMB(indicesPerSecond)}/s\nTris: {Utils.ToKMB(trianglesPerSecond)}/s\nFramework: {RuntimeInformation.FrameworkDescription}\nOS: {RuntimeInformation.OSDescription}\nLast visit: {lastOpened}";
 
             g.DrawString(text, Font.DefaultFont, new Vector2(20), Colors.Yellow, scale);
-
-            drawLog(g);
-
-            g.Projection = shakeMatrix;
-            g.EndDraw();
-            PostProcessing.PresentFinalResult();
         }
 
         private void drawLog(Graphics g)
         {
-            const int MAX_VISIBLE_LOGS = 15;
+            if (ShowLogOverlay == false)
+                return;
 
-            //if (DisplayLog == false)
-            //    return;
+            const int MAX_VISIBLE_LOGS = 15;
 
             Vector2 offset = new Vector2(0, 0);
             float scale = 0.25f;

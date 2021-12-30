@@ -96,7 +96,14 @@ namespace Easy2D.Game
                 Utils.Log($"Unable to set process priority to high!", LogLevel.Warning);
             }
 
-            GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
+            try
+            {
+                GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
+            }
+            catch (Exception ex)
+            {
+                Utils.Log($"Failed to set GCMode to lowlatency: {ex.Message}", LogLevel.Error);
+            }
 
             View.GLContext.SwapInterval(0);
             GL.Instance.DepthFunc(Silk.NET.OpenGLES.DepthFunction.Less);
