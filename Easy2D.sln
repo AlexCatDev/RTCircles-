@@ -15,8 +15,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "New", "New\New.csproj", "{9
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "New.Desktop", "New.Desktop\New.Desktop.csproj", "{E8E3CB0E-2EA6-49E4-B341-3C703138D83D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "New.Droid", "New.Droid\New.Droid.csproj", "{05400A88-1864-40F9-88DA-E97E4244050D}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "bullshit", "bullshit\bullshit.csproj", "{9FD5E183-F6F9-4E29-8060-CE8A09DB5B61}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PogGame", "PogGame\PogGame.csproj", "{CE1210A9-A1E8-424A-A621-6B8DBAE13EDA}"
@@ -26,8 +24,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParticleMadness", "ParticleMadness\ParticleMadness.csproj", "{2C734B06-635D-4B70-BB95-300F266DE835}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParticleMadness.Desktop", "ParticleMadness.Desktop\ParticleMadness.Desktop.csproj", "{4E987FF6-A782-418B-ABD5-5CE2B9AE7CD3}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParticleMadness.Droid", "ParticleMadness.Droid\ParticleMadness.Droid.csproj", "{8E8F543B-3A4F-4A8D-BA34-9B90DAA6172F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RTCircles.Android", "RTCircles.Android\RTCircles.Android.csproj", "{4E3C3B1B-3740-41CD-B06B-D69D2FF86A19}"
 EndProject
@@ -61,12 +57,6 @@ Global
 		{E8E3CB0E-2EA6-49E4-B341-3C703138D83D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E8E3CB0E-2EA6-49E4-B341-3C703138D83D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E8E3CB0E-2EA6-49E4-B341-3C703138D83D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{05400A88-1864-40F9-88DA-E97E4244050D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{05400A88-1864-40F9-88DA-E97E4244050D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{05400A88-1864-40F9-88DA-E97E4244050D}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
-		{05400A88-1864-40F9-88DA-E97E4244050D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{05400A88-1864-40F9-88DA-E97E4244050D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{05400A88-1864-40F9-88DA-E97E4244050D}.Release|Any CPU.Deploy.0 = Release|Any CPU
 		{9FD5E183-F6F9-4E29-8060-CE8A09DB5B61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9FD5E183-F6F9-4E29-8060-CE8A09DB5B61}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9FD5E183-F6F9-4E29-8060-CE8A09DB5B61}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -87,12 +77,6 @@ Global
 		{4E987FF6-A782-418B-ABD5-5CE2B9AE7CD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E987FF6-A782-418B-ABD5-5CE2B9AE7CD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4E987FF6-A782-418B-ABD5-5CE2B9AE7CD3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8E8F543B-3A4F-4A8D-BA34-9B90DAA6172F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8E8F543B-3A4F-4A8D-BA34-9B90DAA6172F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8E8F543B-3A4F-4A8D-BA34-9B90DAA6172F}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
-		{8E8F543B-3A4F-4A8D-BA34-9B90DAA6172F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8E8F543B-3A4F-4A8D-BA34-9B90DAA6172F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8E8F543B-3A4F-4A8D-BA34-9B90DAA6172F}.Release|Any CPU.Deploy.0 = Release|Any CPU
 		{4E3C3B1B-3740-41CD-B06B-D69D2FF86A19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4E3C3B1B-3740-41CD-B06B-D69D2FF86A19}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E3C3B1B-3740-41CD-B06B-D69D2FF86A19}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
