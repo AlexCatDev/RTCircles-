@@ -501,7 +501,7 @@ namespace Easy2D
             quad[3].Rotation = rotation;
         }
 
-        public void DrawEllipse(Vector2 position, float startAngle, float endAngle, float outerRadius, float innerRadius, Vector4 color, Texture texture = null, int segments = 50, bool wrapUV = true)
+        public void DrawEllipse(Vector2 position, float startAngle, float endAngle, float outerRadius, float innerRadius, Vector4 color, Texture texture = null, int segments = 50, bool wrapUV = true, Rectangle? textureCoords = null)
         {
             startAngle = MathHelper.DegreesToRadians(startAngle);
             endAngle = MathHelper.DegreesToRadians(endAngle);
@@ -532,11 +532,24 @@ namespace Easy2D
 
                 if (wrapUV)
                 {
-                    firstUV.X = MathUtils.Map(cos * outerRadius, 0, outerRadius, 0.5f, 1);
-                    firstUV.Y = MathUtils.Map(sin * outerRadius, 0, outerRadius, 0.5f, 1);
+                    if (textureCoords.HasValue)
+                    {
+                        var tex = textureCoords.Value;
 
-                    secondUV.X = MathUtils.Map(cos * innerRadius, 0, outerRadius, 0.5f, 1);
-                    secondUV.Y = MathUtils.Map(sin * innerRadius, 0, outerRadius, 0.5f, 1);
+                        firstUV.X = MathUtils.Map(cos * outerRadius, -outerRadius, outerRadius, tex.X, tex.X + tex.Width);
+                        firstUV.Y = MathUtils.Map(sin * outerRadius, -outerRadius, outerRadius, tex.Y, tex.Y + tex.Height);
+
+                        secondUV.X = MathUtils.Map(cos * innerRadius, -outerRadius, outerRadius, tex.X, tex.X + tex.Width);
+                        secondUV.Y = MathUtils.Map(sin * innerRadius, -outerRadius, outerRadius, tex.Y, tex.Y + tex.Height);
+                    }
+                    else
+                    {
+                        firstUV.X = MathUtils.Map(cos * outerRadius, 0, outerRadius, 0.5f, 1);
+                        firstUV.Y = MathUtils.Map(sin * outerRadius, 0, outerRadius, 0.5f, 1);
+
+                        secondUV.X = MathUtils.Map(cos * innerRadius, 0, outerRadius, 0.5f, 1);
+                        secondUV.Y = MathUtils.Map(sin * innerRadius, 0, outerRadius, 0.5f, 1);
+                    }
                 }
 
                 vertices[i].Position = first;

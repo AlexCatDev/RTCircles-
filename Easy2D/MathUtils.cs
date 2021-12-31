@@ -71,6 +71,8 @@ namespace Easy2D
 
         public static float AspectRatio(this Vector2 vector2) => vector2.X / vector2.Y;
 
+        public static Vector2 Center(this Vector2 vector2) => vector2 / 2;
+
         /// <summary>
         /// The most useful math function on the planet HOLY SHIT
         /// </summary>

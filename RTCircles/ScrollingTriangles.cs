@@ -2,6 +2,7 @@
 using Silk.NET.OpenGLES;
 using OpenTK.Mathematics;
 using System.Collections.Generic;
+using System;
 
 namespace RTCircles
 {
@@ -76,14 +77,29 @@ namespace RTCircles
         private FrameBuffer triangleFramebuffer = new FrameBuffer(1, 1, textureComponentCount: InternalFormat.Rgba, pixelFormat: PixelFormat.Rgba, pixelType: PixelType.UnsignedByte);
         private List<Triangle> triangles = new List<Triangle>();
 
+        private static Easy2D.Texture catJam;
+
+        static ScrollingTriangles()
+        {
+            catJam = new Easy2D.Texture(Utils.GetResource("Skin.catjam-spritesheet.png"));
+        }
+
         public ScrollingTriangles(int TriangleCount)
         {
             triangleCount = TriangleCount;
+
+            OsuContainer.OnKiai += () =>
+            {
+                catJamAlpha.ClearTransforms();
+                catJamAlpha.TransformTo(1f, 0.1f, EasingTypes.In);
+            };
         }
 
         public override Rectangle Bounds => new Rectangle();
 
         private Graphics graphics;
+
+        private SmoothFloat catJamAlpha = new SmoothFloat();
 
         public override void Render(Graphics g)
         {
@@ -101,11 +117,31 @@ namespace RTCircles
                     triangles[i].Render(graphics);
                 }
             });
-            g.DrawEllipse(Position, 0, 360, Radius, 0, Colors.White, triangleFramebuffer.Texture);
+
+            float images = catJam.Width / 112f;
+            float imagesPerBeat = images / 13f;
+
+            int i = (int)MathUtils.OscillateValue((float)OsuContainer.CurrentBeat.Map(0, 1, 0, imagesPerBeat), 0, images);
+
+            float texelSize = 112f / catJam.Width;
+
+            float x = texelSize * i;
+            Rectangle textureRect = new Rectangle(x, 0, texelSize, 1);
+
+            if(OsuContainer.IsKiaiTimeActive == false)
+            {
+                catJamAlpha.ClearTransforms();
+                catJamAlpha.TransformTo(0f, 0.1f, EasingTypes.Out);
+            }
+
+            g.DrawEllipse(Position, 0, 360, Radius, 0, new Vector4(1f, 1f, 1f, 1f), triangleFramebuffer.Texture);
+            g.DrawEllipse(Position, 0, 360, Radius, 0, new Vector4(1f, 1f, 1f, catJamAlpha * 1f), catJam, textureCoords: textureRect);
         }
 
         public override void Update(float delta)
         {
+            catJamAlpha.Update(delta);
+
             for (int i = triangles.Count - 1; i >= 0; i--)
             {
                 triangles[i].Update(delta, new Vector2(Radius * 2));

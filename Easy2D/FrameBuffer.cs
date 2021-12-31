@@ -95,6 +95,7 @@ namespace Easy2D
 
         protected override void delete()
         {
+            //Native symbol not found? Multithreading bug
             GL.Instance.DeleteFramebuffer(Handle);
             Handle = uint.MaxValue;
             Texture.Delete();

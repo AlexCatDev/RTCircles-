@@ -4,6 +4,10 @@ using System.Threading;
 
 namespace Easy2D
 {
+    /// <summary>
+    /// Schedule tasks to be run, schedule them on any thread every where, even under water
+    /// Then just call RunPendingTasks(); on the thread of your choosing or whatever ezpz
+    /// </summary>
     public class Scheduler
     {
         private static List<WeakReference<Scheduler>> allSchedulers = new List<WeakReference<Scheduler>>();
@@ -75,6 +79,7 @@ namespace Easy2D
             ThreadPool.QueueUserWorkItem((obj) => {
                 CancellationTokenSource cancellationToken = new CancellationTokenSource();
 
+                //TODO: Theres a chance asyncTask throws an exception, making the thread quit silently?
                 ++asyncWorkloadsRunning;
                 asyncTask.Invoke(cancellationToken);
                 --asyncWorkloadsRunning;

@@ -62,10 +62,10 @@ namespace Easy2D
         ~GLObject()
         {
             //Just schedule a delete call lololololol
-            GPUScheduler.Run(new (() =>
+            GPUSched.Instance.Add(() =>
             {
                 Delete();
-            }), allowDuplicates: false);
+            });
         }
 
         protected abstract void initialize(int? slot);

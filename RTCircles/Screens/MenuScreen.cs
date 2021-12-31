@@ -146,7 +146,7 @@ namespace RTCircles
             {
                 int beat = (int)Math.Floor(OsuContainer.CurrentBeat);
 
-                if(previousBeat > beat)
+                if (previousBeat > beat)
                     previousBeat = beat;
 
                 if (beat - previousBeat > 0)
@@ -182,8 +182,6 @@ namespace RTCircles
 
                 g.DrawRectangle(new Vector2(MainGame.WindowWidth - flashSize.X, 0), flashSize, new Vector4(1f, 1f, 1f, beatFlash2.Value), menuFlash);
             }
-            //if (Input.IsKeyDown(Key.ControlLeft))
-            //    g.DrawString(OsuContainer.Beatmap.FileInfo.FullName, Font.DefaultFont, new Vector2(20), Colors.LightGray, 0.25f);
         }
 
         public override void Update(float delta)

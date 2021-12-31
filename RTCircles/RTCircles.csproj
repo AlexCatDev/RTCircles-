@@ -26,6 +26,7 @@
     <None Remove="Maps\Union\map.osu" />
     <None Remove="Skin\approachcircle.png" />
     <None Remove="Skin\arrowexpand.png" />
+    <None Remove="Skin\catjam-spritesheet.png" />
     <None Remove="Skin\checkmark.png" />
     <None Remove="Skin\circular-metre.png" />
     <None Remove="Skin\click.wav" />
@@ -56,6 +57,7 @@
     <None Remove="Skin\default-9.png" />
     <None Remove="Skin\defaultbackground.png" />
     <None Remove="Skin\dot.png" />
+    <None Remove="Skin\download-button.png" />
     <None Remove="Skin\drum-hitclap.wav" />
     <None Remove="Skin\drum-hitfinish.wav" />
     <None Remove="Skin\drum-hitnormal.wav" />
@@ -70,9 +72,6 @@
     <None Remove="Skin\hover.wav" />
     <None Remove="Skin\loading.png" />
     <None Remove="Skin\logo.png" />
-    <None Remove="Skin\logo_dark.png" />
-    <None Remove="Skin\logo_isla.png" />
-    <None Remove="Skin\logo_old.png" />
     <None Remove="Skin\menu-flash.png" />
     <None Remove="Skin\normal-hitclap.wav" />
     <None Remove="Skin\normal-hitfinish.wav" />
@@ -142,6 +141,7 @@
     <EmbeddedResource Include="Maps\Union\map.osu" />
     <EmbeddedResource Include="Skin\approachcircle.png" />
     <EmbeddedResource Include="Skin\arrowexpand.png" />
+    <EmbeddedResource Include="Skin\catjam-spritesheet.png" />
     <EmbeddedResource Include="Skin\checkmark.png" />
     <EmbeddedResource Include="Skin\circular-metre.png" />
     <EmbeddedResource Include="Skin\click.wav" />
@@ -172,6 +172,7 @@
     <EmbeddedResource Include="Skin\default-9.png" />
     <EmbeddedResource Include="Skin\defaultbackground.png" />
     <EmbeddedResource Include="Skin\dot.png" />
+    <EmbeddedResource Include="Skin\download-button.png" />
     <EmbeddedResource Include="Skin\drum-hitclap.wav" />
     <EmbeddedResource Include="Skin\drum-hitfinish.wav" />
     <EmbeddedResource Include="Skin\drum-hitnormal.wav" />
@@ -186,9 +187,6 @@
     <EmbeddedResource Include="Skin\hover.wav" />
     <EmbeddedResource Include="Skin\loading.png" />
     <EmbeddedResource Include="Skin\logo.png" />
-    <EmbeddedResource Include="Skin\logo_dark.png" />
-    <EmbeddedResource Include="Skin\logo_isla.png" />
-    <EmbeddedResource Include="Skin\logo_old.png" />
     <EmbeddedResource Include="Skin\menu-flash.png" />
     <EmbeddedResource Include="Skin\normal-hitclap.wav" />
     <EmbeddedResource Include="Skin\normal-hitfinish.wav" />

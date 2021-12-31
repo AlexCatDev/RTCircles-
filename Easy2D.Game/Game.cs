@@ -151,7 +151,7 @@ namespace Easy2D.Game
                 if (View.IsClosing == false)
                     View.SwapBuffers();
 
-                GPUScheduler.Update((float)delta);
+                GPUSched.Instance.RunPendingTasks();
                 PostProcessing.Update((float)delta);
 
                 fps++;

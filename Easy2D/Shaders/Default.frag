@@ -16,10 +16,15 @@ float Map(float value, float fromSource, float toSource, float fromTarget, float
 {
 	return (value - fromSource) / (toSource - fromSource) * (toTarget - fromTarget) + fromTarget;
 }
-
+/*
 float roundedRectSDF(vec2 centerPosition, vec2 size, float radius)
 {
     return length(max(abs(centerPosition) - (size / 2.0) + radius, 0.0)) - radius;
+}
+*/
+float roundedBoxSDF(vec2 CenterPosition, vec2 Size, float Radius)
+{
+    return length(max(abs(CenterPosition) - Size + Radius, 0.0)) - Radius;
 }
 
 uniform vec3 u_BorderColorOuter;
@@ -149,21 +154,23 @@ void main() {
         FragColor = texColor * v_Color;
     else
 	    FragColor = slider(texColor);
-/*
-    vec2 Size = vec2(200.0, 50.0);
+
+    /*
+    vec2 Size = vec2(113, 10);
     vec2 pixelPos = vec2(v_TexCoordinate.x * Size.x, v_TexCoordinate.y * Size.y);
 
-    float Radius = 10.0;
+    float Radius = 40.0;
 
     // Calculate distance to edge
-    float distance = roundedRectSDF(pixelPos - (Size / 2.0), Size, Radius);
+    float distance = roundedBoxSDF(pixelPos - (Size / 2.0), Size / 2.0, Radius);
 
     float distanceVal = 0.01 - distance;
 
     //discard pixels that are outside our rounded rectangle shape
     if(distanceVal <= 0.0)
         discard;
-  */  
-    //FragColor.a *= distanceVal < 1.0 ? distanceVal : 1.0;
+  
+    FragColor.a *= distanceVal < 1.0 ? distanceVal : 1.0;
+    */
 	//test
 }

@@ -31,9 +31,13 @@ namespace Easy2D
         /// </summary>
         Debug,
         /// <summary>
-        /// Black text, white background
+        /// Pink-ish text
         /// </summary>
-        Important
+        Important,
+        /// <summary>
+        /// text
+        /// </summary>
+        Benchmark,
     }
 
     public class LogInfo
@@ -119,9 +123,6 @@ namespace Easy2D
             if (IgnoredLogLevels.Contains(level))
                     return;
 
-            //if (level == LogLevel.Debug)
-            //    return;
-
             var callingMethod = new StackTrace().GetFrame(1).GetMethod();
 
             string method = $"{callingMethod.DeclaringType.Name}.{callingMethod.Name}";
@@ -165,6 +166,8 @@ namespace Easy2D
                     return ConsoleColor.White;
                 case LogLevel.Important:
                     return ConsoleColor.Magenta;
+                case LogLevel.Benchmark:
+                    return ConsoleColor.Gray;
                 default:
                     return ConsoleColor.DarkGray;
             }
@@ -186,6 +189,8 @@ namespace Easy2D
                     return Color4.White;
                 case LogLevel.Important:
                     return Color4.Magenta;
+                case LogLevel.Benchmark:
+                    return Color4.Gray;
                 default:
                     return Color4.DarkGray;
             }
@@ -236,7 +241,7 @@ namespace Easy2D
                 Console.WriteLine($"{name} took {time} milliseconds");
 
             if (log)
-                Utils.Log($"{name} took {time} milliseconds", LogLevel.Info);
+                Utils.Log($"{name} took {time} milliseconds", LogLevel.Benchmark);
 
             return time;
         }

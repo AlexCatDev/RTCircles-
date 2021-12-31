@@ -138,6 +138,7 @@ namespace RTCircles
                 float overlap = (digitSize.X / texture.Width) * Overlap;
 
                 g.DrawRectangle(position + offset, digitSize, color, texture);
+                //g.DrawRectangle(position + offset, digitSize, new Vector4(0f, 0f, 0f, 0.5f));
 
                 offset.X += digitSize.X - overlap;
             }

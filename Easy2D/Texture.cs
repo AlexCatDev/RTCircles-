@@ -121,16 +121,12 @@ namespace Easy2D
             {
                 if (UseAsyncLoading)
                 {
-                    Image<Rgba32> image = null;
+                    GPUSched.Instance.AddAsync((ct) => { 
+                        return Image.Load<Rgba32>(stream);
+                    }, (image) => {
 
-                    GPUScheduler.RunAsync(() =>
-                    {
-                        //Load image on the threadpool
-                        image = Image.Load<Rgba32>(stream);
-                    }, new ScheduledGPUTask(() =>
-                    {
                         uploadImage(image);
-                    }));
+                    });
                 }
                 else
                 {

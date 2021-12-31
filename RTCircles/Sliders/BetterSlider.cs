@@ -197,8 +197,11 @@ namespace RTCircles
 
         public void DeleteFramebuffer()
         {
-            frameBuffer.Delete();
-            hasBeenUpdated = true;
+            GPUSched.Instance.Add(() =>
+            {
+                frameBuffer.Delete();
+                hasBeenUpdated = true;
+            });
         }
 
         private bool hasBeenUpdated = true;

@@ -272,17 +272,17 @@ namespace RTCircles
                 if (beatmapList.data is null)
                     return;
 
-                GPUScheduler.RunAsync(() =>
+                GPUSched.Instance.AddAsync((ct) =>
                 {
                     beatmapList = BeatmapMirror.Sayobot_GetBeatmapList(searchText, beatmapList.endid, dataleft);
 
                     resultsGotten += beatmapList.data.Count;
 
                     AddToList(beatmapList);
-                }, new(() =>
+                }, () =>
                 {
                     moreContentInProgress = false;
-                }));
+                });
             };
             Add(scrollBox);
 
@@ -306,7 +306,7 @@ namespace RTCircles
             resultsGotten = 0;
             count = 0;
             searchTextbox.TextHint = "Searching...";
-            GPUScheduler.RunAsync(() =>
+            GPUSched.Instance.AddAsync((ct) =>
             {
                 searchText = searchTextbox.Text;
                 searchTextbox.Text = "";
@@ -325,10 +325,10 @@ namespace RTCircles
                 count = beatmapList.results;
                 resultsGotten += beatmapList.data.Count;
                 AddToList(beatmapList);
-            }, new(() =>
+            }, () =>
             {
                 searchTextbox.Disabled = false;
-            }));
+            });
         }
 
         private void AddToList(BeatmapMirror.SayobotBeatmapList list)

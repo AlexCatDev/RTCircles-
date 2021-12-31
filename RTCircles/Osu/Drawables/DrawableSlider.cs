@@ -332,13 +332,7 @@ namespace RTCircles
 
         public override void OnRemove()
         {
-            //Remember to delete slider framebuffer when not on screen because they use vram
-            //What happens if this gets called, but then it gets added right after?
-            //It should work fine fingers crossed lol
-            GPUScheduler.Run(new(() =>
-            {
-                sliderPath.DeleteFramebuffer();
-            }));
+            sliderPath.DeleteFramebuffer();
         }
 
         private bool IsHit;

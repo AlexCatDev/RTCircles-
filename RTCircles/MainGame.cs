@@ -75,7 +75,6 @@ namespace RTCircles
                 ScreenManager.OnTextInput(e);
             };
 
-
             float introTime = 0;
             float introDuration = 0.15f;
             ScreenManager.OnIntroTransition += (delta) =>
@@ -164,6 +163,8 @@ namespace RTCircles
             PostProcessing.PresentFinalResult();
         }
 
+        private Vector2? trueHoverSize = null;
+        private Vector2? trueHoverPos = null;
         private void drawFPSGraph(Graphics g)
         {
             if (ShowRenderGraph)
@@ -208,22 +209,56 @@ namespace RTCircles
                 double trianglesPerSecond = (diffTriangles) * (1.0 / RenderDeltaTime);
 
                 const float scale = 0.35f;
-                string text = $"FPS: {FPS}/{1000.0 / FPS:F2}ms UPS: {UPS}/{1000.0 / UPS:F2}ms\nVertices: {Utils.ToKMB(verticesPerSecond)}/s\nIndices: {Utils.ToKMB(indicesPerSecond)}/s\nTris: {Utils.ToKMB(trianglesPerSecond)}/s\nFramework: {RuntimeInformation.FrameworkDescription}\nOS: {RuntimeInformation.OSDescription}\nLast visit: {lastOpened}";
+                string text = $"FPS: {FPS}/{1000.0 / FPS:F2}ms UPS: {UPS}/{1000.0 / UPS:F2}ms";
 
-                int pendingTasks = 0;
-                int asyncWorkloads = 0;
-                for (int i = 0; i < Scheduler.AllSchedulers.Count; i++)
+                Vector2 hoverSize = Font.DefaultFont.MessureString(text, scale);
+                Vector2 hoverPos = new Vector2(WindowWidth, WindowHeight) - hoverSize;
+
+                if(trueHoverSize is null)
+                    trueHoverSize = hoverSize;
+
+                if (trueHoverPos is null)
+                    trueHoverPos = hoverPos;
+
+                if (new Rectangle(Input.MousePosition, Vector2.One).IntersectsWith(new Rectangle(trueHoverPos.Value, trueHoverSize.Value)))
                 {
-                    if(Scheduler.AllSchedulers[i].TryGetTarget(out var scheduler))
+                    text+= $"\nVertices: {Utils.ToKMB(verticesPerSecond)}/s\nIndices: {Utils.ToKMB(indicesPerSecond)}/s\nTris: {Utils.ToKMB(trianglesPerSecond)}/s\nFramework: {RuntimeInformation.FrameworkDescription}\nOS: {RuntimeInformation.OSDescription}\nLast visit: {lastOpened}";
+
+                    int pendingTasks = 0;
+                    int asyncWorkloads = 0;
+                    for (int i = 0; i < Scheduler.AllSchedulers.Count; i++)
                     {
-                        asyncWorkloads += scheduler.AsyncWorkloadsRunning;
-                        pendingTasks += scheduler.PendingTaskCount;
+                        if (Scheduler.AllSchedulers[i].TryGetTarget(out var scheduler))
+                        {
+                            asyncWorkloads += scheduler.AsyncWorkloadsRunning;
+                            pendingTasks += scheduler.PendingTaskCount;
+                        }
                     }
+
+                    text += $"\nSchedulers Count: {Scheduler.AllSchedulers.Count} [TotalPending: {pendingTasks} TotalAsync: {asyncWorkloads}]";
+                }
+                else
+                {
+                    trueHoverSize = null;
                 }
 
-                text += $"\nSchedulers Count: {Scheduler.AllSchedulers.Count} [TotalPending: {pendingTasks} TotalAsync: {asyncWorkloads}]";
+                Vector2 textSize = Font.DefaultFont.MessureString(text, scale);
+                Vector2 drawTextPos = new Vector2(WindowWidth, WindowHeight) - textSize - new Vector2(0);
 
-                g.DrawString(text, Font.DefaultFont, new Vector2(20), Colors.Yellow, scale);
+                trueHoverPos = drawTextPos;
+                trueHoverSize = textSize;
+
+                float value = ((float)FPS).Map(0, 240, 0f, 1).Clamp(0, 1);
+
+                Vector4 color;
+
+                if (value > 0.5f)
+                    color = Interpolation.ValueAt(value, Colors.Yellow, Colors.Green, 0.5f, 1f);
+                else
+                    color = Interpolation.ValueAt(value, Colors.Red, Colors.Yellow, 0f, 0.5f);
+
+                g.DrawRectangle(drawTextPos, textSize, new Vector4(0f, 0f, 0f, 0.5f));
+                g.DrawString(text, Font.DefaultFont, drawTextPos, color, scale);
             }
         }
 
@@ -273,7 +308,6 @@ namespace RTCircles
             }
         }
 
-
         public static Vector2 WindowSize { get; private set; }
 
         public static Vector2 WindowCenter => WindowSize / 2f;
@@ -310,13 +344,13 @@ namespace RTCircles
 
         public override void OnResize(int width, int height)
         {
-            GPUScheduler.Run(new (() =>
+            GPUSched.Instance.Add(() =>
             {
                 WindowSize = new Vector2(width, height);
 
                 Viewport.SetViewport(0, 0, width, height);
                 Projection = Matrix4.CreateOrthographicOffCenter(0, width, height, 0, -1, 1);
-            }));
+            });
         }
 
         public override void OnUpdate(double delta)

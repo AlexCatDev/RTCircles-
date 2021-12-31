@@ -226,15 +226,15 @@ namespace RTCircles
     {
         public override Rectangle Bounds => new Rectangle();
 
-        public static Vector4 SongInfoColor = Colors.From255RGBA(255, 80, 175, 255);
+        public static Vector4 SongInfoColor = Colors.From255RGBA(211, 79, 115, 255);//Colors.From255RGBA(255, 80, 175, 255);
         public static Vector4 SongInfoTextColor = Colors.White;
 
-        public static Vector4 ItemColor = Colors.From255RGBA(67, 64, 65, 255);
+        public static Vector4 ItemColor = Colors.From255RGBA(46, 46, 58, 255);//Colors.From255RGBA(67, 64, 65, 255);
         public static Vector4 ItemTextColor = Colors.White;
         public static float ItemHightlight = 1.25f;
-        public static Vector4 ItemSelectedColor = Colors.From255RGBA(255, 80, 175, 255);
+        public static Vector4 ItemSelectedColor = Colors.From255RGBA(211, 79, 115, 255);//Colors.From255RGBA(255, 80, 175, 255);
 
-        public static Vector4 HeaderColor = Colors.From255RGBA(52, 49, 50, 255);
+        public static Vector4 HeaderColor = Colors.From255RGBA(255, 184, 111, 255);//Colors.From255RGBA(52, 49, 50, 255);
         public static Vector4 HeaderTextColor1 = Colors.White;
         public static Vector4 HeaderTextColor2 = Colors.White;
 
@@ -246,12 +246,21 @@ namespace RTCircles
         public Vector2 ElementSize => new Vector2(MainGame.WindowWidth / 2, 150 * MainGame.Scale);
         public Rectangle SongInfoBounds => new Rectangle(new Vector2(ElementSize.X, HeaderSize.Y), new Vector2(MainGame.WindowWidth - ElementSize.X, MainGame.WindowHeight - HeaderSize.Y));
 
+        public Rectangle SongsBounds => new Rectangle(0, HeaderSize.Y, ElementSize.X, MainGame.WindowHeight - HeaderSize.Y);
+
         private bool clickedSomewhere = false;
 
         public FloatingScreen<OsuScreen> FloatingPlayScreen = new FloatingScreen<OsuScreen>() { Layer = 133769 };
         public SmoothFloat ConfirmPlayAnimation = new SmoothFloat();
 
         private Mods mods = Mods.NM;
+
+        private static Texture downloadIcon;
+
+        static SongSelector()
+        {
+            downloadIcon = new Texture(Utils.GetResource("Skin.download-button.png"));
+        }
 
         public float ScrollMin
         {
@@ -411,13 +420,17 @@ namespace RTCircles
                     color = ItemSelectedColor;
 
                 Vector2 bgSize = Vector2.Zero;
+                Rectangle textureRect = new Rectangle();
 
                 var texture = currentItem.Texture;
 
                 if (texture is not null)
                 {
-                    bgSize = new Vector2(((float)(texture.Width) / texture.Height) * 128f, 128) * MainGame.Scale;
-                    bgSize.X = float.IsFinite(bgSize.X) ? bgSize.X : 0;
+                    bgSize = new Vector2(170, 128) * MainGame.Scale;
+                    float center = 0.5f;
+                    float width = bgSize.AspectRatio() / texture.Size.AspectRatio();
+                    center -= width / 2f;
+                    textureRect = new Rectangle(center, 0, width, 1);
                 }
 
                 if (bounds.IntersectsWith(new Rectangle(Input.MousePosition, Vector2.One)))
@@ -443,12 +456,17 @@ namespace RTCircles
                 float bgPadding = (ElementSize.Y - bgSize.Y) / 2;
 
                 g.DrawRectangle(bounds.Position, bounds.Size, color);
-                g.DrawRectangle(bounds.Position + new Vector2(bgPadding), bgSize, new Vector4(1f, 1f, 1f, currentItem.TextureAlpha), texture);
+                g.DrawRectangle(bounds.Position + new Vector2(bgPadding), bgSize, new Vector4(1f, 1f, 1f, currentItem.TextureAlpha), texture, textureRect, true);
 
                 float textScale = 0.5f * MainGame.Scale;
                 Vector2 textSize = Font.DefaultFont.MessureString(currentItem.Text, textScale);
                 Vector2 textPos = bounds.Position + new Vector2(bgSize.X + bgPadding * 2, ElementSize.Y / 2f - textSize.Y / 2f);
                 g.DrawString(currentItem.Text, Font.DefaultFont, textPos, ItemTextColor, textScale);
+                if (selectedItem == currentItem)
+                {
+                    string songInfoText = $"Objects: {OsuContainer.Beatmap?.HitObjects.Count} AR {OsuContainer.Beatmap?.AR} CS {OsuContainer.Beatmap?.CS} OD {OsuContainer.Beatmap?.OD} HP {OsuContainer.Beatmap?.HP}";
+                    g.DrawString(songInfoText, Font.DefaultFont, textPos + new Vector2(0, textSize.Y), ItemTextColor, textScale * 0.8f);
+                }
 
             incrementYOffset:
                 offset.Y += ElementSize.Y;
@@ -479,12 +497,15 @@ namespace RTCircles
                 string songInfoText = $"Objects: {OsuContainer.Beatmap?.HitObjects.Count} AR {OsuContainer.Beatmap?.AR} CS {OsuContainer.Beatmap?.CS} OD {OsuContainer.Beatmap?.OD} HP {OsuContainer.Beatmap?.HP}";
                 Vector2 songInfoTextSize = Font.DefaultFont.MessureString(songInfoText, songInfoScale);
 
-                g.DrawString(songInfoTextTitle, Font.DefaultFont, new Vector2(SongInfoBounds.Center.X - songInfoTitleSize.X / 2f, HeaderSize.Y + FloatingPlayScreen.Size.Y), SongInfoTextColor, songInfoScale);
 
-                g.DrawString(songInfoText, Font.DefaultFont, new Vector2(SongInfoBounds.Center.X - songInfoTextSize.X / 2f, HeaderSize.Y + FloatingPlayScreen.Size.Y + songInfoTitleSize.Y), SongInfoTextColor, songInfoScale);
+                g.DrawString(songInfoTextTitle, Font.DefaultFont, HeaderSize.Center() - songInfoTitleSize / 2f, Colors.White, songInfoScale);
+                //g.DrawString(songInfoTextTitle, Font.DefaultFont, new Vector2(SongInfoBounds.Center.X - songInfoTitleSize.X / 2f, HeaderSize.Y + FloatingPlayScreen.Size.Y), SongInfoTextColor, songInfoScale);
+
+                //g.DrawString(songInfoText, Font.DefaultFont, new Vector2(SongInfoBounds.Center.X - songInfoTextSize.X / 2f, HeaderSize.Y + FloatingPlayScreen.Size.Y + songInfoTitleSize.Y), SongInfoTextColor, songInfoScale);
             }
 
-            g.DrawRectangleCentered(Input.MousePosition, new Vector2(96) * Skin.GetScale(Skin.HRModIcon, 64, 128) * MainGame.Scale, Colors.White, Skin.HRModIcon);
+            //g.DrawRectangleCentered(Input.MousePosition, new Vector2(96) * Skin.GetScale(Skin.HRModIcon, 64, 128) * MainGame.Scale, Colors.White, Skin.HRModIcon);
+            hopAnimation(g);
 
             clickedSomewhere = false;
 
@@ -499,6 +520,42 @@ namespace RTCircles
 
             FloatingPlayScreen.Position = previewPos;
             FloatingPlayScreen.Size = previewSize;
+        }
+
+        private void hopAnimation(Graphics g)
+        {
+            const float BOUNCE_SCALE_SCALE = 0.8f;
+
+            //How much it's swings side to side
+            float ROTATION = 20 * BOUNCE_SCALE_SCALE;
+            //The height scale when it's fully compressed and about to bounce
+            float BOUNCE_SCALE = 0.8f;
+            //How hight it jumps
+            float BOUNCE_HEIGHT = -30 * BOUNCE_SCALE_SCALE;
+            //When in the bounce height should it animate from
+            float BOUNCE_BEGIN = -8f * BOUNCE_SCALE_SCALE;
+
+            float width = HeaderSize.Y / 2f;
+            float height = width;
+
+            Vector2 drawOrigin = new Vector2(HeaderSize.X - width, HeaderSize.Y / 2);
+            Vector2 bounds = new Vector2(width, height);
+
+            float rotation = MathUtils.OscillateValue((float)OsuContainer.CurrentBeat / 2, 1, 0);
+
+            rotation = Interpolation.ValueAt(rotation, -ROTATION, ROTATION, 0, 1, EasingTypes.InOutSine);
+
+            Vector2 hopOffset = new Vector2(0, MathF.Abs(rotation).Map(0, ROTATION, 0, BOUNCE_HEIGHT));
+
+            if (Precision.AlmostEquals(hopOffset.Y, 0, 0.1f))
+            {
+                Skin.Click.Play(true);
+            }
+
+            height *= Interpolation.ValueAt(hopOffset.Y.Clamp(BOUNCE_BEGIN, 0), BOUNCE_SCALE, 1f, 0, BOUNCE_BEGIN);
+
+            g.DrawRectangleCentered(drawOrigin + hopOffset, new Vector2(width, height), Colors.White, downloadIcon, rotDegrees: rotation);
+
         }
 
         private void enterSelectedMap()
@@ -571,11 +628,13 @@ namespace RTCircles
         private Vector2 dragLastPosition;
         public override bool OnMouseDown(MouseButton args)
         {
-            dragging = true;
-            scrollTo = null;
-            dragStart = Input.MousePosition;
-            dragLastPosition = dragStart;
-
+            if (new Rectangle(Input.MousePosition, Vector2.One).IntersectsWith(SongsBounds))
+            {
+                dragging = true;
+                scrollTo = null;
+                dragStart = Input.MousePosition;
+                dragLastPosition = dragStart;
+            }
             return false;
         }
 
@@ -584,7 +643,7 @@ namespace RTCircles
             dragging = false;
             Vector2 dragEnd = Input.MousePosition;
 
-            if (MathUtils.PositionInsideRadius(dragEnd, dragStart, 100))
+            if (MathUtils.PositionInsideRadius(dragEnd, dragStart, 100) && button == MouseButton.Left)
                 clickedSomewhere = true;
 
             if (MathF.Abs(scrollMomentum) < 600)

@@ -339,7 +339,7 @@ namespace RTCircles
 
             Star = LoadTexture(path, "star");
 
-            ComboBurst = LoadTexture(path, "comboburst");
+            //ComboBurst = LoadTexture(path, "comboburst");
 
             HRModIcon = LoadTexture(path, "selection-mod-hardrock");
             DTModIcon = LoadTexture(path, "selection-mod-doubletime");

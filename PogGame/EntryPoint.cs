@@ -465,13 +465,13 @@ namespace PogGame
 
         public override void OnResize(int width, int height)
         {
-            GPUScheduler.Run(new ScheduledGPUTask(() =>
+            GPUSched.Instance.Add(() =>
             {
                 WindowSize = new Vector2(width, height);
 
                 Viewport.SetViewport(0, 0, width, height);
                 camera.Size = new Vector2(width, height);
-            }));
+            });
         }
 
         public override void OnUpdate(double delta)

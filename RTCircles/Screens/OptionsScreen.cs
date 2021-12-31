@@ -12,12 +12,15 @@ namespace RTCircles
     {
         private Button mtThreadButton = new Button() { Color = Colors.Blue };
         private Button showGraphButton = new Button() { Color = Colors.Green };
-
-        private Button testButton = new Button() { Color = Colors.Yellow, Text = "Test" };
+        private Button showLogButton = new Button() { Color = Colors.Yellow };
 
         public OptionsScreen()
         {
-            Add(testButton);
+            showLogButton.OnClick += (s, e) =>
+            {
+                MainGame.ShowLogOverlay = !MainGame.ShowLogOverlay;
+            };
+            Add(showLogButton);
 
             mtThreadButton.OnClick += (s, e) =>
             {
@@ -36,14 +39,15 @@ namespace RTCircles
         {
             mtThreadButton.Text = $"Multithreading: {(MainGame.Instance.IsMultiThreaded ? "On" : "Off")}";
             showGraphButton.Text = $"Render Graph: {(MainGame.ShowRenderGraph ? "On" : "Off")}";
+            showLogButton.Text = $"Show Log: {(MainGame.ShowLogOverlay ? "On" : "Off")}";
 
             base.Update(delta);
         }
 
         public override void Render(Graphics g)
         {
-            layoutDrawableStack(g, MainGame.WindowCenter, new Vector2(1200, 160) * MainGame.Scale, 10 * MainGame.Scale, origin,
-                mtThreadButton, showGraphButton);
+            layoutDrawableStack(g, MainGame.WindowCenter, new Vector2(1200, 300) * MainGame.Scale, 10 * MainGame.Scale, origin,
+                mtThreadButton, showGraphButton, showLogButton);
 
             base.Render(g);
         }

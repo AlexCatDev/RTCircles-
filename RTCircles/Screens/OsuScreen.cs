@@ -165,7 +165,7 @@ namespace RTCircles
                 }
             }
 
-            if (OsuContainer.Combo % 50 == 0 && ComboBurst.CanSpawn && OsuContainer.Combo > 0)
+            if (OsuContainer.Combo % 50 == 0 && ComboBurst.CanSpawn && OsuContainer.Combo > 0 && Skin.ComboBurst is not null)
                 Add(new ComboBurst());
 
             OsuContainer.HUD.Update(delta);
