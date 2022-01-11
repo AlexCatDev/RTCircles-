@@ -8,10 +8,140 @@ using System.Threading.Tasks;
 
 namespace RTCircles
 {
+    public class FancyCursorTrail : Drawable
+    {
+        public Vector2? PositionOverride;
+
+        class TrailPiece
+        {
+            public Vector2 Position;
+            public Vector4 Color;
+            public float Width;
+
+            public bool RemoveMe;
+
+            public TrailPiece(Vector2 Position)
+            {
+                this.Position = Position;
+
+                this.Color = Vector4.One;
+                this.Width = 10;
+            }
+
+            public void Update(float delta)
+            {
+                Width -= delta * 60;
+                Color.W -= delta * 6;
+
+                Width.ClampRef(0, 10000);
+                Color.W.ClampRef(0, 1);
+
+                float frequency1 = (float)MainGame.Instance.TotalTime;
+                float frequency2 = (float)MainGame.Instance.TotalTime;
+                float frequency3 = (float)MainGame.Instance.TotalTime;
+
+                float phase1 = 0;
+                float phase2 = 1;
+                float phase3 = 5;
+
+                float width = 1f;
+
+                var red = 1 + MathF.Abs(MathF.Sin(frequency1 + phase1)) * width;
+                var grn = 1 + MathF.Abs(MathF.Sin(frequency2 + phase2)) * width;
+                var blu = 1 + MathF.Abs(MathF.Sin(frequency3 + phase3)) * width;
+
+                Color.X = red;
+                Color.Y = grn;
+                Color.Z = blu;
+
+                if (Color.W <= 0)
+                    RemoveMe = true;
+            }
+        }
+
+        List<TrailPiece> trailPieces = new List<TrailPiece>();
+
+        public override void Render(Graphics g)
+        {
+            unsafe
+            {
+                if (trailPieces.Count > 2)
+                {
+                    var verts = g.VertexBatch.GetTriangleStrip((trailPieces.Count * 2) - 2);
+
+                    //Some weird ass artificating happening here lol!
+                    if (verts != null)
+                    {
+                        int slot = g.GetTextureSlot(null);
+                        int vertIndex = 0;
+                        for (int i = 1; i < trailPieces.Count; i++)
+                        {
+                            Vector2 perpen = trailPieces[i - 1].Position - trailPieces[i].Position;
+                            perpen = perpen.PerpendicularLeft;
+                            perpen.Normalize();
+
+                            verts[vertIndex].Position = trailPieces[i - 1].Position - perpen * trailPieces[i - 1].Width;
+                            verts[vertIndex].Color = trailPieces[i - 1].Color;
+                            verts[vertIndex].Rotation = 0;
+                            verts[vertIndex].TextureSlot = slot;
+                            verts[vertIndex].TexCoord = Vector2.Zero;
+                            ++vertIndex;
+
+                            verts[vertIndex].Position = trailPieces[i].Position + perpen * trailPieces[i].Width;
+                            verts[vertIndex].Color = trailPieces[i].Color;
+                            verts[vertIndex].Rotation = 0;
+                            verts[vertIndex].TextureSlot = slot;
+                            verts[vertIndex].TexCoord = Vector2.One;
+                            ++vertIndex;
+                        }
+                        if (verts.Length != vertIndex)
+                            Console.WriteLine("wtf");
+                    }
+                }
+            }
+
+            //g.DrawRectangleCentered(Easy2D.Game.Input.MousePosition, new Vector2(25), Vector4.One, Texture.WhiteCircle);
+        }
+
+        Vector2 lastMousePos;
+
+        public override void Update(float delta)
+        {
+            for (int i = trailPieces.Count - 1; i >= 0; i--)
+            {
+                trailPieces[i].Update(delta);
+
+                if (trailPieces[i].RemoveMe)
+                    trailPieces.RemoveAt(i);
+            }
+
+            Vector2 mousePos;
+
+            if (!PositionOverride.HasValue)
+                mousePos = Easy2D.Game.Input.MousePosition;
+            else
+                mousePos = PositionOverride.Value;
+
+            if (lastMousePos == Vector2.Zero)
+                lastMousePos = mousePos;
+
+            var length = (mousePos - lastMousePos).Length;
+
+            if (length >= 5)
+            {
+                lastMousePos = mousePos;
+                TrailPiece p = new TrailPiece(mousePos);
+
+                trailPieces.Add(p);
+            }
+        }
+    }
+
+
     public class Cursor
     {
         public Vector2 TrailSize => getScaledSize(CursorSize, Skin.CursorTrail);
-        public Vector2 CursorSize { get; set; } = new Vector2(96 * 2);
+        public Vector2 CursorSize { get; set; } = new Vector2(96);
 
         private const float TrailEmitRate = 1f / 60f;
 
@@ -60,8 +190,35 @@ namespace RTCircles
 
         private Vector2 previousPosition;
 
+        private float rotation;
+
+        private FancyCursorTrail fancyTrail = new FancyCursorTrail();
+
+        public static bool UseFancyTrail = true;
+
+        void renderFancy(Graphics g, float delta, Vector2 position, Vector4 color)
+        {
+            rotation += 45 * delta;
+
+            rotation.ClampRef(0, 360);
+            if (rotation == 360)
+                rotation = 0;
+
+            fancyTrail.PositionOverride = position;
+
+            fancyTrail.Update(delta);
+            fancyTrail.Render(g);
+            g.DrawRectangleCentered(position, getScaledSize(CursorSize, Skin.Cursor), color, Skin.Cursor, rotDegrees: rotation);
+        }
+
         public void Render(Graphics g, float delta, Vector2 position, Vector4 color)
         {
+            if (UseFancyTrail)
+            {
+                renderFancy(g,delta, position, color);
+                return;
+            }
+
             if (float.IsFinite(position.X) == false || float.IsFinite(position.Y) == false)
                 return;
 

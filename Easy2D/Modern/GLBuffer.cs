@@ -11,7 +11,7 @@ namespace Easy2D
         private BufferTargetARB bufferType;
         private BufferUsageARB bufferUsage;
 
-        private int sizeOfTypeInBytes;
+        private uint sizeOfTypeInBytes;
 
         public GLBuffer(BufferTargetARB bufferType, BufferUsageARB bufferUsage, int capacity)
         {
@@ -21,7 +21,7 @@ namespace Easy2D
             this.bufferType = bufferType;
             this.bufferUsage = bufferUsage;
 
-            sizeOfTypeInBytes = Marshal.SizeOf<T>();
+            sizeOfTypeInBytes = (uint)Marshal.SizeOf<T>();
 
             Capacity = capacity;
         }
@@ -66,17 +66,30 @@ namespace Easy2D
         /// <param name="objects"></param>
         public void UploadData(int startIndex, int objectCount, T[] objects)
         {
-            Bind();
-
-            int sizeInBytes = objectCount * sizeOfTypeInBytes;
-            int offsetInBytes = startIndex * sizeOfTypeInBytes;
             unsafe
             {
                 fixed (T* data = objects)
                 {
-                    GL.Instance.BufferSubData(bufferType, (IntPtr)offsetInBytes, (nuint)sizeInBytes, data);
+                    UploadData((uint)startIndex, (uint)objectCount, data);
                 }
             }
+        }
+
+        /// <summary>
+        /// Will bind and upload data to GPU
+        /// </summary>
+        /// <param name="startIndex"></param>
+        /// <param name="objectCount"></param>
+        /// <param name="objects"></param>
+        public unsafe void UploadData(uint startIndex, uint objectCount, T* data)
+        {
+            Bind();
+
+            uint sizeInBytes = objectCount * sizeOfTypeInBytes;
+            uint offsetInBytes = startIndex * sizeOfTypeInBytes;
+
+            GL.Instance.BufferSubData(bufferType, (IntPtr)offsetInBytes, (nuint)sizeInBytes, data);
+
         }
 
         protected override void initialize(int? slot)

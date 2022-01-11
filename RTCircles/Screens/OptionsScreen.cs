@@ -14,6 +14,9 @@ namespace RTCircles
         private Button showGraphButton = new Button() { Color = Colors.Green };
         private Button showLogButton = new Button() { Color = Colors.Yellow };
 
+        private Button toggleBloomButton = new Button() { Color = Colors.Pink };
+        private Button toggleMotionBlurButton = new Button() { Color = Colors.Red };
+
         public OptionsScreen()
         {
             showLogButton.OnClick += (s, e) =>
@@ -33,6 +36,18 @@ namespace RTCircles
                 MainGame.ShowRenderGraph = !MainGame.ShowRenderGraph;
             };
             Add(showGraphButton);
+
+            toggleBloomButton.OnClick += (s, e) =>
+            {
+                PostProcessing.Bloom = !PostProcessing.Bloom;
+            };
+            Add(toggleBloomButton);
+
+            toggleMotionBlurButton.OnClick += (s, e) =>
+            {
+                PostProcessing.MotionBlur = !PostProcessing.MotionBlur;
+            };
+            Add(toggleMotionBlurButton);
         }
 
         public override void Update(float delta)
@@ -41,13 +56,16 @@ namespace RTCircles
             showGraphButton.Text = $"Render Graph: {(MainGame.ShowRenderGraph ? "On" : "Off")}";
             showLogButton.Text = $"Show Log: {(MainGame.ShowLogOverlay ? "On" : "Off")}";
 
+            toggleBloomButton.Text = $"Bloom: {(PostProcessing.Bloom ? "On" : "Off")}";
+            toggleMotionBlurButton.Text = $"MotionBlur: {(PostProcessing.MotionBlur ? "On" : "Off")}";
+
             base.Update(delta);
         }
 
         public override void Render(Graphics g)
         {
             layoutDrawableStack(g, MainGame.WindowCenter, new Vector2(1200, 300) * MainGame.Scale, 10 * MainGame.Scale, origin,
-                mtThreadButton, showGraphButton, showLogButton);
+                mtThreadButton, showGraphButton, showLogButton, toggleBloomButton, toggleMotionBlurButton);
 
             base.Render(g);
         }

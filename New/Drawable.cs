@@ -216,7 +216,7 @@ namespace New
         /// Render children
         /// </summary>
         /// <param name="g"></param>
-        public virtual void Render(Graphics g)
+        public virtual void Render(FastGraphics g)
         {
             int childCount = children.Count;
             for (int i = 0; i < childCount; i++)

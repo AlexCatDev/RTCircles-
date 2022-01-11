@@ -16,20 +16,22 @@ namespace RTCircles
         public static bool SnakeOut = true;
         public static bool Explode = true;
 
+        public static Vector2 SliderBallPositionForAuto { get; private set; }
+
         private Slider slider;
 
         private Vector2 Size => new Vector2(OsuContainer.Beatmap.CircleRadius * 2);
 
         private Vector4 color => new Vector4(Skin.Config.ColorFromIndex(colorIndex), 1f);
 
-        private BetterSlider sliderPath = new BetterSlider();
+        public readonly BetterSlider SliderPath = new BetterSlider();
 
         private int repeatsDone = 0;
         private int lastRepeatsDone = 0;
 
         private SmoothFloat sliderBallScaleAnim = new SmoothFloat();
 
-        public override Rectangle Bounds => sliderPath.Path.Bounds;
+        public override Rectangle Bounds => SliderPath.Path.Bounds;
 
         public HitObject BaseObject => slider;
 
@@ -101,11 +103,11 @@ namespace RTCircles
                 fullPath.Add(new Vector2(slider.Position.X, slider.Position.Y));
 
             //The radius in osu pixels
-            float sizeInOsuSpace = 54.4f - 4.48f * OsuContainer.Beatmap.CS;
+            float sizeInOsuSpace = OsuContainer.Beatmap.CircleRadiusInOsuPixels;
 
             //Defining the pointsize in path, makes it know how big to calculate the bounding box
             //The pointsize is in osu pixels from the current circlesize
-            sliderPath.SetPoints(fullPath, sizeInOsuSpace);
+            SliderPath.SetPoints(fullPath, sizeInOsuSpace);
         }
 
         private float snakeIn = 1f;
@@ -135,8 +137,8 @@ namespace RTCircles
         private void drawSliderRepeatHead(Graphics g)
         {
             //Get the angle of the first and second point. so we can rotate the sliderRepeat towards that for the head
-            var first = sliderPath.Path.Points[0];
-            var next = sliderPath.Path.Points[1];
+            var first = SliderPath.Path.Points[0];
+            var next = SliderPath.Path.Points[1];
 
             first = OsuContainer.MapToPlayfield(first.X, first.Y);
             next = OsuContainer.MapToPlayfield(next.X, next.Y);
@@ -149,8 +151,8 @@ namespace RTCircles
         private void drawSliderRepeatTail(Graphics g)
         {
             //Get the angle of the last and second last point. so we can rotate the sliderRepeat towards that for the tail
-            var last = sliderPath.Path.Points[sliderPath.Path.Points.Count - 1];
-            var secondLast = sliderPath.Path.Points[sliderPath.Path.Points.Count - 2];
+            var last = SliderPath.Path.Points[SliderPath.Path.Points.Count - 1];
+            var secondLast = SliderPath.Path.Points[SliderPath.Path.Points.Count - 2];
 
             last = OsuContainer.MapToPlayfield(last.X, last.Y);
             secondLast = OsuContainer.MapToPlayfield(secondLast.X, secondLast.Y);
@@ -177,7 +179,11 @@ namespace RTCircles
 
             float osc = MathUtils.OscillateValue(progress * slider.Repeats, 0f, 1f);
 
-            Vector2 pos = sliderPath.Path.CalculatePositionAtProgress(osc);
+            Vector2 pos = SliderPath.Path.CalculatePositionAtProgress(osc);
+
+            if (OsuContainer.SongPosition > slider.StartTime && OsuContainer.SongPosition < slider.EndTime)
+                SliderBallPositionForAuto = pos;
+
             sliderballPosition = OsuContainer.MapToPlayfield(pos.X, pos.Y);
 
             //Uncapped but still only render sliderball when it's within range exlusive, since uncap just overflows above 1
@@ -285,7 +291,7 @@ namespace RTCircles
                     var hitsound = slider.EdgeHitSounds?[0] ?? slider.HitSound;
                     var sample = slider.EdgeAdditions?[0].Item1 ?? slider.Extras.SampleSet;
                     OsuContainer.PlayHitsound(hitsound, sample);
-                    OsuContainer.HUD.AddHit((float)hittableTime, HitResult.Max, sliderPath.Path.Points[0], false);
+                    OsuContainer.HUD.AddHit((float)hittableTime, HitResult.Max, SliderPath.Path.Points[0], false);
 
                     return true;
                 }
@@ -332,7 +338,7 @@ namespace RTCircles
 
         public override void OnRemove()
         {
-            sliderPath.DeleteFramebuffer();
+            SliderPath.DeleteFramebuffer();
         }
 
         private bool IsHit;
@@ -514,17 +520,17 @@ namespace RTCircles
             //This whole piece here is for exploding the slider itself like it was a circle
             if (fadeout && (IsHit || IsEndingHit) && Explode)
             {
-                sliderPath.ScalingOrigin = sliderballPosition;
-                sliderPath.DrawScale = circleAlpha.Map(1f, 0f, 1f, (float)OsuContainer.CircleExplode);
+                SliderPath.ScalingOrigin = sliderballPosition;
+                SliderPath.DrawScale = circleAlpha.Map(1f, 0f, 1f, (float)OsuContainer.CircleExplode);
             }
             else
             {
-                sliderPath.ScalingOrigin = null;
+                SliderPath.ScalingOrigin = null;
             }
 
-            sliderPath.Alpha = circleAlpha;
+            SliderPath.Alpha = circleAlpha;
 
-            sliderPath.SetProgress(snakeOut, snakeIn);
+            SliderPath.SetProgress(snakeOut, snakeIn);
 
             if (OsuContainer.SongPosition > slider.StartTime + OsuContainer.Beatmap.Window50 && !IsHit && !IsMissed)
             {
@@ -559,7 +565,7 @@ namespace RTCircles
             g.TrackColorOuter = Shade(-0.1f, new Vector4(sliderTrack, 1.0f)).Xyz;
             g.TrackColorInner = Shade(0.5f, new Vector4(sliderTrack, 1.0f)).Xyz;
 
-            sliderPath.Render(g);
+            SliderPath.Render(g);
 
             if (circleAlpha > 0)
             {

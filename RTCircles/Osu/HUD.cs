@@ -221,7 +221,7 @@ namespace RTCircles
 
             drawComboText(g);
 
-            string scoreText = $"{(int)Math.Round(rollingScore, 0, MidpointRounding.AwayFromZero)}x";
+            string scoreText = $"{((int)Math.Round(rollingScore, 0, MidpointRounding.AwayFromZero)).ToString("00000000.##")}";
             Vector2 scoreSize = Skin.CircleNumbers.Meassure(66, scoreText);
 
             Skin.CircleNumbers.Draw(g, new Vector2(MainGame.WindowWidth - scoreSize.X, 0), 66, Colors.White, scoreText);
@@ -248,6 +248,8 @@ namespace RTCircles
         private bool shouldGenGraph = true;
         private void drawDifficultyGraph(Graphics g)
         {
+            return;
+
             Vector2 position = new Vector2(0, 0);
             Vector2 size = new Vector2(MainGame.WindowWidth, 150);
 
@@ -271,6 +273,7 @@ namespace RTCircles
 
                 Utils.Log($"Generating strain graph framebuffer!", LogLevel.Info);
 
+                /*
                 g.DrawInFrameBuffer(strainFB, () =>
                 {
                     graph = PathApproximator.ApproximateCatmull(graph);
@@ -316,8 +319,8 @@ namespace RTCircles
                 });
 
                 shouldGenGraph = false;
+                */
             }
-
             g.DrawFrameBuffer(position, new Vector4(1f, 1f, 1f, 0.5f), strainFB);
 
             Vector2 songPosPos = new Vector2((float)OsuContainer.SongPosition.Map(OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime, OsuContainer.Beatmap.HitObjects[^1].BaseObject.StartTime, position.X, position.X + size.X), position.Y);

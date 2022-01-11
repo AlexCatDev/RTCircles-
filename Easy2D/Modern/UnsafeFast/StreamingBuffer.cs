@@ -6,7 +6,7 @@ using System.Text;
 namespace Easy2D
 {
     /// <summary>
-    /// A faster glbuffer which is unsynchronized with the gpu, requires EXT.BufferStorage GLES 3.1+
+    /// A fast immutable direct pointer to gpu memory which is unsynchronized, requires EXT.BufferStorage GLES 3.1+
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public unsafe class StreamingBuffer<T> : GLObject where T : unmanaged

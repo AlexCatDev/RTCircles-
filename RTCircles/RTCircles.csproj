@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
 	  <LangVersion>latest</LangVersion>
+	  <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -73,6 +74,7 @@
     <None Remove="Skin\loading.png" />
     <None Remove="Skin\logo.png" />
     <None Remove="Skin\menu-flash.png" />
+    <None Remove="Skin\message-button.png" />
     <None Remove="Skin\normal-hitclap.wav" />
     <None Remove="Skin\normal-hitfinish.wav" />
     <None Remove="Skin\normal-hitnormal.wav" />
@@ -85,6 +87,7 @@
     <None Remove="Skin\selection-mod-doubletime.png" />
     <None Remove="Skin\selection-mod-easy.png" />
     <None Remove="Skin\selection-mod-hardrock.png" />
+    <None Remove="Skin\settings-button.png" />
     <None Remove="Skin\skin.ini" />
     <None Remove="Skin\sliderb0.png" />
     <None Remove="Skin\sliderfollowcircle.png" />
@@ -188,6 +191,7 @@
     <EmbeddedResource Include="Skin\loading.png" />
     <EmbeddedResource Include="Skin\logo.png" />
     <EmbeddedResource Include="Skin\menu-flash.png" />
+    <EmbeddedResource Include="Skin\message-button.png" />
     <EmbeddedResource Include="Skin\normal-hitclap.wav" />
     <EmbeddedResource Include="Skin\normal-hitfinish.wav" />
     <EmbeddedResource Include="Skin\normal-hitnormal.wav" />
@@ -200,6 +204,7 @@
     <EmbeddedResource Include="Skin\selection-mod-doubletime.png" />
     <EmbeddedResource Include="Skin\selection-mod-easy.png" />
     <EmbeddedResource Include="Skin\selection-mod-hardrock.png" />
+    <EmbeddedResource Include="Skin\settings-button.png" />
     <EmbeddedResource Include="Skin\skin.ini" />
     <EmbeddedResource Include="Skin\sliderb0.png" />
     <EmbeddedResource Include="Skin\sliderfollowcircle.png" />

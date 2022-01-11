@@ -13,6 +13,14 @@ namespace Easy2D.Game
     {
         public static Game Instance { get; private set; }
 
+        static Game()
+        {
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+            {
+                Console.WriteLine($"CRASH_ERROR_UNHANDLED_EXCEPTION: {e.ExceptionObject.ToString()}");
+            };
+        }
+
         public static int FPS { get; private set; }
         public static int UPS { get; private set; }
 

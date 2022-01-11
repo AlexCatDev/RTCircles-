@@ -2,15 +2,19 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
+	  <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="hit.wav" />
+    <None Remove="trail.png" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="hit.wav" />
+    <EmbeddedResource Include="trail.png" />
   </ItemGroup>
 
   <ItemGroup>

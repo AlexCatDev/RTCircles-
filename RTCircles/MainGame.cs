@@ -17,32 +17,25 @@ namespace RTCircles
         public static Matrix4 Projection { get; private set; }
 
         private SmoothFloat shakeKiai = new SmoothFloat();
-        private Matrix4 shakeMatrix
-        {
-            get
-            {
-                var scale = Matrix4.CreateScale(
-                (OsuContainer.IsKiaiTimeActive ? 1f : 0).Map(0f, 1f, 1f, 0.95f),
-                (OsuContainer.IsKiaiTimeActive ? 1f : 0).Map(0f, 1f, 1f, 0.95f),
-                1f);
-
-                scale = Matrix4.Identity;
-
-                float beatScaled = PostProcessing.MotionBlur ? shakeKiai.Value : 0;
-
-                return Matrix4.CreateTranslation(new Vector3((float)RNG.Next(-10, 10) * beatScaled, (float)RNG.Next(-10, 10) * beatScaled, 0f)) * Projection * scale;
-            }
-        }
+        private Matrix4 shakeMatrix => 
+            Matrix4.CreateTranslation(new Vector3(RNG.Next(-10, 10) * shakeKiai.Value, RNG.Next(-10, 10) * shakeKiai.Value, 0f)) * Projection;
 
         public override void OnLoad()
         {
-            OsuContainer.OnKiai += () =>
-            {
-                shakeKiai.Value = 2f;
-                shakeKiai.TransformTo(0f, 0.5f, EasingTypes.Out);
-            };
+            Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\- HAPS MIT NU");
 
             g = new Graphics();
+
+            OsuContainer.OnKiai += () =>
+            {
+                //shakeKiai.Value = 2f;
+                //shakeKiai.TransformTo(0f, 0.5f, EasingTypes.Out);
+
+                //Det her ser bedere ud tbh
+                shakeKiai.Value = 2f;
+                //shakeKiai.TransformTo(0f, 1f, EasingTypes.OutCirc);
+                shakeKiai.TransformTo(0f, 1f, EasingTypes.OutQuart);
+            };
 
             Input.InputContext.Mice[0].MouseDown += (s, e) =>
             {
@@ -158,7 +151,7 @@ namespace RTCircles
             drawFPSGraph(g);
             drawLog(g);
 
-            g.Projection = shakeMatrix;
+            g.Projection = PostProcessing.MotionBlur ? shakeMatrix : Projection;
             g.EndDraw();
             PostProcessing.PresentFinalResult();
         }
@@ -355,10 +348,8 @@ namespace RTCircles
 
         public override void OnUpdate(double delta)
         {
-            //System.Threading.Thread.Sleep(1);
-
             if (ScreenManager.ActiveScreen() is OsuScreen)
-                PostProcessing.BloomThreshold = MathHelper.Lerp(PostProcessing.BloomThreshold, OsuContainer.IsKiaiTimeActive ? 0.75f : 1.0f, (float)delta * 20f);
+                PostProcessing.BloomThreshold = shakeKiai.Value.Map(2, 0, 0.2f, 1f);
             else
                 PostProcessing.BloomThreshold = 1f;
 

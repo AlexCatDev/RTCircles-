@@ -43,6 +43,7 @@ namespace RTCircles
         public float HP { get; private set; }
 
         public float CircleRadius => (OsuContainer.Playfield.Width / 16f) * (1f - (0.7f * (CS - 5f) / 5f));
+        public float CircleRadiusInOsuPixels => 54.4f - 4.48f * OsuContainer.Beatmap.CS;
 
         public List<double> DifficultyGraph = new List<double>();
 
@@ -82,9 +83,9 @@ namespace RTCircles
 
         private void applyMods(Mods mods)
         {
-            CS = InternalBeatmap.DifficultySection.CircleSize / 2;
+            CS = InternalBeatmap.DifficultySection.CircleSize;
             AR = InternalBeatmap.DifficultySection.ApproachRate;
-            OD = InternalBeatmap.DifficultySection.OverallDifficulty / 2;
+            OD = InternalBeatmap.DifficultySection.OverallDifficulty;
             HP = InternalBeatmap.DifficultySection.HPDrainRate;
 
             Mods = mods;

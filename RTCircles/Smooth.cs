@@ -37,6 +37,15 @@ namespace RTCircles
         private T currentValue;
 
         /// <summary>
+        /// From 0 to 1 how far along is the current transform
+        /// </summary>
+        public double PercentageCompleted { get; private set; }
+        /// <summary>
+        /// This gets incremented by one everytime a new transform has begun, not when added
+        /// </summary>
+        public int CurrentIndex { get; private set; }
+
+        /// <summary>
         /// Get the current value, setting this value will clear all pending transforms, and instantaneously set the new value
         /// </summary>
         public T Value
@@ -73,6 +82,7 @@ namespace RTCircles
                     if (status.hasCompleted)
                     {
                         status.onComplete?.Invoke();
+                        PercentageCompleted = 0;
                         currentTransform = null;
                     }
                 }
@@ -100,10 +110,12 @@ namespace RTCircles
                 {
                     start = currentValue;
                     initStart = true;
+                    ++CurrentIndex;
                 }
 
                 currentTime = currentTime.Clamp(startTime, endTime);
                 currentValue = GetValueAt(currentTime, startTime, endTime, start, value, easing);
+                PercentageCompleted = currentTime.Map(startTime, endTime, 0, 1);
 
                 return (currentTime == endTime, onComplete);
             });

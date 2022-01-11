@@ -39,6 +39,7 @@ namespace RTCircles
 
         public override void OnAdd()
         {
+            spinnerCompletedCheck = false;
             rotationCounter = 0;
             lastAngle = 0;
             rotation = 0;
@@ -48,6 +49,8 @@ namespace RTCircles
             spinRPM = 0;
             base.OnAdd();
         }
+
+        private bool spinnerCompletedCheck;
 
         private float currentRotation = 0;
 
@@ -86,7 +89,7 @@ namespace RTCircles
             g.DrawRectangleCentered(position, size, color * colorBoost, Skin.SpinnerCircle, rotDegrees: rotation);
 
             if (score > 0)
-                Skin.CircleNumbers.DrawCentered(g, OsuContainer.MapToPlayfield(512 / 2, 280), (size.Y / 9) * scoreBonusScale, new Vector4(1f, 1f, 1f, scoreBonusAlpha), score.ToString());
+                Skin.CircleNumbers.DrawCentered(g, OsuContainer.MapToPlayfield(512 / 2, 280), (size.Y / 9) * scoreBonusScale, new Vector4(1f, 1f, 1f, scoreBonusAlpha * color.W), score.ToString());
 
             if (OsuContainer.SongPosition >= spinner.EndTime + OsuContainer.Fadeout)
                 IsDead = true;
@@ -116,7 +119,7 @@ namespace RTCircles
 
             float timeElapsed = (float)(OsuContainer.SongPosition - spinner.StartTime + OsuContainer.Beatmap.Preempt);
 
-            if (OsuContainer.SongPosition >= spinner.EndTime && color.W == 1f)
+            if (OsuContainer.SongPosition >= spinner.EndTime && !spinnerCompletedCheck)
             {
                 if (rotationCounter > 0)
                 {
@@ -127,6 +130,8 @@ namespace RTCircles
                 {
                     OsuContainer.HUD.AddHit(0f, HitResult.Miss, position);
                 }
+
+                spinnerCompletedCheck = true;
             }
 
             if (timeElapsed < OsuContainer.Beatmap.Fadein)
@@ -139,7 +144,7 @@ namespace RTCircles
             var deltaRot = thisAngle - lastAngle;
 
             //Only allow for rotations if it's fully faded in
-            if ((OsuContainer.Key1Down || OsuContainer.Key2Down) && color.W == 1f && OsuContainer.DeltaSongPosition > 0)
+            if ((OsuContainer.Key1Down || OsuContainer.Key2Down) && OsuContainer.DeltaSongPosition > 0 && color.W == 1f)
                 addRotation(deltaRot);
 
             lastAngle = thisAngle;
@@ -152,7 +157,7 @@ namespace RTCircles
             spinRPM = (float)((MathF.Abs(rotation) / 360f) / (OsuContainer.SongPosition - spinner.StartTime));
             spinRPM *= 60000;
 
-            if (Math.Abs(rotation - lastRotation) >= 360)
+            if (Math.Abs(rotation - lastRotation) >= 360 && color.W == 1f)
             {
                 lastRotation = rotation;
                 rotationCounter++;

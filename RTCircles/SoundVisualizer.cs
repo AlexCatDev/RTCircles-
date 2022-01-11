@@ -158,12 +158,18 @@ namespace RTCircles
                 }
             }
 
+            int slot = g.GetTextureSlot(null);
+
             var points = PathApproximator.ApproximateBezier(controlPoints);
-            //var points = PathApproximator.ApproximateBSpline(controlPoints, 6);
+            //var points = PathApproximator.ApproximateBSpline(controlPoints, 32);
             float theta = -MathF.PI / 2;
             float stepTheta = (MathF.PI * 2) / (points.Count);
 
             var vertices = g.VertexBatch.GetTriangleStrip(points.Count * 2);
+
+            var vertices2 = g.VertexBatch.GetTriangleStrip(points.Count * 2);
+
+            int vertices2Index = 0;
 
             int verticesIndex = 0;
 
@@ -176,18 +182,43 @@ namespace RTCircles
                 Vector2 pos2 = new Vector2(MathF.Cos(theta), MathF.Sin(theta)) * (Radius + (now * BarLength));
 
                 vertices[verticesIndex].Position = pos + Position;
-                vertices[verticesIndex].Color = ColorAt?.Invoke(pos) ?? StartColor;
-                vertices[verticesIndex].TextureSlot = g.GetTextureSlot(null);
+                vertices[verticesIndex].Color = new Vector4(3f, 3f, 3f, 1f);//ColorAt?.Invoke(pos) ?? StartColor;
+                vertices[verticesIndex].TextureSlot = slot;
                 vertices[verticesIndex].TexCoord = new Vector2(0, 0);
 
                 verticesIndex++;
 
                 vertices[verticesIndex].Position = pos2 + Position;
-                vertices[verticesIndex].Color = ColorAt?.Invoke(pos) ?? EndColor;
-                vertices[verticesIndex].TextureSlot = g.GetTextureSlot(null);
+                vertices[verticesIndex].Color = new Vector4(3f, 3f, 3f, 1f);//ColorAt?.Invoke(pos) ?? EndColor;
+                vertices[verticesIndex].TextureSlot = slot;
                 vertices[verticesIndex].TexCoord = new Vector2(1, 1);
 
                 verticesIndex++;
+
+                theta += stepTheta;
+            }
+
+            for (int i = 0; i < points.Count; i++)
+            {
+                float now = points[i].Y - 0.005f;
+
+                Vector2 pos = new Vector2(MathF.Cos(theta), MathF.Sin(theta)) * Radius;
+
+                Vector2 pos2 = new Vector2(MathF.Cos(theta), MathF.Sin(theta)) * (Radius + (now * BarLength));
+
+                vertices2[vertices2Index].Position = pos + Position;
+                vertices2[vertices2Index].Color = Colors.From255RGBA(37, 37, 37, 255);
+                vertices2[vertices2Index].TextureSlot = slot;
+                vertices2[vertices2Index].TexCoord = new Vector2(0, 0);
+
+                vertices2Index++;
+
+                vertices2[vertices2Index].Position = pos2 + Position;
+                vertices2[vertices2Index].Color = Colors.From255RGBA(37, 37, 37, 255);
+                vertices2[vertices2Index].TextureSlot = slot;
+                vertices2[vertices2Index].TexCoord = new Vector2(1, 1);
+
+                vertices2Index++;
 
                 theta += stepTheta;
             }
@@ -217,7 +248,7 @@ namespace RTCircles
                     prevPos = pos;
                 }
             }
-            
+
             /*
             if (PatchEnd)
             {
@@ -275,6 +306,7 @@ namespace RTCircles
 
         private void drawCircle(Graphics g)
         {
+            MirrorCount = 2;
             float stepTheta = ((MathF.PI * 2) / SmoothBuffer.Length) / MirrorCount;
             float theta = StartRotation;
 

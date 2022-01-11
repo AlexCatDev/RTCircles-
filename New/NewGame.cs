@@ -4,10 +4,285 @@ using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace New
 {
+    class FancyCursorTrail : Drawable
+    {
+        class TrailPiece
+        {
+            public Vector2 Position;
+            public Vector4 Color;
+            public float Width;
+
+            public bool RemoveMe;
+
+            public TrailPiece(Vector2 Position)
+            {
+                this.Position = Position;
+
+                this.Color = Vector4.One;
+                this.Width = 10;
+            }
+
+            public void Update(float delta)
+            {
+                Width -= delta * 30;
+                Color.W -= delta * 4;
+
+                Width.ClampRef(0, 10000);
+                Color.W.ClampRef(0, 1);
+
+                float frequency1 = (float)NewGame.Instance.TotalTime;
+                float frequency2 = (float)NewGame.Instance.TotalTime;
+                float frequency3 = (float)NewGame.Instance.TotalTime;
+
+                float phase1 = 0;
+                float phase2 = 1;
+                float phase3 = 5;
+
+                float width = 2f;
+
+                var red = 1 + MathF.Abs(MathF.Sin(frequency1 + phase1)) * width;
+                var grn = 1 + MathF.Abs(MathF.Sin(frequency2 + phase2)) * width;
+                var blu = 1 + MathF.Abs(MathF.Sin(frequency3 + phase3)) * width;
+
+                Color.X = red;
+                Color.Y = grn;
+                Color.Z = blu;
+
+                if (Color.W <= 0)
+                    RemoveMe = true;
+            }
+        }
+
+        List<TrailPiece> trailPieces = new List<TrailPiece>(); 
+
+        public override void Render(FastGraphics g)
+        {
+            unsafe
+            {
+                if (trailPieces.Count > 2)
+                {
+                    var verts = g.VertexBatch.GetTriangleStrip((uint)(trailPieces.Count * 2) - 2);
+
+                    if (verts != null)
+                    {
+                        int slot = g.GetTextureSlot(null);
+                        for (int i = 1; i < trailPieces.Count; i++)
+                        {
+                            Vector2 perpen = trailPieces[i - 1].Position - trailPieces[i].Position;
+                            perpen = perpen.PerpendicularLeft;
+                            perpen.Normalize();
+
+                            verts->Position = trailPieces[i - 1].Position - perpen * trailPieces[i - 1].Width;
+                            verts->Color = trailPieces[i - 1].Color;
+                            verts->Rotation = 0;
+                            verts->TextureSlot = slot;
+                            ++verts;
+
+                            verts->Position = trailPieces[i].Position + perpen * trailPieces[i].Width;
+                            verts->Color = trailPieces[i].Color;
+                            verts->Rotation = 0;
+                            verts->TextureSlot = slot;
+                            ++verts;
+                        }
+                    }
+                }
+            }
+
+            base.Render(g);
+        }
+
+        Vector2 lastMousePos;
+
+        public override void OnUpdate()
+        {
+            for (int i = trailPieces.Count - 1; i >= 0; i--)
+            {
+                trailPieces[i].Update(fDelta);
+
+                if (trailPieces[i].RemoveMe)
+                    trailPieces.RemoveAt(i);
+            }
+
+            var mousePos = Easy2D.Game.Input.MousePosition;
+
+
+            if (lastMousePos == Vector2.Zero)
+                lastMousePos = mousePos;
+
+
+            var length = (mousePos - lastMousePos).Length;
+
+            if (length >= 5)
+            {
+                lastMousePos = mousePos;
+                TrailPiece p = new TrailPiece(mousePos);
+
+                trailPieces.Add(p);
+            }
+
+            base.OnUpdate();
+        }
+    }
+
+    public class Player : Drawable
+    {
+        class Particle
+        {
+            public Vector2 Position;
+            public Vector2 PositionOffset;
+            public Vector4 Color;
+
+            public Vector2 Velocity;
+
+            public bool IsDead;
+
+            public float OffsetX;
+            public float OffsetY;
+
+            public float Width = 10;
+
+            public void Wake()
+            {
+                Position = Easy2D.Game.Input.MousePosition;
+                Color = Vector4.One;
+
+                Velocity.X = RNG.Next(-10, 10) * 50;
+                Velocity.Y = RNG.Next(-10, 10) * 50;
+
+                OffsetX = RNG.Next(0, 10f);
+                OffsetY = RNG.Next(0, 10f);
+            }
+
+            public void Update(float delta)
+            {
+                Width -= delta * 30;
+                Color.W -= delta * 4;
+
+                float frequency1 = (float)NewGame.Instance.TotalTime;
+                float frequency2 = (float)NewGame.Instance.TotalTime;
+                float frequency3 = (float)NewGame.Instance.TotalTime;
+
+                float phase1 = 0;
+                float phase2 = 1;
+                float phase3 = 5;
+
+                float width = 2f;
+
+                var red = 1 + MathF.Abs(MathF.Sin(frequency1 + phase1)) * width;
+                var grn = 1 + MathF.Abs(MathF.Sin(frequency2 + phase2)) * width;
+                var blu = 1 + MathF.Abs(MathF.Sin(frequency3 + phase3)) * width;
+
+                Color.X = red;
+                Color.Y = grn;
+                Color.Z = blu;
+
+                if (Color.W <= 0)
+                    IsDead = true;
+            }
+        }
+
+        List<Particle> Particles = new List<Particle>();
+
+        float emitTimer = 0;
+
+        //20 particlesPerSecond
+        float emitRate = 1f / 90f;
+
+        private Texture lineTexture = new Texture(Utils.GetResource("trail.png"));
+
+        public override void Render(FastGraphics g)
+        {
+            /*
+            for (int i = 0; i < Particles.Count; i++)
+            {
+                g.DrawRectangle(Particles[i].Position + Particles[i].PositionOffset, new Vector2(12, 12), Particles[i].Color, Texture.WhiteCircle);
+            }
+            */
+
+            if (Particles.Count < 2)
+                return;
+
+            unsafe
+            {
+                var verts = g.VertexBatch.GetTriangleStrip((uint)(Particles.Count * 2) - 2);
+
+                if (verts != null)
+                {
+                    int slot = g.GetTextureSlot(null);
+                    for (int i = 1; i < Particles.Count; i++)
+                    {
+                        Vector2 perpen = Particles[i - 1].Position - Particles[i].Position;
+                        perpen = perpen.PerpendicularLeft;
+                        perpen.Normalize();
+
+                        verts->Position = Particles[i - 1].Position - perpen * Particles[i - 1].Width;
+                        verts->Color = Particles[i - 1].Color;
+                        verts->Rotation = 0;
+                        verts->TextureSlot = slot;
+
+                        ++verts;
+
+
+                        verts->Position = Particles[i].Position + perpen * Particles[i].Width;
+                        verts->Color = Particles[i].Color;
+                        verts->Rotation = 0;
+                        verts->TextureSlot = slot;
+
+                        ++verts;
+                    }
+                }
+            }
+
+            Console.WriteLine(g.VertexBatch.TriangleRenderCount);
+            base.Render(g);
+        }
+
+        Vector2 lastMousePos;
+
+        public override void OnUpdate()
+        {
+            for (int i = Particles.Count - 1; i >= 0; i--)
+            {
+                Particles[i].Update(fDelta);
+
+                if (Particles[i].IsDead)
+                    Particles.RemoveAt(i);
+            }
+
+            emitTimer += fDelta;
+
+            if (emitTimer >= emitRate)
+            {
+                emitTimer -= emitRate;
+
+                //Particle p = new Particle();
+                //p.Wake();
+
+                //Particles.Add(p);
+            }
+
+            var mousePos = Easy2D.Game.Input.MousePosition;
+            var length = (mousePos - lastMousePos).Length;
+
+            if (length >= 5)
+            {
+                lastMousePos = mousePos;
+                Particle p = new Particle();
+                p.Wake();
+
+                Particles.Add(p);
+            }
+
+            base.OnUpdate();
+        }
+    }
+
     public class NewGame : Game
     {
         public new static NewGame Instance { get; private set; }
@@ -23,7 +298,7 @@ namespace New
 
         private Drawable container = new Drawable();
 
-        private Graphics graphics;
+        private FastGraphics graphics;
         private Sound sound;
 
         public override void OnLoad()
@@ -32,18 +307,20 @@ namespace New
 
             sound = new Sound(Utils.GetResource("hit.wav"));
 
-            graphics = new Graphics();
+            graphics = new FastGraphics(400_000 * 5, 600_000 * 5);
 
-            container.Add(new Test());
-            container.Add(new PerformanceCounter());
-            
+            //container.Add(new Test());
+            //container.Add(new PerformanceCounter());
+
+            Width = 1280;
+            Height = 720;
             
             for (int i = 0; i < 100000; i++)
             {
-                container.Add(new BouncingCube());
+                //container.Add(new BouncingCube());
             }
-            
-            container.Add(new BouncingCube());
+
+            container.Add(new FancyCursorTrail());
 
             Input.InputContext.Keyboards[0].KeyDown += (s, e, x) =>
             {
@@ -60,6 +337,12 @@ namespace New
                 IsMultiThreaded = false;
             };
 
+            PrintFPS = true;
+            if (RuntimeInformation.ProcessArchitecture == Architecture.X86 || RuntimeInformation.ProcessArchitecture == Architecture.X64)
+            {
+                PostProcessing.Bloom = true;
+                //PostProcessing.MotionBlur = true;
+            }
             //PostProcessing.MotionBlur = true;
         }
 
@@ -94,17 +377,29 @@ namespace New
             position.X = RNG.Next(0, NewGame.Instance.Width);
             position.Y = RNG.Next(0, NewGame.Instance.Height);
 
-            velocity.X = RNG.TryChance() ? 1000f : -1000f;
-            velocity.Y = RNG.TryChance() ? 1000f : -1000f;
+            //velocity.X = RNG.TryChance() ? 1000f : -1000f;
+            //velocity.Y = RNG.TryChance() ? 1000f : -1000f;
+            velocity.X = RNG.Next(0, 500);
+            velocity.Y = RNG.Next(0, 500);
+
+            color.W = 1f;
+            color.X = RNG.Next(0f, 1f);
+            color.Y = RNG.Next(0f, 1f);
+            color.Z = RNG.Next(0f, 1f);
         }
 
         private Vector2 position;
         private Vector2 size = new Vector2(2);
         private Vector2 velocity;
+        private Vector4 color;
+        private Vector4 texRect = new Vector4(0, 0, 1, 1);
 
-        public override void Render(Graphics g)
+        public override void Render(FastGraphics g)
         {
-            g.DrawRectangle(position, size, new Vector4(2f, 2f, 2f, 1f));
+            g.DrawRectangle(position, size, (Vector4)color);
+            //g.RawDrawRectangle(in position, in size, in color, null, in texRect, in Vector2.Zero, 0);
+            //g.DrawEllipse(position, 0, 360, 10, 0, color, Texture.WhiteCircle);
+            //g.DrawString("Cock", Font.DefaultFont, position, color);
             base.Render(g);
         }
 
@@ -116,23 +411,19 @@ namespace New
         {
             position += velocity * fDelta;
 
-            position.X = position.X.Clamp(0, NewGame.Instance.Width - size.X);
-            position.Y = position.Y.Clamp(0, NewGame.Instance.Height - size.Y);
+            float maxX = NewGame.Instance.Width - size.X;
+            float maxY = NewGame.Instance.Height - size.Y;
 
-            if (position.X == NewGame.Instance.Width - size.X || position.X == 0)
+            position.X.ClampRef(0, maxX);
+            position.Y.ClampRef(0, maxY);
+
+            if (position.X == maxX || position.X == 0)
                 velocity.X *= -1f;
 
-            if (position.Y == NewGame.Instance.Height - size.Y || position.Y == 0)
+            if (position.Y == maxY || position.Y == 0)
                 velocity.Y *= -1f;
 
             elapsed += fDelta;
-            /*
-            if (elapsed >= 0.1f && count < 10000)
-            {
-                Add(new BouncingCube());
-                count++;
-            }
-            */
         }
     }
 
@@ -160,7 +451,7 @@ namespace New
 
         private int renderThreadID;
 
-        public override void Render(Graphics g)
+        public override void Render(FastGraphics g)
         {
             renderThreadID = Thread.CurrentThread.ManagedThreadId;
 
@@ -241,7 +532,7 @@ namespace New
 
         }
 
-        public override void Render(Graphics g)
+        public override void Render(FastGraphics g)
         {
             //g.DrawRectangleCentered(Program.Instance.MousePosition, new Vector2(64, 64), new Vector4(1f,1f,1f,1f));
             g.DrawString($"Time: {Time:F2}", Font.DefaultFont, Easy2D.Game.Input.MousePosition, new Vector4(14.75f, 9.125f, 1.71f, 1f), 1f);

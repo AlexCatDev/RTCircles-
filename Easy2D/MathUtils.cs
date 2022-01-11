@@ -35,6 +35,12 @@ namespace Easy2D
             return min + MathF.Abs(((input + range) % (range * 2)) - range);
         }
 
+        public static double OscillateValue(this double input, double min, double max)
+        {
+            var range = max - min;
+            return min + Math.Abs(((input + range) % (range * 2)) - range);
+        }
+
         public static bool PositionInsideRadius(Vector2 point1, Vector2 point2, float radius)
         {
             var distance = HypotF(point1.X - point2.X , point1.Y - point2.Y);
@@ -100,6 +106,19 @@ namespace Easy2D
                 return min;
 
             return value;
+        }
+
+        public static void ClampRef(this ref float value, float min, float max)
+        {
+            if (value < min)
+                value = min;
+            if(value > max)
+                value = max;
+        }
+
+        public static void MapRef(this ref float value, float fromSource, float toSource, float fromTarget, float toTarget)
+        {
+            value = (value - fromSource) / (toSource - fromSource) * (toTarget - fromTarget) + fromTarget;
         }
 
         public static double Clamp(this double value, double min, double max)

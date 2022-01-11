@@ -31,7 +31,33 @@ namespace RTCircles
                        OsuContainer.Beatmap.Song.Volume = 0;
                        OsuContainer.SongPosition = (OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai))?.Offset - 2500 ?? 0;
                        OsuContainer.Beatmap.Song.Play(false);
-                   }
+                        /*
+                        GPUSched.Instance.AddAsync((ct) => {
+                            System.Threading.Thread.Sleep(6000);
+                        }, () => {
+
+                            ScreenManager.SetScreen<OsuScreen>();
+                        });
+                        */
+                    }
+                    else
+                    {
+                        PlayingBeatmap playingBeatmap = new PlayingBeatmap(
+                            BeatmapMirror.DecodeBeatmap(Utils.GetResource("Maps.Nanahira.map.osu")),
+                            new Sound(Utils.GetResource("Maps.Nanahira.audio.mp3")),
+                            new Texture(Utils.GetResource("Maps.Nanahira.bg.jpg")));
+
+                        OsuContainer.SetMap(playingBeatmap);
+
+                        playingBeatmap.GenerateHitObjects(Mods.Auto);
+
+                        GPUSched.Instance.AddAsync((ct) => {
+                            System.Threading.Thread.Sleep(15000);
+                        }, () => {
+
+                            ScreenManager.SetScreen<OsuScreen>();
+                        });
+                    }
 
                     //When everything has been loaded, add the ui items
                     MapBackground mapBackground = new MapBackground();
@@ -46,7 +72,6 @@ namespace RTCircles
                         mapBackground.TriggerFadeIn();
                     });
                 });
-                //OsuContainer.SetMap(BeatmapMirror.DecodeBeatmap(Utils.GetResource("Maps.SliderBenchmark.map.osu")), true, Mods.Auto);
             });
         }
 
@@ -281,9 +306,9 @@ namespace RTCircles
             {
                 Vector4 col = Vector4.Zero;
                 col.X = pos.X.Map(-visualizer.Radius, visualizer.Radius, 0f, 1f);
-                col.Z = pos.Y.Map(visualizer.Radius, -visualizer.Radius, 0f, 1f);
+                col.Y = pos.Y.Map(-visualizer.Radius, visualizer.Radius, 0f, 1f);
 
-                col.Y = 1f - col.X;
+                col.Z = 1f - col.X;
 
                 col = Colors.Tint(col, 1.2f);
 

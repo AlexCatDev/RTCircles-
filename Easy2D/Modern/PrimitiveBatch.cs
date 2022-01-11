@@ -161,7 +161,7 @@ namespace Easy2D
 
                 Utils.Log($"IndexBuffer ran out of space and has been RESIZED", LogLevel.Warning);
             }
-            
+
             if (VertexRenderCount + vertexCount > vertexPool.Length)
             {
                 if (!Resizable)

@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace Easy2D
 {
@@ -35,9 +36,13 @@ namespace Easy2D
         /// </summary>
         Important,
         /// <summary>
-        /// text
+        /// Black text with white background
         /// </summary>
         Benchmark,
+        /// <summary>
+        /// Black text with yellow background
+        /// </summary>
+        Performance,
     }
 
     public class LogInfo
@@ -146,7 +151,13 @@ namespace Easy2D
 
         private static void writeColor(string text, ConsoleColor color)
         {
-            Console.ForegroundColor = color;
+            //This throws platform not supported exception on android and ios
+            try
+            {
+                Console.ForegroundColor = color;
+            }
+            catch{ }
+
             Console.Write(text);
         }
 

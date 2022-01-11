@@ -255,13 +255,6 @@ namespace RTCircles
 
         private Mods mods = Mods.NM;
 
-        private static Texture downloadIcon;
-
-        static SongSelector()
-        {
-            downloadIcon = new Texture(Utils.GetResource("Skin.download-button.png"));
-        }
-
         public float ScrollMin
         {
             get
@@ -275,9 +268,7 @@ namespace RTCircles
 
         public float ScrollMax => 0;
 
-        //private Checkbox HRcheckbox, DTcheckbox, EZcheckbox;
         private float? scrollTo;
-        private Button downloadScreenButton = new Button();
 
         public SongSelector()
         {
@@ -309,85 +300,34 @@ namespace RTCircles
             };
         }
 
+        private BouncingButton downloadBtn, settingsBtn, modsBtn;
         public override void OnAdd()
         {
             Container.Add(FloatingPlayScreen);
 
-            downloadScreenButton.Color = Colors.From255RGBA(75,75,75,100);
-            downloadScreenButton.TextColor = Colors.White;
-            downloadScreenButton.Text = "Download more maps";
-            downloadScreenButton.OnClick += (s, e) =>
+            downloadBtn = new BouncingButton(new Texture(Utils.GetResource("Skin.download-button.png")));
+            downloadBtn.OnClick += () =>
             {
                 ScreenManager.SetScreen<DownloadScreen>();
             };
 
-            Container.Add(downloadScreenButton);
+            Container.Add(downloadBtn);
 
-            /*
-            Dropdown skinDropdown = new Dropdown();
-            skinDropdown.Items = OptionsScreen.SkinDropdown.Items;
-            skinDropdown.Position = new Vector2(1920 - 400, 0);
-            skinDropdown.Layer = 69696996;
-            skinDropdown.Text = "Skins";
-            skinDropdown.RightSideArrow = true;
-            skinDropdown.HeaderColor = Colors.Black;
-            skinDropdown.HeaderTextColor = Colors.White;
-            skinDropdown.ItemSizeOverride = new Vector2(400, headerSize.Y / 2f);
-            skinDropdown.Size = new Vector2(400, headerSize.Y);
-
-            Container.Add(skinDropdown);
-
-            HRcheckbox = new Checkbox();
-            HRcheckbox.Text = "HR";
-            HRcheckbox.Size = 40;
-
-            DTcheckbox = new Checkbox();
-            DTcheckbox.Text = "DT";
-            DTcheckbox.Size = 40;
-
-            EZcheckbox = new Checkbox();
-            EZcheckbox.Text = "EZ";
-            EZcheckbox.Size = 40;
-
-            HRcheckbox.Position = new Vector2(725, 755);
-            EZcheckbox.Position = new Vector2(840, 755);
-            DTcheckbox.Position = new Vector2(955, 755);
-
-            HRcheckbox.OnCheckChanged += (s, e) =>
+            settingsBtn = new BouncingButton(new Texture(Utils.GetResource("Skin.settings-button.png")));
+            settingsBtn.OnClick += () =>
             {
-                if (e)
-                {
-                    mods |= Mods.HR;
-                    EZcheckbox.IsChecked = false;
-                }
-                else
-                    mods &= ~Mods.HR;
+                ScreenManager.SetScreen<OptionsScreen>();
             };
 
-            DTcheckbox.OnCheckChanged += (s, e) =>
+            Container.Add(settingsBtn);
+
+            modsBtn = new BouncingButton(Skin.HRModIcon.Texture);
+            modsBtn.OnClick += () =>
             {
-                if (e)
-                    mods |= Mods.DT;
-                else
-                    mods &= ~Mods.DT;
+                Utils.Log($"no and yes thats a thread", LogLevel.Warning);
             };
 
-            EZcheckbox.OnCheckChanged += (s, e) =>
-            {
-                if (e)
-                {
-                    mods |= Mods.EZ;
-                    HRcheckbox.IsChecked = false;
-                }
-                else
-                    mods &= ~Mods.EZ;
-            };
-            */
-            /*
-            Container.Add(DTcheckbox);
-            Container.Add(EZcheckbox);
-            Container.Add(HRcheckbox);
-            */
+            Container.Add(modsBtn);
         }
 
         public override void Render(Graphics g)
@@ -504,9 +444,6 @@ namespace RTCircles
                 //g.DrawString(songInfoText, Font.DefaultFont, new Vector2(SongInfoBounds.Center.X - songInfoTextSize.X / 2f, HeaderSize.Y + FloatingPlayScreen.Size.Y + songInfoTitleSize.Y), SongInfoTextColor, songInfoScale);
             }
 
-            //g.DrawRectangleCentered(Input.MousePosition, new Vector2(96) * Skin.GetScale(Skin.HRModIcon, 64, 128) * MainGame.Scale, Colors.White, Skin.HRModIcon);
-            hopAnimation(g);
-
             clickedSomewhere = false;
 
             Vector2 previewSize = new Vector2(SongInfoBounds.Width, SongInfoBounds.Width / MainGame.WindowSize.AspectRatio());
@@ -522,48 +459,12 @@ namespace RTCircles
             FloatingPlayScreen.Size = previewSize;
         }
 
-        private void hopAnimation(Graphics g)
-        {
-            const float BOUNCE_SCALE_SCALE = 0.8f;
-
-            //How much it's swings side to side
-            float ROTATION = 20 * BOUNCE_SCALE_SCALE;
-            //The height scale when it's fully compressed and about to bounce
-            float BOUNCE_SCALE = 0.8f;
-            //How hight it jumps
-            float BOUNCE_HEIGHT = -30 * BOUNCE_SCALE_SCALE;
-            //When in the bounce height should it animate from
-            float BOUNCE_BEGIN = -8f * BOUNCE_SCALE_SCALE;
-
-            float width = HeaderSize.Y / 2f;
-            float height = width;
-
-            Vector2 drawOrigin = new Vector2(HeaderSize.X - width, HeaderSize.Y / 2);
-            Vector2 bounds = new Vector2(width, height);
-
-            float rotation = MathUtils.OscillateValue((float)OsuContainer.CurrentBeat / 2, 1, 0);
-
-            rotation = Interpolation.ValueAt(rotation, -ROTATION, ROTATION, 0, 1, EasingTypes.InOutSine);
-
-            Vector2 hopOffset = new Vector2(0, MathF.Abs(rotation).Map(0, ROTATION, 0, BOUNCE_HEIGHT));
-
-            if (Precision.AlmostEquals(hopOffset.Y, 0, 0.1f))
-            {
-                Skin.Click.Play(true);
-            }
-
-            height *= Interpolation.ValueAt(hopOffset.Y.Clamp(BOUNCE_BEGIN, 0), BOUNCE_SCALE, 1f, 0, BOUNCE_BEGIN);
-
-            g.DrawRectangleCentered(drawOrigin + hopOffset, new Vector2(width, height), Colors.White, downloadIcon, rotDegrees: rotation);
-
-        }
-
         private void enterSelectedMap()
         {
             if (selectedItem is null)
                 return;
 
-            OsuContainer.Beatmap.Song.Stop();
+            OsuContainer.Beatmap.Song.Pause();
             ConfirmPlayAnimation.ClearTransforms();
             ConfirmPlayAnimation.TransformTo(1f, 0.5f, EasingTypes.OutElasticHalf, () => {
                 OsuContainer.Beatmap.Mods &= ~Mods.Auto;
@@ -574,8 +475,14 @@ namespace RTCircles
 
         public override void Update(float delta)
         {
-            downloadScreenButton.Size = new Vector2(HeaderSize.Y * 8, HeaderSize.Y);
-            downloadScreenButton.Position = new Vector2(MainGame.WindowWidth - downloadScreenButton.Size.X, 0);
+            downloadBtn.Size = new Vector2(HeaderSize.Y / 1.2f);
+            downloadBtn.Position = new Vector2(MainGame.WindowWidth - downloadBtn.Size.X / 2f, HeaderSize.Y / 2f);
+
+            settingsBtn.Size = downloadBtn.Size;
+            settingsBtn.Position = downloadBtn.Position - new Vector2(modsBtn.Size.X + 5, 0);
+
+            modsBtn.Size = downloadBtn.Size;
+            modsBtn.Position = settingsBtn.Position - new Vector2(modsBtn.Size.X + 5, 0);
 
             if (scrollTo.HasValue)
             {

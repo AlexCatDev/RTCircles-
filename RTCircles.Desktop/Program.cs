@@ -24,7 +24,7 @@ namespace RTCircles.Desktop
             Silk.NET.Windowing.Sdl.SdlWindowing.Use();
 
             IWindow window = Window.Create(b);
-
+            window.WindowState = WindowState.Maximized;
             var game = new MainGame();
             game.View = window;
 
@@ -46,7 +46,6 @@ namespace RTCircles.Desktop
                     
                 }
 
-                //silk is pretty buggy
                 input.Keyboards[0].KeyDown += (s, e, x) =>
                 {
                     if (e == Key.ShiftRight)
@@ -56,6 +55,7 @@ namespace RTCircles.Desktop
                     {
                         //var value = window.WindowState != WindowState.Normal ? 0 : 1;
 
+                        //THIS DOESNT WORK WHY, WINDOW STATE NORMAL BROKEN!!!!!!! cant toggle :(
                         window.WindowState = window.WindowState != WindowState.Normal ? WindowState.Normal : WindowState.Fullscreen;
 
                         unsafe 

@@ -43,23 +43,26 @@ namespace RTCircles
             public void Render(Graphics g)
             {
                 var triangle = g.VertexBatch.GetTriangleStrip(3);
-                
+
                 int slot = g.GetTextureSlot(Easy2D.Texture.WhiteSquare);
 
                 triangle[0].Position = pos;
                 triangle[0].Color = color + parent.TriangleAdditive;
                 triangle[0].TextureSlot = slot;
                 triangle[0].TexCoord = Vector2.Zero;
+                triangle[0].Rotation = 0;
 
                 triangle[1].Position = pos - Size;
                 triangle[1].Color = color + parent.TriangleAdditive;
                 triangle[1].TextureSlot = slot;
                 triangle[1].TexCoord = Vector2.One;
+                triangle[1].Rotation = 0;
 
                 triangle[2].Position = pos + new Vector2(Size.X, -Size.Y);
                 triangle[2].Color = color + parent.TriangleAdditive;
                 triangle[2].TextureSlot = slot;
                 triangle[2].TexCoord = Vector2.Zero;
+                triangle[2].Rotation = 0;
             }
         }
 
@@ -77,11 +80,13 @@ namespace RTCircles
         private FrameBuffer triangleFramebuffer = new FrameBuffer(1, 1, textureComponentCount: InternalFormat.Rgba, pixelFormat: PixelFormat.Rgba, pixelType: PixelType.UnsignedByte);
         private List<Triangle> triangles = new List<Triangle>();
 
-        private static Easy2D.Texture catJam;
+        private static Easy2D.Texture catJamSpritesheet;
+        public static bool DrawCatJam = true;
 
         static ScrollingTriangles()
         {
-            catJam = new Easy2D.Texture(Utils.GetResource("Skin.catjam-spritesheet.png"));
+            if(DrawCatJam)
+                catJamSpritesheet = new Easy2D.Texture(Utils.GetResource("Skin.catjam-spritesheet.png"));
         }
 
         public ScrollingTriangles(int TriangleCount)
@@ -91,7 +96,7 @@ namespace RTCircles
             OsuContainer.OnKiai += () =>
             {
                 catJamAlpha.ClearTransforms();
-                catJamAlpha.TransformTo(1f, 0.1f, EasingTypes.In);
+                catJamAlpha.TransformTo(1f, 0.2f, EasingTypes.Out);
             };
         }
 
@@ -118,24 +123,30 @@ namespace RTCircles
                 }
             });
 
-            float images = catJam.Width / 112f;
-            float imagesPerBeat = images / 13f;
-
-            int i = (int)MathUtils.OscillateValue((float)OsuContainer.CurrentBeat.Map(0, 1, 0, imagesPerBeat), 0, images);
-
-            float texelSize = 112f / catJam.Width;
-
-            float x = texelSize * i;
-            Rectangle textureRect = new Rectangle(x, 0, texelSize, 1);
-
-            if(OsuContainer.IsKiaiTimeActive == false)
+            Rectangle catJamRect = Rectangle.Empty;
+            if (catJamSpritesheet is not null)
             {
-                catJamAlpha.ClearTransforms();
-                catJamAlpha.TransformTo(0f, 0.1f, EasingTypes.Out);
+                double images = catJamSpritesheet.Width / 112d;
+                double imagesPerBeat = images / 13d;
+
+                int i = (int)OsuContainer.CurrentBeat.Map(0, 1, 0, imagesPerBeat).OscillateValue(0, images);
+
+                float texelSize = 112f / catJamSpritesheet.Width;
+
+                float x = texelSize * i;
+                catJamRect = new Rectangle(x, 0, texelSize, 1);
+
+                if (OsuContainer.IsKiaiTimeActive == false)
+                {
+                    catJamAlpha.ClearTransforms();
+                    catJamAlpha.TransformTo(0f, 0.1f, EasingTypes.Out);
+                }
             }
 
             g.DrawEllipse(Position, 0, 360, Radius, 0, new Vector4(1f, 1f, 1f, 1f), triangleFramebuffer.Texture);
-            g.DrawEllipse(Position, 0, 360, Radius, 0, new Vector4(1f, 1f, 1f, catJamAlpha * 1f), catJam, textureCoords: textureRect);
+
+            if(DrawCatJam)
+                g.DrawEllipse(Position, 0, 360, Radius, 0, new Vector4(1f, 1f, 1f, catJamAlpha * 0.5f), catJamSpritesheet, textureCoords: catJamRect);
         }
 
         public override void Update(float delta)
