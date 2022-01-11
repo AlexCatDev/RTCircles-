@@ -1,7 +1,7 @@
 # Easy2D
 A Pure 2D OpenGL Framework and various projects that use it
 
-#RTCircles
+# RTCircles
 
 A osu! clone with various features
 ![](https://cdn.discordapp.com/attachments/598945024322830365/930428648782180362/ezgif-2-7a7e01ce5a.gif)
