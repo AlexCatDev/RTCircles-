@@ -33,6 +33,26 @@ namespace RTCircles
         {
             Vector4 color = new Vector4(1f, 1f, 1f, alpha);
 
+            //g.DrawRectangle(OsuContainer.FullPlayfield.Position, OsuContainer.FullPlayfield.Size, Colors.Red);
+            //g.DrawRectangle(OsuContainer.Playfield.Position, OsuContainer.Playfield.Size, Colors.Yellow);
+
+            Vector2 warningTopLeft = new Vector2(OsuContainer.FullPlayfield.TopLeft.X - size.X, OsuContainer.FullPlayfield.Y);
+            //g.DrawRectangle(warningTopLeft, size, Colors.Green);
+            g.DrawRectangle(warningTopLeft, size, color, Skin.WarningArrow);
+
+            Vector2 warningTopRight = new Vector2(OsuContainer.FullPlayfield.TopRight.X, OsuContainer.FullPlayfield.Y);
+            //g.DrawRectangle(warningTopRight, size, Colors.Green);
+            g.DrawRectangle(warningTopRight, size, color, Skin.WarningArrow, new Rectangle(1, 0, -1, 1), true);
+
+            Vector2 warningBottomLeft = new Vector2(OsuContainer.FullPlayfield.X - size.X, OsuContainer.FullPlayfield.BottomLeft.Y - size.Y);
+            //g.DrawRectangle(warningBottomLeft, size, Colors.Green);
+            g.DrawRectangle(warningBottomLeft, size, color, Skin.WarningArrow);
+
+            Vector2 warningBottomRight = new Vector2(OsuContainer.FullPlayfield.BottomRight.X, OsuContainer.FullPlayfield.BottomLeft.Y - size.Y);
+            //g.DrawRectangle(warningBottomRight, size, Colors.Green);
+            g.DrawRectangle(warningBottomRight, size, color, Skin.WarningArrow, new Rectangle(1, 0, -1, 1), true);
+
+            /*
             g.DrawRectangle(OsuContainer.FullPlayfield.TopLeft + offset, size, color, Skin.WarningArrow);
 
             g.DrawRectangle(OsuContainer.FullPlayfield.TopRight - new Vector2(size.X, 0) - offset, size, color, Skin.WarningArrow, new Rectangle(1, 0, -1, 1), true);
@@ -40,27 +60,27 @@ namespace RTCircles
             g.DrawRectangle(OsuContainer.FullPlayfield.BottomLeft - new Vector2(0, size.Y) + offset, size, color, Skin.WarningArrow);
 
             g.DrawRectangle(OsuContainer.FullPlayfield.BottomRight - new Vector2(size.X, size.Y) - offset, size, color, Skin.WarningArrow, new Rectangle(1, 0, -1, 1), true);
+            */
         }
 
-        private double lastBeat = 0;
+        private double elapsedTime = 0;
 
         public override void Update(float delta)
         {
             if (OsuContainer.SongPosition < spawnTime && alpha == 0)
                 return;
 
-            if (Math.Abs(OsuContainer.CurrentBeat * 4 - lastBeat) >= 1f)
+            elapsedTime += OsuContainer.DeltaSongPosition;
+
+            if (elapsedTime >= 125)
             {
-                lastBeat = OsuContainer.CurrentBeat * 4;
+                elapsedTime -= 125;
 
-                if (alpha == 1f)
-                    alpha = 0f;
-                else
-                    alpha = 1f;
-
-                if (OsuContainer.SongPosition > spawnTime + 2000)
-                    IsDead = true;
+                alpha = alpha == 1f ? 0 : 1f;
             }
+
+            if (OsuContainer.SongPosition > spawnTime + 2000)
+                IsDead = true;
         }
     }
 

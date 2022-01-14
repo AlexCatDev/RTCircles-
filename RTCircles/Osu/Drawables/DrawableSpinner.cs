@@ -89,7 +89,7 @@ namespace RTCircles
             g.DrawRectangleCentered(position, size, color * colorBoost, Skin.SpinnerCircle, rotDegrees: rotation);
 
             if (score > 0)
-                Skin.CircleNumbers.DrawCentered(g, OsuContainer.MapToPlayfield(512 / 2, 280), (size.Y / 9) * scoreBonusScale, new Vector4(1f, 1f, 1f, scoreBonusAlpha * color.W), score.ToString());
+                Skin.CircleNumbers.DrawCentered(g, OsuContainer.MapToPlayfield(512 / 2, 280, true), (size.Y / 9) * scoreBonusScale, new Vector4(1f, 1f, 1f, scoreBonusAlpha * color.W), score.ToString());
 
             if (OsuContainer.SongPosition >= spinner.EndTime + OsuContainer.Fadeout)
                 IsDead = true;
@@ -144,7 +144,7 @@ namespace RTCircles
             var deltaRot = thisAngle - lastAngle;
 
             //Only allow for rotations if it's fully faded in
-            if ((OsuContainer.Key1Down || OsuContainer.Key2Down) && OsuContainer.DeltaSongPosition > 0 && color.W == 1f)
+            if ((OsuContainer.Key1Down || OsuContainer.Key2Down ||OsuContainer.CookieziMode) && OsuContainer.DeltaSongPosition > 0 && color.W == 1f)
                 addRotation(deltaRot);
 
             lastAngle = thisAngle;

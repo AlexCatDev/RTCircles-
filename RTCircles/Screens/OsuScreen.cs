@@ -62,6 +62,7 @@ namespace RTCircles
             objectIndex = 0;
 
             firstAutoObject = null;
+            shouldAutoSpin = false;
             autoCursorAnimation.ClearTransforms();
 
             OsuContainer.Combo = 0;
@@ -197,11 +198,20 @@ namespace RTCircles
                 Add(new ComboBurst());
         }
 
+        private bool shouldAutoSpin = false;
         private void addAutoCursorAnimation(double fromTime, IDrawableHitObject toObj)
         {
             if(toObj is DrawableSpinner)
             {
-                
+                //Transform from the previous object so that the cursor lands in the middle of the spinner, when it just starts
+                //and then set the spin flag to true
+                autoCursorAnimation.TransformTo(new Vector2(toObj.BaseObject.Position.X, toObj.BaseObject.Position.Y), 
+                    fromTime, toObj.BaseObject.StartTime, EasingTypes.None, () => { shouldAutoSpin = true; });
+
+                //After above is done, just spend the rest of the duration with the cursor in the middle, and when the spinner is done
+                //unset the spinner flag
+                autoCursorAnimation.TransformTo(new Vector2(toObj.BaseObject.Position.X, toObj.BaseObject.Position.Y),
+                    toObj.BaseObject.StartTime, toObj.BaseObject.EndTime, EasingTypes.None, () => { shouldAutoSpin = false; });
                 return;
             }
 
@@ -258,7 +268,7 @@ namespace RTCircles
 
             g.DrawRectangleCentered(MainGame.WindowCenter, bgSize, new Vector4(1f, 1f, 1f, bgAlpha.Value), OsuContainer.Beatmap.Background);
 
-            g.DrawRectangle(OsuContainer.FullPlayfield.Position, OsuContainer.FullPlayfield.Size, new Vector4(1f, 1f, 1f, 0.1f));
+            //g.DrawRectangle(OsuContainer.FullPlayfield.Position, OsuContainer.FullPlayfield.Size, new Vector4(1f, 1f, 1f, 0.1f));
         }
 
         public override void Render(Graphics g)
@@ -266,7 +276,7 @@ namespace RTCircles
             if (OsuContainer.Beatmap is null)
                 return;
 
-            //drawBackground(g);
+            drawBackground(g);
 
             base.Render(g);
             OsuContainer.HUD.Render(g);
@@ -290,50 +300,65 @@ namespace RTCircles
                     return false;
                 });
 
+                double danceAnim = autoCursorAnimation.PercentageCompleted;
+
                 //if true use that sliders current sliderball position, else, use the auto cursor animation
                 Vector2 autoPos;
                 if (validSliderOnScreen)
                 {
                     autoPos = DrawableSlider.SliderBallPositionForAuto;
-                    if (autoCursorAnimation.CurrentIndex % 2 == 0)
+
+                    if (GlobalOptions.AutoCursorDance.Value)
                     {
-                        autoPos.X += (float)Math.Cos(autoCursorAnimation.PercentageCompleted.Map(0, 1, MathF.PI / 2, -MathF.PI / 2)) * OsuContainer.Beatmap.CircleRadiusInOsuPixels;
-                        autoPos.Y += (float)Math.Sin(autoCursorAnimation.PercentageCompleted.Map(0, 1, MathF.PI, 0)) * OsuContainer.Beatmap.CircleRadiusInOsuPixels;
-                    }
-                    else
-                    {
-                        autoPos.X -= (float)Math.Cos(autoCursorAnimation.PercentageCompleted.Map(0, 1, MathF.PI / 2, -MathF.PI / 2)) * OsuContainer.Beatmap.CircleRadiusInOsuPixels;
-                        autoPos.Y -= (float)Math.Sin(autoCursorAnimation.PercentageCompleted.Map(0, 1, MathF.PI, 0)) * OsuContainer.Beatmap.CircleRadiusInOsuPixels;
+                        if (autoCursorAnimation.CurrentIndex % 2 == 0)
+                        {
+                            autoPos.X += (float)Math.Cos(danceAnim.Map(0, 1, MathF.PI / 2, -MathF.PI / 2)) * OsuContainer.Beatmap.CircleRadiusInOsuPixels;
+                            autoPos.Y += (float)Math.Sin(danceAnim.Map(0, 1, MathF.PI, 0)) * OsuContainer.Beatmap.CircleRadiusInOsuPixels;
+                        }
+                        else
+                        {
+                            autoPos.X -= (float)Math.Cos(danceAnim.Map(0, 1, MathF.PI / 2, -MathF.PI / 2)) * OsuContainer.Beatmap.CircleRadiusInOsuPixels;
+                            autoPos.Y -= (float)Math.Sin(danceAnim.Map(0, 1, MathF.PI, 0)) * OsuContainer.Beatmap.CircleRadiusInOsuPixels;
+                        }
                     }
                 }
                 else
                 {
                     autoPos = autoCursorAnimation.Value;
-                    //Cursor dance thingy lol
-                    if (autoCursorAnimation.CurrentIndex % 2 == 0)
+
+                    if (GlobalOptions.AutoCursorDance.Value)
                     {
-                        autoPos.X += (float)Math.Cos(autoCursorAnimation.PercentageCompleted.Map(0, 1, -MathF.PI / 2, MathF.PI / 2)) * 100;
-                        autoPos.Y += (float)Math.Sin(autoCursorAnimation.PercentageCompleted.Map(0, 1, 0, MathF.PI)) * 100;
-                    }
-                    else
-                    {
-                        autoPos.X -= (float)Math.Cos(autoCursorAnimation.PercentageCompleted.Map(0, 1, -MathF.PI / 2, MathF.PI / 2)) * 100;
-                        autoPos.Y -= (float)Math.Sin(autoCursorAnimation.PercentageCompleted.Map(0, 1, 0, MathF.PI)) * 100;
+                        //Cursor dance thingy lol
+                        if (autoCursorAnimation.CurrentIndex % 2 == 0)
+                        {
+                            autoPos.X += (float)Math.Cos(danceAnim.Map(0, 1, -MathF.PI / 2, MathF.PI / 2)) * 100;
+                            autoPos.Y += (float)Math.Sin(danceAnim.Map(0, 1, 0, MathF.PI)) * 100;
+                        }
+                        else
+                        {
+                            autoPos.X -= (float)Math.Cos(danceAnim.Map(0, 1, -MathF.PI / 2, MathF.PI / 2)) * 100;
+                            autoPos.Y -= (float)Math.Sin(danceAnim.Map(0, 1, 0, MathF.PI)) * 100;
+                        }
                     }
                 }
 
-                /*
-                autoPos.X += (float)Perlin.Instance.Noise(OsuContainer.SongPosition / 100, 0, 0) * 50;
-                autoPos.X -= 25;
+                if (shouldAutoSpin)
+                {
+                    autoPos = autoCursorAnimation.Value;
+                    autoPos.X += (float)Math.Cos(OsuContainer.SongPosition / 20) * 50;
+                    autoPos.Y += (float)Math.Sin(OsuContainer.SongPosition / 20) * 50;
+                }
 
-                autoPos.Y += (float)Perlin.Instance.Noise(0, OsuContainer.SongPosition / 100, 0) * 50;
-                autoPos.Y -= 25;
-                */
-
-                cursor.Render(g, delta, OsuContainer.MapToPlayfield(autoPos), Colors.White);
+                autoPos = OsuContainer.MapToPlayfield(autoPos);
+                OsuContainer.CustomCursorPosition = autoPos;
+                cursor.Render(g, delta, autoPos, Colors.White);
                 //Else if not playing with auto, just render the cursor normally.
-            } else if (ScreenManager.ActiveScreen() == this)
+            }
+            else if (ScreenManager.ActiveScreen() == this)
+            {
                 cursor.Render(g, delta, Input.MousePosition, Colors.White);
+                OsuContainer.CustomCursorPosition = null;
+            }
         }
 
         public override void OnKeyDown(Key key)

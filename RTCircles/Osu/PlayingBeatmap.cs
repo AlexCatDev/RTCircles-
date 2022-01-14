@@ -43,7 +43,7 @@ namespace RTCircles
         public float HP { get; private set; }
 
         public float CircleRadius => (OsuContainer.Playfield.Width / 16f) * (1f - (0.7f * (CS - 5f) / 5f));
-        public float CircleRadiusInOsuPixels => 54.4f - 4.48f * OsuContainer.Beatmap.CS;
+        public float CircleRadiusInOsuPixels => 54.4f - 4.48f * CS;
 
         public List<double> DifficultyGraph = new List<double>();
 
@@ -122,6 +122,21 @@ namespace RTCircles
                 OD = InternalBeatmap.DifficultySection.OverallDifficulty / 2f;
                 HP = InternalBeatmap.DifficultySection.HPDrainRate / 2f;
             }
+        }
+
+        public void OverrideDifficulty(float cs, float ar, float od, float hp)
+        {
+            CS = cs;
+            AR = ar;
+            OD = od;
+            HP = hp;
+
+            Window50 = mapDifficultyRange(OD, 200, 150, 100);
+            Window100 = mapDifficultyRange(OD, 140, 100, 60);
+            Window300 = mapDifficultyRange(OD, 80, 50, 20);
+
+            Preempt = mapDifficultyRange(AR, 1800, 1200, 450);
+            Fadein = 400 * Math.Min(1, Preempt / 450);
         }
 
         private void generateStrainGraph()

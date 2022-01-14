@@ -170,6 +170,10 @@ namespace RTCircles
 
         public static string[] SupportedImageExtensions { get; private set; } = new string[] { ".png", ".jpg", ".gif", ".bmp", ".tga", ".tiff" };
 
+        /// <summary>
+        /// TODO: Compile textures into an atlas, so drawcalls can be cut down.
+        /// </summary>
+
         public static OsuTexture ApproachCircle { get; private set; }
 
         public static OsuTexture HitCircleOverlay { get; private set; }

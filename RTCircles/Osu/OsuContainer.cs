@@ -104,8 +104,6 @@ namespace RTCircles
             Playfield.Position - new Vector2(Beatmap?.CircleRadius ?? 0) / 2,
             Playfield.Size + new Vector2(Beatmap?.CircleRadius ?? 0));
 
-        public static OsuDatabase Database { get; private set; } = new OsuDatabase();
-
         public static HUD HUD { get; private set; } = new HUD();
 
         public static Key Key1 = Key.Z;
@@ -232,16 +230,6 @@ namespace RTCircles
 
         public static void SetMap(Beatmap beatmap, bool generateHitObjects = true, Mods mods = Mods.NM)
         {
-            /*
-            if (Beatmap?.FileInfo.Name == file.Name && generateHitObjects)
-            {
-                if (Beatmap.HitObjects.Count == 0 || Beatmap.Mods != mods)
-                    Beatmap.GenerateHitObjects(mods);
-
-                return;
-            }
-            */
-
             Beatmap?.Song.Stop();
 
             Beatmap = new PlayingBeatmap(beatmap);
@@ -264,7 +252,7 @@ namespace RTCircles
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public static Vector2 MapToPlayfield(float x, float y, bool ignoreMods = false)
         {
-            if (Beatmap.Mods.HasFlag(Mods.HR) && ignoreMods == false)
+            if (ignoreMods == false && Beatmap.Mods.HasFlag(Mods.HR))
                 y = 384 - y;
             
             x = MathUtils.Map(x, 0, 512, Playfield.Left, Playfield.Right);

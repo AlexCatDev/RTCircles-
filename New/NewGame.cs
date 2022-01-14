@@ -346,11 +346,146 @@ namespace New
             //PostProcessing.MotionBlur = true;
         }
 
+        public (Vector2 topLeft, Vector2 topRight, Vector2 bottomLeft, Vector2 bottomRight) DrawLine(Vector2 startPosition, Vector2 endPosition, Vector4 color1, Vector4 color2, float thickness, Texture texture = null)
+        {
+            Vector2 difference = endPosition - startPosition;
+            Vector2 perpen = new Vector2(difference.Y, -difference.X);
+
+            perpen.Normalize();
+
+            Vector2 topLeft = new Vector2(startPosition.X + perpen.X * thickness / 2f,
+                startPosition.Y + perpen.Y * thickness / 2f);
+
+            Vector2 topRight = new Vector2(startPosition.X - perpen.X * thickness / 2f,
+                startPosition.Y - perpen.Y * thickness / 2f);
+
+            Vector2 bottomLeft = new Vector2(endPosition.X - perpen.X * thickness / 2f,
+                endPosition.Y - perpen.Y * thickness / 2f);
+
+            Vector2 bottomRight = new Vector2(endPosition.X + perpen.X * thickness / 2f,
+                endPosition.Y + perpen.Y * thickness / 2f);
+
+            unsafe
+            {
+                var quad = graphics.VertexBatch.GetQuad();
+
+                int slot = graphics.GetTextureSlot(texture);
+
+                quad->Rotation = 0;
+                quad->Color = color1;
+                quad->Position = topLeft;
+                quad->TexCoord = new Vector2(0, 0);
+                quad->TextureSlot = slot;
+                quad->Rotation = 0;
+                ++quad;
+
+                quad->Rotation = 0;
+                quad->Color = color1;
+                quad->Position = topRight;
+                quad->TexCoord = new Vector2(0, 1);
+                quad->TextureSlot = slot;
+                quad->Rotation = 0;
+                ++quad;
+
+                quad->Rotation = 0;
+                quad->Color = color2;
+                quad->Position = bottomLeft;
+                quad->TexCoord = new Vector2(1, 1);
+                quad->TextureSlot = slot;
+                quad->Rotation = 0;
+                ++quad;
+
+                quad->Rotation = 0;
+                quad->Color = color2;
+                quad->Position = bottomRight;
+                quad->TexCoord = new Vector2(1, 0);
+                quad->TextureSlot = slot;
+                quad->Rotation = 0;
+            }
+
+            return (topLeft,topRight,bottomLeft,bottomRight);
+        }
+
+        private void drawCircle(Vector2 pos, float radius, float startRotation, float endRotation)
+        {
+            const int CIRCLE_RESOLUTION = 20;
+            unsafe
+            {
+                int slot = graphics.GetTextureSlot(null);
+                var verts = graphics.VertexBatch.GetTriangleFan(CIRCLE_RESOLUTION);
+
+                verts->Position = new Vector2(pos.X, pos.Y);
+                verts->TextureSlot = slot;
+                verts->Color = Colors.White;
+                verts->Rotation = 0;
+                ++verts;
+
+                float theta = startRotation;
+                float stepTheta = (endRotation - startRotation) / (CIRCLE_RESOLUTION - 2);
+
+                Vector2 vertPos = new Vector2(0, 0);
+
+                for (int i = 1; i < CIRCLE_RESOLUTION; i++)
+                {
+                    vertPos.X = MathF.Cos(theta) * radius + pos.X;
+                    vertPos.Y = MathF.Sin(theta) * radius + pos.Y;
+
+                    verts->Position = vertPos;
+                    verts->TextureSlot = slot;
+                    verts->Color = Colors.White;
+                    verts->Rotation = 0;
+                    ++verts;
+
+                    theta += stepTheta;
+                }
+            }
+        }
+
         public override void OnRender(double delta)
         {
             PostProcessing.Use(new Vector2i(Width, Height), new Vector2i(Width, Height));
 
             container.Render(graphics);
+
+            Vector2 line1 = new Vector2(100, 100);
+            Vector2 line1_2 = new Vector2(300, 300);
+
+            Vector2 pos2 = Input.MousePosition;
+
+            var k1 = DrawLine(line1, line1_2, Colors.Red, Colors.Red, 50f);
+            var k2 = DrawLine(line1_2, pos2, Colors.Green, Colors.Green, 50f);
+
+            float angle1 = MathUtils.AtanVec(line1_2, line1);
+            float angle2 = MathUtils.AtanVec(line1_2, pos2);
+
+            float angle3 = MathUtils.AtanVec(k1.bottomLeft, k2.topRight);
+
+            float angleDegrees = MathHelper.RadiansToDegrees(angle1);
+            float angle2Degrees = MathHelper.RadiansToDegrees(angle2);
+
+            float angle3Degrees = MathHelper.RadiansToDegrees(angle3);
+
+            graphics.DrawString(angleDegrees.ToString(), Font.DefaultFont, line1, Colors.Blue);
+            graphics.DrawString(angle2Degrees.ToString(), Font.DefaultFont, pos2, Colors.Blue);
+
+            graphics.DrawString(angle3Degrees.ToString(), Font.DefaultFont, line1_2, Colors.Blue);
+
+            graphics.DrawRectangleCentered(line1, new Vector2(4), Colors.Yellow);
+            graphics.DrawRectangleCentered(line1_2, new Vector2(4), Colors.Yellow);
+            graphics.DrawRectangleCentered(pos2, new Vector2(4), Colors.Yellow);
+
+            //graphics.DrawEllipse(line1_2, angleDegrees > angle2Degrees ? angle2Degrees : angleDegrees, angle2Degrees, 25, 0, Colors.Yellow, null, 50);
+
+            //drawCircle(line1, 25, angle + MathF.PI, angle + MathF.PI * 2);
+
+            //float angleEnd = MathUtils.AtanVec(k1, k2);
+
+            //drawCircle(line1_2, 25, angle, angleEnd);
+
+            //drawCircle(pos2, 25, angleEnd + MathF.PI / 2, angleEnd + MathF.PI + MathF.PI / 2);
+
+            graphics.DrawString("k1 bl", Font.DefaultFont, k1.bottomLeft, Colors.White, 0.25f);
+            graphics.DrawString("k2 tr", Font.DefaultFont, k2.topRight, Colors.White, 0.25f);
             graphics.EndDraw();
             PostProcessing.PresentFinalResult();
         }

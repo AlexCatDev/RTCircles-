@@ -50,6 +50,8 @@ namespace Easy2D
             return false;
         }
 
+        public static float AtanVec(Vector2 pos1, Vector2 pos2) => MathF.Atan2(pos1.Y - pos2.Y, pos1.X - pos2.X); 
+
         public static float GetAngleFromOrigin(Vector2 origin, Vector2 target)
         {
             var n = 270f - (MathF.Atan2(origin.Y - target.Y, origin.X - target.X)) * 180 / MathF.PI;

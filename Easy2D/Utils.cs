@@ -68,6 +68,8 @@ namespace Easy2D
 
     public static class Utils
     {
+        public const int MAX_LOGS = 50;
+
         public static string BasePath { get; private set; }
 
         public static event Action<LogDetails> OnLog;
@@ -99,6 +101,9 @@ namespace Easy2D
                         writeColor(item.Text, item.ConsoleColor);
                     }
                 }
+
+                if (Logs.Count > MAX_LOGS)
+                    Logs.RemoveAt(0);
 
                 Logs.Add(s);
             };

@@ -20,20 +20,24 @@ namespace RTCircles
 
             public bool RemoveMe;
 
-            public TrailPiece(Vector2 Position)
+            private float startWidth;
+
+            public TrailPiece(Vector2 Position, float startWidth)
             {
                 this.Position = Position;
+                this.startWidth = startWidth;
 
                 this.Color = Vector4.One;
-                this.Width = 10;
             }
 
             public void Update(float delta)
             {
-                Width -= delta * 60;
+                //Width -= delta * 60;
                 Color.W -= delta * 6;
 
-                Width.ClampRef(0, 10000);
+                Width = Interpolation.ValueAt(Color.W, startWidth, 0, 1, 0, EasingTypes.None);
+                //Width = Color.W.Map(1, 0, 8, 0);
+                //Width.ClampRef(0, 10000);
                 Color.W.ClampRef(0, 1);
 
                 float frequency1 = (float)MainGame.Instance.TotalTime;
@@ -44,11 +48,11 @@ namespace RTCircles
                 float phase2 = 1;
                 float phase3 = 5;
 
-                float width = 1f;
+                float colorWidth = 1f;
 
-                var red = 1 + MathF.Abs(MathF.Sin(frequency1 + phase1)) * width;
-                var grn = 1 + MathF.Abs(MathF.Sin(frequency2 + phase2)) * width;
-                var blu = 1 + MathF.Abs(MathF.Sin(frequency3 + phase3)) * width;
+                var red = 1 + MathF.Abs(MathF.Sin(frequency1 + phase1)) * colorWidth;
+                var grn = 1 + MathF.Abs(MathF.Sin(frequency2 + phase2)) * colorWidth;
+                var blu = 1 + MathF.Abs(MathF.Sin(frequency3 + phase3)) * colorWidth;
 
                 Color.X = red;
                 Color.Y = grn;
@@ -76,8 +80,9 @@ namespace RTCircles
                         int vertIndex = 0;
                         for (int i = 1; i < trailPieces.Count; i++)
                         {
-                            Vector2 perpen = trailPieces[i - 1].Position - trailPieces[i].Position;
-                            perpen = perpen.PerpendicularLeft;
+                            Vector2 difference = trailPieces[i].Position - trailPieces[i - 1].Position;
+                            Vector2 perpen = new Vector2(difference.Y, -difference.X);
+
                             perpen.Normalize();
 
                             verts[vertIndex].Position = trailPieces[i - 1].Position - perpen * trailPieces[i - 1].Width;
@@ -130,13 +135,12 @@ namespace RTCircles
             if (length >= 5)
             {
                 lastMousePos = mousePos;
-                TrailPiece p = new TrailPiece(mousePos);
+                TrailPiece p = new TrailPiece(mousePos, 8);
 
                 trailPieces.Add(p);
             }
         }
     }
-
 
     public class Cursor
     {
@@ -194,8 +198,6 @@ namespace RTCircles
 
         private FancyCursorTrail fancyTrail = new FancyCursorTrail();
 
-        public static bool UseFancyTrail = true;
-
         void renderFancy(Graphics g, float delta, Vector2 position, Vector4 color)
         {
             rotation += 45 * delta;
@@ -213,7 +215,7 @@ namespace RTCircles
 
         public void Render(Graphics g, float delta, Vector2 position, Vector4 color)
         {
-            if (UseFancyTrail)
+            if (GlobalOptions.UseFancyCursorTrail.Value)
             {
                 renderFancy(g,delta, position, color);
                 return;

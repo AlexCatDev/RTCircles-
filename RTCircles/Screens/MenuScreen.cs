@@ -20,25 +20,26 @@ namespace RTCircles
             {
                 BeatmapMirror.Scheduler.Add(() =>
                 {
-                   ScreenManager.GetScreen<MapSelectScreen>().LoadCarouselItems();
+                    ScreenManager.GetScreen<MapSelectScreen>().LoadCarouselItems();
 
-                   var carouselItems = BeatmapCarousel.Items;
-                   if (BeatmapCarousel.Items.Count > 0)
-                   {
-                       var item = carouselItems[RNG.Next(0, carouselItems.Count - 1)];
+                    var carouselItems = BeatmapCarousel.Items;
+                    if (BeatmapCarousel.Items.Count > 0)
+                    {
+                        var item = carouselItems[RNG.Next(0, carouselItems.Count - 1)];
 
-                       OsuContainer.SetMap(BeatmapMirror.DecodeBeatmap(System.IO.File.OpenRead(item.FullPath)), true, Mods.Auto);
-                       OsuContainer.Beatmap.Song.Volume = 0;
-                       OsuContainer.SongPosition = (OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai))?.Offset - 2500 ?? 0;
-                       OsuContainer.Beatmap.Song.Play(false);
-                        /*
-                        GPUSched.Instance.AddAsync((ct) => {
-                            System.Threading.Thread.Sleep(6000);
-                        }, () => {
+                        item = carouselItems.Find((o) => o.Text.Contains("Nanahira"));
 
+
+                        GPUSched.Instance.Add(() =>
+                        {
+                            OsuContainer.SetMap(BeatmapMirror.DecodeBeatmap(System.IO.File.OpenRead(item.FullPath)), true, Mods.Auto);
+                            OsuContainer.Beatmap.Song.Volume = 0;
+                            OsuContainer.SongPosition = (OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai))?.Offset - 2500 ?? 0;
+                            //OsuContainer.Beatmap.Song.Play(false);
+
+                            OsuContainer.Beatmap.Song.Volume = 1f;
                             ScreenManager.SetScreen<OsuScreen>();
                         });
-                        */
                     }
                     else
                     {
@@ -51,9 +52,11 @@ namespace RTCircles
 
                         playingBeatmap.GenerateHitObjects(Mods.Auto);
 
-                        GPUSched.Instance.AddAsync((ct) => {
+                        GPUSched.Instance.AddAsync((ct) =>
+                        {
                             System.Threading.Thread.Sleep(15000);
-                        }, () => {
+                        }, () =>
+                        {
 
                             ScreenManager.SetScreen<OsuScreen>();
                         });

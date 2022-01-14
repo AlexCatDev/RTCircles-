@@ -30,10 +30,14 @@ namespace RTCircles
 
         public Path Path = new Path();
 
+        private float radius = -1;
+
         private FrameBuffer frameBuffer = new FrameBuffer(1, 1, FramebufferAttachment.DepthAttachment,
             InternalFormat.DepthComponent, PixelFormat.DepthComponent, PixelType.UnsignedShort);
 
-        private static PrimitiveBatch<Vector3> sliderBatch = new PrimitiveBatch<Vector3>(20000, 40000) { Resizable = false };
+        //1mb for stupid aspire abuse sliders
+        //Also optimize circle betweens points, so i can cut this down and in turn the amount of vertices to render
+        private static UnsafePrimitiveBuffer<Vector3> sliderBatch = new UnsafePrimitiveBuffer<Vector3>(50_000, 130_000);
 
         private void drawLine(Vector2 startPosition, Vector2 endPosition, float radius)
         {
@@ -53,64 +57,71 @@ namespace RTCircles
 
             Vector3 bottomLeft = new Vector3(endPosition.X, endPosition.Y, 0); ;
 
-            var quad = sliderBatch.GetQuad();
+            unsafe
+            {
+                var quad = sliderBatch.GetQuad();
 
-            quad[0] = topRight;
-            quad[1] = bottomRight;
-            quad[2] = bottomLeft;
-            quad[3] = topLeft;
+                *quad++ = topRight;
+                *quad++ = bottomRight;
+                *quad++ = bottomLeft;
+                *quad++ = topLeft;
 
-            //Second line bottom
+                //Second line bottom
 
-            topRight = bottomRight;
+                topRight = bottomRight;
 
-            topLeft = bottomLeft;
+                topLeft = bottomLeft;
 
-            bottomRight = new Vector3(startPosition.X - perpen.X * radius,
-                                             startPosition.Y - perpen.Y * radius, 1);
+                bottomRight = new Vector3(startPosition.X - perpen.X * radius,
+                                                 startPosition.Y - perpen.Y * radius, 1);
 
-            bottomLeft = new Vector3(endPosition.X - perpen.X * radius,
-                                             endPosition.Y - perpen.Y * radius, 1);
+                bottomLeft = new Vector3(endPosition.X - perpen.X * radius,
+                                                 endPosition.Y - perpen.Y * radius, 1);
 
-            quad = sliderBatch.GetQuad();
+                quad = sliderBatch.GetQuad();
 
-            quad[0] = topRight;
-            quad[1] = bottomRight;
-            quad[2] = bottomLeft;
-            quad[3] = topLeft;
+                *quad++ = topRight;
+                *quad++ = bottomRight;
+                *quad++ = bottomLeft;
+                *quad++ = topLeft;
+            }
         }
 
         //Circles can be pregenerated, optimize circle resolution for the radius
         private void drawCircle(Vector2 pos, float radius)
         {
-            var verts = sliderBatch.GetTriangleFan(CIRCLE_RESOLUTION);
-
-            verts[0] = new Vector3(pos.X, pos.Y, 0f);
-
-            float theta = 0;
-            float stepTheta = (MathF.PI * 2) / (verts.Length - 2);
-
-            Vector3 vertPos = new Vector3(0, 0, 1f);
-
-            for (int i = 1; i < verts.Length; i++)
+            unsafe
             {
-                vertPos.X = MathF.Cos(theta) * radius + pos.X;
-                vertPos.Y = MathF.Sin(theta) * radius + pos.Y;
+                var verts = sliderBatch.GetTriangleFan(CIRCLE_RESOLUTION);
 
-                verts[i] = vertPos;
+                *verts++ = new Vector3(pos.X, pos.Y, 0f);
 
-                theta += stepTheta;
+                float theta = 0;
+                const float stepTheta = (MathF.PI * 2) / (CIRCLE_RESOLUTION - 2);
+
+                Vector3 vertPos = new Vector3(0, 0, 1f);
+
+                for (int i = 1; i < CIRCLE_RESOLUTION; i++)
+                {
+                    vertPos.X = MathF.Cos(theta) * radius + pos.X;
+                    vertPos.Y = MathF.Sin(theta) * radius + pos.Y;
+
+                    *verts++ = vertPos;
+
+                    theta += stepTheta;
+                }
             }
         }
 
         private void drawSlider()
         {
-            float radius = Path.Radius;
-            Vector2 posOffset = Path.Bounds.Position;
+            //The path coordinates are in osu pixel space, and we need to convert them to framebuffer space
+            Vector2 posOffset = Path.Bounds.Position - new Vector2(radius);
 
             float startLength = Path.Length * startProgress;
             float endLength = Path.Length * endProgress;
 
+            //All of this is stupid, unreadable and gave me cancer looking at it and made me die writing it all for stupid optimizations
             if (startLength == endLength)
                 drawCircle(Path.CalculatePositionAtProgress(endProgress) - posOffset, radius);
             else
@@ -157,16 +168,26 @@ namespace RTCircles
                     }
                 }
             }
-
             sliderBatch.Draw();
         }
 
-        public void SetPoints(List<Vector2> points, float pointSize)
+        public void SetRadius(float radius)
         {
-            Path.Radius = pointSize;
-            Path.SetPoints(points);
+            if(this.radius != radius)
+            {
+                this.radius = radius;
 
-            frameBuffer.Resize(Path.Bounds.Width, Path.Bounds.Height);
+                //Make framebuffer the size of the slider bounding box, + the circle radius (circle radius and size is in osu pixels)
+                frameBuffer.Resize(Path.Bounds.Width + radius * 2, Path.Bounds.Height + radius * 2);
+                projectionMatrix = Matrix4.CreateOrthographicOffCenter(0, frameBuffer.Width, frameBuffer.Height, 0, 1f, -1f);
+
+                hasBeenUpdated = true;
+            }
+        }
+
+        public void SetPoints(List<Vector2> points)
+        {
+            Path.SetPoints(points);
 
             //Pregenerate will create the framebuffer AT ONCE!
             if (PregenerateFramebuffer)
@@ -217,12 +238,15 @@ namespace RTCircles
 
         public float Alpha;
 
+        private Matrix4 projectionMatrix;
+
         public void Render(Graphics g)
         {
+            if (radius < -1)
+                throw new Exception("Slider radius was less than 0????");
+
             if (Path.Points.Count == 0 || (frameBuffer.Status != GLEnum.FramebufferComplete && frameBuffer.IsInitialized))
                 return;
-
-            var bounds = Path.Bounds;
 
             if (hasBeenUpdated)
                 hasBeenUpdated = false;
@@ -233,10 +257,10 @@ namespace RTCircles
 
             frameBuffer.Bind();
             GL.Instance.Enable(EnableCap.DepthTest);
-            Viewport.SetViewport(0, 0, (int)bounds.Width, (int)bounds.Height);
+            Viewport.SetViewport(0, 0, (int)frameBuffer.Width, (int)frameBuffer.Height);
             GL.Instance.Clear(ClearBufferMask.DepthBufferBit);
             sliderShader.Bind();
-            sliderShader.SetMatrix("u_Projection", Matrix4.CreateOrthographicOffCenter(0, (int)bounds.Width, (int)bounds.Height, 0, 1f, -1f));
+            sliderShader.SetMatrix("u_Projection", projectionMatrix);
             drawSlider();
 
             frameBuffer.Unbind();
@@ -247,12 +271,27 @@ namespace RTCircles
 
         //Batched slider quads!
         skipSliderCreation:
-            Vector2 renderPosition = OsuContainer.MapToPlayfield(bounds.Position.X, bounds.Position.Y);
+            Rectangle bounds = Path.Bounds;
+
+            bounds.X -= radius;
+            bounds.Y -= radius;
+
+            Rectangle texCoords;
+            Vector2 renderPosition;
+            //If hr is on change the way the slider is rendered so it matches
+            if (OsuContainer.Beatmap.Mods.HasFlag(Mods.HR))
+            {
+                texCoords = new Rectangle(0, 0, 1, 1);
+                renderPosition = OsuContainer.MapToPlayfield(bounds.Position.X, bounds.Position.Y + frameBuffer.Height);
+            }
+            else
+            {
+                texCoords = new Rectangle(0, 1, 1, -1);
+                renderPosition = OsuContainer.MapToPlayfield(bounds.Position.X, bounds.Position.Y);
+            }
 
             //Convert the size of the slider from osu pixels to playfield pixels, since the points and the radius are in osu pixels
-            Vector2 renderSize = bounds.Size * (OsuContainer.Playfield.Width / 512);
-
-            Rectangle texCoords = new Rectangle(0, 1, 1, -1);
+            Vector2 renderSize = (new Vector2(frameBuffer.Width, frameBuffer.Height)) * (OsuContainer.Playfield.Width / 512);
 
             if (ScalingOrigin.HasValue)
             {
@@ -269,6 +308,7 @@ namespace RTCircles
             }
             else
             {
+                //^ and we draw this, within the main batcher
                 g.DrawRectangle(renderPosition, renderSize, new Vector4(10000, 0, 0, Alpha), frameBuffer.Texture, texCoords, true);
             }
         }

@@ -11,6 +11,38 @@ using System.Runtime.InteropServices;
 
 namespace RTCircles
 {
+    public static class GlobalOptions
+    {
+        public readonly static Option<bool> Bloom 
+            = Option<bool>.CreateProxy("Bloom", (value) => { GPUSched.Instance.Add(() => { PostProcessing.Bloom = value; }); }, true);
+
+        public readonly static Option<bool> MotionBlur 
+            = Option<bool>.CreateProxy("MotionBlur", (value) => { GPUSched.Instance.Add(() => { PostProcessing.MotionBlur = value; }); }, true);
+
+        public readonly static Option<bool> UseFancyCursorTrail = new Option<bool>("UseFancyCursorTrail", true);
+
+        public readonly static Option<bool> SliderSnakeIn = new Option<bool>("SliderSnakeIn", true);
+
+        public readonly static Option<bool> SliderSnakeOut = new Option<bool>("SliderSnakeOut", true);
+
+        public readonly static Option<bool> SliderSnakeExplode = new Option<bool>("SliderSnakeExplode", true);
+
+        public readonly static Option<bool> AutoCursorDance = new Option<bool>("AutoCursorDance", true);
+
+        public readonly static Option<bool> ShowRenderGraphOverlay = new Option<bool>("ShowRenderGraphOverlay", false);
+
+        public readonly static Option<bool> ShowLogOverlay = new Option<bool>("ShowLogOverlay", false);
+
+        public readonly static Option<bool> ShowFPS = new Option<bool>("ShowFPS", true);
+
+        public static void Init() 
+        {
+            Utils.Log($"Loaded Settings", LogLevel.Info);
+            //We need to access a variable to instantiate every variable lol
+            var ok = Bloom.Value;
+        }
+    }
+
     public class MainGame : Game
     {
         private Graphics g;
@@ -22,6 +54,7 @@ namespace RTCircles
 
         public override void OnLoad()
         {
+            GlobalOptions.Init();
             Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\- HAPS MIT NU");
 
             g = new Graphics();
@@ -119,23 +152,12 @@ namespace RTCircles
                 ScreenManager.GoBack();
             };
 
-            if (RuntimeInformation.ProcessArchitecture == Architecture.X86 || RuntimeInformation.ProcessArchitecture == Architecture.X64)
-            {
-                PostProcessing.Bloom = true;
-                PostProcessing.MotionBlur = true;
-            }
-
             IsMultiThreaded = false;
 
-            Utils.IgnoredLogLevels.Add(LogLevel.Debug);
+            //Utils.IgnoredLogLevels.Add(LogLevel.Debug);
         }
 
         private DateTime lastOpened;
-
-
-        public static bool ShowRenderGraph = false;
-        public static bool ShowLogOverlay = false;
-        public static bool ShowFPS = true;
 
         private ulong prevVertices;
         private ulong prevIndices;
@@ -160,7 +182,7 @@ namespace RTCircles
         private Vector2? trueHoverPos = null;
         private void drawFPSGraph(Graphics g)
         {
-            if (ShowRenderGraph)
+            if (GlobalOptions.ShowRenderGraphOverlay.Value)
             {
                 if (renderTimes.Count == 1000)
                     renderTimes.RemoveAt(0);
@@ -184,7 +206,7 @@ namespace RTCircles
                 g.DrawString("20 MS", Font.DefaultFont, new Vector2(WindowWidth - 75, height20MS), Colors.Red, 0.35f);
             }
 
-            if (ShowFPS)
+            if (GlobalOptions.ShowFPS.Value)
             {
                 ulong diffVertices = g.VerticesDrawn - prevVertices;
                 prevVertices = g.VerticesDrawn;
@@ -257,13 +279,13 @@ namespace RTCircles
 
         private void drawLog(Graphics g)
         {
-            if (ShowLogOverlay == false)
+            if (!GlobalOptions.ShowLogOverlay.Value)
                 return;
 
-            const int MAX_VISIBLE_LOGS = 15;
+            const int MAX_VISIBLE_LOGS = 20;
 
             Vector2 offset = new Vector2(0, 0);
-            float scale = 0.25f;
+            float scale = 0.30f;
 
             float totalSize = (Font.DefaultFont.Size * scale) * MAX_VISIBLE_LOGS;
 

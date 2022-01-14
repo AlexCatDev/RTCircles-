@@ -17,26 +17,6 @@ namespace RTCircles
 
         public IReadOnlyList<Vector2> Points => points.AsReadOnly();
 
-        /// <summary>
-        /// Set this if you want the bounding box to be 100% correct with the size of the points you're rendering, they have to be centered
-        /// </summary>
-        public float Radius
-        {
-            get
-            {
-                return radius;
-            }
-            set
-            {
-                if (value == radius)
-                    return;
-
-                radius = value;
-                Bounds = calculateBoundingBox();
-            }
-        }
-        private float radius;
-
         public float Length { get; private set; }
         public Rectangle Bounds { get; private set; }
 
@@ -113,9 +93,6 @@ namespace RTCircles
             }
 
             Rectangle rect = new Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
-
-            rect.Size += new Vector2(Radius) * 2f;
-            rect.Position -= new Vector2(Radius);
 
             return rect;
         }

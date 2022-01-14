@@ -12,10 +12,6 @@ namespace RTCircles
     {
         public static float SliderResolution = 1f;
 
-        public static bool SnakeIn = true;
-        public static bool SnakeOut = true;
-        public static bool Explode = true;
-
         public static Vector2 SliderBallPositionForAuto { get; private set; }
 
         private Slider slider;
@@ -102,12 +98,9 @@ namespace RTCircles
             if (fullPath.Count == 0)
                 fullPath.Add(new Vector2(slider.Position.X, slider.Position.Y));
 
-            //The radius in osu pixels
-            float sizeInOsuSpace = OsuContainer.Beatmap.CircleRadiusInOsuPixels;
-
             //Defining the pointsize in path, makes it know how big to calculate the bounding box
             //The pointsize is in osu pixels from the current circlesize
-            SliderPath.SetPoints(fullPath, sizeInOsuSpace);
+            SliderPath.SetPoints(fullPath);
         }
 
         private float snakeIn = 1f;
@@ -417,14 +410,14 @@ namespace RTCircles
 
                 circleAlpha = MathUtils.Map(timeElapsed, 0, (float)OsuContainer.Beatmap.Fadein, 0, 1f).Clamp(0, 1f);
 
-                snakeIn = SnakeIn ? MathUtils.Map(timeElapsed, 0, (float)OsuContainer.Beatmap.Fadein / 3f, 0, 1f).Clamp(0, 1f) : 1;
+                snakeIn = GlobalOptions.SliderSnakeIn.Value ? MathUtils.Map(timeElapsed, 0, (float)OsuContainer.Beatmap.Fadein / 2f, 0, 1f).Clamp(0, 1f) : 1;
             }
 
             //Slider snakeout module
             //Im suprised i could fit this in my head, 1 month ago, i had no fucking clue
             //How i would do this, and solved it in like 7 minutes now? easy
             float snakeOut = 0f;
-            if (repeatsDone >= slider.Repeats - 1 && SnakeOut)
+            if (repeatsDone >= slider.Repeats - 1 && GlobalOptions.SliderSnakeOut.Value)
             {
                 double duration = slider.EndTime - slider.StartTime;
                 double startSnake = slider.Repeats > 1 ? slider.EndTime - (duration / slider.Repeats) : slider.StartTime;
@@ -518,9 +511,13 @@ namespace RTCircles
 
             //Fix only explode when there are no misses on the slider
             //This whole piece here is for exploding the slider itself like it was a circle
-            if (fadeout && (IsHit || IsEndingHit) && Explode)
+            if (fadeout && (IsHit || IsEndingHit) && GlobalOptions.SliderSnakeExplode.Value)
             {
-                SliderPath.ScalingOrigin = sliderballPosition;
+                if (GlobalOptions.SliderSnakeOut.Value)
+                    SliderPath.ScalingOrigin = sliderballPosition;
+                else
+                    SliderPath.ScalingOrigin = OsuContainer.MapToPlayfield(SliderPath.Path.Bounds.Center);
+
                 SliderPath.DrawScale = circleAlpha.Map(1f, 0f, 1f, (float)OsuContainer.CircleExplode);
             }
             else
@@ -554,6 +551,8 @@ namespace RTCircles
 
         public override void Render(Graphics g)
         {
+            SliderPath.SetRadius(OsuContainer.Beatmap.CircleRadiusInOsuPixels);
+
             Vector3 sliderBorder = new Vector3(Skin.Config.SliderBorder ?? new Vector3(1f, 1f, 1f));
             Vector3 sliderTrack = new Vector3(Skin.Config.SliderTrackOverride ?? Skin.Config.ColorFromIndex(colorIndex));
 
