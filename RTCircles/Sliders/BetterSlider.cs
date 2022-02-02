@@ -173,15 +173,22 @@ namespace RTCircles
 
         public void SetRadius(float radius)
         {
-            if(this.radius != radius)
+            if (this.radius != radius)
             {
                 this.radius = radius;
 
+                int beforeWidth = frameBuffer.Width;
+                int beforeHeight = frameBuffer.Height;
+
                 //Make framebuffer the size of the slider bounding box, + the circle radius (circle radius and size is in osu pixels)
                 frameBuffer.Resize(Path.Bounds.Width + radius * 2, Path.Bounds.Height + radius * 2);
-                projectionMatrix = Matrix4.CreateOrthographicOffCenter(0, frameBuffer.Width, frameBuffer.Height, 0, 1f, -1f);
 
-                hasBeenUpdated = true;
+                //Cant really rely on a float comparison
+                if (beforeWidth != frameBuffer.Width || beforeHeight != frameBuffer.Height)
+                {
+                    projectionMatrix = Matrix4.CreateOrthographicOffCenter(0, frameBuffer.Width, frameBuffer.Height, 0, 1f, -1f);
+                    hasBeenUpdated = true;
+                }
             }
         }
 
@@ -246,7 +253,10 @@ namespace RTCircles
                 throw new Exception("Slider radius was less than 0????");
 
             if (Path.Points.Count == 0 || (frameBuffer.Status != GLEnum.FramebufferComplete && frameBuffer.IsInitialized))
+            {
+                g.DrawString($"Aspire slider brr\nPoints: {Path.Points.Count} {frameBuffer.Width}x{frameBuffer.Height}", Font.DefaultFont, Path.CalculatePositionAtProgress(0), Colors.Red);
                 return;
+            }
 
             if (hasBeenUpdated)
                 hasBeenUpdated = false;

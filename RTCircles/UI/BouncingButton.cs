@@ -22,6 +22,8 @@ namespace RTCircles
         private SmoothVector4 colorAnim = new SmoothVector4();
         private Texture texture;
 
+        public float Alpha = 1;
+
         public BouncingButton(Texture texture)
         {
             colorAnim.Value = Vector4.One;
@@ -58,7 +60,14 @@ namespace RTCircles
             animSize.Update((float)OsuContainer.DeltaSongPosition);
             animRotation.Update((float)OsuContainer.DeltaSongPosition);
 
+            if (OsuContainer.Beatmap == null || OsuContainer.Beatmap.Song.IsPlaying == false)
+            {
+                animSize.Value = Size;
+                animPos.Value = Vector2.Zero;
+            }
+
             var diff = OsuContainer.CurrentBeat - lastBeat;
+
             if(diff >= 2 || diff < 0)
             {
                 if(diff < 0)
@@ -92,9 +101,11 @@ namespace RTCircles
                     //Button flies up in the air
                     animPos.TransformTo(new Vector2(0, -15), beatDuration / 2, EasingTypes.OutSine);
 
-                    //Ball lands
+                    //Button lands
                     animPos.TransformTo(Vector2.Zero, beatDuration / 2, EasingTypes.InSine, () => {
+                        //Squish
                         animSize.TransformTo(new Vector2(Size.X, Size.Y * 0.9f), 50f, EasingTypes.OutSine);
+                        //Popup
                         animSize.TransformTo(Size, 50f, EasingTypes.InSine);
                     });
                 }
@@ -112,12 +123,12 @@ namespace RTCircles
                 animSize.TransformTo(Size, 100f);
 
                 colorAnim.ClearTransforms();
-                colorAnim.TransformTo(Vector4.One, 0.1f, EasingTypes.Out);
+                colorAnim.TransformTo(new Vector4(1f, 1f, 1f, Alpha), 0.1f, EasingTypes.Out);
             }
             else
             {
                 colorAnim.ClearTransforms();
-                colorAnim.TransformTo(new Vector4(1.2f, 1.2f, 1.2f, 1f), 0.1f, EasingTypes.Out);
+                colorAnim.TransformTo(new Vector4(2f, 2f, 2f,  Alpha), 0.1f, EasingTypes.Out);
             }
         }
     }

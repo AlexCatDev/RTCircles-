@@ -103,12 +103,6 @@ namespace RTCircles
 
         public override void Update(float delta)
         {
-            if ((this as IDrawableHitObject).TimeElapsed < 0)
-            {
-                IsDead = true;
-                return;
-            }
-
             position = OsuContainer.MapToPlayfield(spinner.Position.X, spinner.Position.Y);
 
             //Just complete all spinners with a duration of less than some value thats impossible to complete

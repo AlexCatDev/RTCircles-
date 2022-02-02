@@ -226,7 +226,7 @@ namespace RTCircles
     {
         public override Rectangle Bounds => new Rectangle();
 
-        public static Vector4 SongInfoColor = Colors.From255RGBA(211, 79, 115, 255);//Colors.From255RGBA(255, 80, 175, 255);
+        public static Vector4 SongInfoColor = Colors.From255RGBA(37, 37, 37, 255);//Colors.From255RGBA(211, 79, 115, 255);//Colors.From255RGBA(255, 80, 175, 255);
         public static Vector4 SongInfoTextColor = Colors.White;
 
         public static Vector4 ItemColor = Colors.From255RGBA(46, 46, 58, 255);//Colors.From255RGBA(67, 64, 65, 255);
@@ -301,6 +301,9 @@ namespace RTCircles
         }
 
         private BouncingButton downloadBtn, settingsBtn, modsBtn;
+
+        private SliderBar speedBar, csBar, arBar, odBar, hpBar;
+
         public override void OnAdd()
         {
             Container.Add(FloatingPlayScreen);
@@ -324,10 +327,85 @@ namespace RTCircles
             modsBtn = new BouncingButton(Skin.HRModIcon.Texture);
             modsBtn.OnClick += () =>
             {
-                Utils.Log($"no and yes thats a thread", LogLevel.Warning);
+                Utils.Log($"not yet.", LogLevel.Error);
             };
 
             Container.Add(modsBtn);
+
+
+            speedBar = new SliderBar();
+
+            speedBar.ButtonTexture = Skin.DTModIcon;
+            speedBar.MinValue = 10;
+            speedBar.Value = 100;
+            speedBar.MaxValue = 200;
+
+            speedBar.ValueChanged += (e) =>
+            {
+                float scale = e / 100f;
+                OsuContainer.Beatmap.Song.PlaybackSpeed = scale;
+                string bpm = "??";
+
+                if(OsuContainer.CurrentBeatTimingPoint != null)
+                    bpm = $"{(60000 / OsuContainer.CurrentBeatTimingPoint.BeatLength) * scale:F0}";
+
+                speedBar.Text = $"Song Speed: {scale:F2}x ({bpm} BPM";
+            };
+
+            csBar = new SliderBar();
+
+            csBar.ButtonTexture = Skin.HRModIcon;
+            csBar.MinValue = 0;
+            csBar.MaxValue = 100;
+
+            csBar.ValueChanged += (e) =>
+            {
+                float cs = e / 10f;
+                OsuContainer.Beatmap.OverrideDifficulty(cs, OsuContainer.Beatmap.AR, OsuContainer.Beatmap.OD, OsuContainer.Beatmap.HP);
+                csBar.Text = $"Circle Size: {cs:F1}";
+            };
+
+            arBar = new SliderBar();
+
+            arBar.MinValue = 0;
+            arBar.MaxValue = 100;
+
+            arBar.ValueChanged += (e) =>
+            {
+                float ar = e / 10f;
+                OsuContainer.Beatmap.OverrideDifficulty(OsuContainer.Beatmap.CS, ar, OsuContainer.Beatmap.OD, OsuContainer.Beatmap.HP);
+                arBar.Text = $"Approach Rate: {ar:F1}";
+            };
+
+            odBar = new SliderBar();
+
+            odBar.MinValue = 0;
+            odBar.MaxValue = 100;
+
+            odBar.ValueChanged += (e) =>
+            {
+                float od = e / 10f;
+                OsuContainer.Beatmap.OverrideDifficulty(OsuContainer.Beatmap.CS, OsuContainer.Beatmap.AR, od, OsuContainer.Beatmap.HP);
+                odBar.Text = $"Overall Difficulty: {od:F1}";
+            };
+
+            hpBar = new SliderBar();
+
+            hpBar.MinValue = 0;
+            hpBar.MaxValue = 100;
+
+            hpBar.ValueChanged += (e) =>
+            {
+                float hp = e / 10f;
+                OsuContainer.Beatmap.OverrideDifficulty(OsuContainer.Beatmap.CS, OsuContainer.Beatmap.AR, OsuContainer.Beatmap.OD, hp);
+                hpBar.Text = $"Hitpoints: {hp:F1}";
+            };
+
+            Container.Add(speedBar);
+            Container.Add(csBar);
+            Container.Add(arBar);
+            Container.Add(odBar);
+            Container.Add(hpBar);
         }
 
         public override void Render(Graphics g)
@@ -359,19 +437,24 @@ namespace RTCircles
                 if (currentItem == selectedItem)
                     color = ItemSelectedColor;
 
-                Vector2 bgSize = Vector2.Zero;
+                Vector2 bgSize = new Vector2(170, 128) * MainGame.Scale;
                 Rectangle textureRect = new Rectangle();
 
                 var texture = currentItem.Texture;
 
-                if (texture is not null)
+                float textureAlpha = currentItem.TextureAlpha;
+
+                if (texture == null)
                 {
-                    bgSize = new Vector2(170, 128) * MainGame.Scale;
-                    float center = 0.5f;
-                    float width = bgSize.AspectRatio() / texture.Size.AspectRatio();
-                    center -= width / 2f;
-                    textureRect = new Rectangle(center, 0, width, 1);
+                    texture = Skin.DefaultBackground;
+                    textureAlpha = 1f;
                 }
+
+                float center = 0.5f;
+                float width = bgSize.AspectRatio() / texture.Size.AspectRatio();
+                center -= width / 2f;
+                //Clip the texture rectangle to make the background fit into the thumbnail size regardless of aspect ratio
+                textureRect = new Rectangle(center, 0, width, 1);
 
                 if (bounds.IntersectsWith(new Rectangle(Input.MousePosition, Vector2.One)))
                 {
@@ -396,7 +479,7 @@ namespace RTCircles
                 float bgPadding = (ElementSize.Y - bgSize.Y) / 2;
 
                 g.DrawRectangle(bounds.Position, bounds.Size, color);
-                g.DrawRectangle(bounds.Position + new Vector2(bgPadding), bgSize, new Vector4(1f, 1f, 1f, currentItem.TextureAlpha), texture, textureRect, true);
+                g.DrawRectangle(bounds.Position + new Vector2(bgPadding), bgSize, new Vector4(1f, 1f, 1f, textureAlpha), texture, textureRect, true);
 
                 float textScale = 0.5f * MainGame.Scale;
                 Vector2 textSize = Font.DefaultFont.MessureString(currentItem.Text, textScale);
@@ -467,13 +550,11 @@ namespace RTCircles
             OsuContainer.Beatmap.Song.Pause();
             ConfirmPlayAnimation.ClearTransforms();
             ConfirmPlayAnimation.TransformTo(1f, 0.5f, EasingTypes.OutElasticHalf, () => {
-                OsuContainer.Beatmap.Mods &= ~Mods.Auto;
-                ScreenManager.GetScreen<OsuScreen>().OnExiting();
                 ScreenManager.SetScreen<OsuScreen>();
             });
         }
 
-        public override void Update(float delta)
+        private void updateUI(float delta)
         {
             downloadBtn.Size = new Vector2(HeaderSize.Y / 1.2f);
             downloadBtn.Position = new Vector2(MainGame.WindowWidth - downloadBtn.Size.X / 2f, HeaderSize.Y / 2f);
@@ -484,6 +565,71 @@ namespace RTCircles
             modsBtn.Size = downloadBtn.Size;
             modsBtn.Position = settingsBtn.Position - new Vector2(modsBtn.Size.X + 5, 0);
 
+            if (OsuContainer.Beatmap != null)
+            {
+                var startBars = new Vector2(SongInfoBounds.X, FloatingPlayScreen.Position.Y + FloatingPlayScreen.Size.Y + 20);
+
+                float yIncrease = 60 * MainGame.Scale;
+
+                Vector2 buttonSize = new Vector2(50 * MainGame.Scale);
+
+                speedBar.Value = (int)(OsuContainer.Beatmap.Song.PlaybackSpeed * 100);
+                speedBar.ButtonSize = buttonSize;
+                speedBar.BarThickness = 10 * MainGame.Scale;
+                speedBar.BarLength = SongInfoBounds.Width;
+                speedBar.Position = startBars;
+                speedBar.IsVisible = true;
+
+                startBars.Y += yIncrease;
+
+                csBar.SetValue((int)(OsuContainer.Beatmap.CS * 10));
+                csBar.BarThickness = 10 * MainGame.Scale;
+                csBar.ButtonSize = buttonSize;
+                csBar.BarLength = SongInfoBounds.Width;
+                csBar.Position = startBars;
+                csBar.IsVisible = true;
+
+                startBars.Y += yIncrease;
+
+                arBar.SetValue((int)(OsuContainer.Beatmap.AR * 10));
+                arBar.BarThickness = 10 * MainGame.Scale;
+                arBar.BarLength = SongInfoBounds.Width;
+                arBar.ButtonSize = buttonSize;
+                arBar.Position = startBars;
+                arBar.IsVisible = true;
+
+                startBars.Y += yIncrease;
+
+                odBar.SetValue((int)(OsuContainer.Beatmap.OD * 10));
+                odBar.BarThickness = 10 * MainGame.Scale;
+                odBar.BarLength = SongInfoBounds.Width;
+                odBar.ButtonSize = buttonSize;
+                odBar.Position = startBars;
+                odBar.IsVisible = true;
+
+                startBars.Y += yIncrease;
+
+                hpBar.SetValue((int)(OsuContainer.Beatmap.HP * 10));
+                hpBar.BarThickness = 10 * MainGame.Scale;
+                hpBar.BarLength = SongInfoBounds.Width;
+                hpBar.ButtonSize = buttonSize;
+                hpBar.Position = startBars;
+                hpBar.IsVisible = true;
+            }
+            else
+            {
+                speedBar.IsVisible = false;
+                csBar.IsVisible = false;
+                arBar.IsVisible = false;
+                odBar.IsVisible = false;
+                hpBar.IsVisible = false;
+            }
+        }
+
+        public override void Update(float delta)
+        {
+            updateUI(delta);
+            
             if (scrollTo.HasValue)
             {
                 scrollOffset = MathHelper.Lerp(scrollOffset, scrollTo.Value, delta * 10f);
@@ -587,7 +733,7 @@ namespace RTCircles
                 }
             }
 
-            if (key == Key.F2)
+            if (key == Key.F2 && BeatmapCarousel.SearchItems.Count > 0)
             {
                 var randomBeatmap = BeatmapCarousel.SearchItems[RNG.Next(0, BeatmapCarousel.SearchItems.Count - 1)];
 
@@ -623,6 +769,16 @@ namespace RTCircles
             ScreenManager.GetScreen<OsuScreen>().OnExiting();
             OsuContainer.SetMap(beatmap, true, Mods.Auto | mods);
             ScreenManager.GetScreen<OsuScreen>().OnEntering();
+        }
+
+        public void DeleteSelectedItem()
+        {
+            if(selectedItem != null)
+            {
+                BeatmapCarousel.SearchItems.Remove(selectedItem);
+                BeatmapCarousel.Items.Remove(selectedItem);
+                selectedItem = null;
+            }
         }
     }
 
@@ -663,7 +819,7 @@ namespace RTCircles
         public void AddBeatmapToCarousel(DBBeatmap dBBeatmap)
         {
             //Dont add to carousel if we already have this item
-            Utils.Log($"Adding DBBeatmap: {dBBeatmap.File} Current carousel item count: {BeatmapCarousel.Items.Count}", LogLevel.Info);
+            Utils.Log($"Adding DBBeatmap: {dBBeatmap.File} Current carousel item count: {BeatmapCarousel.Items.Count}", LogLevel.Debug);
 
             for (int i = 0; i < BeatmapCarousel.Items.Count; i++)
             {
@@ -686,12 +842,23 @@ namespace RTCircles
             foreach (var item in BeatmapMirror.Realm.All<DBBeatmap>())
             {
                 AddBeatmapToCarousel(item);
-                Utils.Log($"Loaded DBBeatmap: {item.File}", LogLevel.Info);
+                Utils.Log($"Loaded DBBeatmap: {item.File}", LogLevel.Debug);
             }
         }
 
         public override void OnKeyDown(Key key)
         {
+            if(key == Key.Delete && Input.IsKeyDown(Key.ControlLeft))
+            {
+                BeatmapMirror.Scheduler.Add(() =>
+                {
+                    songSelector.DeleteSelectedItem();
+                    OsuContainer.UnloadMap();
+                    
+                    //BeatmapMirror.Realm.Remove()
+                });
+            }
+
             base.OnKeyDown(key);
         }
 

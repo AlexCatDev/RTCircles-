@@ -16,7 +16,7 @@ namespace RTCircles.Desktop
             b.VSync = false;
             b.Title = "nabo";
             b.Size = new Vector2D<int>(1280, 720);
-            b.API = new GraphicsAPI(ContextAPI.OpenGLES, new APIVersion(3, 0));
+            b.API = new GraphicsAPI(ContextAPI.OpenGL, new APIVersion(3, 3));
             b.WindowBorder = WindowBorder.Resizable;
             b.TransparentFramebuffer = false;
             b.ShouldSwapAutomatically = false;

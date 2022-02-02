@@ -1,8 +1,6 @@
 ﻿#version 300 es
 //I really have no fucking clue what precision should be and how it matters so...
-#if GL_ES
 precision mediump float;
-#endif
 
 uniform float u_BloomThreshold;
 
@@ -125,8 +123,7 @@ void main() {
             color = vec4(color.rgb, 1.0);
         else
             color = vec4(0.0, 0.0, 0.0, 1.0);
-          */  
-            
+          */
 	} else if(u_Combine) {
 		vec4 color2 = texture(u_CombineTexture, v_TexCoordinate);
 
@@ -134,13 +131,16 @@ void main() {
 
 		color = vec4(color.rgb + color2.rgb, 1.0);
 	} else if(u_Final) {
+        //dst framebuffer
         color = texture(u_Texture, v_TexCoordinate);
-
+        
 		vec4 inputBloom = texture(u_CombineTexture, v_TexCoordinate);
 
 		vec3 tempColor = color.rgb + ACESFitted(inputBloom.rgb);
+        /*
         //vec3 tempColor = ACESFitted(color.rgb + inputBloom.rgb);
-
+        //vec3 tempColor = RRTAndODTFit(color.rgb + inputBloom.rgb);
+        */
 		color = vec4(tempColor, 1.0);
         //Else we're writing to another buffer
 	} else {

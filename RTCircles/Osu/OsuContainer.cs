@@ -74,7 +74,7 @@ namespace RTCircles
         /// <summary>
         /// The end scale for hitobjects when they have been hit
         /// </summary>
-        public static double CircleExplode = 1.3;
+        public static double CircleExplodeScale = 1.5;
 
         //Cache this?
         public static Rectangle Playfield
@@ -113,7 +113,7 @@ namespace RTCircles
         public static bool Key1Down { get; private set; }
         public static bool Key2Down { get; private set; }
 
-        public static bool EnableMouseButtons = true;
+        public static bool EnableMouseButtons => GlobalOptions.EnableMouseButtons.Value;
 
         static OsuContainer()
         {
@@ -138,7 +138,7 @@ namespace RTCircles
 
         public static bool CookieziMode => Beatmap.Mods.HasFlag(Mods.Auto);
 
-        public static PlayingBeatmap Beatmap { get; private set; }
+        public static PlayableBeatmap Beatmap { get; private set; }
 
         public static event Action BeatmapChanged;
 
@@ -223,7 +223,13 @@ namespace RTCircles
             } 
         }
 
-        public static void SetMap(PlayingBeatmap beatmap)
+        public static void UnloadMap()
+        {
+            Beatmap = null;
+            GC.Collect(2, GCCollectionMode.Forced, false);
+        }
+
+        public static void SetMap(PlayableBeatmap beatmap)
         {
             Beatmap = beatmap;
         }
@@ -232,7 +238,7 @@ namespace RTCircles
         {
             Beatmap?.Song.Stop();
 
-            Beatmap = new PlayingBeatmap(beatmap);
+            Beatmap = new PlayableBeatmap(beatmap);
 
             //FIIIIIIIIIIIX
             GC.Collect(2, GCCollectionMode.Forced, false);
@@ -283,6 +289,8 @@ namespace RTCircles
             if (MuteHitsounds)
                 return;
 
+            Vector2 position = CustomCursorPosition ?? Input.MousePosition;
+
             foreach (var hitsound in type.GetFlags())
             {
                 HitSoundType hs = hitsound;
@@ -298,20 +306,22 @@ namespace RTCircles
                         set = SampleSet.Normal;
                 }
 
-                //first look for the map hitsounds
-                var beatmapHitsound = Beatmap.Hitsounds[hs, set];
+                int sampleSetIndex = CurrentTimingPoint?.CustomSampleSet ?? 0;
 
-                var skinHitsound = Skin.Hitsounds[hs, set];
+                //first look for the map hitsounds
+                var beatmapHitsound = Beatmap.Hitsounds?[hs, set, sampleSetIndex];
+
+                var skinHitsound = Skin.Hitsounds[hs, set, 0];
 
                 if (beatmapHitsound is not null)
                 {
                     //Positional hitsounds
-                    beatmapHitsound.Pan = Input.MousePosition.X.Map(0, 1920, -0.5f, 0.5f);
+                    beatmapHitsound.Pan = position.X.Map(0, MainGame.WindowWidth, -0.5f, 0.5f);
                     beatmapHitsound.Play(true);
                 }
                 else if (skinHitsound is not null)
                 {
-                    skinHitsound.Pan = Input.MousePosition.X.Map(0, 1920, -0.5f, 0.5f);
+                    skinHitsound.Pan = position.X.Map(0, MainGame.WindowWidth, -0.5f, 0.5f);
                     skinHitsound.Play(true);
                 }
                 else
@@ -388,6 +398,11 @@ namespace RTCircles
                     Beatmap.Song.Pause();
                 else
                     Beatmap.Song.Play(false);
+            }
+
+            if (e == Key.Pause)
+            {
+                OnKiai?.Invoke();
             }
 #endif
         }

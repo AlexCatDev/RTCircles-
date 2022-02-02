@@ -12,6 +12,8 @@ namespace RTCircles
 
         public string Name => name;
 
+        public string Description;
+
         private WeakReference<Option<T>> weakRef;
 
         private string name;
@@ -52,9 +54,10 @@ namespace RTCircles
         /// </summary>
         /// <param name="name">The known name of the option</param>
         /// <param name="defaultValue">If the option does not exist, what is the default value?</param>
-        public static Option<T> CreateProxy(string name, Action<T> setter, T defaultValue = default(T))
+        public static Option<T> CreateProxy(string name, Action<T> setter, T defaultValue = default(T), string description = null)
         {
             var proxy = new Option<T>(name, defaultValue, true);
+            proxy.Description = description;
             proxy.setter = setter;
 
             T cock_and_balls_cum = proxy.Value;

@@ -1,8 +1,6 @@
 ﻿#version 300 es
 //I really have no fucking clue what precision should be and how it matters so...
-#if GL_ES
 precision mediump float;
-#endif
 
 uniform sampler2D u_Texture;
 uniform sampler2D u_CombineTexture;

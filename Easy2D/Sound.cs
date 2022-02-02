@@ -87,6 +87,8 @@ namespace Easy2D
 
         public bool IsStalled => Bass.ChannelIsActive(handle) == PlaybackState.Stalled;
 
+        public bool SupportsFX { get; private set; }
+
         public double DefaultFrequency { get; private set; }
 
         /// <summary>
@@ -187,6 +189,9 @@ namespace Easy2D
         {
             get
             {
+                if (!SupportsFX)
+                    return Frequency / DefaultFrequency;
+
                 double speed = Bass.ChannelGetAttribute(handle, ChannelAttribute.Tempo);
                 speed /= 100;
                 speed += 1;
@@ -195,8 +200,13 @@ namespace Easy2D
             }
             set
             {
-                double speed = value * 100 - 100;
-                Bass.ChannelSetAttribute(handle, ChannelAttribute.Tempo, speed);
+                if (!SupportsFX)
+                    Frequency = DefaultFrequency * value;
+                else
+                {
+                    double speed = value * 100 - 100;
+                    Bass.ChannelSetAttribute(handle, ChannelAttribute.Tempo, speed);
+                }
             }
         }
 
@@ -253,11 +263,14 @@ namespace Easy2D
                     handle = Bass.CreateStream(data, 0, data.Length, BassFlags.Prescan);
                 }
 
-                if(noBuffer)
-                    Bass.ChannelSetAttribute(handle, ChannelAttribute.NoBuffer, 1);
+                if (noBuffer)
+                {
+                    Bass.ChannelSetAttribute(handle, ChannelAttribute.Buffer, 0);
+                }
             }
 
             DefaultFrequency = Frequency;
+            SupportsFX = useFX;
 
             if (Bass.LastError != Errors.OK)
                 Utils.Log($"BASS error when loading audio: {Bass.LastError}", LogLevel.Error);

@@ -9,6 +9,9 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace Easy2D
 {
+    /// <summary>
+    /// TODO: REDO THIS MESS
+    /// </summary>
     public class Texture : GLObject, IEqualityComparer<Texture>
     {
         public static int TextureCount { get; private set; }
@@ -58,6 +61,50 @@ namespace Easy2D
             InternalFormat = InternalFormat.Rgba;
             PixelFormat = PixelFormat.Rgba;
             PixelType = PixelType.UnsignedByte;
+        }
+
+        public Texture(Image<Rgba32> image, bool genMips)
+        {
+            InternalFormat = InternalFormat.Rgba;
+            PixelFormat = PixelFormat.Rgba;
+            PixelType = PixelType.UnsignedByte;
+
+            Width = image.Width;
+            Height = image.Height;
+
+            bool status = image.TryGetSinglePixelSpan(out Span<Rgba32> imageData);
+
+            if (!status)
+                throw new Exception("Couldnt get pixel span?");
+
+            Handle = GL.Instance.GenTexture();
+
+            bind(null);
+
+            GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (float)TextureMinFilter.Linear);
+            GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (float)TextureMagFilter.Linear);
+
+            GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+            GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+
+            unsafe
+            {
+                fixed (Rgba32* imageDataPtr = imageData)
+                {
+                    //GL.Instance.CompressedTexImage2D(TextureTarget.Texture2D, 0, InternalFormat.CompressedRgba, (uint)Width, (uint)Height, 0, (uint)(imageData.Length * sizeof(Rgba32)), imageDataPtr);
+                    GL.Instance.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat, (uint)Width, (uint)Height, 0, PixelFormat, PixelType, imageDataPtr);
+                }
+            }
+
+            if (genMips)
+            {
+                GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (float)TextureMinFilter.LinearMipmapNearest);
+
+                //Gen mipmap
+                GL.Instance.GenerateMipmap(TextureTarget.Texture2D);
+            }
+
+            TextureCount++;
         }
 
         /// <summary>

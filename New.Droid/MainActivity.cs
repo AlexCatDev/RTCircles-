@@ -99,12 +99,6 @@ namespace New.Droid
                 GL.Instance.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
                 Sound.Init(view.Handle);
-                //this did not work after all, idk what to do, cpu is at max frequency when you start the application
-                //then the system scheduler just decides, okay this program is not worth using resources on after 15 seconds
-                //down clocks the cpu core???
-                //bad fps, basically halves fps in worst case scenario, my device: 340 fps to 180 yikes,
-                //and on heavy scenes i go from 130 fps to 70 :(
-                //Process.SetThreadPriority(ThreadPriority.Foreground);
 
                 game.Load(input);
 

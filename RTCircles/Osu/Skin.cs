@@ -207,8 +207,6 @@ namespace RTCircles
         public static Sound Hover { get; private set; }
         public static Sound Click { get; private set; }
 
-        public static Sound IntroSound { get; private set; }
-
         public static Texture VisualizerBar { get; private set; }
 
         public static OsuTexture Star { get; private set; }
@@ -235,7 +233,7 @@ namespace RTCircles
         public static OsuTexture SliderStartCircle { get; private set; }
         public static OsuTexture SliderStartCircleOverlay { get; private set; }
 
-        public static Texture DefaultBackground { get; private set; }
+        public static Texture DefaultBackground { get; private set; } = new Texture(Utils.GetResource("Skin.defaultbackground.png"));
 
         public static OsuTexture CursorMiddle { get; private set; }
 
@@ -257,18 +255,16 @@ namespace RTCircles
 
             WarningArrow = LoadTexture(path, "play-warningarrow");
 
-            DefaultBackground = LoadTexture(path, "defaultbackground");
-
             LoadingSpinner = LoadTexture(path, "loading");
             VisualizerBar = LoadTexture(path, "visualizer-bar", false);
 
             SpinnerApproachCircle = LoadTexture(path, "spinner-approachcircle");
 
             SliderSlide = LoadSound(path, "sliderslide");
-            SliderSlide.Volume = 0.6f;
+            SliderSlide.Volume = GlobalOptions.SkinVolume.Value;
 
             SpinnerBonus = LoadSound(path, "spinnerbonus");
-            SpinnerBonus.Volume = 0.6f;
+            SpinnerBonus.Volume = GlobalOptions.SkinVolume.Value;
 
             SpinnerCircle = LoadTexture(path, "spinner-circle");
 
@@ -329,17 +325,14 @@ namespace RTCircles
 
             ScoreNumbers = ComboNumbers;
 
-            Hitsounds = new HitsoundStore(path, false);
-            //Hitsounds.SetVolume(0.6f);
+            Hitsounds = new HitsoundStore(path, true);
+            Hitsounds.SetVolume(GlobalOptions.SkinVolume.Value);
 
             Arrow = LoadTexture(path, "arrowexpand");
             Checkmark = LoadTexture(path, "checkmark");
 
             Hover = LoadSound(path, "hover");
             Click = LoadSound(path, "click");
-
-            IntroSound = LoadSound(path, "welcome");
-            //IntroSound.Volume = 0.6f;
 
             Star = LoadTexture(path, "star");
 
@@ -488,7 +481,7 @@ namespace RTCircles
             //if that fails load from our default skin
             if (sound is null)
             {
-                sound = new Sound(Utils.GetResource($"Skin.{name}.wav"));
+                sound = new Sound(Utils.GetResource($"Skin.{name}.wav"), false, true);
                 Utils.Log($"Could not load {name} so default element is used", LogLevel.Warning);
             }
 

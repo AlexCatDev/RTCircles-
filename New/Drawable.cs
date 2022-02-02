@@ -15,7 +15,6 @@ namespace New
 
         private List<Drawable> children = new List<Drawable>();
         private HashSet<Drawable> hashedChildren = new HashSet<Drawable>();
-        private List<int> childrenToRemove = new List<int>();
 
         public IReadOnlyList<Drawable> Children => children.AsReadOnly();
 
@@ -24,9 +23,9 @@ namespace New
         public int Layer;
 
         /// <summary>
-        /// This is initially null, will be set when it's added
+        /// This is initially null, and will first be set right before OnAdd() is called. 
         /// </summary>
-        public Drawable Parent { get; private set; }
+        public Drawable? Parent { get; private set; }
 
         public volatile bool IsDead;
 
@@ -51,12 +50,19 @@ namespace New
             {
                 var currentDrawable = drawables[i];
 
+                if (currentDrawable.Parent != null)
+                    throw new Exception("This drawable is already a child of another drawable, remove it from there");
+
                 currentDrawable.IsDead = false;
                 if (hashedChildren.Contains(currentDrawable) == false)
                 {
                     children.Add(currentDrawable);
                     hashedChildren.Add(currentDrawable);
                     requireSorting = true;
+                }
+                else
+                {
+                    throw new Exception("This drawable already is added");
                 }
 
                 currentDrawable.Parent = this;
@@ -85,10 +91,20 @@ namespace New
         /// <returns></returns>
         public IEnumerator<T> Get<T>() where T : Drawable
         {
-            for (int i = 0; i < children.Count; i++)
+            for (int i = children.Count - 1; i >= 0; i--)
             {
                 if (children[i] is T t)
                     yield return t;
+            }
+        }
+
+        public void Get<T>(Func<T, bool> onGet) where T : Drawable
+        {
+            for (int i = children.Count - 1; i >= 0; i--)
+            {
+                if (children[i] is T t)
+                    if (onGet(t))
+                        break;
             }
         }
 
@@ -196,14 +212,14 @@ namespace New
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        public virtual bool Input(object input)
+        public virtual bool OnInput(object input)
         {
             for (int i = children.Count - 1; i >= 0; i--)
             {
                 if (children[i].IsDead)
                     continue;
 
-                if (children[i].Input(input))
+                if (children[i].OnInput(input))
                     return true;
             }
 
@@ -250,53 +266,42 @@ namespace New
 
             OnUpdate();
 
-            int childCount = children.Count;
-            for (int i = 0; i < childCount; i++)
+            //Update the children
+            int size = children.Count - 1;
+            for (int i = size; i >= 0; i--)
             {
                 //if children[i].isdead
                 //add the current index to the childrenToRemoveList
-                if (children[i].IsDead)
+                var child = children[i];
+
+                if (child.IsDead)
                 {
-                    childrenToRemove.Add(i);
+                    children.RemoveAt(i);
+                    hashedChildren.Remove(child);
+                    child.OnRemove();
+                    child.Parent = null;
                     continue;
                 }
 
-                children[i].Update(Time);
+                child.Update(Time);
 
-                if (i > 0)
+                if (i > 1)
                 {
-                    var nowDepth = children[i].Layer;
                     var prevDepth = children[i - 1].Layer;
+                    var nowDepth = child.Layer;
 
                     if (prevDepth > nowDepth)
                         requireSorting = true;
                 }
             }
 
-            if (childrenToRemove.Count > 0)
-            {
-                for (int i = childrenToRemove.Count - 1; i >= 0; i--)
-                {
-                    int indexRemove = childrenToRemove[i];
-
-                    if (children[indexRemove].IsDead)
-                    {
-                        children[indexRemove].OnRemove();
-                        //Set the parent to null, now this brings upon an issue where it's possible for two drawables, to own the same object?
-
-                        children[indexRemove].Parent = null;
-                        hashedChildren.Remove(children[indexRemove]);
-                        children.RemoveAt(indexRemove);
-                    }
-                }
-
-                childrenToRemove.Clear();
-            }
-
             if (requireSorting)
             {
+                //string profileString = $"Sorting {children.Count} drawables in <({this.GetType().Name})>";
+                //Utils.BeginProfiling(profileString);
                 children.Sort();
                 requireSorting = false;
+                //Utils.EndProfiling(profileString, false, true);
             }
         }
 

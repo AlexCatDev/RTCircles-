@@ -10,6 +10,7 @@ namespace RTCircles
 {
     public class DrawableSlider : Drawable, IDrawableHitObject
     {
+        //TODO: add
         public static float SliderResolution = 1f;
 
         public static Vector2 SliderBallPositionForAuto { get; private set; }
@@ -98,8 +99,7 @@ namespace RTCircles
             if (fullPath.Count == 0)
                 fullPath.Add(new Vector2(slider.Position.X, slider.Position.Y));
 
-            //Defining the pointsize in path, makes it know how big to calculate the bounding box
-            //The pointsize is in osu pixels from the current circlesize
+            //Set the sliderpath to the points.
             SliderPath.SetPoints(fullPath);
         }
 
@@ -120,7 +120,9 @@ namespace RTCircles
             //times an index
             float diff = (slider.EndTime - slider.StartTime) / slider.Repeats;
 
-            Vector2 beatPulse = new Vector2(OsuContainer.Beatmap.CircleRadius * 0.75f) * (float)OsuContainer.GetBeatProgressAt(slider.StartTime + (diff * index));
+            float beatProgress = Interpolation.ValueAt(OsuContainer.GetBeatProgressAt(slider.StartTime + (diff * index)), 1, 0, 1, 0, EasingTypes.OutSine);
+
+            Vector2 beatPulse = new Vector2(OsuContainer.Beatmap.CircleRadius * 0.75f * beatProgress);
 
             Vector2 size = new Vector2(Size.Y, Size.Y / Skin.SliderReverse.Texture.Size.AspectRatio()) * Skin.GetScale(Skin.SliderReverse);
 
@@ -183,7 +185,7 @@ namespace RTCircles
             //If i used progress here since progress is capped, the sliderball would stay visible for the entire duration of the slider
             //Either that or i have to basically throw away a frame at the end if only checking for < 1f
             //so uncap makes sense here, to not miss a frame
-            if (IsHit == true || IsMissed == true)
+            if ((IsHit == true || IsMissed == true) && OsuContainer.SongPosition >= slider.StartTime)
             {
                 if (OsuContainer.SongPosition < slider.EndTime)
                 {
@@ -195,7 +197,7 @@ namespace RTCircles
 
                 float followCircleAlpha = sliderBallScaleAnim.Value.Map(1f, 2f, 0f, 1) * circleAlpha;
 
-                float fadeoutScale = Interpolation.ValueAt(circleAlpha.Clamp(0.5f, 1f), 1f, 0.75f, 1f, 0.5f, EasingTypes.OutQuad).Clamp(0.75f, 1f);
+                float fadeoutScale = Interpolation.ValueAt(circleAlpha.Clamp(0f, 1f), 1f, 0.7f, 1f, 0f, EasingTypes.OutQuad).Clamp(0.7f, 1f);
 
                 Vector2 followCircleSize = Size * sliderBallScaleAnim * Skin.GetScale(Skin.SliderFollowCircle, 256, 512) * fadeoutScale;
 
@@ -239,7 +241,7 @@ namespace RTCircles
                 if (hitTime.HasValue)
                 {
                     hitCircleAlpha = (float)OsuContainer.SongPosition.Map(hitTime.Value, hitTime.Value + OsuContainer.Fadeout, circleAlpha, 0).Clamp(0, 1f);
-                    scaleExplode = (float)OsuContainer.SongPosition.Map(hitTime.Value, hitTime.Value + OsuContainer.Fadeout, 1, OsuContainer.CircleExplode);
+                    scaleExplode = (float)OsuContainer.SongPosition.Map(hitTime.Value, hitTime.Value + OsuContainer.Fadeout, 1, OsuContainer.CircleExplodeScale);
                 }
                 else
                 {
@@ -250,14 +252,23 @@ namespace RTCircles
                 g.DrawRectangleCentered(hitCirclePos, Size * Skin.GetScale(Skin.SliderStartCircle) * scaleExplode, new Vector4(color.X, color.Y, color.Z, hitCircleAlpha), Skin.SliderStartCircle);
 
                 g.DrawRectangleCentered(hitCirclePos, Size * Skin.GetScale(Skin.SliderStartCircleOverlay) * scaleExplode, new Vector4(1f, 1f, 1f, hitCircleAlpha), Skin.SliderStartCircleOverlay);
-
-                if(approachRing > 1f)
-                    g.DrawRectangleCentered(hitCirclePos, Size * approachRing * Skin.GetScale(Skin.ApproachCircle), new Vector4(color.X, color.Y, color.Z, hitCircleAlpha), Skin.ApproachCircle);
             }
 
             //Circle numbers dont need to fade or explode, just dissappear instantly
             if(IsHit == false && IsMissed == false)
                 Skin.CircleNumbers.DrawCentered(g, hitCirclePos, Size.X / 2.7f, new Vector4(1f, 1f, 1f, circleAlpha), combo.ToString());
+        }
+
+        public override void AfterRender(Graphics g)
+        {
+            if (approachRing > 1f && !IsMissed)
+            {
+                float hitCircleAlpha = circleAlpha;
+                if(hitTime.HasValue)
+                    hitCircleAlpha = (float)OsuContainer.SongPosition.Map(hitTime.Value, hitTime.Value + OsuContainer.Fadeout, circleAlpha, 0).Clamp(0, 1f);
+
+                g.DrawRectangleCentered(hitCirclePos, Size * approachRing * Skin.GetScale(Skin.ApproachCircle), new Vector4(color.X, color.Y, color.Z, hitCircleAlpha), Skin.ApproachCircle);
+            }
         }
 
         private bool checkHit()
@@ -295,6 +306,9 @@ namespace RTCircles
 
         public override bool OnKeyDown(Key key)
         {
+            if (OsuContainer.CookieziMode)
+                return false;
+
             if (key == OsuContainer.Key1 || key == OsuContainer.Key2)
                 return checkHit();
 
@@ -303,6 +317,9 @@ namespace RTCircles
 
         public override bool OnMouseDown(MouseButton args)
         {
+            if (OsuContainer.CookieziMode)
+                return false;
+
             if (args == MouseButton.Left && OsuContainer.EnableMouseButtons)
                 return checkHit();
 
@@ -322,7 +339,7 @@ namespace RTCircles
         private bool IsTracking => (OsuContainer.Key1Down || OsuContainer.Key2Down) && MathUtils.PositionInsideRadius(OsuContainer.CursorPosition, sliderballPosition, OsuContainer.Beatmap.CircleRadius * 4f) || OsuContainer.CookieziMode;
 
         //Allow 36ms releasing the slider too early
-        private const double TrackingErrorAcceptance = 36;
+        private const double TrackingErrorAcceptance = 24;
         private bool IsValidTrack => (OsuContainer.SongPosition - lastTrackingTime) <= TrackingErrorAcceptance || OsuContainer.CookieziMode;
 
         private bool previousTracking;
@@ -360,12 +377,6 @@ namespace RTCircles
 
         public override void Update(float delta)
         {
-            if ((this as IDrawableHitObject).TimeElapsed < 0)
-            {
-                IsDead = true;
-                return;
-            }
-
             if (IsTracking != previousTracking && IsHit || IsMissed)
             {
                 previousTracking = IsTracking;
@@ -373,7 +384,7 @@ namespace RTCircles
                 if (IsTracking)
                 {
                     sliderBallScaleAnim.ClearTransforms();
-                    sliderBallScaleAnim.TransformTo(2f, (float)OsuContainer.Fadeout, EasingTypes.OutQuad);
+                    sliderBallScaleAnim.TransformTo(2f, 180f, EasingTypes.OutCirc);
                 }
             }
 
@@ -518,7 +529,7 @@ namespace RTCircles
                 else
                     SliderPath.ScalingOrigin = OsuContainer.MapToPlayfield(SliderPath.Path.Bounds.Center);
 
-                SliderPath.DrawScale = circleAlpha.Map(1f, 0f, 1f, (float)OsuContainer.CircleExplode);
+                SliderPath.DrawScale = circleAlpha.Map(1f, 0f, 1f, (float)OsuContainer.CircleExplodeScale);
             }
             else
             {
@@ -536,34 +547,44 @@ namespace RTCircles
             }
 
             if (fadeout && circleAlpha == 0)
-            {
                 IsDead = true;
-            }
 
             //Instead of making it like this, maybe i should map the fadein time so that when it overflows it fades out?
             //probaly not since i need to check for when a user is done playing the slider anyways
             //And they can start it very early or very late
             if (OsuContainer.SongPosition >= slider.EndTime)
-            {
                 fadeout = true;
-            }
+        }
+
+        public override void BeforeRender(Graphics g)
+        {
+           
         }
 
         public override void Render(Graphics g)
         {
-            SliderPath.SetRadius(OsuContainer.Beatmap.CircleRadiusInOsuPixels);
-
             Vector3 sliderBorder = new Vector3(Skin.Config.SliderBorder ?? new Vector3(1f, 1f, 1f));
             Vector3 sliderTrack = new Vector3(Skin.Config.SliderTrackOverride ?? Skin.Config.ColorFromIndex(colorIndex));
 
+            /*
+            double p = OsuContainer.CurrentBeat.OscillateValue(0, 2).Map(0, 2, 0, MathF.PI);
+            float red = (float)Math.Sin(p) + 1;
+            float grn = (float)Math.Sin(p + 2f) + 1;
+            float blu = (float)Math.Sin(p + 4f) + 1;
+            g.BorderColorInner = new Vector3(red, grn, blu);
+            */
+            g.BorderColorInner = sliderBorder;
+            g.BorderColorOuter = g.BorderColorInner;
+
             g.ShadowColor = new Vector4(0, 0, 0, 0.5f);
 
-            g.BorderColorOuter = sliderBorder;
-            g.BorderColorInner = sliderBorder;
+            //g.BorderColorOuter = sliderBorder;
+            //g.BorderColorInner = sliderBorder;
 
             g.TrackColorOuter = Shade(-0.1f, new Vector4(sliderTrack, 1.0f)).Xyz;
             g.TrackColorInner = Shade(0.5f, new Vector4(sliderTrack, 1.0f)).Xyz;
 
+            SliderPath.SetRadius(OsuContainer.Beatmap.CircleRadiusInOsuPixels);
             SliderPath.Render(g);
 
             if (circleAlpha > 0)

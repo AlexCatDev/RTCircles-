@@ -13,27 +13,50 @@ namespace RTCircles
 {
     public static class GlobalOptions
     {
-        public readonly static Option<bool> Bloom 
-            = Option<bool>.CreateProxy("Bloom", (value) => { GPUSched.Instance.Add(() => { PostProcessing.Bloom = value; }); }, true);
+        #region booleans
+        public readonly static Option<bool> Bloom
+            = Option<bool>.CreateProxy("Bloom", (value) => { GPUSched.Instance.Add(() => { PostProcessing.Bloom = value; }); }, false, "Enable bloom fx - Huge performance hit");
 
-        public readonly static Option<bool> MotionBlur 
-            = Option<bool>.CreateProxy("MotionBlur", (value) => { GPUSched.Instance.Add(() => { PostProcessing.MotionBlur = value; }); }, true);
+        public readonly static Option<bool> MotionBlur
+            = Option<bool>.CreateProxy("MotionBlur", (value) => { GPUSched.Instance.Add(() => { PostProcessing.MotionBlur = value; }); }, false, "Enable motion blur like effect, with kiai 'bass' shake - Big performance hit");
 
         public readonly static Option<bool> UseFancyCursorTrail = new Option<bool>("UseFancyCursorTrail", true);
 
-        public readonly static Option<bool> SliderSnakeIn = new Option<bool>("SliderSnakeIn", true);
+        public readonly static Option<bool> SliderSnakeIn = new Option<bool>("SliderSnakeIn", true) { Description = "Negligible performance hit" };
 
-        public readonly static Option<bool> SliderSnakeOut = new Option<bool>("SliderSnakeOut", true);
+        public readonly static Option<bool> SliderSnakeOut = new Option<bool>("SliderSnakeOut", true) { Description = "Significant performance hit" };
 
-        public readonly static Option<bool> SliderSnakeExplode = new Option<bool>("SliderSnakeExplode", true);
+        public readonly static Option<bool> SliderSnakeExplode = new Option<bool>("SliderSnakeExplode", true) { Description = "No performance hit" };
 
-        public readonly static Option<bool> AutoCursorDance = new Option<bool>("AutoCursorDance", true);
+        public readonly static Option<bool> AutoCursorDance = new Option<bool>("AutoCursorDance", false);
 
         public readonly static Option<bool> ShowRenderGraphOverlay = new Option<bool>("ShowRenderGraphOverlay", false);
 
         public readonly static Option<bool> ShowLogOverlay = new Option<bool>("ShowLogOverlay", false);
 
         public readonly static Option<bool> ShowFPS = new Option<bool>("ShowFPS", true);
+
+        public readonly static Option<bool> KiaiCatJam = new Option<bool>("KiaiCatJam", true);
+
+        public readonly static Option<bool> AllowMapHitSounds = new Option<bool>("AllowMapHitSounds", true);
+
+        public readonly static Option<bool> RenderBackground = new Option<bool>("RenderBackground", true);
+
+        public readonly static Option<bool> EnableMouseButtons = new Option<bool>("MouseButtons", false) { Description = "Enable Mouse Buttons?" };
+        #endregion
+        #region doubles
+        public readonly static Option<double> GlobalVolume = Option<double>.CreateProxy("GlobalVolume", (volume) => Sound.GlobalVolume = volume, 0.3);
+
+        public readonly static Option<double> SkinVolume = Option<double>.CreateProxy("SkinVolume", (volume) => {
+            Skin.Hitsounds?.SetVolume(volume);
+            OsuContainer.Beatmap?.Hitsounds?.SetVolume(volume);
+        }, 1);
+
+        public readonly static Option<double> SongVolume = Option<double>.CreateProxy("SongVolume", (volume) => {
+            if(OsuContainer.Beatmap != null)
+                OsuContainer.Beatmap.Song.Volume = volume;
+        }, 1);
+        #endregion
 
         public static void Init() 
         {
@@ -54,19 +77,16 @@ namespace RTCircles
 
         public override void OnLoad()
         {
-            GlobalOptions.Init();
-            Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\- HAPS MIT NU");
+            //GlobalOptions.Init();
+            //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  ALEX BOBBLER");
+            Skin.Load(@"C:\Users\vitalia\AppData\Local\osu!\Skins-        # re;owoTuna v1.1 『MK』 #        -");
 
             g = new Graphics();
 
             OsuContainer.OnKiai += () =>
             {
-                //shakeKiai.Value = 2f;
-                //shakeKiai.TransformTo(0f, 0.5f, EasingTypes.Out);
-
                 //Det her ser bedere ud tbh
                 shakeKiai.Value = 2f;
-                //shakeKiai.TransformTo(0f, 1f, EasingTypes.OutCirc);
                 shakeKiai.TransformTo(0f, 1f, EasingTypes.OutQuart);
             };
 
@@ -79,7 +99,6 @@ namespace RTCircles
             {
                 ScreenManager.OnMouseUp(e);
             };
-
 
             Input.InputContext.Mice[0].Scroll += (s, e) =>
             {
@@ -108,7 +127,7 @@ namespace RTCircles
                 introTime += delta;
                 introTime = introTime.Clamp(0f, introDuration);
 
-                float alpha = Interpolation.ValueAt(introTime, 0f, 1f, 0f, introDuration, EasingTypes.Out);
+                float alpha = Interpolation.ValueAt(introTime, 0f, 1f, 0f, introDuration, EasingTypes.In);
 
                 g.DrawRectangle(Vector2.Zero, new Vector2(WindowWidth, WindowHeight), new Vector4(0f, 0f, 0f, alpha));
 
@@ -142,7 +161,7 @@ namespace RTCircles
                 return false;
             };
 
-            ScreenManager.SetScreen<MenuScreen>(false);
+            ScreenManager.SetScreen<MenuScreen2>(false);
 
             lastOpened = Settings.GetValue<DateTime>("LastOpened", out bool exists);
             Settings.SetValue(DateTime.Now, "LastOpened");
@@ -152,9 +171,11 @@ namespace RTCircles
                 ScreenManager.GoBack();
             };
 
-            IsMultiThreaded = false;
-
-            //Utils.IgnoredLogLevels.Add(LogLevel.Debug);
+            Utils.IgnoredLogLevels.Add(LogLevel.Debug);
+#if DEBUG
+            Utils.WriteToConsole = true;
+#endif
+            //IsMultiThreaded = true;
         }
 
         private DateTime lastOpened;
@@ -237,7 +258,17 @@ namespace RTCircles
 
                 if (new Rectangle(Input.MousePosition, Vector2.One).IntersectsWith(new Rectangle(trueHoverPos.Value, trueHoverSize.Value)))
                 {
-                    text+= $"\nVertices: {Utils.ToKMB(verticesPerSecond)}/s\nIndices: {Utils.ToKMB(indicesPerSecond)}/s\nTris: {Utils.ToKMB(trianglesPerSecond)}/s\nFramework: {RuntimeInformation.FrameworkDescription}\nOS: {RuntimeInformation.OSDescription}\nLast visit: {lastOpened}";
+                    text+= $"\nVertices: {Utils.ToKMB(verticesPerSecond)}/s\n" +
+                        $"Indices: {Utils.ToKMB(indicesPerSecond)}/s\n" +
+                        $"Tris: {Utils.ToKMB(trianglesPerSecond)}/s\n" +
+                        $"Textures: {Easy2D.Texture.TextureCount}\n" +
+                        $"Framework: {RuntimeInformation.FrameworkDescription} {RuntimeInformation.ProcessArchitecture}\n" +
+                        $"OS: {RuntimeInformation.OSDescription}\n" +
+                        $"GL: {GL.GLVersion}\n" +
+                        $"Renderer: {GL.GLRenderer}\n" +
+                        $"GC: [{GC.CollectionCount(0)}, {GC.CollectionCount(1)}, {GC.CollectionCount(2)}]\n" +
+                        $"Mem: {GC.GetTotalMemory(false)}\n" +
+                        $"Last visit: {lastOpened}";
 
                     int pendingTasks = 0;
                     int asyncWorkloads = 0;
@@ -250,7 +281,7 @@ namespace RTCircles
                         }
                     }
 
-                    text += $"\nSchedulers Count: {Scheduler.AllSchedulers.Count} [TotalPending: {pendingTasks} TotalAsync: {asyncWorkloads}]";
+                    text += $"\nSchedulers: {Scheduler.AllSchedulers.Count} [Pending: {pendingTasks} Async: {asyncWorkloads}]";
                 }
                 else
                 {

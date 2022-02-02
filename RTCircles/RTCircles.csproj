@@ -103,8 +103,11 @@
     <None Remove="Skin\spinner-circle.png" />
     <None Remove="Skin\spinnerbonus.wav" />
     <None Remove="Skin\star.png" />
+    <None Remove="Skin\text-exit.png" />
+    <None Remove="Skin\text-multiplayer.png" />
+    <None Remove="Skin\text-options.png" />
+    <None Remove="Skin\text-singleplay.png" />
     <None Remove="Skin\visualizer-bar.png" />
-    <None Remove="Skin\welcome.wav" />
     <None Remove="Sliders\FastSlider.frag" />
     <None Remove="Sliders\FastSlider.vert" />
     <None Remove="Sliders\slider.frag" />
@@ -220,8 +223,11 @@
     <EmbeddedResource Include="Skin\spinner-circle.png" />
     <EmbeddedResource Include="Skin\spinnerbonus.wav" />
     <EmbeddedResource Include="Skin\star.png" />
+    <EmbeddedResource Include="Skin\text-exit.png" />
+    <EmbeddedResource Include="Skin\text-multiplayer.png" />
+    <EmbeddedResource Include="Skin\text-options.png" />
+    <EmbeddedResource Include="Skin\text-singleplay.png" />
     <EmbeddedResource Include="Skin\visualizer-bar.png" />
-    <EmbeddedResource Include="Skin\welcome.wav" />
     <EmbeddedResource Include="Sliders\FastSlider.frag" />
     <EmbeddedResource Include="Sliders\FastSlider.vert" />
     <EmbeddedResource Include="Sliders\slider.frag" />
@@ -234,7 +240,7 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="OsuParsers" Version="1.7.1" />
-    <PackageReference Include="Realm" Version="10.7.1" />
+    <PackageReference Include="Realm" Version="10.9.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -9,11 +9,13 @@
 
   <ItemGroup>
     <None Remove="hit.wav" />
+    <None Remove="sword.png" />
     <None Remove="trail.png" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="hit.wav" />
+    <EmbeddedResource Include="sword.png" />
     <EmbeddedResource Include="trail.png" />
   </ItemGroup>
 

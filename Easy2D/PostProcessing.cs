@@ -55,10 +55,8 @@ namespace Easy2D
                 FrameBuffer.DefaultFrameBuffer.SetTarget(null);
                 return;
             }
-            else
-            {
-                FrameBuffer.DefaultFrameBuffer.SetTarget(MainFrameBuffer);
-            }
+            
+            FrameBuffer.DefaultFrameBuffer.SetTarget(MainFrameBuffer);
 
             PostProcessing.drawSize = drawSize;
 
@@ -97,6 +95,7 @@ namespace Easy2D
 
             bloomShader.Bind();
             bloomShader.SetInt("u_Texture", 0);
+            bloomShader.SetInt("u_CombineTexture", 5);
 
             if (Bloom)
             {
@@ -137,7 +136,6 @@ namespace Easy2D
 
                 bloomShader.SetBoolean("u_Blur", false);
                 bloomShader.SetBoolean("u_Combine", true);
-                bloomShader.SetInt("u_CombineTexture", 5);
 
                 blurBuffer5.Texture.Bind(5);
                 blitFramebuffer(blurBuffer6, blurBuffer5);
@@ -156,7 +154,6 @@ namespace Easy2D
 
                 bloomShader.SetBoolean("u_Final", true);
                 bloomShader.SetBoolean("u_Combine", false);
-                blurBuffer1.Texture.Bind(5);
                 blitFramebuffer(MainFrameBuffer, MotionBlur ? MainFrameBuffer : null);
 
                 bloomShader.SetBoolean("u_Final", false);

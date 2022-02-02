@@ -1,8 +1,6 @@
 ﻿#version 300 es
 //I really have no fucking clue what precision should be and how it matters so...
-#if GL_ES
 precision mediump float;
-#endif
 
 uniform sampler2D u_Textures[16];
 
@@ -25,6 +23,26 @@ float roundedRectSDF(vec2 centerPosition, vec2 size, float radius)
 float roundedBoxSDF(vec2 CenterPosition, vec2 Size, float Radius)
 {
     return length(max(abs(CenterPosition) - Size + Radius, 0.0)) - Radius;
+}
+
+vec3 light(vec2 lightPos, float lightRadius, vec2 normal, vec3 color)
+{
+    vec2 pixelPos = gl_FragCoord.xy;
+
+    vec2 toLight = (lightPos - pixelPos);
+
+    vec3 lightcolor = vec3(1.0);
+
+    // This computes how much is the pixel lit based on where it faces
+    float brightness = clamp(dot(normalize(toLight), normal), 0.0, 1.0);
+
+    // If it faces towards the light it is lit fully, if it is perpendicular
+    // to the direction towards the light then it is not lit at all.
+
+    // This reduces the brightness based on the distance form the light and the light's radius
+    brightness *= clamp(1.0 - (length(toLight) / lightRadius), 0.0, 1.0);
+    // The final color of the pixel.
+    return lightcolor * brightness;
 }
 
 uniform vec3 u_BorderColorOuter;

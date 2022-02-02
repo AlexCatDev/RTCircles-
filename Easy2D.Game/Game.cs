@@ -63,6 +63,7 @@ namespace Easy2D.Game
                         System.Threading.ThreadPool.QueueUserWorkItem(new((o) =>
                         {
                             renderThreadID = System.Threading.Thread.CurrentThread.ManagedThreadId;
+                            System.Threading.Thread.CurrentThread.Priority = System.Threading.ThreadPriority.Highest;
 
                             Stopwatch sw = new Stopwatch();
                             while (!View.IsClosing && isMultiThreaded)
@@ -115,13 +116,10 @@ namespace Easy2D.Game
 
             View.GLContext.SwapInterval(0);
             GL.Instance.DepthFunc(Silk.NET.OpenGLES.DepthFunction.Less);
-
             Input.SetContext(inputContext);
 
             OnLoad();
         }
-
-        private readonly object renderUpdateSyncLock = new object();
 
         private double totalRenderTime;
         private int fps;
@@ -144,7 +142,7 @@ namespace Easy2D.Game
                 }
 
                 RenderDeltaTime = delta;
-
+                
                 GL.Instance.Clear(ClearBufferMask.ColorBufferBit);
 
                 //Unfortunately syncing of the rendering and upating is kinda mandatory
@@ -153,8 +151,8 @@ namespace Easy2D.Game
 
                 //Conversely, this would wait for the update thread to complete, who ever locks it first  i guess
 
-                lock(renderUpdateSyncLock)
-                    OnRender(delta);
+                OnUpdate(delta);
+                OnRender(delta);
 
                 if (View.IsClosing == false)
                     View.SwapBuffers();
@@ -163,7 +161,11 @@ namespace Easy2D.Game
                 PostProcessing.Update((float)delta);
 
                 fps++;
+
                 totalRenderTime += delta;
+
+                TotalTime += delta;
+                DeltaTime = delta;
 
                 if (totalRenderTime >= 1)
                 {
@@ -171,53 +173,17 @@ namespace Easy2D.Game
                     totalRenderTime -= 1;
                     fps = 0;
 
-                    if(PrintFPS)
+                    if (PrintFPS)
                         Console.WriteLine($"FPS: {FPS}");
                 }
             }
         }
 
-        private double totalUpdateTime;
-        private int ups;
         /// <summary>
         /// This gets called by the game host
         /// </summary>
         /// <param name="delta"></param>
-        public void Update(double delta)
-        {
-            TotalTime += delta;
-            DeltaTime = delta;
-
-            //If the render thread is busy? dont wait for updates? just continue processing window events?
-            //Updates and render has to not occour at the same time,
-            //Input events can happen out of sync mostly, as long as it doesnt modify the game state too much
-
-            //While the render thread is busy rendering the scene, process window events meanwhile
-            while (System.Threading.Monitor.TryEnter(renderUpdateSyncLock) == false)
-            {
-                View.DoEvents();
-                //Sleep if vsync or nah?
-            }
-
-            OnUpdate(delta);
-            System.Threading.Monitor.Exit(renderUpdateSyncLock);
-
-            ups++;
-            totalUpdateTime += delta;
-
-            if (totalUpdateTime >= 1)
-            {
-                UPS = ups;
-                totalUpdateTime -= 1;
-                ups = 0;
-
-                if (PrintUPS)
-                    Console.WriteLine($"UPS: {UPS}");
-            }
-
-            if (View.VSync)
-                System.Threading.Thread.Sleep(1);
-        }
+        public void Update(double delta) { }
 
         public double TotalTime { get; private set; }
         public double DeltaTime { get; private set; }

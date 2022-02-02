@@ -1,15 +1,30 @@
 ﻿using Easy2D;
 using Easy2D.Game;
 using OpenTK.Mathematics;
+using Silk.NET.Input;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace New
 {
+    static class Helpers
+    {
+        public static Vector4 GetRainbow(double time, double scale = 1,
+            double phaseRed = 0, double phaseGreen = 1, double phaseBlue = 5)
+        {
+            float red = (float)(Math.Abs(Math.Sin(time + phaseRed)) * scale);
+            float grn = (float)(Math.Abs(Math.Sin(time + phaseGreen)) * scale);
+            float blu = (float)(Math.Abs(Math.Sin(time + phaseBlue)) * scale);
+
+            return new Vector4(red, grn, blu, 1f);
+        }
+    }
+
     class FancyCursorTrail : Drawable
     {
         class TrailPiece
@@ -20,12 +35,12 @@ namespace New
 
             public bool RemoveMe;
 
-            public TrailPiece(Vector2 Position)
+            public TrailPiece(Vector2 Position, float width)
             {
                 this.Position = Position;
 
                 this.Color = Vector4.One;
-                this.Width = 10;
+                Width = width;
             }
 
             public void Update(float delta)
@@ -99,6 +114,9 @@ namespace New
 
         Vector2 lastMousePos;
 
+        public Vector2? PositionOverride = null;
+        public float Width;
+
         public override void OnUpdate()
         {
             for (int i = trailPieces.Count - 1; i >= 0; i--)
@@ -109,19 +127,17 @@ namespace New
                     trailPieces.RemoveAt(i);
             }
 
-            var mousePos = Easy2D.Game.Input.MousePosition;
-
+            Vector2 mousePos = PositionOverride ?? Easy2D.Game.Input.MousePosition;
 
             if (lastMousePos == Vector2.Zero)
                 lastMousePos = mousePos;
 
 
             var length = (mousePos - lastMousePos).Length;
-
             if (length >= 5)
             {
                 lastMousePos = mousePos;
-                TrailPiece p = new TrailPiece(mousePos);
+                TrailPiece p = new TrailPiece(mousePos, Width);
 
                 trailPieces.Add(p);
             }
@@ -283,6 +299,267 @@ namespace New
         }
     }
 
+    public class StandableBlock : Drawable
+    {
+        public Vector2 pos;
+        public Vector2 size;
+
+        public override Rectangle Bounds => new Rectangle(pos, size);
+
+        public override void Render(FastGraphics g)
+        {
+            g.DrawRectangle(pos, size, Colors.Blue);
+            base.Render(g);
+        }
+    }
+
+    public class TestPlayerSword : Drawable
+    {
+        class Trail : Drawable
+        {
+            Vector2 pos, size;
+            Vector4 color;
+
+            public static float SpawnTimer;
+
+            public Trail(Vector2 pos, Vector2 size)
+            {
+                this.pos = pos;
+                this.size = size;
+
+                color = Colors.White;
+            }
+
+            public override void Render(FastGraphics g)
+            {
+                g.DrawRectangleCentered(pos, size, color);
+                base.Render(g);
+            }
+
+            public override void OnUpdate()
+            {
+                color.W -= 4f * fDelta;
+
+                if (color.W <= 0)
+                    IsDead = true;
+
+                base.OnUpdate();
+            }
+        }
+
+        static Texture tex = new Texture(Utils.GetResource("sword.png"));
+
+        SmoothFloat attackAnim = new SmoothFloat();
+
+        Vector2 pos = new Vector2(200, 200);
+
+        Vector2 charSize = new Vector2(64);
+
+        double HitPoints = 100;
+        double Stamina = 100;
+
+        Drawable obstaclesContainer = new Drawable();
+
+        public TestPlayerSword()
+        {
+            obstaclesContainer.Add(new StandableBlock() { pos = new Vector2(400, 600), size = new Vector2(100, 20) });
+
+            obstaclesContainer.Add(new StandableBlock() { pos = new Vector2(500, 500), size = new Vector2(100, 20) });
+
+            Add(obstaclesContainer);
+        }
+
+        public override void Render(FastGraphics g)
+        {
+            base.Render(g);
+
+            g.DrawRectangleCentered(pos, charSize, Colors.Red);
+
+            Vector2 wepPos = pos + new Vector2(30, 15);
+            Vector2 wepSize = tex.Size / 12;
+
+            float angle = MathUtils.AtanVec(Easy2D.Game.Input.MousePosition, wepPos) + MathF.PI / 4;
+
+            Vector2 animOffset = Vector2.Zero;
+            animOffset.X = MathF.Cos(angle - MathF.PI / 4) * 30f * attackAnim.Value;
+            animOffset.Y = MathF.Sin(angle - MathF.PI / 4) * 30f * attackAnim.Value;
+
+            g.DrawRectangleCentered(wepPos + animOffset, wepSize, new Vector4(1f), tex, rotDegrees: MathHelper.RadiansToDegrees(angle));
+
+            drawHUD(g);
+        }
+
+        private void drawHUD(FastGraphics g)
+        {
+            g.DrawString($"HP: {HitPoints:F2}\nStamina: {Stamina:F2}", Font.DefaultFont, new Vector2(10), Helpers.GetRainbow(Time, 1, 0, 1, 2));
+        }
+
+        public override bool OnMouseDown(MouseButton args)
+        {
+            if (attackAnim.HasCompleted)
+            {
+                attackAnim.TransformTo(1f, 0.08f, EasingTypes.InSine);
+                attackAnim.Wait(0.04f);
+                attackAnim.TransformTo(0f, 0.08f, EasingTypes.OutSine);
+            }
+            return base.OnMouseDown(args);
+        }
+
+        private float gravity = 0;
+        private float speed = 500;
+
+        private bool rechargedEnoughStamina = true;
+
+        public override void OnUpdate()
+        {
+            attackAnim.Update(fDelta);
+
+            Trail.SpawnTimer += fDelta;
+            Trail.SpawnTimer.ClampRef(0, 0.05f);
+
+            if (Input.IsKeyDown(Key.ShiftLeft) && rechargedEnoughStamina)
+            {
+                speed = 750;
+                Stamina -= 75 * fDelta;
+
+                if (Trail.SpawnTimer >= 0.05f)
+                {
+                    Trail.SpawnTimer -= 0.05f;
+                    Add(new Trail(pos, charSize));
+                }
+
+                //PostProcessing.MotionBlurScale = 100;
+                //PostProcessing.BloomThreshold = 0.5f;
+
+                if (Stamina <= 0)
+                    rechargedEnoughStamina = false;
+            }
+            else
+            {
+                speed = 500;
+                Stamina += 40 * fDelta;
+                Stamina = Stamina.Clamp(0, 100);
+
+                //PostProcessing.MotionBlurScale = 31289381293;
+                //PostProcessing.BloomThreshold = 1f;
+
+                if (Stamina > 75)
+                    rechargedEnoughStamina = true;
+            }
+
+            if (Input.IsKeyDown(Key.D))
+            {
+                pos.X += speed * fDelta;
+            }
+
+            if (Input.IsKeyDown(Key.A))
+            {
+                pos.X -= speed * fDelta;
+            }
+
+            gravity += 1500f * fDelta;
+            //float maxY = NewGame.Instance.Height - charSize.Y / 2;
+
+            float maxY = NewGame.Instance.Height - charSize.Y / 2;
+
+            float minY = 0;
+
+            Rectangle fixedBounds = new Rectangle(pos - charSize / 2, charSize);
+
+            obstaclesContainer.Get<StandableBlock>((block) => {
+                if (fixedBounds.Right > block.Bounds.Left && fixedBounds.Left < block.Bounds.Right)
+                {
+                    if (fixedBounds.Top <= block.Bounds.Bottom && fixedBounds.Bottom > block.Bounds.Bottom)
+                    {
+                        minY = block.Bounds.Bottom + charSize.Y / 2;
+                        return true;
+                    }
+                    else if (block.Bounds.Top < maxY && block.Bounds.Top >= fixedBounds.Bottom)
+                    {
+                        maxY = block.pos.Y - charSize.Y / 2;
+                        return true;
+                    }
+                }
+
+
+
+                //    if (pos.X + charSize.X / 2 > o.pos.X && pos.X < o.pos.X + o.size.X + charSize.X / 2)
+                //{
+                //    if (o.pos.Y >= pos.Y - charSize.Y / 2 && o.pos.Y < maxY)
+                //    {
+                //        maxY = o.pos.Y - charSize.Y / 2;
+                //        return true;
+                //    }
+                //}
+
+                return false;
+            });
+
+            pos.Y += gravity * fDelta;
+
+            if (pos.Y >= maxY)
+            {
+                gravity = 0;
+                pos.Y = maxY;
+            }else if(pos.Y <= minY)
+            {
+                pos.Y = minY;
+                gravity = 1;
+            }
+
+            if(Input.IsKeyDown(Key.Space) && gravity == 0)
+            {
+                gravity = -700f;
+            }
+
+            base.OnUpdate();
+        }
+    }
+
+    public class TestCutText : Drawable
+    {
+        class Text : Drawable
+        {
+            private TestCutText testCutText;
+
+            private Vector2 position;
+
+            public Text(TestCutText testCutText)
+            {
+                this.testCutText = testCutText;
+            }
+
+            public override void Render(FastGraphics g)
+            {
+                base.Render(g);
+            }
+        }
+
+        public Vector2 Position => new Vector2(200, 200);
+        public Vector2 Size = new Vector2(500, 500);
+
+        public override Rectangle Bounds => new Rectangle(Position, Size);
+
+        public override bool OnTextInput(char args)
+        {
+            return base.OnTextInput(args);
+        }
+
+        public override void Render(FastGraphics g)
+        {
+            g.DrawRectangle(Position, Size, Colors.White);
+
+            g.DrawClippedString("This is a clipped string. you cant see this text", Font.DefaultFont, Input.MousePosition, Colors.Red, Bounds, 0.5f);
+
+            base.Render(g);
+        }
+
+        public override void OnUpdate()
+        {
+            base.OnUpdate();
+        }
+    }
+
     public class NewGame : Game
     {
         public new static NewGame Instance { get; private set; }
@@ -303,6 +580,7 @@ namespace New
 
         public override void OnLoad()
         {
+            Utils.WriteToConsole = true;
             Instance = this;
 
             sound = new Sound(Utils.GetResource("hit.wav"));
@@ -310,25 +588,29 @@ namespace New
             graphics = new FastGraphics(400_000 * 5, 600_000 * 5);
 
             //container.Add(new Test());
-            //container.Add(new PerformanceCounter());
+            container.Add(new PerformanceCounter());
 
             Width = 1280;
             Height = 720;
-            
+
             for (int i = 0; i < 100000; i++)
             {
-                //container.Add(new BouncingCube());
+                container.Add(new BouncingCube());
             }
 
-            container.Add(new FancyCursorTrail());
+            container.Add(new FancyCursorTrail() { Width = 10});
+            container.Add(new TestPlayerSword());
 
+            container.Add(new TestCutText());
             Input.InputContext.Keyboards[0].KeyDown += (s, e, x) =>
             {
+                container.OnKeyDown(e);
                 sound.Play(true);
             };
 
             Input.InputContext.Mice[0].MouseDown += (s, e) =>
             {
+                container.OnMouseDown(e);
                 IsMultiThreaded = true;
             };
 
@@ -337,13 +619,14 @@ namespace New
                 IsMultiThreaded = false;
             };
 
-            PrintFPS = true;
+            //PrintFPS = true;
             if (RuntimeInformation.ProcessArchitecture == Architecture.X86 || RuntimeInformation.ProcessArchitecture == Architecture.X64)
             {
-                PostProcessing.Bloom = true;
+                //PostProcessing.Bloom = true;
                 //PostProcessing.MotionBlur = true;
             }
-            //PostProcessing.MotionBlur = true;
+
+            View.VSync = true;
         }
 
         public (Vector2 topLeft, Vector2 topRight, Vector2 bottomLeft, Vector2 bottomRight) DrawLine(Vector2 startPosition, Vector2 endPosition, Vector4 color1, Vector4 color2, float thickness, Texture texture = null)
@@ -447,6 +730,9 @@ namespace New
 
             container.Render(graphics);
 
+            //graphics.DrawRectangleCentered(Center, tex.Size / 2, new Vector4(1.1f, 1.1f, 1.1f, 1f), tex);
+
+            /*
             Vector2 line1 = new Vector2(100, 100);
             Vector2 line1_2 = new Vector2(300, 300);
 
@@ -486,6 +772,7 @@ namespace New
 
             graphics.DrawString("k1 bl", Font.DefaultFont, k1.bottomLeft, Colors.White, 0.25f);
             graphics.DrawString("k2 tr", Font.DefaultFont, k2.topRight, Colors.White, 0.25f);
+            */
             graphics.EndDraw();
             PostProcessing.PresentFinalResult();
         }
@@ -560,6 +847,18 @@ namespace New
 
             elapsed += fDelta;
         }
+
+        /*
+        public override bool OnKeyDown(Key key)
+        {
+            if (RNG.TryChance())
+            {
+                IsDead = true;
+            }
+
+            return base.OnKeyDown(key);
+        }
+        */
     }
 
     public class PerformanceCounter : Drawable
@@ -584,12 +883,8 @@ namespace New
 
         private Stopwatch sw = Stopwatch.StartNew();
 
-        private int renderThreadID;
-
         public override void Render(FastGraphics g)
         {
-            renderThreadID = Thread.CurrentThread.ManagedThreadId;
-
             frame++;
 
             double delta = ((double)sw.ElapsedTicks / Stopwatch.Frequency);
@@ -642,7 +937,7 @@ namespace New
 
             if (elapsed >= 1.0)
             {
-                drawString = $"FPS: {frame} UPS: {update} Drawables: {Parent.ChildrenCount} Update: {Thread.CurrentThread.ManagedThreadId} Render: {renderThreadID}";
+                drawString = $"FPS: {frame} UPS: {update} Drawables: {Parent.ChildrenCount} R&U_ID: {Thread.CurrentThread.ManagedThreadId} GC [zero:{GC.CollectionCount(0)}] [one:{GC.CollectionCount(1)}] [two:{GC.CollectionCount(2)}] mem: {GC.GetTotalMemory(false)}";
                 elapsed -= 1.0;
                 update = 0;
                 frame = 0;

@@ -21,6 +21,9 @@ namespace RTCircles
         public abstract void Update(float delta);
         public abstract void Render(Graphics g);
 
+        public virtual void BeforeRender(Graphics g) { }
+        public virtual void AfterRender(Graphics g) { }
+
         public virtual bool OnTextInput(char c) { return false; }
 
         public virtual bool OnKeyDown(Key key) { return false; }

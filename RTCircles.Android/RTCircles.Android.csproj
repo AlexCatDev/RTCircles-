@@ -1,24 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net6.0-android</TargetFramework>
-	<SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
-	<OutputType>Exe</OutputType>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <ApplicationId>Alexx.RTCircles</ApplicationId>
-    <ApplicationVersion>1</ApplicationVersion>
-    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <AndroidPackageFormat>apk</AndroidPackageFormat>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net6.0-android</TargetFramework>
+		<SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
+		<OutputType>Exe</OutputType>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<ApplicationId>Alexx.RTCircles</ApplicationId>
+		<ApplicationVersion>1</ApplicationVersion>
+		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<AndroidPackageFormat>apk</AndroidPackageFormat>
+	</PropertyGroup>
   <ItemGroup>
     <None Remove="libs\arm64-v8a\libbass.so" />
     <None Remove="libs\arm64-v8a\libbass_fx.so" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Realm" Version="10.7.1" />
+    <PackageReference Include="Realm" Version="10.9.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RTCircles\RTCircles.csproj" />

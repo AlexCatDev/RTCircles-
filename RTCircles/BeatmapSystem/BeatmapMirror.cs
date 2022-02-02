@@ -212,7 +212,19 @@ namespace RTCircles
         {
             lock (beatmapDecoderLock)
             {
-                return Poop.BeatmapDecoder.Decode(stream);
+                var bm = BeatmapDecoder.Decode(getLines(stream));
+                return bm;
+            }
+        }
+
+        private static IEnumerable<string> getLines(Stream stream)
+        {
+            using(StreamReader sr = new StreamReader(stream))
+            {
+                while (!sr.EndOfStream)
+                {
+                    yield return sr.ReadLine();
+                }
             }
         }
 

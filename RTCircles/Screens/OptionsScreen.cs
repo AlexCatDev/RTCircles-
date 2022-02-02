@@ -33,6 +33,8 @@ namespace RTCircles
             float padding = 4f * MainGame.Scale;
             float fontSize = 0.75f * MainGame.Scale;
 
+            string drawDescription = null;
+
             for (int i = 0; i < Option<bool>.AllOptions.Count; i++)
             {
                 if (Option<bool>.AllOptions[i].TryGetTarget(out var option)) {
@@ -48,17 +50,30 @@ namespace RTCircles
 
                     g.DrawString(text, Font.DefaultFont, truePos + new Vector2(panelSize.X / 2 - textSize.X / 2, panelSize.Y / 2f - textSize.Y/2), Colors.White, fontSize);
 
-                    if (clickedSomewhere)
+                    if (new Rectangle(Input.MousePosition, Vector2.One).IntersectsWith(new Rectangle(truePos, panelSize)))
                     {
-                        if (new Rectangle(Input.MousePosition, Vector2.One).IntersectsWith(new Rectangle(truePos, panelSize)))
+                        if (clickedSomewhere)
                         {
                             option.Value = !option.Value;
                             Skin.Click.Play(true);
                             clickedSomewhere = false;
                         }
+
+                        drawDescription = option.Description;
                     }
+
                     offset.Y += panelSize.Y + padding;
                 }
+            }
+
+            if (drawDescription != null)
+            {
+                Vector2 descPos = Input.MousePosition;
+                float descScale = 0.5f * MainGame.Scale;
+                Vector2 descSize = Font.DefaultFont.MessureString(drawDescription, descScale);
+
+                g.DrawRectangle(descPos, descSize, new Vector4(0f, 0f, 0f, 0.5f));
+                g.DrawString(drawDescription, Font.DefaultFont, Input.MousePosition, Colors.White, descScale);
             }
 
             clickedSomewhere = false;

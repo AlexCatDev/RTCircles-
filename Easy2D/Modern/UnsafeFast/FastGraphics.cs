@@ -391,6 +391,140 @@ namespace Easy2D
                 position.X -= character.XOffset * scale;
             }
         }
+
+        public void DrawClippedString(string text, Font font, Vector2 position, Vector4 color, Rectangle boundingBox, float scale = 1f, bool alignText = true)
+        {
+            Vector2 startPosition = position;
+
+            scale = Math.Max(0, scale);
+
+            float biggestChar = 0;
+            float smallestBearing = float.MaxValue;
+
+            if (alignText)
+            {
+                for (int i = 0; i < text.Length; i++)
+                {
+                    char c = text[i];
+
+                    if (c == '\n')
+                        continue;
+                    else if (c == '\t')
+                        continue;
+                    else if (c == '\r')
+                        continue;
+
+                    //3.6%
+                    bool isValidCharacter = font.Info.Characters.TryGetValue(c, out SharpFNT.Character character);
+
+                    if (isValidCharacter == false)
+                        character = font.Info.Characters['?'];
+
+                    float height = character.Height * scale;
+
+                    float bearing = (character.YOffset * scale);
+
+                    smallestBearing = smallestBearing > bearing ? bearing : smallestBearing;
+
+                    biggestChar = height > biggestChar ? height : biggestChar;
+                }
+            }
+            else
+            {
+                smallestBearing = 0;
+            }
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+
+                if (c == '\n')
+                {
+                    position.Y += font.Info.Common.LineHeight * scale;
+                    position.X = startPosition.X;
+                    continue;
+                }
+                else if (c == '\t')
+                    continue;
+                else if (c == '\r')
+                    continue;
+
+                //3.6%
+                bool isValidCharacter = font.Info.Characters.TryGetValue(c, out SharpFNT.Character character);
+
+                if (isValidCharacter == false)
+                    character = font.Info.Characters['?'];
+
+                float bearing = (character.YOffset * scale);
+
+                position.Y += bearing - smallestBearing;
+
+                Vector2 size = new Vector2(character.Width, character.Height) * scale;
+
+                Vector2 clipPush = Vector2.Zero;
+                
+                Rectangle texRect = new Rectangle(character.X, character.Y, character.Width, character.Height);
+
+                if (position.X + size.X > boundingBox.Right)
+                {
+                    var diff = position.X + size.X - boundingBox.Right;
+                    texRect.Width -= texRect.Width * (diff / size.X);
+
+                    size.X -= diff;
+                }
+                else if (position.X < boundingBox.Left)
+                {
+                    var diff = boundingBox.Left - position.X;
+                    texRect.X += texRect.Width * (diff / size.X);
+                    texRect.Width -= texRect.Width * (diff / size.X);
+
+                    position.X += diff;
+                    size.X -= diff;
+                    clipPush.X = diff;
+                }
+
+                if (position.Y + size.Y > boundingBox.Bottom)
+                {
+                    var diff = position.Y + size.Y - boundingBox.Bottom;
+                    texRect.Height -= texRect.Height * (diff / size.Y);
+
+                    size.Y -= diff;
+                }
+                else if (position.Y < boundingBox.Top)
+                {
+                    var diff = boundingBox.Top - position.Y;
+
+                    texRect.Y += texRect.Height * (diff / size.Y);
+                    texRect.Height -= texRect.Height * (diff / size.Y);
+
+                    position.Y += diff;
+                    size.Y -= diff;
+                    clipPush.Y = diff;
+                }
+
+                if (size.X < 0)
+                    size.X = 0;
+
+                if (size.Y < 0)
+                    size.Y = 0;
+
+                //30%
+                DrawRectangle(position, size, color, font.Texture, texRect, false);
+
+                position -= clipPush;
+
+                position.Y -= bearing - smallestBearing;
+
+                position.X += character.XAdvance * scale;
+
+                //10%
+                if (i < text.Length - 1)
+                    position.X += font.Info.GetKerningAmount(c, text[i + 1]) * scale;
+
+                position.X -= character.XOffset * scale;
+            }
+        }
+
         #endregion
 
         public void DrawInFrameBuffer(FrameBuffer frameBuffer, params Action[] drawActions)
@@ -639,6 +773,8 @@ namespace Easy2D
 
         public float BorderWidth = 1.0f;
 
+        private bool slotArrayFlag = true;
+
         /// <summary>
         /// Ends and draws the batch currently pending
         /// </summary>
@@ -655,7 +791,11 @@ namespace Easy2D
             }
 
             Shader.Bind();
-            Shader.SetIntArray("u_Textures", slots);
+            if (slotArrayFlag)
+            {
+                Shader.SetIntArray("u_Textures", slots);
+                slotArrayFlag = false;
+            }
 
             #region SliderUniforms
             Shader.SetFloat("u_BorderWidth", BorderWidth);

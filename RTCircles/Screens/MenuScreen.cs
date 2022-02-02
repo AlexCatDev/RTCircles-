@@ -9,6 +9,100 @@ using System.Threading.Tasks;
 
 namespace RTCircles
 {
+    public class CumSprayer : Drawable
+    {
+        class Cum : Drawable
+        {
+            private Vector2 size;
+            private SmoothFloat alpha = new SmoothFloat() { Value = 1 };
+
+            private float speed;
+
+            private Vector2 position;
+            private Vector2 velocity;
+            private float angle = 0;
+
+            public Cum(Vector2 startPos, float angle)
+            {
+                position = startPos;
+
+                alpha.TransformTo(0f, 0.8f, EasingTypes.Out, () => {
+                    IsDead = true;
+                });
+
+                size = new Vector2(RNG.Next(64, 96));
+
+                velocity = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
+
+                speed = size.X.Map(64, 96, 2500, 2000);
+                angle = RNG.Next(0, 360);
+            }
+
+            public override void Render(Graphics g)
+            {
+                g.DrawRectangleCentered(position, size * MainGame.Scale, new Vector4(1f, 1f, 1f, alpha), Skin.Star, rotDegrees: angle);
+            }
+
+            public override void Update(float delta)
+            {
+                position += velocity * delta * speed * MainGame.Scale;
+                angle += speed * delta / 3;
+
+                if (speed > 0)
+                    speed -= 4000 * delta;
+                else
+                    speed -= 100 * delta;
+
+                //speed -= 3000*delta;
+                //speed = MathF.Max(speed, -50);
+                alpha.Update(delta);
+            }
+        }
+
+        public CumSprayer()
+        {
+            OsuContainer.OnKiai += OsuContainer_OnKiai;
+        }
+
+        private bool startSpawningCum;
+        private float cumTimer;
+        private float angle = 0;
+
+        private void OsuContainer_OnKiai()
+        {
+            startSpawningCum = true;
+        }
+
+        public override void Render(Graphics g)
+        {
+            g.DrawString(angle.ToString(), Font.DefaultFont, Input.MousePosition, Colors.Blue, 1f);
+        }
+
+        public override void Update(float delta)
+        {
+            float spawnRate = 0.02f;
+            float startAngle = MathF.PI + MathF.PI / 8;
+            if (startSpawningCum)
+            {
+                cumTimer += delta;
+
+                angle += 1.5f * delta;
+
+                if (cumTimer >= spawnRate)
+                {
+                    cumTimer -= spawnRate;
+                    Container.Add(new Cum(Input.MousePosition, startAngle + angle));
+                }
+
+                if(angle >= MathF.PI - MathF.PI / 3)
+                {
+                    startSpawningCum = false;
+                    angle = 0;
+                }
+            }
+        }
+    }
+
     public class MenuScreen : Screen
     {
         private SmoothVector4 introFade = new SmoothVector4();
@@ -27,37 +121,36 @@ namespace RTCircles
                     {
                         var item = carouselItems[RNG.Next(0, carouselItems.Count - 1)];
 
-                        item = carouselItems.Find((o) => o.Text.Contains("Nanahira"));
-
 
                         GPUSched.Instance.Add(() =>
                         {
                             OsuContainer.SetMap(BeatmapMirror.DecodeBeatmap(System.IO.File.OpenRead(item.FullPath)), true, Mods.Auto);
                             OsuContainer.Beatmap.Song.Volume = 0;
                             OsuContainer.SongPosition = (OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai))?.Offset - 2500 ?? 0;
-                            //OsuContainer.Beatmap.Song.Play(false);
-
-                            OsuContainer.Beatmap.Song.Volume = 1f;
-                            ScreenManager.SetScreen<OsuScreen>();
+                            OsuContainer.Beatmap.Song.Play(false);
                         });
+
                     }
                     else
                     {
-                        PlayingBeatmap playingBeatmap = new PlayingBeatmap(
+                        PlayableBeatmap playingBeatmap = new PlayableBeatmap(
                             BeatmapMirror.DecodeBeatmap(Utils.GetResource("Maps.Nanahira.map.osu")),
-                            new Sound(Utils.GetResource("Maps.Nanahira.audio.mp3")),
+                            new Sound(Utils.GetResource("Maps.Nanahira.audio.mp3"), true),
                             new Texture(Utils.GetResource("Maps.Nanahira.bg.jpg")));
 
                         OsuContainer.SetMap(playingBeatmap);
 
                         playingBeatmap.GenerateHitObjects(Mods.Auto);
 
+                        OsuContainer.SongPosition = (OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai))?.Offset - 2500 ?? 0;
+                        OsuContainer.Beatmap.Song.Volume = 0;
+                        OsuContainer.Beatmap.Song.Play(false);
+
                         GPUSched.Instance.AddAsync((ct) =>
                         {
-                            System.Threading.Thread.Sleep(15000);
+                            System.Threading.Thread.Sleep(20000);
                         }, () =>
                         {
-
                             ScreenManager.SetScreen<OsuScreen>();
                         });
                     }
@@ -91,7 +184,7 @@ namespace RTCircles
 
             float alpha = introFade.Value.W;
 
-            float explode = (1f - alpha) * (float)OsuContainer.CircleExplode;
+            float explode = (1f - alpha) * (float)OsuContainer.CircleExplodeScale;
 
             if(alpha > 0f)
                 g.DrawRectangleCentered(MainGame.WindowCenter, new Vector2(800) + new Vector2(800) * explode, new Vector4(1f, 1f, 1f, alpha), MenuLogo.LogoTexture);
@@ -274,15 +367,23 @@ namespace RTCircles
 
         private ScrollingTriangles triangles = new ScrollingTriangles(60);
 
+        private SmoothFloat logoExplodeKiaiAnim = new SmoothFloat();
+
         public MenuLogo(MapBackground mapBackground)
         {
             this.mapBackground = mapBackground;
+
+            OsuContainer.OnKiai += () =>
+            {
+                logoExplodeKiaiAnim.Value = 1f;
+                logoExplodeKiaiAnim.TransformTo(0f, 0.5f, EasingTypes.Out);
+            };
 
             sizeTransform.Value = -size;
             sizeTransform.TransformTo(new Vector2(0), 0.25f, EasingTypes.Out, () => { sizeFadedIn = true; });
 
             soundFade.Value = 0f;
-            soundFade.TransformTo(1f, 1f);
+            soundFade.TransformTo(1f, (float)GlobalOptions.SongVolume.Value);
 
             buttonAlpha.Value = 0f;
 
@@ -313,9 +414,9 @@ namespace RTCircles
 
                 col.Z = 1f - col.X;
 
-                col = Colors.Tint(col, 1.2f);
+                col = Colors.Tint(col, 2f);
 
-                col += visualizerColorAdditive * 0.25f;
+                col += visualizerColorAdditive;
 
                 col.W = 1.0f;
 
@@ -399,8 +500,14 @@ namespace RTCircles
 
         public override void Render(Graphics g)
         {
-            Vector4 beatFlash = new Vector4(0.7f, 0.7f, 0.7f, 0f) * Interpolation.ValueAt(OsuContainer.BeatProgressKiai, 0f, 1f, 0f, 1f, EasingTypes.Out);
+            Vector4 beatFlash = new Vector4(0.4f, 0.4f, 0.4f, 0f) * Interpolation.ValueAt(OsuContainer.BeatProgressKiai, 0f, 1f, 0f, 1f, EasingTypes.Out);
             g.DrawRectangleCentered(visualizer.Position, logoSize, colorTransform + beatFlash, LogoTexture, null, false, rotationTransform);
+
+            if (!logoExplodeKiaiAnim.HasCompleted)
+            {
+                float scale = logoExplodeKiaiAnim.Value.Map(1f, 0f, 1f, 1.35f);
+                g.DrawRectangleCentered(visualizer.Position, logoSize * scale, new Vector4(1f, 1f, 1f, logoExplodeKiaiAnim.Value), LogoTexture);
+            }
         }
 
         public override bool OnMouseDown(MouseButton args)
@@ -494,6 +601,8 @@ namespace RTCircles
 
         public override void Update(float delta)
         {
+            logoExplodeKiaiAnim.Update(delta);
+
             if (OsuContainer.IsKiaiTimeActive && PostProcessing.Bloom)
             {
                 visualizerColorAdditive = Vector4.Lerp(visualizerColorAdditive, new Vector4(1f), delta * 10f);
@@ -598,8 +707,8 @@ namespace RTCircles
             //BASS KIAI LOGO VIBRATION 2.0, buggy sometimes the logo glitches suddenly to a side for some reason???
             if (OsuContainer.IsKiaiTimeActive)
             {
-                float dirX = RNG.TryChance() ? -40 : 40;
-                float dirY = RNG.TryChance() ? -40 : 40;
+                float dirX = RNG.TryChance() ? -50 : 50;
+                float dirY = RNG.TryChance() ? -50 : 50;
                 //Pick a random direction from negative Value to positive Value
                 Vector2 dist = new Vector2(dirX, dirY) * MainGame.Scale;
 
@@ -608,7 +717,7 @@ namespace RTCircles
                 //fuck jeg er tørstig lol
                 //cock
                 //use perlin noise
-                var blend = (delta * 30f * visualizer.BeatValue).Clamp(0, 1);
+                var blend = (delta * 35f * visualizer.BeatValue).Clamp(0, 1);
                 offset = Vector2.Lerp(offset, dist, blend);
             }
             else

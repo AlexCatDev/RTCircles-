@@ -65,8 +65,8 @@
     <PackageReference Include="ManagedBass.Fx" Version="3.1.0" />
     <PackageReference Include="OpenTK.Mathematics" Version="4.6.7" />
     <PackageReference Include="SharpFNT" Version="2.0.0" />
-    <PackageReference Include="Silk.NET.OpenGLES" Version="2.11.0" />
-    <PackageReference Include="Silk.NET.OpenGLES.Extensions.EXT" Version="2.11.0" />
+    <PackageReference Include="Silk.NET.OpenGLES" Version="2.12.0" />
+    <PackageReference Include="Silk.NET.OpenGLES.Extensions.EXT" Version="2.12.0" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
   </ItemGroup>
 

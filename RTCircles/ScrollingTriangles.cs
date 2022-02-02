@@ -12,7 +12,7 @@ namespace RTCircles
         {
             public bool RemoveMe { get; private set; }
 
-            private Vector4 color;
+            private float colorOffset;
             private Vector2 pos;
             public Vector2 Size = new Vector2(80, 160);
 
@@ -22,8 +22,7 @@ namespace RTCircles
             {
                 pos = new Vector2(RNG.Next(0, 1000), RNG.Next(-1000, 0));
 
-                color = parent.BaseColor * RNG.Next(0.85f, 1.15f);
-                color.W = 1.0f;
+                colorOffset = RNG.Next(0.85f, 1.15f);
 
                 Size *= RNG.Next(1f, 2f);
 
@@ -42,24 +41,26 @@ namespace RTCircles
 
             public void Render(Graphics g)
             {
-                var triangle = g.VertexBatch.GetTriangleStrip(3);
-
                 int slot = g.GetTextureSlot(Easy2D.Texture.WhiteSquare);
 
+                var triangle = g.VertexBatch.GetTriangleStrip(3);
+
+                var col = new Vector4(parent.BaseColor.Xyz * colorOffset, 1);
+
                 triangle[0].Position = pos;
-                triangle[0].Color = color + parent.TriangleAdditive;
+                triangle[0].Color = col + parent.TriangleAdditive;
                 triangle[0].TextureSlot = slot;
                 triangle[0].TexCoord = Vector2.Zero;
                 triangle[0].Rotation = 0;
 
                 triangle[1].Position = pos - Size;
-                triangle[1].Color = color + parent.TriangleAdditive;
+                triangle[1].Color = col + parent.TriangleAdditive;
                 triangle[1].TextureSlot = slot;
                 triangle[1].TexCoord = Vector2.One;
                 triangle[1].Rotation = 0;
 
                 triangle[2].Position = pos + new Vector2(Size.X, -Size.Y);
-                triangle[2].Color = color + parent.TriangleAdditive;
+                triangle[2].Color = col + parent.TriangleAdditive;
                 triangle[2].TextureSlot = slot;
                 triangle[2].TexCoord = Vector2.Zero;
                 triangle[2].Rotation = 0;
@@ -77,16 +78,14 @@ namespace RTCircles
 
         private int triangleCount;
 
-        private FrameBuffer triangleFramebuffer = new FrameBuffer(1, 1, textureComponentCount: InternalFormat.Rgba, pixelFormat: PixelFormat.Rgba, pixelType: PixelType.UnsignedByte);
+        private FrameBuffer triangleFramebuffer = new FrameBuffer(1, 1, textureComponentCount: InternalFormat.Rgba16f, pixelFormat: PixelFormat.Rgba, pixelType: (PixelType)GLEnum.HalfFloat);
         private List<Triangle> triangles = new List<Triangle>();
 
         private static Easy2D.Texture catJamSpritesheet;
-        public static bool DrawCatJam = true;
 
         static ScrollingTriangles()
         {
-            if(DrawCatJam)
-                catJamSpritesheet = new Easy2D.Texture(Utils.GetResource("Skin.catjam-spritesheet.png"));
+            catJamSpritesheet = new Easy2D.Texture(Utils.GetResource("Skin.catjam-spritesheet.png"));
         }
 
         public ScrollingTriangles(int TriangleCount)
@@ -123,6 +122,15 @@ namespace RTCircles
                 }
             });
 
+           
+            g.DrawEllipse(Position, 0, 360, Radius, 0, new Vector4(1f, 1f, 1f, 1f), triangleFramebuffer.Texture);
+
+            if (GlobalOptions.KiaiCatJam.Value)
+                renderCatJam(g);
+        }
+
+        private void renderCatJam(Graphics g)
+        {
             Rectangle catJamRect = Rectangle.Empty;
             if (catJamSpritesheet is not null)
             {
@@ -136,17 +144,14 @@ namespace RTCircles
                 float x = texelSize * i;
                 catJamRect = new Rectangle(x, 0, texelSize, 1);
 
-                if (OsuContainer.IsKiaiTimeActive == false)
+                if (OsuContainer.IsKiaiTimeActive == false || OsuContainer.Beatmap?.Song.IsPlaying == false)
                 {
                     catJamAlpha.ClearTransforms();
                     catJamAlpha.TransformTo(0f, 0.1f, EasingTypes.Out);
                 }
             }
 
-            g.DrawEllipse(Position, 0, 360, Radius, 0, new Vector4(1f, 1f, 1f, 1f), triangleFramebuffer.Texture);
-
-            if(DrawCatJam)
-                g.DrawEllipse(Position, 0, 360, Radius, 0, new Vector4(1f, 1f, 1f, catJamAlpha * 0.5f), catJamSpritesheet, textureCoords: catJamRect);
+            g.DrawEllipse(Position, 0, 360, Radius, 0, new Vector4(1f, 1f, 1f, catJamAlpha * 0.5f), catJamSpritesheet, textureCoords: catJamRect);
         }
 
         public override void Update(float delta)

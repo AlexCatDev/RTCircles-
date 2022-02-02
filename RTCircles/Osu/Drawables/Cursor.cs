@@ -45,18 +45,14 @@ namespace RTCircles
                 float frequency3 = (float)MainGame.Instance.TotalTime;
 
                 float phase1 = 0;
-                float phase2 = 1;
-                float phase3 = 5;
+                float phase2 = 2;
+                float phase3 = 4;
 
-                float colorWidth = 1f;
+                float colorWidth = PostProcessing.Bloom ? 2.5f : 1;
 
-                var red = 1 + MathF.Abs(MathF.Sin(frequency1 + phase1)) * colorWidth;
-                var grn = 1 + MathF.Abs(MathF.Sin(frequency2 + phase2)) * colorWidth;
-                var blu = 1 + MathF.Abs(MathF.Sin(frequency3 + phase3)) * colorWidth;
-
-                Color.X = red;
-                Color.Y = grn;
-                Color.Z = blu;
+                Color.X = MathF.Abs(MathF.Sin(frequency1 + phase1)) * colorWidth;
+                Color.Y = MathF.Abs(MathF.Sin(frequency2 + phase2)) * colorWidth;
+                Color.Z = MathF.Abs(MathF.Sin(frequency3 + phase3)) * colorWidth;
 
                 if (Color.W <= 0)
                     RemoveMe = true;
@@ -145,7 +141,7 @@ namespace RTCircles
     public class Cursor
     {
         public Vector2 TrailSize => getScaledSize(CursorSize, Skin.CursorTrail);
-        public Vector2 CursorSize { get; set; } = new Vector2(96);
+        public Vector2 CursorSize { get; set; } = new Vector2(96*2);
 
         private const float TrailEmitRate = 1f / 60f;
 

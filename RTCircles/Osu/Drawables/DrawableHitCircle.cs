@@ -1,4 +1,5 @@
 ﻿using Easy2D;
+using Easy2D.Game;
 using OpenTK.Mathematics;
 using OsuParsers.Beatmaps.Objects;
 using OsuParsers.Enums.Beatmaps;
@@ -131,26 +132,24 @@ namespace RTCircles
 
             g.DrawRectangleCentered(Position, (Vector2)Size * explodeScale * Skin.GetScale(Skin.HitCircleOverlay), new Vector4(1f, 1f, 1f, alpha), Skin.HitCircleOverlay);
 
-            Vector2 approachCircleSize = (Vector2)Size * approachScale * Skin.GetScale(Skin.ApproachCircle);
-
+            
             if (!IsHit && !IsMissed)
             {
-                if (approachScale > 1f)
-                    g.DrawRectangleCentered(Position, approachCircleSize, new Vector4(Color.X, Color.Y, Color.Z, alpha), Skin.ApproachCircle);
-
                 Skin.CircleNumbers.DrawCentered(g, Position, Size.X / 2.7f, new Vector4(1f, 1f, 1f, alpha), combo.ToString());
+            }
+        }
+
+        public override void AfterRender(Graphics g)
+        {
+            if (approachScale > 1f && !IsHit && !IsMissed)
+            {
+                Vector2 approachCircleSize = (Vector2)Size * approachScale * Skin.GetScale(Skin.ApproachCircle);
+                g.DrawRectangleCentered(Position, approachCircleSize, new Vector4(Color.X, Color.Y, Color.Z, alpha), Skin.ApproachCircle);
             }
         }
 
         public override void Update(float delta)
         {
-            if ((this as IDrawableHitObject).TimeElapsed < 0)
-            {
-                //Container.Remove(this);
-                IsDead = true;
-                return;
-            }
-
             Position = OsuContainer.MapToPlayfield(circle.Position.X, circle.Position.Y);
 
             double timeElapsed = (OsuContainer.SongPosition - circle.StartTime + OsuContainer.Beatmap.Preempt);
@@ -182,7 +181,7 @@ namespace RTCircles
 
                 if (IsHit)
                 {
-                    explodeScale = (float)MathUtils.Map(OsuContainer.SongPosition, start, to, 1, OsuContainer.CircleExplode).Clamp(1, OsuContainer.CircleExplode);
+                    explodeScale = (float)MathUtils.Map(OsuContainer.SongPosition, start, to, 1, OsuContainer.CircleExplodeScale);
                     alpha = (float)MathUtils.Map(OsuContainer.SongPosition, start, to, hitAlpha, 0).Clamp(0, 1);
                 }
                 else if (IsMissed)
@@ -198,6 +197,9 @@ namespace RTCircles
 
         public override bool OnKeyDown(Key key)
         {
+            if (OsuContainer.CookieziMode)
+                return false;
+
             if (key == OsuContainer.Key1 || key == OsuContainer.Key2)
             {
                 if (IsHit)
@@ -215,6 +217,9 @@ namespace RTCircles
 
         public override bool OnMouseDown(MouseButton args)
         {
+            if (OsuContainer.CookieziMode)
+                return false;
+
             if (args == MouseButton.Left && OsuContainer.EnableMouseButtons)
             {
                 if (IsHit)
