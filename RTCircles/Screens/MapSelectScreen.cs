@@ -13,6 +13,11 @@ using Realms;
 
 namespace RTCircles
 {
+    //recode this piece of shit//recode this piece of shit//recode this piece of shit//recode this piece of shit
+    //recode this piece of shit
+    //recode this piece of shit
+    //recode this piece of shit
+
     public static class DynamicTexureCache
     {
         private static Dictionary<string, (Texture, List<Guid>)> textureCache = new Dictionary<string, (Texture, List<Guid>)>();
@@ -229,12 +234,12 @@ namespace RTCircles
         public static Vector4 SongInfoColor = Colors.From255RGBA(37, 37, 37, 255);//Colors.From255RGBA(211, 79, 115, 255);//Colors.From255RGBA(255, 80, 175, 255);
         public static Vector4 SongInfoTextColor = Colors.White;
 
-        public static Vector4 ItemColor = Colors.From255RGBA(46, 46, 58, 255);//Colors.From255RGBA(67, 64, 65, 255);
-        public static Vector4 ItemTextColor = Colors.White;
+        public static Vector4 ItemColor = Colors.From255RGBA(21, 21, 21, 255);//Colors.From255RGBA(67, 64, 65, 255);
+        public static Vector4 ItemTextColor = Colors.From255RGBA(249, 0, 147, 255);
         public static float ItemHightlight = 1.25f;
-        public static Vector4 ItemSelectedColor = Colors.From255RGBA(211, 79, 115, 255);//Colors.From255RGBA(255, 80, 175, 255);
+        public static Vector4 ItemSelectedColor = Colors.From255RGBA(45, 45, 45, 255);//Colors.From255RGBA(255, 80, 175, 255);
 
-        public static Vector4 HeaderColor = Colors.From255RGBA(255, 184, 111, 255);//Colors.From255RGBA(52, 49, 50, 255);
+        public static Vector4 HeaderColor = Colors.From255RGBA(53, 125, 237, 255);//Colors.From255RGBA(52, 49, 50, 255);
         public static Vector4 HeaderTextColor1 = Colors.White;
         public static Vector4 HeaderTextColor2 = Colors.White;
 
@@ -335,7 +340,8 @@ namespace RTCircles
 
             speedBar = new SliderBar();
 
-            speedBar.ButtonTexture = Skin.DTModIcon;
+            speedBar.ButtonTexture = Texture.WhiteCircle;
+            speedBar.BarColor = Colors.From255RGBA(246, 174, 45, 255);
             speedBar.MinValue = 10;
             speedBar.Value = 100;
             speedBar.MaxValue = 200;
@@ -354,7 +360,8 @@ namespace RTCircles
 
             csBar = new SliderBar();
 
-            csBar.ButtonTexture = Skin.HRModIcon;
+            csBar.ButtonTexture = Texture.WhiteCircle;
+            csBar.BarColor = Colors.From255RGBA(246, 174, 45, 255);
             csBar.MinValue = 0;
             csBar.MaxValue = 100;
 
@@ -367,6 +374,9 @@ namespace RTCircles
 
             arBar = new SliderBar();
 
+            arBar.ButtonTexture = Texture.WhiteCircle;
+            arBar.BarColor = Colors.From255RGBA(246, 174, 45, 255);
+            
             arBar.MinValue = 0;
             arBar.MaxValue = 100;
 
@@ -379,6 +389,8 @@ namespace RTCircles
 
             odBar = new SliderBar();
 
+            odBar.ButtonTexture = Texture.WhiteCircle;
+            odBar.BarColor = Colors.From255RGBA(246, 174, 45, 255);
             odBar.MinValue = 0;
             odBar.MaxValue = 100;
 
@@ -391,6 +403,8 @@ namespace RTCircles
 
             hpBar = new SliderBar();
 
+            hpBar.ButtonTexture = Texture.WhiteCircle;
+            hpBar.BarColor = Colors.From255RGBA(246, 174, 45, 255);
             hpBar.MinValue = 0;
             hpBar.MaxValue = 100;
 
@@ -551,6 +565,7 @@ namespace RTCircles
             ConfirmPlayAnimation.ClearTransforms();
             ConfirmPlayAnimation.TransformTo(1f, 0.5f, EasingTypes.OutElasticHalf, () => {
                 ScreenManager.SetScreen<OsuScreen>();
+                //OsuContainer.Beatmap.Mods &= ~Mods.Auto;
             });
         }
 
@@ -567,16 +582,16 @@ namespace RTCircles
 
             if (OsuContainer.Beatmap != null)
             {
-                var startBars = new Vector2(SongInfoBounds.X, FloatingPlayScreen.Position.Y + FloatingPlayScreen.Size.Y + 20);
+                var startBars = new Vector2(SongInfoBounds.X + 100, FloatingPlayScreen.Position.Y + FloatingPlayScreen.Size.Y + 20);
 
                 float yIncrease = 60 * MainGame.Scale;
 
-                Vector2 buttonSize = new Vector2(50 * MainGame.Scale);
+                Vector2 buttonSize = new Vector2(35 * MainGame.Scale);
 
                 speedBar.Value = (int)(OsuContainer.Beatmap.Song.PlaybackSpeed * 100);
                 speedBar.ButtonSize = buttonSize;
                 speedBar.BarThickness = 10 * MainGame.Scale;
-                speedBar.BarLength = SongInfoBounds.Width;
+                speedBar.BarLength = SongInfoBounds.Width - 100;
                 speedBar.Position = startBars;
                 speedBar.IsVisible = true;
 
@@ -585,7 +600,7 @@ namespace RTCircles
                 csBar.SetValue((int)(OsuContainer.Beatmap.CS * 10));
                 csBar.BarThickness = 10 * MainGame.Scale;
                 csBar.ButtonSize = buttonSize;
-                csBar.BarLength = SongInfoBounds.Width;
+                csBar.BarLength = SongInfoBounds.Width - 100;
                 csBar.Position = startBars;
                 csBar.IsVisible = true;
 
@@ -593,7 +608,7 @@ namespace RTCircles
 
                 arBar.SetValue((int)(OsuContainer.Beatmap.AR * 10));
                 arBar.BarThickness = 10 * MainGame.Scale;
-                arBar.BarLength = SongInfoBounds.Width;
+                arBar.BarLength = SongInfoBounds.Width - 100;
                 arBar.ButtonSize = buttonSize;
                 arBar.Position = startBars;
                 arBar.IsVisible = true;
@@ -602,7 +617,7 @@ namespace RTCircles
 
                 odBar.SetValue((int)(OsuContainer.Beatmap.OD * 10));
                 odBar.BarThickness = 10 * MainGame.Scale;
-                odBar.BarLength = SongInfoBounds.Width;
+                odBar.BarLength = SongInfoBounds.Width - 100;
                 odBar.ButtonSize = buttonSize;
                 odBar.Position = startBars;
                 odBar.IsVisible = true;
@@ -611,7 +626,7 @@ namespace RTCircles
 
                 hpBar.SetValue((int)(OsuContainer.Beatmap.HP * 10));
                 hpBar.BarThickness = 10 * MainGame.Scale;
-                hpBar.BarLength = SongInfoBounds.Width;
+                hpBar.BarLength = SongInfoBounds.Width - 100;
                 hpBar.ButtonSize = buttonSize;
                 hpBar.Position = startBars;
                 hpBar.IsVisible = true;
@@ -766,9 +781,28 @@ namespace RTCircles
         private void selectMap(CarouselItem item)
         {
             var beatmap = BeatmapMirror.DecodeBeatmap(File.OpenRead(item.FullPath));
-            ScreenManager.GetScreen<OsuScreen>().OnExiting();
-            OsuContainer.SetMap(beatmap, true, Mods.Auto | mods);
+
+            OsuContainer.SetMap(beatmap, true, mods);
             ScreenManager.GetScreen<OsuScreen>().OnEntering();
+
+            int previewTime = OsuContainer.Beatmap.InternalBeatmap.GeneralSection.PreviewTime;
+
+            //This monster is basically:
+            //If the preview time is before the first hitobject
+            //Try to find the first kiai instead
+            //if that fails or the kiai is before the first hitobject, then use the first hitobject as the preview time.
+            if(OsuContainer.Beatmap.HitObjects.Count > 0 && previewTime < OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime)
+            {
+                var firstKiai = OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai);
+
+                if (firstKiai != null && firstKiai.Offset >= OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime)
+                    previewTime = firstKiai.Offset - (int)OsuContainer.Beatmap.Preempt;
+                else
+                    previewTime = OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime - (int)OsuContainer.Beatmap.Preempt; 
+            }
+
+            OsuContainer.SongPosition = previewTime;
+            ScreenManager.GetScreen<OsuScreen>().SyncObjectIndexToTime();
         }
 
         public void DeleteSelectedItem()
@@ -850,7 +884,7 @@ namespace RTCircles
         {
             if(key == Key.Delete && Input.IsKeyDown(Key.ControlLeft))
             {
-                BeatmapMirror.Scheduler.Add(() =>
+                BeatmapMirror.Scheduler.Enqueue(() =>
                 {
                     songSelector.DeleteSelectedItem();
                     OsuContainer.UnloadMap();

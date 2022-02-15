@@ -15,6 +15,8 @@ namespace RTCircles
 {
     public class OsuScreen : Screen
     {
+        private BreakPanel breakOverlay = new BreakPanel();
+
         private int objectIndex = 0;
 
         private Cursor cursor = new Cursor();
@@ -76,9 +78,7 @@ namespace RTCircles
             if (OsuContainer.Beatmap is null || OsuContainer.Beatmap.HitObjects.Count == 0)
                 return;
 
-            float startDelay = ScreenManager.ActiveScreen() is MapSelectScreen ? (float)OsuContainer.Beatmap.Preempt : 3000;
-
-            OsuContainer.SongPosition = OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime - startDelay;
+            OsuContainer.SongPosition = OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime - 3000;
 
             OnKeyUp(OsuContainer.Key1);
             OnKeyUp(OsuContainer.Key2);
@@ -107,19 +107,7 @@ namespace RTCircles
             if (OsuContainer.SongPosition < OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime)
                 objectIndex = 0;
             else
-            {
-                for (int i = 1; i < OsuContainer.Beatmap.HitObjects.Count; i++)
-                {
-                    var prevObj = OsuContainer.Beatmap.HitObjects[i - 1];
-                    var obj = OsuContainer.Beatmap.HitObjects[i];
-
-                    if (obj.BaseObject.StartTime > OsuContainer.SongPosition && prevObj.BaseObject.StartTime < OsuContainer.SongPosition)
-                    {
-                        objectIndex = i;
-                        break;
-                    }
-                }
-            }
+                objectIndex = OsuContainer.Beatmap.HitObjects.FindIndex((o) => o.BaseObject.EndTime > OsuContainer.SongPosition);
 
             if (objectIndex == -1)
                 objectIndex = OsuContainer.Beatmap.HitObjects.Count;
@@ -195,7 +183,10 @@ namespace RTCircles
         private void spawnWarningArrowsCheck(IDrawableHitObject current, IDrawableHitObject next)
         {
             if (next.BaseObject.StartTime - current.BaseObject.EndTime >= 3000)
-                Add(new WarningArrows(next.BaseObject.StartTime - 3000));
+            {
+                breakOverlay.Show(next.BaseObject.StartTime - 1100);
+                //Add(new WarningArrows(next.BaseObject.StartTime - 3000));
+            }
         }
 
         private float bgZoom = 0f;
@@ -240,13 +231,15 @@ namespace RTCircles
             base.Render(g);
             OsuContainer.HUD.Render(g);
 
+            breakOverlay.Render(g);
+
             drawCursor(g);
         }
 
         private void drawCursor(Graphics g)
         {
             //Check if our current mods is auto, to see if we need to render the auto cursor
-            if (OsuContainer.Beatmap.Mods.HasFlag(Mods.Auto))
+            if (OsuContainer.CookieziMode)
             {
                 OsuContainer.Beatmap.AutoGenerator.Update(OsuContainer.SongPosition);
                 Vector2 autoPos = OsuContainer.MapToPlayfield(OsuContainer.Beatmap.AutoGenerator.CurrentPosition);
@@ -255,10 +248,10 @@ namespace RTCircles
                 cursor.Render(g, delta, autoPos, Colors.White);
                 //Else if not playing with auto, just render the cursor normally.
             }
-            else if (ScreenManager.ActiveScreen() == this)
+            else
             {
-                cursor.Render(g, delta, Input.MousePosition, Colors.White);
                 OsuContainer.CustomCursorPosition = null;
+                cursor.Render(g, delta, Input.MousePosition, Colors.White);
             }
         }
 

@@ -120,13 +120,11 @@ namespace RTCircles
             //times an index
             float diff = (slider.EndTime - slider.StartTime) / slider.Repeats;
 
-            float beatProgress = Interpolation.ValueAt(OsuContainer.GetBeatProgressAt(slider.StartTime + (diff * index)), 1, 0, 1, 0, EasingTypes.OutSine);
-
-            Vector2 beatPulse = new Vector2(OsuContainer.Beatmap.CircleRadius * 0.75f * beatProgress);
+            float beatProgress = Interpolation.ValueAt(OsuContainer.GetBeatProgressAt(slider.StartTime + (diff * index)), 1.3f, 1, 1, 0, EasingTypes.OutSine);
 
             Vector2 size = new Vector2(Size.Y, Size.Y / Skin.SliderReverse.Texture.Size.AspectRatio()) * Skin.GetScale(Skin.SliderReverse);
 
-            g.DrawRectangleCentered(position, size + beatPulse, new Vector4(1f, 1f, 1f, circleAlpha), Skin.SliderReverse, null, false, angle);
+            g.DrawRectangleCentered(position, size * beatProgress, new Vector4(1f, 1f, 1f, circleAlpha), Skin.SliderReverse, null, false, angle);
         }
 
         private void drawSliderRepeatHead(Graphics g)
@@ -197,7 +195,7 @@ namespace RTCircles
 
                 float followCircleAlpha = sliderBallScaleAnim.Value.Map(1f, 2f, 0f, 1) * circleAlpha;
 
-                float fadeoutScale = Interpolation.ValueAt(circleAlpha.Clamp(0f, 1f), 1f, 0.7f, 1f, 0f, EasingTypes.OutQuad).Clamp(0.7f, 1f);
+                float fadeoutScale = Interpolation.ValueAt(circleAlpha.Clamp(0f, 1f), 1f, 0.75f, 1f, 0f, EasingTypes.OutQuad).Clamp(0.75f, 1f);
 
                 Vector2 followCircleSize = Size * sliderBallScaleAnim * Skin.GetScale(Skin.SliderFollowCircle, 256, 512) * fadeoutScale;
 
@@ -280,7 +278,7 @@ namespace RTCircles
                 {
                     double hittableTime = Math.Abs(OsuContainer.SongPosition - slider.StartTime);
 
-                    if (circleAlpha < 0.6f)
+                    if (circleAlpha < 0.7f)
                         return true;
 
                     if (hittableTime > OsuContainer.Beatmap.Window50)
@@ -554,11 +552,6 @@ namespace RTCircles
             //And they can start it very early or very late
             if (OsuContainer.SongPosition >= slider.EndTime)
                 fadeout = true;
-        }
-
-        public override void BeforeRender(Graphics g)
-        {
-           
         }
 
         public override void Render(Graphics g)

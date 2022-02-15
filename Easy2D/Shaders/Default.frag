@@ -73,10 +73,10 @@ vec4 slider(vec4 sliderTexture) {
     vec4 borderColorInner = vec4(u_BorderColorInner.rgb, v_Color.a);
 
     //Original was vec4 outerShadow = vec4(vec3(0.0), 0.5 * distance_inv / borderStart * borderColorInner.a);
-    vec4 outerShadow = vec4(vec3(u_ShadowColor.r, u_ShadowColor.g, u_ShadowColor.b), u_ShadowColor.a * distance_inv / borderStart * borderColorInner.a);
+    vec4 outerShadow = vec4(u_ShadowColor.rgb, u_ShadowColor.a * distance_inv / borderStart * borderColorInner.a);
 
-    vec4 bodyColorOuter = vec4(u_TrackColorOuter.rgb, v_Color.a * 0.7);
-    vec4 bodyColorInner = vec4(u_TrackColorInner.rgb, v_Color.a * 0.7);
+    vec4 bodyColorOuter = vec4(u_TrackColorOuter.rgb, v_Color.a * 0.5);
+    vec4 bodyColorInner = vec4(u_TrackColorInner.rgb, v_Color.a * 0.5);
 
     float borderWidthScaled = u_BorderWidth < 1.0 ? u_BorderWidth * baseBorderWidth : (u_BorderWidth - 1.0) * slope + baseBorderWidth;
     float borderMid = borderStart + borderWidthScaled / 2.0;

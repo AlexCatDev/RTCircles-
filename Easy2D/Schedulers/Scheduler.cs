@@ -1,164 +1,121 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 
 namespace Easy2D
 {
     /// <summary>
-    /// Schedule tasks to be run, schedule them on any thread every where, even under water
+    /// Schedule tasks to be run, schedule them on any thread, schedule them under water
     /// Then just call RunPendingTasks(); on the thread of your choosing or whatever ezpz
     /// </summary>
     public class Scheduler
     {
-        private static List<WeakReference<Scheduler>> allSchedulers = new List<WeakReference<Scheduler>>();
-        public static IReadOnlyList<WeakReference<Scheduler>> AllSchedulers => allSchedulers.AsReadOnly();
+        private static volatile int totalPendingWorkloads;
+        private static volatile int totalAsyncWorkloads;
 
-        private List<Action> tasks = new List<Action>();
+        public static int TotalPendingWorkloads => totalPendingWorkloads;
+        public static int TotalAsyncWorkloads => totalAsyncWorkloads;
+
+        public string Name { get; set; } = Guid.NewGuid().ToString();
 
         public int PendingTaskCount => tasks.Count;
-        public int AsyncWorkloadsRunning => asyncWorkloadsRunning;
+
+        /// <summary>
+        /// Is the calling thread the owner of this scheduler?
+        /// </summary>
+        public bool IsMainThread => mainThreadID == Thread.CurrentThread.ManagedThreadId;
+
+        /// <summary>
+        /// Default: True
+        /// </summary>
+        public bool AllowCrossThreadRun { get; set; } = true;
+
+        private Queue<Action> tasks = new Queue<Action>();
+
+        private int mainThreadID;
 
         private readonly object mutex = new object();
 
-        private readonly int mainThreadID;
+        public Scheduler() => TransferThreadOwnership();
 
-        private volatile int asyncWorkloadsRunning;
-
-        private bool IsMainThread => mainThreadID == Thread.CurrentThread.ManagedThreadId;
-
-        private readonly WeakReference<Scheduler> weakReference;
-        public Scheduler()
-        {
-            mainThreadID = Thread.CurrentThread.ManagedThreadId;
-
-            weakReference = new WeakReference<Scheduler>(this);
-            allSchedulers.Add(weakReference);
-        }
-
-        ~Scheduler()
-        {
-            allSchedulers.Remove(weakReference);
-        }
+        public void TransferThreadOwnership() => mainThreadID = Thread.CurrentThread.ManagedThreadId;
 
         /// <summary>
-        /// Schedule an action to be run
+        /// Execute scheduled tasks, if AllowCrossThreadRun is false this will throw an exception if the calling thread does not own this scheduler.
         /// </summary>
-        /// <param name="task">The action to schedule</param>
-        /// <returns><paramref name="task"/></returns>
-        public Action Add(Action task)
-        {
-            lock (mutex)
-            {
-                tasks.Add(task);
-            }
-            return task;
-        }
-
-        /// <summary>
-        /// Schedule an action to be run but only if it has not been already scheduled in this cycle
-        /// </summary>
-        /// <param name="task">The action to schedule</param>
-        /// <returns><paramref name="task"/></returns>
-        public Action AddOnce(Action task)
-        {
-            lock (mutex)
-            {
-                if (!tasks.Contains(task))
-                    tasks.Add(task);
-            }
-            return task;
-        }
-
-        /// <summary>
-        /// Complete work on another thread and schedule the result
-        /// </summary>
-        /// <param name="asyncTask">The action to be invoked on another thread</param>
-        /// <param name="onCompletion">The action that gets scheduled</param>
-        public void AddAsync(Action<CancellationTokenSource> asyncTask, Action onCompletion)
-        {
-            ThreadPool.QueueUserWorkItem((obj) => {
-                CancellationTokenSource cancellationToken = new CancellationTokenSource();
-
-                //TODO: Theres a chance asyncTask throws an exception, making the thread quit silently?
-                ++asyncWorkloadsRunning;
-                asyncTask.Invoke(cancellationToken);
-                --asyncWorkloadsRunning;
-
-                if (!cancellationToken.IsCancellationRequested)
-                    Add(onCompletion);
-            });
-        }
-
-        /// <summary>
-        /// Complete work on another thread and schedule the result
-        /// </summary>
-        /// <typeparam name="T">The type to send to the scheduled action</typeparam>
-        /// <param name="asyncTask">The action to be invoked on another thread</param>
-        /// <param name="onCompletion">The action that gets scheduled</param>
-        public void AddAsync<T>(Func<CancellationTokenSource, T> asyncAction, Action<T> onCompletion)
-        {
-            ThreadPool.QueueUserWorkItem((obj) => {
-                CancellationTokenSource cancellationToken = new CancellationTokenSource();
-
-                ++asyncWorkloadsRunning;
-                var userObject = asyncAction.Invoke(cancellationToken);
-                --asyncWorkloadsRunning;
-
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    Add(() => {
-                        onCompletion(userObject);
-                    });
-                }
-            });
-        }
-
-        /// <summary>
-        /// Schedule an action to be run or execute immediately if it's on the same thread
-        /// </summary>
-        /// <param name="task">The action to schedule</param>
-        /// <returns><paramref name="task"/></returns>
-        public Action AddOrExecuteImmediately(Action task)
-        {
-            if (IsMainThread)
-                task.Invoke();
-            else
-                Add(task);
-
-            return task;
-        }
-
-        /// <summary>
-        /// Remove a task that has been schedued
-        /// </summary>
-        /// <param name="task">The action to remove</param>
-        /// <returns><paramref name="task"/></returns>
-        public bool Remove(Action task) => tasks.Remove(task);
-
-        /// <summary>
-        /// Execute all scheduled tasks, must only be called from the thread in which this scheduler object was created
-        /// </summary>
+        /// <param name="maxCount">The max amount of tasks that can run now, 0 and below are treated as ALL</param>
         /// <exception cref="InvalidOperationException"></exception>
-        public void RunPendingTasks()
+        public void RunPendingTasks(int maxCount = 0)
         {
-            //if (!IsMainThread)
-            //    throw new InvalidOperationException("This method can only be run in the thread it was created on");
+            if (!AllowCrossThreadRun && !IsMainThread)
+                throw new InvalidOperationException("This method can only be run in the thread it was created on");
 
             lock (mutex)
             {
                 int count = tasks.Count;
-                for (int i = 0; i < count; i++)
-                {
-                    tasks[i].Invoke();
-                }
 
-                tasks.RemoveRange(0, count);
+                if (count == 0)
+                    return;
+
+                if(maxCount > 0)
+                    count = Math.Min(maxCount, count);
+
+                for (int i = 0; i < count; i++)
+                    tasks.Dequeue().Invoke();
+
+                totalPendingWorkloads -= count;
             }
         }
 
+        public void Enqueue(Action task, bool tryExecuteNow = false)
+        {
+            if(tryExecuteNow && IsMainThread)
+            {
+                task();
+                return;
+            }
+
+            lock (mutex)
+            {
+                tasks.Enqueue(task);
+                totalPendingWorkloads++;
+            }
+        }
+
+        public delegate (bool ShouldContinue, T Result) AsyncAction<T>();
+
+        public void EnqueueAsync<T>(AsyncAction<T> asyncAction, Action<T> onCompletion, int delay = 0)
+        {
+            ThreadPool.QueueUserWorkItem((obj) =>
+            {
+                totalAsyncWorkloads++;
+
+                try
+                {
+                    if (delay > 0)
+                        Thread.Sleep(delay);
+
+                    var result = asyncAction();
+
+                    if (result.ShouldContinue)
+                        Enqueue(() => { onCompletion(result.Result); });
+
+                    totalAsyncWorkloads--;
+                }
+                catch (Exception ex)
+                {
+                    totalAsyncWorkloads--;
+                    OnAsyncException?.Invoke(ex);
+                }
+            });
+        }
+
+        public event Action<Exception> OnAsyncException;
+        
         public override string ToString()
         {
-            return $"Scheduled tasks: {tasks.Count} Async workloads: {asyncWorkloadsRunning}";
+            return $"[{Name}] Scheduled tasks: {PendingTaskCount}";
         }
     }
 }

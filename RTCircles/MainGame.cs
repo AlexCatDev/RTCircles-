@@ -15,10 +15,10 @@ namespace RTCircles
     {
         #region booleans
         public readonly static Option<bool> Bloom
-            = Option<bool>.CreateProxy("Bloom", (value) => { GPUSched.Instance.Add(() => { PostProcessing.Bloom = value; }); }, false, "Enable bloom fx - Huge performance hit");
+            = Option<bool>.CreateProxy("Bloom", (value) => { GPUSched.Instance.Enqueue(() => { PostProcessing.Bloom = value; }); }, false, "Enable bloom fx - Huge performance hit");
 
         public readonly static Option<bool> MotionBlur
-            = Option<bool>.CreateProxy("MotionBlur", (value) => { GPUSched.Instance.Add(() => { PostProcessing.MotionBlur = value; }); }, false, "Enable motion blur like effect, with kiai 'bass' shake - Big performance hit");
+            = Option<bool>.CreateProxy("MotionBlur", (value) => { GPUSched.Instance.Enqueue(() => { PostProcessing.MotionBlur = value; }); }, false, "Enable motion blur like effect, with kiai 'bass' shake - Big performance hit");
 
         public readonly static Option<bool> UseFancyCursorTrail = new Option<bool>("UseFancyCursorTrail", true);
 
@@ -120,6 +120,7 @@ namespace RTCircles
                 ScreenManager.OnTextInput(e);
             };
 
+            /*
             float introTime = 0;
             float introDuration = 0.15f;
             ScreenManager.OnIntroTransition += (delta) =>
@@ -160,10 +161,54 @@ namespace RTCircles
 
                 return false;
             };
+            */
 
-            ScreenManager.SetScreen<MenuScreen2>(false);
+        float outroTime = 0;
+        float outroDuration = 0.15f;
+            ScreenManager.OnOutroTransition += (delta) =>
+            {
+                outroTime += delta;
+                outroTime = outroTime.Clamp(0f, outroDuration);
 
-            lastOpened = Settings.GetValue<DateTime>("LastOpened", out bool exists);
+                float alpha = Interpolation.ValueAt(outroTime, 1f, 0f, 0f, outroDuration, EasingTypes.None);
+
+                //Fade black fullscreen quad
+                g.DrawRectangle(new Vector2(0, 0), WindowSize, new Vector4(0.1f, 0.1f, 0.1f, alpha));
+
+                if (outroTime == outroDuration)
+                {
+                    outroTime = 0;
+                    return true;
+                }
+
+                return false;
+            };
+
+        float introDuration = 0.15f;
+        float introTime = 0;
+            ScreenManager.OnIntroTransition += (delta) =>
+            {
+                introTime += delta;
+                introTime = introTime.Clamp(0f, introDuration);
+
+                float sizeX = WindowWidth / 2f;
+                float slideX = Interpolation.ValueAt(introTime, -sizeX, 0f, 0f, introDuration, EasingTypes.InOutQuad);
+
+                //Left door
+                g.DrawRectangle(new Vector2(slideX, 0), new Vector2(sizeX, WindowHeight), new Vector4(0.1f, 0.1f, 0.1f, 1f));
+                //Right door
+                g.DrawRectangle(new Vector2(sizeX - slideX, 0), new Vector2(sizeX, WindowHeight), new Vector4(0.1f, 0.1f, 0.1f, 1f));
+
+                if (introTime == introDuration)
+                {
+                    introTime = 0;
+                    return true;
+                }
+
+                return false;
+            };
+
+        lastOpened = Settings.GetValue<DateTime>("LastOpened", out bool exists);
             Settings.SetValue(DateTime.Now, "LastOpened");
 
             Input.OnBackPressed += () =>
@@ -176,6 +221,8 @@ namespace RTCircles
             Utils.WriteToConsole = true;
 #endif
             //IsMultiThreaded = true;
+
+            ScreenManager.SetScreen<MenuScreen>(false);
         }
 
         private DateTime lastOpened;
@@ -194,7 +241,7 @@ namespace RTCircles
             drawFPSGraph(g);
             drawLog(g);
 
-            g.Projection = PostProcessing.MotionBlur ? shakeMatrix : Projection;
+            g.Projection = PostProcessing.MotionBlur && ScreenManager.ActiveScreen() is not MapSelectScreen ? shakeMatrix : Projection;
             g.EndDraw();
             PostProcessing.PresentFinalResult();
         }
@@ -270,18 +317,7 @@ namespace RTCircles
                         $"Mem: {GC.GetTotalMemory(false)}\n" +
                         $"Last visit: {lastOpened}";
 
-                    int pendingTasks = 0;
-                    int asyncWorkloads = 0;
-                    for (int i = 0; i < Scheduler.AllSchedulers.Count; i++)
-                    {
-                        if (Scheduler.AllSchedulers[i].TryGetTarget(out var scheduler))
-                        {
-                            asyncWorkloads += scheduler.AsyncWorkloadsRunning;
-                            pendingTasks += scheduler.PendingTaskCount;
-                        }
-                    }
-
-                    text += $"\nSchedulers: {Scheduler.AllSchedulers.Count} [Pending: {pendingTasks} Async: {asyncWorkloads}]";
+                    text += $"\nSchedulers [Pending: {Scheduler.TotalPendingWorkloads} Async: {Scheduler.TotalAsyncWorkloads}]";
                 }
                 else
                 {
@@ -390,7 +426,7 @@ namespace RTCircles
 
         public override void OnResize(int width, int height)
         {
-            GPUSched.Instance.Add(() =>
+            GPUSched.Instance.Enqueue(() =>
             {
                 WindowSize = new Vector2(width, height);
 

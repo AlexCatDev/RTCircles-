@@ -136,7 +136,7 @@ namespace RTCircles
 
         public static bool MuteHitsounds { get; set; }
 
-        public static bool CookieziMode => Beatmap.Mods.HasFlag(Mods.Auto);
+        public static bool CookieziMode => ScreenManager.ActiveScreen() is MapSelectScreen || Beatmap.Mods.HasFlag(Mods.Auto);
 
         public static PlayableBeatmap Beatmap { get; private set; }
 

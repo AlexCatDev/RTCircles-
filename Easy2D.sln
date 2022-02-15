@@ -27,7 +27,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParticleMadness.Desktop", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RTCircles.Android", "RTCircles.Android\RTCircles.Android.csproj", "{4E3C3B1B-3740-41CD-B06B-D69D2FF86A19}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "New.Droid", "New.Droid\New.Droid.csproj", "{ECC56D42-C549-41D4-A991-5C6A5B27210D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "New.Droid", "New.Droid\New.Droid.csproj", "{ECC56D42-C549-41D4-A991-5C6A5B27210D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

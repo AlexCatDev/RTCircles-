@@ -44,6 +44,7 @@ namespace RTCircles
         }
     }
 
+    //recode this piece of shit
     public class Textbox : Drawable
     {
         private DrawableContainer fallingTextContainer = new DrawableContainer();
@@ -64,7 +65,6 @@ namespace RTCircles
                     insertIndex = text.Length;
             }
         }
-
 
         public string TextHint = "";
 
@@ -167,7 +167,6 @@ namespace RTCircles
                     if (Text.Length < startText.Length)
                     {
                         fallingTextContainer.Add(new FallingText(this, realCaretPos, TextDeleteColor, startText.Substring(insertIndex, startText.Length - Text.Length), textScale));
-                        //fallingTextContainer.Add(new FallingText(fboCaretPos, TextDeleteColor, startText.Substring(insertIndex, startText.Length - Text.Length), textScale));
                     }
                 }
 
@@ -192,11 +191,11 @@ namespace RTCircles
 
         public override bool OnKeyUp(Key key)
         {
-            if (key == Key.ControlLeft)
-                controlDown = false;
-
             if (Disabled)
                 return false;
+
+            if (key == Key.ControlLeft)
+                controlDown = false;
 
             return false;
         }

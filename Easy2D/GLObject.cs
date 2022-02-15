@@ -62,7 +62,7 @@ namespace Easy2D
         ~GLObject()
         {
             //Just schedule a delete call lololololol
-            GPUSched.Instance.Add(() =>
+            GPUSched.Instance.Enqueue(() =>
             {
                 Delete();
             });

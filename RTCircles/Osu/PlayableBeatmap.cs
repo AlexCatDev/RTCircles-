@@ -37,7 +37,9 @@ namespace RTCircles
 
             float blend = Interpolation.ValueAt(time, 0, 1, from.Time, to.Time);
 
-            var vec2 = Vector2.Lerp(from.Position, to.Position, Interpolation.ValueAt(blend, 0, 1, 0, 1, EasingTypes.Out));
+            var easing = (from.Position - to.Position).Length < OsuContainer.Beatmap.CircleRadiusInOsuPixels * 2 ? EasingTypes.None : EasingTypes.Out; 
+
+            var vec2 = Vector2.Lerp(from.Position, to.Position, Interpolation.ValueAt(blend, 0, 1, 0, 1, easing));
 
             if (!cursorDance)
                 return vec2;
@@ -349,6 +351,8 @@ namespace RTCircles
         {
             Utils.Log($"Generating Drawable Hitobjects for {InternalBeatmap.HitObjects.Count} hitobjects!", LogLevel.Info);
 
+            Utils.BeginProfiling("Generate HitObjects");
+
             HitObjects.Clear();
 
             //TODO: allow the game to process atleast a refresh rate worth of frames
@@ -471,6 +475,8 @@ namespace RTCircles
 
             AutoGenerator.Sort();
             //generateStrainGraph();
+
+            Utils.EndProfiling("Generate HitObjects");
         }
 
         private double mapDifficultyRange(double difficulty, double min, double mid, double max)

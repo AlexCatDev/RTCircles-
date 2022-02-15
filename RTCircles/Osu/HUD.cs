@@ -222,13 +222,13 @@ namespace RTCircles
             drawComboText(g);
 
             string scoreText = $"{((int)Math.Round(rollingScore, 0, MidpointRounding.AwayFromZero)).ToString("00000000.##")}";
-            Vector2 scoreSize = Skin.CircleNumbers.Meassure(66, scoreText);
+            Vector2 scoreSize = Skin.ScoreNumbers.Meassure(66, scoreText);
 
-            Skin.CircleNumbers.Draw(g, new Vector2(MainGame.WindowWidth - scoreSize.X, 0), 66, Colors.White, scoreText);
+            Skin.ScoreNumbers.Draw(g, new Vector2(MainGame.WindowWidth - scoreSize.X, 0), 66, Colors.White, scoreText);
 
             string accText = $"{rollingAcc:F2}%";
-            Vector2 accSize = Skin.CircleNumbers.Meassure(38, accText);
-            Skin.CircleNumbers.Draw(g, new Vector2(MainGame.WindowWidth - accSize.X, scoreSize.Y), 38, Colors.White, accText);
+            Vector2 accSize = Skin.ScoreNumbers.Meassure(38, accText);
+            Skin.ScoreNumbers.Draw(g, new Vector2(MainGame.WindowWidth - accSize.X, scoreSize.Y), 38, Colors.White, accText);
 
             float endAngle = (float)MathUtils.Map(OsuContainer.SongPosition, 0, OsuContainer.Beatmap.HitObjects.Count == 0 ? 0 : OsuContainer.Beatmap.HitObjects[^1].BaseObject.EndTime, -90, 270);
 

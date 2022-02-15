@@ -149,14 +149,6 @@ namespace RTCircles
                 if (children[i].IsDead)
                     continue;
 
-                children[i].BeforeRender(g);
-            }
-
-            for (int i = 0; i < childCount; i++)
-            {
-                if (children[i].IsDead)
-                    continue;
-
                 children[i].Render(g);
             }
 

@@ -168,8 +168,8 @@ namespace Easy2D
             {
                 if (UseAsyncLoading)
                 {
-                    GPUSched.Instance.AddAsync((ct) => { 
-                        return Image.Load<Rgba32>(stream);
+                    GPUSched.Instance.EnqueueAsync(() => {
+                        return (true, Image.Load<Rgba32>(stream));
                     }, (image) => {
 
                         uploadImage(image);

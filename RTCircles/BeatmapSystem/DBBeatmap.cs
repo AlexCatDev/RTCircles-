@@ -34,20 +34,22 @@ namespace RTCircles
         public string Hash { get; set; }
 
         [Realms.Required]
-        public string Folder { get; set; }
+        public string OsuFile { get; set; }
 
-        [Realms.Required]
-        public string File { get; set; }
+        public DBBeatmapSetInfo SetInfo { get; set; }
 
         public string BackgroundFile { get; set; }
 
-        public double Difficulty { get; set; }
+        public double Difficulty { get; set; } = 0;
     }
 
     public class DBBeatmapSetInfo : Realms.RealmObject
     {
         [Realms.PrimaryKey]
         public Guid ID { get; set; } = Guid.NewGuid();
+
+        [Realms.Required]
+        public string Folder { get; set; }
 
         public IList<DBBeatmapInfo> Beatmaps { get; }
     }

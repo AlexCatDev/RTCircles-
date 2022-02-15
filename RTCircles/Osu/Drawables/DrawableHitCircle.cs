@@ -94,7 +94,7 @@ namespace RTCircles
                 hitTime = OsuContainer.SongPosition;
                 double t = Math.Abs(hittableTime);
 
-                if (alpha < 0.6f)
+                if (alpha < 0.7f)
                     return true;
 
                 if (t < OsuContainer.Beatmap.Window300)

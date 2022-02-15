@@ -225,7 +225,7 @@ namespace RTCircles
 
         public void DeleteFramebuffer()
         {
-            GPUSched.Instance.Add(() =>
+            GPUSched.Instance.Enqueue(() =>
             {
                 frameBuffer.Delete();
                 hasBeenUpdated = true;

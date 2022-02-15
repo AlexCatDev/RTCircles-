@@ -313,6 +313,21 @@ namespace New
         }
     }
 
+    public abstract class Weapon
+    {
+        public Texture Texture { get; }
+        public double Damage { get; }
+
+        public double Rotation { get; }
+
+        public Vector2 Size { get; }
+        public Vector2 PositionOffset { get; }
+
+        public abstract bool OnAttack();
+
+        public abstract void Update(float delta);
+    }
+
     public class TestPlayerSword : Drawable
     {
         class Trail : Drawable
@@ -593,15 +608,16 @@ namespace New
             Width = 1280;
             Height = 720;
 
+            /*
             for (int i = 0; i < 100000; i++)
             {
                 container.Add(new BouncingCube());
             }
-
+            */
             container.Add(new FancyCursorTrail() { Width = 10});
             container.Add(new TestPlayerSword());
 
-            container.Add(new TestCutText());
+            //container.Add(new TestCutText());
             Input.InputContext.Keyboards[0].KeyDown += (s, e, x) =>
             {
                 container.OnKeyDown(e);
@@ -611,12 +627,12 @@ namespace New
             Input.InputContext.Mice[0].MouseDown += (s, e) =>
             {
                 container.OnMouseDown(e);
-                IsMultiThreaded = true;
+                //IsMultiThreaded = true;
             };
 
             Input.InputContext.Mice[0].MouseUp += (s, e) =>
             {
-                IsMultiThreaded = false;
+                //IsMultiThreaded = false;
             };
 
             //PrintFPS = true;
@@ -626,7 +642,7 @@ namespace New
                 //PostProcessing.MotionBlur = true;
             }
 
-            View.VSync = true;
+            //View.VSync = true;
         }
 
         public (Vector2 topLeft, Vector2 topRight, Vector2 bottomLeft, Vector2 bottomRight) DrawLine(Vector2 startPosition, Vector2 endPosition, Vector4 color1, Vector4 color2, float thickness, Texture texture = null)

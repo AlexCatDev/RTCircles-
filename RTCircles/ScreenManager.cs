@@ -174,8 +174,7 @@ namespace RTCircles
         }
 
         public static void Update(float delta) {
-            if (!inIntroSequence)
-                currentScreen.Update(delta);
+            currentScreen.Update(delta);
         }
 
         public static void OnTextInput(char c)

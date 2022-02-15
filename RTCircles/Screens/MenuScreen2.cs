@@ -17,7 +17,7 @@ namespace RTCircles
         {
             introFade.TransformTo(1f, 0.3f, EasingTypes.Out, () =>
             {
-                BeatmapMirror.Scheduler.Add(() =>
+                BeatmapMirror.Scheduler.Enqueue(() =>
                 {
                     ScreenManager.GetScreen<MapSelectScreen>().LoadCarouselItems();
 
@@ -32,19 +32,19 @@ namespace RTCircles
                     else
                     {
                         PlayableBeatmap builtInBeatmap = new PlayableBeatmap(
-                            BeatmapMirror.DecodeBeatmap(Utils.GetResource("Maps.Union.map.osu")),
-                            new Sound(Utils.GetResource("Maps.Union.audio.mp3"), true, false),
-                            null);
+                            BeatmapMirror.DecodeBeatmap(Utils.GetResource("Maps.BuildIn.map.osu")),
+                            new Sound(Utils.GetResource("Maps.BuildIn.audio.mp3"), true, false),
+                            new Texture(Utils.GetResource("Maps.BuildIn.eleventea.jpg")));
 
                         builtInBeatmap.GenerateHitObjects(Mods.NM);
                         OsuContainer.SetMap(builtInBeatmap);
+
+                        GPUSched.Instance.EnqueueAsync(() => { return (true, 0); }, (obj) => { ScreenManager.SetScreen<OsuScreen>(); }, 10000);
                     }
 
                     OsuContainer.Beatmap.Song.Volume = 0;
                     OsuContainer.SongPosition = (OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai))?.Offset - 2500 ?? 0;
                     OsuContainer.Beatmap.Song.Play(false);
-
-                    GPUSched.Instance.AddAsync(ct => { System.Threading.Thread.Sleep(5000); }, () => { ScreenManager.SetScreen<OsuScreen>(); });
                 });
 
                 Add(new NewLogo());
@@ -162,6 +162,9 @@ namespace RTCircles
 
         private float[] buffer = new float[4096];
         private float[] smoothBuffer = new float[33];
+
+        public float this[int i] => buffer[i];
+
         public float BeatValue { get; private set; }
         public override void Update(float delta)
         {
@@ -275,6 +278,7 @@ namespace RTCircles
 
         private float idleTimer;
         private Vector2 lastMousePos;
+
         public override void Update(float delta)
         {
             float animDelta = delta * 1.1f;
@@ -308,6 +312,21 @@ namespace RTCircles
             multiplayerBtn.Update(delta);
             optionsBtn.Update(delta);
             exitBtn.Update(delta);
+
+            /*
+            Console.SetCursorPosition(0, 0);
+            for (int i = 0; i < 33; i++)
+            {
+                Console.WriteLine($"[{i}] {audioGraph[i]}        ");
+            }
+            */
+            if (OsuContainer.IsKiaiTimeActive)
+            {
+                float beat = (audioGraph[2] + audioGraph[6] + audioGraph[9] + audioGraph[16]) / 4;
+                mapBackground.Zoom = MathHelper.Lerp(mapBackground.Zoom, 50 + 3000 * beat, 20f * delta);
+            }
+            else
+                mapBackground.Zoom = MathHelper.Lerp(mapBackground.Zoom, 50, 10f * delta);
         }
 
         private void clickedLogo()

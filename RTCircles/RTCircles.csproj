@@ -7,24 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Maps\BuildIn\audio.mp3" />
+    <None Remove="Maps\BuildIn\eleventea.jpg" />
+    <None Remove="Maps\BuildIn\map.osu" />
     <None Remove="Maps\Finally\BARIELG.jpg" />
     <None Remove="Maps\Finally\FINALLY.mp3" />
     <None Remove="Maps\Finally\map.osu" />
-    <None Remove="Maps\Nanahira\audio.mp3" />
-    <None Remove="Maps\Nanahira\bg.jpg" />
-    <None Remove="Maps\Nanahira\map.osu" />
-    <None Remove="Maps\Porta\bg.png" />
-    <None Remove="Maps\Porta\Hyper Potions - Porta Vista.mp3" />
-    <None Remove="Maps\Porta\map.osu" />
     <None Remove="Maps\SliderBenchmark\map.osu" />
     <None Remove="Maps\SliderBenchmark\patrick.jpg" />
     <None Remove="Maps\SliderBenchmark\preparing for te shakedown_200705155_soundcloud.mp3" />
-    <None Remove="Maps\TestMap\audio.mp3" />
-    <None Remove="Maps\TestMap\do u care.jpg" />
-    <None Remove="Maps\TestMap\map.osu" />
-    <None Remove="Maps\Union\851679.jpg" />
-    <None Remove="Maps\Union\audio.mp3" />
-    <None Remove="Maps\Union\map.osu" />
     <None Remove="Skin\approachcircle.png" />
     <None Remove="Skin\arrowexpand.png" />
     <None Remove="Skin\catjam-spritesheet.png" />
@@ -63,6 +54,7 @@
     <None Remove="Skin\drum-hitfinish.wav" />
     <None Remove="Skin\drum-hitnormal.wav" />
     <None Remove="Skin\drum-hitwhistle.wav" />
+    <None Remove="Skin\followpoint-0.png" />
     <None Remove="Skin\followpoint.png" />
     <None Remove="Skin\hit0.png" />
     <None Remove="Skin\hit100.png" />
@@ -118,15 +110,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Maps\BuildIn\audio.mp3" />
+    <EmbeddedResource Include="Maps\BuildIn\eleventea.jpg" />
+    <EmbeddedResource Include="Maps\BuildIn\map.osu" />
     <EmbeddedResource Include="Maps\Finally\BARIELG.jpg" />
     <EmbeddedResource Include="Maps\Finally\FINALLY.mp3" />
     <EmbeddedResource Include="Maps\Finally\map.osu" />
-    <EmbeddedResource Include="Maps\Nanahira\audio.mp3" />
-    <EmbeddedResource Include="Maps\Nanahira\bg.jpg" />
-    <EmbeddedResource Include="Maps\Nanahira\map.osu" />
-    <EmbeddedResource Include="Maps\Porta\bg.png" />
-    <EmbeddedResource Include="Maps\Porta\Hyper Potions - Porta Vista.mp3" />
-    <EmbeddedResource Include="Maps\Porta\map.osu" />
     <EmbeddedResource Include="Maps\SliderBenchmark\map.osu">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
@@ -139,12 +128,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Maps\TestMap\audio.mp3" />
-    <EmbeddedResource Include="Maps\TestMap\do u care.jpg" />
-    <EmbeddedResource Include="Maps\TestMap\map.osu" />
-    <EmbeddedResource Include="Maps\Union\851679.jpg" />
-    <EmbeddedResource Include="Maps\Union\audio.mp3" />
-    <EmbeddedResource Include="Maps\Union\map.osu" />
     <EmbeddedResource Include="Skin\approachcircle.png" />
     <EmbeddedResource Include="Skin\arrowexpand.png" />
     <EmbeddedResource Include="Skin\catjam-spritesheet.png" />
@@ -183,7 +166,7 @@
     <EmbeddedResource Include="Skin\drum-hitfinish.wav" />
     <EmbeddedResource Include="Skin\drum-hitnormal.wav" />
     <EmbeddedResource Include="Skin\drum-hitwhistle.wav" />
-    <EmbeddedResource Include="Skin\followpoint.png" />
+    <EmbeddedResource Include="Skin\followpoint-0.png" />
     <EmbeddedResource Include="Skin\hit0.png" />
     <EmbeddedResource Include="Skin\hit100.png" />
     <EmbeddedResource Include="Skin\hit300.png" />

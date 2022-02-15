@@ -96,7 +96,7 @@ namespace RTCircles
 
             realmsThread = new Thread(() =>
             {
-                Realm = Realm.GetInstance($"./RTCircles.db");
+                Realm = Realm.GetInstance(new RealmConfiguration("RTCircles.realm") { SchemaVersion = 1 });
                 Utils.Log($"Realm Path: {Realm.Config.DatabasePath}", LogLevel.Important);
                 while (MainGame.Instance.View.IsClosing == false)
                 {
@@ -190,7 +190,7 @@ namespace RTCircles
                     else
                         dBBeatmap.Background = null;
 
-                    Scheduler.Add(() =>
+                    Scheduler.Enqueue(() =>
                     {
                         Realm.Write(() =>
                         {
@@ -210,11 +210,15 @@ namespace RTCircles
         /// <returns></returns>
         public static Beatmap DecodeBeatmap(Stream stream)
         {
-            lock (beatmapDecoderLock)
+            Beatmap bm = null;
+
+            Utils.Benchmark(() =>
             {
-                var bm = BeatmapDecoder.Decode(getLines(stream));
-                return bm;
-            }
+                lock (beatmapDecoderLock)
+                    bm = BeatmapDecoder.Decode(getLines(stream));
+            }, "Beatmap Decoding");
+
+            return bm;
         }
 
         private static IEnumerable<string> getLines(Stream stream)

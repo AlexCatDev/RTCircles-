@@ -7,6 +7,10 @@ using System.Linq;
 
 namespace RTCircles
 {
+    //TODO: Compile texture elements to an atlas.
+    //Somehow fix when circle/combo/score numbers share the same texture, dont load them again
+    //Support followpoints correctly
+
     public class OsuTexture
     {
         public float Scale { get; private set; }
@@ -315,15 +319,16 @@ namespace RTCircles
             SliderBall = LoadTexture(path, "sliderb0");
             SliderReverse = LoadTexture(path, "reversearrow");
 
-            FollowPoint = LoadTexture(path, "followpoint");
+            FollowPoint = LoadTexture(path, "followpoint-0");
 
-            CircleNumbers = new SkinNumberStore(path, "default-", "dot", "percent", "score-x");
+            CircleNumbers = new SkinNumberStore(path, $"{Config.HitCirclePrefix}-");
             CircleNumbers.Overlap = Config.HitCircleOverlap;
 
-            ComboNumbers = new SkinNumberStore(path, "combo-", "dot", "percent", "combo-x");
+            ComboNumbers = new SkinNumberStore(path, $"{Config.ComboPrefix}-", "dot", "percent", "combo-x");
             ComboNumbers.Overlap = Config.ComboOverlap;
 
-            ScoreNumbers = ComboNumbers;
+            ScoreNumbers = new SkinNumberStore(path, $"{Config.ScorePrefix}-", "dot", "percent", "score-x");
+            ScoreNumbers.Overlap = Config.ScoreOverlap;
 
             Hitsounds = new HitsoundStore(path, true);
             Hitsounds.SetVolume(GlobalOptions.SkinVolume.Value);

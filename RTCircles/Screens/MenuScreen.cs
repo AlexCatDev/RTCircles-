@@ -112,7 +112,7 @@ namespace RTCircles
             //Fade loader in
             introFade.TransformTo(new Vector4(0f, 0f, 0f, 1f), 0.3f, EasingTypes.Out, () =>
             {
-                BeatmapMirror.Scheduler.Add(() =>
+                BeatmapMirror.Scheduler.Enqueue(() =>
                 {
                     ScreenManager.GetScreen<MapSelectScreen>().LoadCarouselItems();
 
@@ -122,7 +122,7 @@ namespace RTCircles
                         var item = carouselItems[RNG.Next(0, carouselItems.Count - 1)];
 
 
-                        GPUSched.Instance.Add(() =>
+                        GPUSched.Instance.Enqueue(() =>
                         {
                             OsuContainer.SetMap(BeatmapMirror.DecodeBeatmap(System.IO.File.OpenRead(item.FullPath)), true, Mods.Auto);
                             OsuContainer.Beatmap.Song.Volume = 0;
@@ -134,25 +134,25 @@ namespace RTCircles
                     else
                     {
                         PlayableBeatmap playingBeatmap = new PlayableBeatmap(
-                            BeatmapMirror.DecodeBeatmap(Utils.GetResource("Maps.Nanahira.map.osu")),
-                            new Sound(Utils.GetResource("Maps.Nanahira.audio.mp3"), true),
-                            new Texture(Utils.GetResource("Maps.Nanahira.bg.jpg")));
+                            BeatmapMirror.DecodeBeatmap(Utils.GetResource("Maps.BuildIn.map.osu")),
+                            new Sound(Utils.GetResource("Maps.BuildIn.audio.mp3"), true),
+                            new Texture(Utils.GetResource("Maps.BuildIn.eleventea.jpg")));
 
                         OsuContainer.SetMap(playingBeatmap);
 
-                        playingBeatmap.GenerateHitObjects(Mods.Auto);
+                        playingBeatmap.GenerateHitObjects(Mods.NM);
 
                         OsuContainer.SongPosition = (OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai))?.Offset - 2500 ?? 0;
                         OsuContainer.Beatmap.Song.Volume = 0;
                         OsuContainer.Beatmap.Song.Play(false);
 
-                        GPUSched.Instance.AddAsync((ct) =>
+                        GPUSched.Instance.EnqueueAsync(() =>
                         {
-                            System.Threading.Thread.Sleep(20000);
-                        }, () =>
+                            return (true, 0);
+                        }, (obj) =>
                         {
                             ScreenManager.SetScreen<OsuScreen>();
-                        });
+                        }, delay: 20000);
                     }
 
                     //When everything has been loaded, add the ui items
@@ -336,7 +336,7 @@ namespace RTCircles
         private SmoothVector4 colorTransform = new SmoothVector4();
 
         private Vector2 position = new Vector2();
-        private Vector2 size => new Vector2(800) * MainGame.Scale + new Vector2(300) * visualizer.BeatValue * MainGame.Scale;
+        private Vector2 size => new Vector2(750) * MainGame.Scale + new Vector2(300) * visualizer.BeatValue * MainGame.Scale;
         private Vector2 logoSize;
 
         private Vector2 parallaxPosition => mapBackground.ParallaxPosition * 2f;
@@ -365,7 +365,7 @@ namespace RTCircles
 
         private Vector4 visualizerColorAdditive = Vector4.Zero;
 
-        private ScrollingTriangles triangles = new ScrollingTriangles(60);
+        private ScrollingTriangles triangles = new ScrollingTriangles(80);
 
         private SmoothFloat logoExplodeKiaiAnim = new SmoothFloat();
 
@@ -548,7 +548,7 @@ namespace RTCircles
             buttonPosition.TransformTo(new Vector2(30, 270), 0.25f, EasingTypes.Out);
 
             buttonAlpha.ClearTransforms();
-            buttonAlpha.TransformTo(1f, 0.25f, EasingTypes.Out);
+            buttonAlpha.TransformTo(0.9f, 0.25f, EasingTypes.Out);
         }
 
         private void slideBack()
@@ -627,7 +627,7 @@ namespace RTCircles
             }
             lastHover = hover;
 
-            slideBackTimer += delta;
+            //slideBackTimer += delta;
             if (slideBackTimer >= 7f)
                 slideBack();
 
@@ -645,10 +645,10 @@ namespace RTCircles
             optionsButton.Color.W = buttonAlpha.Value;
             exitButton.Color.W = buttonAlpha.Value;
 
-            playButton.TextColor.W = buttonAlpha.Value;
-            multiPlayButton.TextColor.W = buttonAlpha.Value;
-            optionsButton.TextColor.W = buttonAlpha.Value;
-            exitButton.TextColor.W = buttonAlpha.Value;
+            playButton.TextColor.W = buttonAlpha.Value + 0.1f;
+            multiPlayButton.TextColor.W = buttonAlpha.Value + 0.1f;
+            optionsButton.TextColor.W = buttonAlpha.Value + 0.1f;
+            exitButton.TextColor.W = buttonAlpha.Value + 0.1f;
 
             positionTransform.Update(delta);
             rotationTransform.Update(delta);
@@ -679,7 +679,7 @@ namespace RTCircles
 
             triangles.Radius = Bounds.Size.X / 2 - 20f * MainGame.Scale;
             triangles.Position = Bounds.Center;
-            triangles.Speed = 50 + 600 * visualizer.BeatValue;
+            triangles.Speed = 50 + 1700 * visualizer.BeatValue;
 
             visualizer.Position = Bounds.Center;
             visualizer.Radius = Bounds.Size.X / 2f - 20f * MainGame.Scale;
