@@ -240,6 +240,51 @@ namespace RTCircles
             g.DrawEllipse(piePos, -90, endAngle, radius, 0, col);
             g.DrawRectangleCentered(piePos, new Vector2(radius * 2.6f), Colors.White, Skin.CircularMetre);
 
+            var ranking = OsuContainer.GetCurrentRanking();
+            OsuTexture tex = null;
+            switch (ranking)
+            {
+                case OsuContainer.Ranking.X:
+                    tex = Skin.RankingX;
+                    break;
+                case OsuContainer.Ranking.XH:
+                    tex = Skin.RankingXH;
+                    break;
+                case OsuContainer.Ranking.S:
+                    tex = Skin.RankingS;
+                    break;
+                case OsuContainer.Ranking.SH:
+                    tex = Skin.RankingSH;
+                    break;
+                case OsuContainer.Ranking.A:
+                    tex = Skin.RankingA;
+                    break;
+                case OsuContainer.Ranking.B:
+                    tex = Skin.RankingB;
+                    break;
+                case OsuContainer.Ranking.C:
+                    tex = Skin.RankingC;
+                    break;
+                case OsuContainer.Ranking.D:
+                    tex = Skin.RankingD;
+                    break;
+                default:
+                    break;
+            }
+
+            piePos.X -= radius*2.8f;
+
+            float beatProgress = (float)Interpolation.ValueAt(OsuContainer.BeatProgressKiai, 0f, 1f, 0f, 1f, EasingTypes.InOutSine);
+
+            float brightness = 1f + 1f * beatProgress;
+
+            float rankSize = radius * 3.8f;
+            g.DrawRectangleCentered(piePos, new Vector2(rankSize * tex.Texture.Size.AspectRatio(), rankSize), new Vector4(brightness, brightness, brightness, 1f), tex.Texture);
+
+            piePos.X -= rankSize * 0.8f;
+            rankSize /= 1.4f - 0.25f * beatProgress;
+            drawDancer(g, piePos, new Vector2(rankSize, rankSize * Skin.Star.Texture.Size.AspectRatio()));
+
             drawKeyOverlay(g);
         }
 
@@ -248,10 +293,8 @@ namespace RTCircles
         private bool shouldGenGraph = true;
         private void drawDifficultyGraph(Graphics g)
         {
-            return;
-
             Vector2 position = new Vector2(0, 0);
-            Vector2 size = new Vector2(MainGame.WindowWidth, 150);
+            Vector2 size = new Vector2(MainGame.WindowWidth, 100);
 
             if (strainFB.Width != size.X || strainFB.Height != size.Y)
             {
@@ -273,7 +316,7 @@ namespace RTCircles
 
                 Utils.Log($"Generating strain graph framebuffer!", LogLevel.Info);
 
-                /*
+                
                 g.DrawInFrameBuffer(strainFB, () =>
                 {
                     graph = PathApproximator.ApproximateCatmull(graph);
@@ -286,7 +329,7 @@ namespace RTCircles
 
                     float stepX = size.X / graph.Count;
 
-                    Vector4 bottomColor = new Vector4(1f, 1f, 1f, 1f);
+                    Vector4 bottomColor = new Vector4(0.75f, 0.75f, 0.75f, 1f);
                     Vector4 peakColor = new Vector4(1f, 1f, 1f, 1f);
 
                     Vector2 movingPos = position;
@@ -295,7 +338,7 @@ namespace RTCircles
                     {
                             //float height = graph[i].Y.Map(0, 10, 0, size.Y);
 
-                            float height = graph[i].Y.Map(0, 8000, 0, size.Y);
+                            float height = graph[i].Y.Map(0, 10000, 0, size.Y);
 
                             //Grundlinje
                             vertices[vertexIndex].TextureSlot = textureSlot;
@@ -319,34 +362,37 @@ namespace RTCircles
                 });
 
                 shouldGenGraph = false;
-                */
+                
             }
             g.DrawFrameBuffer(position, new Vector4(1f, 1f, 1f, 0.5f), strainFB);
 
-            Vector2 songPosPos = new Vector2((float)OsuContainer.SongPosition.Map(OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime, OsuContainer.Beatmap.HitObjects[^1].BaseObject.StartTime, position.X, position.X + size.X), position.Y);
+            Vector2 poo = new Vector2(64 * Skin.Arrow.Size.AspectRatio(), 64) * MainGame.Scale;
 
-            g.DrawLine(songPosPos, new Vector2(songPosPos.X, songPosPos.Y + size.Y), Colors.Red, 5f);
+            Vector2 songPosPos = new Vector2((float)OsuContainer.SongPosition.Map(OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime, OsuContainer.Beatmap.HitObjects[^1].BaseObject.StartTime, position.X, position.X + size.X), position.Y + poo.Y / 4);
+
+            g.DrawRectangleCentered(songPosPos, poo, new Vector4(4f,4f,4f,1f), Skin.Arrow, null, false, 180);
+            //g.DrawLine(songPosPos, new Vector2(songPosPos.X, songPosPos.Y + size.Y), Colors.Red, 5f);
         }
-        
-        public void drawDancer(Graphics g)
+
+        private float dancerAlpha = 0f;
+        public void drawDancer(Graphics g, Vector2 starPos, Vector2 starSize)
         {
+            dancerAlpha = MathHelper.Lerp(dancerAlpha, OsuContainer.IsKiaiTimeActive ? 1f : 0f, 5f * (float)MainGame.Instance.DeltaTime);
+
+            if (dancerAlpha <= 0.05f)
+                return;
+
             float angle = (int)Math.Floor(OsuContainer.CurrentBeat) % 2 == 0 ? 15 : -15f;
 
-            float beatProgress = Interpolation.ValueAt(OsuContainer.BeatProgress, 0f, 1f, 0f, 1f, EasingTypes.InOutSine);
             float beatProgressKiai = Interpolation.ValueAt(OsuContainer.BeatProgressKiai, 0f, 1f, 0f, 1f, EasingTypes.InOutSine);
 
             float rotation = MathUtils.Map(beatProgressKiai, 0f, 1f, -angle, angle);
 
-            Vector4 flash = Colors.White + new Vector4(beatProgress.Map(0f, 1f, 0f, -0.2f), 0f, 0f, 0f);
+            float brightness = 1f + beatProgressKiai;
 
-            if (OsuContainer.IsKiaiTimeActive)
-                flash.W = 1.0f;
-            else
-                flash.W = 0.5f;
+            Vector4 color = new Vector4(brightness, brightness, brightness, dancerAlpha);
 
-            Vector2 starSize = (Skin.Star.Texture.Size / 12f) + new Vector2(10) * beatProgressKiai;
-            Vector2 starPos = new Vector2(1860, 210);
-            g.DrawRectangleCentered(starPos, starSize, flash, Skin.Star, null, false, rotation);
+            g.DrawRectangleCentered(starPos, starSize, color, Skin.Star, null, false, rotation);
         }
 
         private Vector2 key1Size = new Vector2(50);
@@ -357,9 +403,9 @@ namespace RTCircles
         public void drawKeyOverlay(Graphics g)
         {
             Vector2 key1Position = new Vector2(MainGame.WindowWidth - key1Size.X, MainGame.WindowHeight / 2f);
-            float padding = 4f;
+            float padding = 4f * MainGame.Scale;
             Vector2 key2Postion = new Vector2(MainGame.WindowWidth - key2Size.X, MainGame.WindowHeight / 2f + key1Size.Y + padding);
-            float fontScale = 0.5f;
+            float fontScale = 0.5f * MainGame.Scale;
 
             string key1Text = OsuContainer.Key1.ToString();
             string key2Text = OsuContainer.Key2.ToString();
@@ -374,7 +420,7 @@ namespace RTCircles
             textSize = Font.DefaultFont.MessureString(key2Text, fontScale);
             g.DrawString(key2Text, Font.DefaultFont, key2Postion + key2Size / 2f - textSize / 2f, Colors.Black, fontScale);
 
-            //g.DrawString(OsuContainer.GetRankingLetter(OsuContainer.Count300, OsuContainer.Count100, OsuContainer.Count50, OsuContainer.CountMiss), Font.DefaultFont, Game.Instance.MousePosition, Colors.White);
+            //g.DrawString(OsuContainer.GetCurrentRankingLetter(), Font.DefaultFont, Easy2D.Game.Input.MousePosition, Colors.White);
         }
 
         public override void Update(float delta)
@@ -392,26 +438,30 @@ namespace RTCircles
 
             scale2 = Interpolation.ValueAt(scaleTime2, 2.7f, 1.5f, 0, 0.4f, EasingTypes.OutQuart);
 
+            float pressSize = 50f * MainGame.Scale;
+            float size = 65f * MainGame.Scale;
+            const float lerpSpeed = 32f;
+
             if (OsuContainer.Key1Down)
             {
-                key1Size = Vector2.Lerp(key1Size, new Vector2(65), delta * 30f);
-                key1Color = Vector4.Lerp(key1Color, Colors.Pink, delta * 30f);
+                key1Size = Vector2.Lerp(key1Size, new Vector2(pressSize), delta * lerpSpeed);
+                key1Color = Vector4.Lerp(key1Color, Colors.Pink, delta * lerpSpeed);
             }
             else
             {
-                key1Size = Vector2.Lerp(key1Size, new Vector2(50), delta * 30f);
-                key1Color = Vector4.Lerp(key1Color, Colors.White, delta * 30f);
+                key1Size = Vector2.Lerp(key1Size, new Vector2(size), delta * lerpSpeed);
+                key1Color = Vector4.Lerp(key1Color, Colors.White, delta * lerpSpeed);
             }
 
             if (OsuContainer.Key2Down)
             {
-                key2Size = Vector2.Lerp(key2Size, new Vector2(65), delta * 30f);
-                key2Color = Vector4.Lerp(key2Color, Colors.Pink, delta * 30f);
+                key2Size = Vector2.Lerp(key2Size, new Vector2(pressSize), delta * lerpSpeed);
+                key2Color = Vector4.Lerp(key2Color, Colors.Pink, delta * lerpSpeed);
             }
             else
             {
-                key2Size = Vector2.Lerp(key2Size, new Vector2(50), delta * 30f);
-                key2Color = Vector4.Lerp(key2Color, Colors.White, delta * 30f);
+                key2Size = Vector2.Lerp(key2Size, new Vector2(size), delta * lerpSpeed);
+                key2Color = Vector4.Lerp(key2Color, Colors.White, delta * lerpSpeed);
             }
         }
 

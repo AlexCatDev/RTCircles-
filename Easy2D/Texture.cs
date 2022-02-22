@@ -30,6 +30,8 @@ namespace Easy2D
         public static Texture WhiteSquare { get; private set; }
         public static Texture WhiteCircle { get; private set; }
 
+        public TextureMinFilter MinFilter { get; set; } = TextureMinFilter.Linear;
+        public TextureMagFilter MagFilter { get; set; } = TextureMagFilter.Linear;
 
         public bool ImageDoneUploading { get; private set; } 
 
@@ -81,8 +83,8 @@ namespace Easy2D
 
             bind(null);
 
-            GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (float)TextureMinFilter.Linear);
-            GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (float)TextureMagFilter.Linear);
+            GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (float)MinFilter);
+            GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (float)MagFilter);
 
             GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
             GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);

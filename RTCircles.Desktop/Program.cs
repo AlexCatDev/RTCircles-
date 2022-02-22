@@ -147,6 +147,10 @@ namespace RTCircles.Desktop
                     {
                         toggleFullScreen();
                         return 0;
+                    }else if(ev.Key.Keysym.Sym == 1073741892)
+                    {
+                        toggleFullScreen();
+                        return 0;
                     }
 
                     break;

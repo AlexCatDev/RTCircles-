@@ -6,19 +6,29 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Easy2D;
+using System.Runtime.CompilerServices;
 
 public static class GL
 {
     public static Silk.NET.OpenGLES.GL Instance { get; private set; }
-    public static unsafe string GLVendor => Marshal.PtrToStringAnsi(new IntPtr(Instance.GetString(StringName.Vendor)));
-    public static unsafe string GLRenderer => Marshal.PtrToStringAnsi(new IntPtr(Instance.GetString(StringName.Renderer)));
-    public static unsafe string GLShadingVersion => Marshal.PtrToStringAnsi(new IntPtr(Instance.GetString(StringName.ShadingLanguageVersion)));
-    public static unsafe string GLVersion => Marshal.PtrToStringAnsi(new IntPtr(Instance.GetString(StringName.Version)));
-    public static unsafe string GLExtensions => Marshal.PtrToStringAnsi(new IntPtr(Instance.GetString(StringName.Extensions)));
 
-    public static void SetGL(Silk.NET.OpenGLES.GL gl)
+    public static string GLVendor { get; private set; }
+    public static string GLRenderer { get; private set; }
+    public static string GLShadingVersion { get; private set; }
+    public static string GLVersion { get; private set; }
+    public static string GLExtensions { get; private set; }
+
+    public static ulong DrawCalls { get; private set; }
+
+    public unsafe static void SetGL(Silk.NET.OpenGLES.GL gl)
     {
         Instance = gl;
+
+        GLVendor = Marshal.PtrToStringAnsi(new IntPtr(Instance.GetString(StringName.Vendor)));
+        GLRenderer = Marshal.PtrToStringAnsi(new IntPtr(Instance.GetString(StringName.Renderer)));
+        GLShadingVersion = Marshal.PtrToStringAnsi(new IntPtr(Instance.GetString(StringName.ShadingLanguageVersion)));
+        GLVersion = Marshal.PtrToStringAnsi(new IntPtr(Instance.GetString(StringName.Version)));
+        GLExtensions = Marshal.PtrToStringAnsi(new IntPtr(Instance.GetString(StringName.Extensions)));
 
         Utils.Log($"Vendor: {GLVendor}", LogLevel.Important);
         Utils.Log($"Renderer: {GLRenderer}", LogLevel.Important);
@@ -26,13 +36,29 @@ public static class GL
         Utils.Log($"GLSL Version: {GLShadingVersion}", LogLevel.Important);
 
 #if DEBUG
-        unsafe
-        {
-            Instance.Enable(GLEnum.DebugOutput);
-            Instance.Enable(GLEnum.DebugOutputSynchronous);
-            Instance.DebugMessageCallback(OnDebug, null);
-        }
+        Instance.Enable(GLEnum.DebugOutput);
+        Instance.Enable(GLEnum.DebugOutputSynchronous);
+        Instance.DebugMessageCallback(OnDebug, null);
 #endif
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void DrawElements(PrimitiveType mode, uint count, DrawElementsType elementsType, void* indices = null)
+    {
+        Instance.DrawElements(mode, count, elementsType, indices);
+        DrawCalls++;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void DrawArrays(PrimitiveType mode, int first, uint count)
+    {
+        Instance.DrawArrays(mode, first, count);
+        DrawCalls++;
+    }
+
+    public static void ResetStatistics()
+    {
+        DrawCalls = 0;
     }
 
     private static void OnDebug(GLEnum source, GLEnum type, int id, GLEnum severity, int length, nint message, nint userparam)

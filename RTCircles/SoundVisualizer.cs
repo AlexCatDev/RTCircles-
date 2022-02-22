@@ -99,7 +99,7 @@ namespace RTCircles
 
         public override Rectangle Bounds => new Rectangle(Position - new Vector2(Radius), new Vector2(Radius * 2f));
 
-        public event Func<Vector2, Vector4> ColorAt;
+        public event Func<float, Vector4> ColorAt;
 
         public Sound Sound;
 
@@ -175,15 +175,17 @@ namespace RTCircles
 
                 Vector2 pos2 = new Vector2(MathF.Cos(theta), MathF.Sin(theta)) * (Radius + (now * BarLength));
 
+                float progress = ((float)i / points.Count);
+
                 vertices[verticesIndex].Position = pos + Position;
-                vertices[verticesIndex].Color = ColorAt?.Invoke(pos) ?? StartColor;
+                vertices[verticesIndex].Color = ColorAt?.Invoke(progress) ?? StartColor;
                 vertices[verticesIndex].TextureSlot = slot;
                 vertices[verticesIndex].TexCoord = new Vector2(0, 0);
 
                 verticesIndex++;
 
                 vertices[verticesIndex].Position = pos2 + Position;
-                vertices[verticesIndex].Color = ColorAt?.Invoke(pos) ?? EndColor;
+                vertices[verticesIndex].Color = ColorAt?.Invoke(progress) ?? EndColor;
                 vertices[verticesIndex].TextureSlot = slot;
                 vertices[verticesIndex].TexCoord = new Vector2(1, 1);
 
@@ -255,51 +257,51 @@ namespace RTCircles
             */
         }
 
-        private void drawCircle2(Graphics g)
-        {
-            float theta = StartRotation;
-            float stepTheta = (MathF.PI * 2) / (SmoothBuffer.Length) / 4;
+        //private void drawCircle2(Graphics g)
+        //{
+        //    float theta = StartRotation;
+        //    float stepTheta = (MathF.PI * 2) / (SmoothBuffer.Length) / 4;
 
-            var vertices = g.VertexBatch.GetTriangleStrip(SmoothBuffer.Length * 2 * 4);
+        //    var vertices = g.VertexBatch.GetTriangleStrip(SmoothBuffer.Length * 2 * 4);
 
-            int verticesIndex = 0;
+        //    int verticesIndex = 0;
 
-            for (int k = 0; k < 4; k++)
-            {
-                for (int i = 0; i < SmoothBuffer.Length; i++)
-                {
-                    float now = SmoothBuffer[i];
+        //    for (int k = 0; k < 4; k++)
+        //    {
+        //        for (int i = 0; i < SmoothBuffer.Length; i++)
+        //        {
+        //            float now = SmoothBuffer[i];
 
-                    Vector2 pos = new Vector2(MathF.Cos(theta), MathF.Sin(theta)) * Radius;
-                    pos += Position;
+        //            Vector2 pos = new Vector2(MathF.Cos(theta), MathF.Sin(theta)) * Radius;
+        //            pos += Position;
 
-                    Vector2 pos2 = new Vector2(MathF.Cos(theta), MathF.Sin(theta)) * (Radius + (now * BarLength));
-                    pos2 += Position;
+        //            Vector2 pos2 = new Vector2(MathF.Cos(theta), MathF.Sin(theta)) * (Radius + (now * BarLength));
+        //            pos2 += Position;
 
-                    vertices[verticesIndex].Position = pos;
-                    vertices[verticesIndex].Color = ColorAt?.Invoke(pos) ?? StartColor;
-                    vertices[verticesIndex].TextureSlot = g.GetTextureSlot(null);
-                    vertices[verticesIndex].TexCoord = new Vector2(0, 0);
+        //            vertices[verticesIndex].Position = pos;
+        //            vertices[verticesIndex].Color = ColorAt?.Invoke(pos) ?? StartColor;
+        //            vertices[verticesIndex].TextureSlot = g.GetTextureSlot(null);
+        //            vertices[verticesIndex].TexCoord = new Vector2(0, 0);
 
-                    verticesIndex++;
+        //            verticesIndex++;
 
-                    vertices[verticesIndex].Position = pos2;
-                    vertices[verticesIndex].Color = ColorAt?.Invoke(pos) ?? EndColor;
-                    vertices[verticesIndex].TextureSlot = g.GetTextureSlot(null);
-                    vertices[verticesIndex].TexCoord = new Vector2(1, 1);
+        //            vertices[verticesIndex].Position = pos2;
+        //            vertices[verticesIndex].Color = ColorAt?.Invoke(pos) ?? EndColor;
+        //            vertices[verticesIndex].TextureSlot = g.GetTextureSlot(null);
+        //            vertices[verticesIndex].TexCoord = new Vector2(1, 1);
 
-                    verticesIndex++;
+        //            verticesIndex++;
 
-                    theta += stepTheta;
-                }
-            }
+        //            theta += stepTheta;
+        //        }
+        //    }
 
-            if (PatchEnd)
-            {
-                vertices[^1].Position = vertices[1].Position;
-                vertices[^2].Position = vertices[0].Position;
-            }
-        }
+        //    if (PatchEnd)
+        //    {
+        //        vertices[^1].Position = vertices[1].Position;
+        //        vertices[^2].Position = vertices[0].Position;
+        //    }
+        //}
 
         private void drawCircle(Graphics g)
         {
@@ -326,67 +328,67 @@ namespace RTCircles
         }
 
         //TODO: Make it truly smooth, where bars effect each other!
-        private void drawSmoothCircle(Graphics g, float scale = 1f)
-        {
-            if (MirrorCount < 1 || Smoothness < 1)
-                return;
+        //private void drawSmoothCircle(Graphics g, float scale = 1f)
+        //{
+        //    if (MirrorCount < 1 || Smoothness < 1)
+        //        return;
 
-            //HVAD FANDEN I HELE HULE HELVEDET
-            float stepTheta = (MathF.PI * 2) / (SmoothBuffer.Length * Smoothness) / MirrorCount;
+        //    //HVAD FANDEN I HELE HULE HELVEDET
+        //    float stepTheta = (MathF.PI * 2) / (SmoothBuffer.Length * Smoothness) / MirrorCount;
 
-            float theta = StartRotation;
+        //    float theta = StartRotation;
 
-            var vertices = g.VertexBatch.GetTriangleStrip(SmoothBuffer.Length * Smoothness * MirrorCount * 2);
+        //    var vertices = g.VertexBatch.GetTriangleStrip(SmoothBuffer.Length * Smoothness * MirrorCount * 2);
 
-            int verticesIndex = 0;
+        //    int verticesIndex = 0;
 
-            for (int j = 0; j < MirrorCount; j++)
-            {
-                for (int i = 0; i < SmoothBuffer.Length; i++)
-                {
-                    for (int k = 0; k < Smoothness; k++)
-                    {
-                        var now = SmoothBuffer[i];
-                        var next = i + 1 < SmoothBuffer.Length ? SmoothBuffer[i + 1] : SmoothBuffer[0];
+        //    for (int j = 0; j < MirrorCount; j++)
+        //    {
+        //        for (int i = 0; i < SmoothBuffer.Length; i++)
+        //        {
+        //            for (int k = 0; k < Smoothness; k++)
+        //            {
+        //                var now = SmoothBuffer[i];
+        //                var next = i + 1 < SmoothBuffer.Length ? SmoothBuffer[i + 1] : SmoothBuffer[0];
 
-                        float interpVolume = 0;
+        //                float interpVolume = 0;
 
-                        if (next > now)
-                            interpVolume = Interpolation.ValueAt(k, now, next, 0, Smoothness - 1, EasingTypes.OutSine);
-                        else
-                            interpVolume = Interpolation.ValueAt(k, now, next, 0, Smoothness - 1, EasingTypes.InSine);
+        //                if (next > now)
+        //                    interpVolume = Interpolation.ValueAt(k, now, next, 0, Smoothness - 1, EasingTypes.OutSine);
+        //                else
+        //                    interpVolume = Interpolation.ValueAt(k, now, next, 0, Smoothness - 1, EasingTypes.InSine);
 
-                        Vector2 pos = new Vector2(MathF.Cos(theta), MathF.Sin(theta)) * Radius;
-                        pos += Position;
+        //                Vector2 pos = new Vector2(MathF.Cos(theta), MathF.Sin(theta)) * Radius;
+        //                pos += Position;
 
-                        Vector2 pos2 = new Vector2(MathF.Cos(theta), MathF.Sin(theta)) * (Radius + (interpVolume * BarLength) * scale);
-                        pos2 += Position;
+        //                Vector2 pos2 = new Vector2(MathF.Cos(theta), MathF.Sin(theta)) * (Radius + (interpVolume * BarLength) * scale);
+        //                pos2 += Position;
 
-                        vertices[verticesIndex].Position = pos;
-                        vertices[verticesIndex].Color = ColorAt?.Invoke(pos) ?? StartColor;
-                        vertices[verticesIndex].TextureSlot = g.GetTextureSlot(null);
-                        vertices[verticesIndex].TexCoord = new Vector2(0, 0);
+        //                vertices[verticesIndex].Position = pos;
+        //                vertices[verticesIndex].Color = ColorAt?.Invoke(pos) ?? StartColor;
+        //                vertices[verticesIndex].TextureSlot = g.GetTextureSlot(null);
+        //                vertices[verticesIndex].TexCoord = new Vector2(0, 0);
 
-                        verticesIndex++;
+        //                verticesIndex++;
 
-                        vertices[verticesIndex].Position = pos2;
-                        vertices[verticesIndex].Color = ColorAt?.Invoke(pos) ?? EndColor;
-                        vertices[verticesIndex].TextureSlot = g.GetTextureSlot(null);
-                        vertices[verticesIndex].TexCoord = new Vector2(1, 1);
+        //                vertices[verticesIndex].Position = pos2;
+        //                vertices[verticesIndex].Color = ColorAt?.Invoke(pos) ?? EndColor;
+        //                vertices[verticesIndex].TextureSlot = g.GetTextureSlot(null);
+        //                vertices[verticesIndex].TexCoord = new Vector2(1, 1);
 
-                        verticesIndex++;
+        //                verticesIndex++;
 
-                        theta += stepTheta;
-                    }
-                }
-            }
+        //                theta += stepTheta;
+        //            }
+        //        }
+        //    }
 
-            if (PatchEnd)
-            {
-                vertices[^1].Position = vertices[1].Position;
-                vertices[^2].Position = vertices[0].Position;
-            }
-        }
+        //    if (PatchEnd)
+        //    {
+        //        vertices[^1].Position = vertices[1].Position;
+        //        vertices[^2].Position = vertices[0].Position;
+        //    }
+        //}
 
         private float freckleSpawnTimer = 0;
 

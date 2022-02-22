@@ -333,21 +333,27 @@ namespace RTCircles
             }
         }
 
+        private static double totalOffset => Sound.DeviceLatency + 0;
+
         public static void Update(float delta)
         {
             if (Beatmap is null)
                 return;
 
-            if (songPos < 0)
+            if (songPos < totalOffset)
             {
                 Beatmap.Song.Stop();
-                songPos = Math.Min(songPos + delta * 1000d * Beatmap.Song.PlaybackSpeed, 0);
-                if (songPos == 0)
+                songPos = Math.Min(songPos + delta * 1000d * Beatmap.Song.PlaybackSpeed, totalOffset);
+                if (songPos == totalOffset)
                     Beatmap.Song.Play(true);
+            }
+            else if (songPos >= Beatmap.Song.PlaybackLength)
+            {
+                songPos += delta * 1000f * Beatmap.Song.PlaybackSpeed;
             }
             else
             {
-                songPos = Beatmap?.Song.PlaybackPosition + Sound.DeviceLatency ?? 0;
+                songPos = Beatmap?.Song.PlaybackPosition + totalOffset ?? 0;
 
                 DeltaSongPosition = songPos - previousSongPos;
                 previousSongPos = songPos;
@@ -415,6 +421,75 @@ namespace RTCircles
                 Key2Down = false;
         }
 
+        public enum Ranking
+        {
+            /// <summary>
+            /// SS
+            /// </summary>
+            X,
+            /// <summary>
+            /// SS with hidden mod
+            /// </summary>
+            XH,
+            S,
+            /// <summary>
+            /// S with hidden mod
+            /// </summary>
+            SH,
+            A,
+            B,
+            C,
+            D
+        }
+
+        public static Ranking GetCurrentRanking()
+        {
+            int totalHits = Count300 + Count100 + Count50 + CountMiss;
+
+            var acc = ((Count300 * 300.0) + (Count100 * 100.0) + (Count50 * 50.0)) / (totalHits * 300);
+
+            var percent50s = ((double)Count50 / totalHits) * 100.0;
+            var percent300s = ((double)Count300 / totalHits) * 100.0;
+
+            if (totalHits == 0)
+                acc = 1.0;
+
+            acc *= 100;
+
+            //SH = Hidden/Flashlight S
+            //XH = Hidden/Flashlight SS
+            //X = SS
+
+            if (CountMiss == 0)
+            {
+                if (acc == 100)
+                    return Beatmap.Mods.HasFlag(Mods.HD) ? Ranking.XH : Ranking.X;
+
+                if (percent50s < 1.0 && percent300s > 90.0)
+                    return Beatmap.Mods.HasFlag(Mods.HD) ? Ranking.SH : Ranking.S;
+                else if (percent300s > 80.0)
+                    return Ranking.A;
+                else if (percent300s > 70.0)
+                    return Ranking.B;
+                else if (percent300s > 60.0)
+                    return Ranking.C;
+                else
+                    return Ranking.D;
+            }
+            else
+            {
+                if (percent300s > 90.0)
+                    return Ranking.A;
+                else if (percent300s > 80.0)
+                    return Ranking.B;
+                else if (percent300s > 60.0)
+                    return Ranking.C;
+                else
+                    return Ranking.D;
+            }
+        }
+        
+            /*
         public static string GetRankingLetter(int count300, int count100, int count50, int countMiss)
         {
             int totalHits = count300 + count100 + count50 + countMiss;
@@ -461,5 +536,6 @@ namespace RTCircles
                     return "D";
             }
         }
+        */
     }
 }

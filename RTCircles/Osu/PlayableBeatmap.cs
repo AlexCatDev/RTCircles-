@@ -59,34 +59,6 @@ namespace RTCircles
                 vec2.Y -= (float)Math.Sin(blend.Map(0, 1, MathF.PI, 0)) * length;
                 vec2.X -= (float)Math.Cos(blend.Map(0, 1, MathF.PI / 2, -MathF.PI / 2)) * length;
             }
-            /*
-            float angle = MathHelper.RadiansToDegrees(MathUtils.AtanVec(from.Destination, to.Destination));
-
-            if (angle > 0)
-                blend = 1f - blend;
-
-            angle = MathF.Abs(angle);
-
-            if(angle >= 270)
-            {
-                vec2.Y -= (float)Math.Sin(blend.Map(0, 1, MathF.PI, 0)) * length;
-                vec2.X -= (float)Math.Cos(blend.Map(0, 1, MathF.PI / 2, -MathF.PI / 2)) * length;
-            }else if(angle >= 180)
-            {
-                vec2.Y -= (float)Math.Sin(blend.Map(0, 1, MathF.PI, 0)) * length;
-                vec2.X -= (float)Math.Cos(blend.Map(0, 1, MathF.PI / 2, -MathF.PI / 2)) * length;
-            }
-            else if (angle >= 90)
-            {d
-                vec2.Y -= (float)Math.Sin(blend.Map(0, 1, MathF.PI, 0)) * length;
-                vec2.X -= (float)Math.Cos(blend.Map(0, 1, MathF.PI / 2, -MathF.PI / 2)) * length;
-            }
-            else if(angle >= 45)
-            {
-                vec2.Y -= (float)Math.Sin(blend.Map(0, 1, MathF.PI, 0)) * length;
-                vec2.X -= (float)Math.Cos(blend.Map(0, 1, MathF.PI / 2, -MathF.PI / 2)) * length;
-            }
-            */
 
             return vec2;
         }
@@ -474,7 +446,7 @@ namespace RTCircles
             }
 
             AutoGenerator.Sort();
-            //generateStrainGraph();
+            generateStrainGraph();
 
             Utils.EndProfiling("Generate HitObjects");
         }

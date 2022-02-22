@@ -220,7 +220,7 @@ namespace Easy2D
 
             unsafe
             {
-                GL.Instance.DrawElements(PrimitiveType.Triangles, (uint)IndexRenderCount, DrawElementsType.UnsignedInt, null);
+                GL.DrawElements(PrimitiveType.Triangles, (uint)IndexRenderCount, DrawElementsType.UnsignedInt, null);
             }
 
             if(AutoClearOnRender)
@@ -235,7 +235,7 @@ namespace Easy2D
         {
             unsafe
             {
-                GL.Instance.DrawElements(PrimitiveType.Triangles, (uint)IndexRenderCount, DrawElementsType.UnsignedInt, null);
+                GL.DrawElements(PrimitiveType.Triangles, (uint)IndexRenderCount, DrawElementsType.UnsignedInt, null);
             }
         }
 

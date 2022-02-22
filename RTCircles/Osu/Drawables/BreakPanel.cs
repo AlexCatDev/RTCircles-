@@ -8,65 +8,71 @@ namespace RTCircles
 {
     public class BreakPanel : Drawable
     {
-        private SmoothFloat yPosition = new SmoothFloat() { Value = 0f };
-
         private Vector2 size => new Vector2(MainGame.WindowWidth, 400 * MainGame.Scale);
 
         private double? timeClose;
         private double showTime = 0;
 
-        public void Show(double timeClose)
-        {
-            yPosition.ClearTransforms();
-            yPosition.Wait(600);
-            yPosition.TransformTo(1f, (float)OsuContainer.Beatmap.Preempt * 2f, EasingTypes.OutBack);
+        private AnimationTFloat tree = new AnimationTFloat();
 
-            this.timeClose = timeClose;
+        private string breakText = "";
+
+        public void Break(IDrawableHitObject current, IDrawableHitObject next)
+        {
+            tree.Clear();
+
+            //Starting State
+            tree.Add(current.BaseObject.EndTime + OsuContainer.Fadeout, 0f);
+
+            tree.Add(current.BaseObject.EndTime + OsuContainer.Fadeout + 500, 1f, EasingTypes.OutQuart);
+
+            tree.Wait(next.BaseObject.StartTime - OsuContainer.Beatmap.Preempt - 500);
+
+            tree.Add(next.BaseObject.StartTime - OsuContainer.Beatmap.Preempt, 2f, EasingTypes.InQuart);
 
             showTime = OsuContainer.SongPosition;
+
+            timeClose = next.BaseObject.StartTime - OsuContainer.Beatmap.Preempt - 500;
         }
 
-        private void hide()
-        {
-            yPosition.ClearTransforms();
-            yPosition.TransformTo(0f, (float)OsuContainer.Beatmap.Preempt * 1.5f, EasingTypes.InBack);
-        }
+        private float scaledBeatProgress;
 
         public override void Render(Graphics g)
         {
-            yPosition.Update((float)OsuContainer.DeltaSongPosition);
+            double output = tree.GetOutputAtTime(OsuContainer.SongPosition);
 
-            float yPos = yPosition.Value.Map(0, 1, MainGame.WindowHeight + size.Y, MainGame.WindowCenter.Y);
-            Vector2 pos = new Vector2(MainGame.WindowCenter.X, yPos);
+            float xPos = (float)output.Map(0, 1, -size.X / 2f, size.X / 2f);
 
-            if (yPosition.Value > 0) {
+            Vector2 pos = new Vector2(xPos, MainGame.WindowCenter.Y);
+
+            if (output > 0 && output < 2)
+            {
                 g.DrawRectangleCentered(pos, size, Colors.From255RGBA(37, 37, 37, 127));
 
                 var val = timeClose ?? OsuContainer.SongPosition;
 
-                string txt = $"{(val - OsuContainer.SongPosition) / 1000:F2}";
+                var remainingTime = (val - OsuContainer.SongPosition) / 1000;
 
-                Skin.ScoreNumbers.DrawCentered(g, pos, 100 * MainGame.Scale, Colors.White, txt);
+                if (remainingTime < 0)
+                    remainingTime = 0;
 
-                /*
-                float txtScale = 2f * MainGame.Scale;
+                string txt = $"{remainingTime:F2}";
 
-                Vector2 txtSize = Font.DefaultFont.MessureString(txt, txtScale);
+                scaledBeatProgress = MathHelper.Lerp(scaledBeatProgress, MainGame.Scale * (float)OsuContainer.BeatProgress.Map(0, 1, 0.9, 1), (float)MainGame.Instance.DeltaTime * 60f);
 
-                g.DrawString(txt, Font.DefaultFont, pos - txtSize / 2f, Colors.White, txtScale);
-                */
+                float txtYSize = 100 * scaledBeatProgress;
+
+                Skin.ScoreNumbers.DrawCentered(g, pos, txtYSize, Colors.White, txt);
+
+                var breakTxtSize = Font.DefaultFont.MessureString(breakText, 1f);
+
+                g.DrawString(breakText, Font.DefaultFont, pos - new Vector2(breakTxtSize.X / 2, breakTxtSize.Y * 3.5f), Colors.White, 1f);
             }
 
             if (OsuContainer.SongPosition < showTime)
             {
                 timeClose = null;
-                yPosition.Value = 0f;
-            }
-
-            if(OsuContainer.SongPosition >= timeClose)
-            {
-                timeClose = null;
-                hide();
+                tree.Clear();
             }
         }
 

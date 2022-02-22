@@ -30,7 +30,6 @@ namespace ParticleMadness.Desktop
 
             window.Load += () =>
             {
-                Console.WriteLine("load");
                 var input = window.CreateInput();
 
                 input.Keyboards[0].KeyDown += (s, e, x) =>

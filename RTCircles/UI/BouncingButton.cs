@@ -77,7 +77,7 @@ namespace RTCircles
                     animRotation.ClearTransforms();
                 }
 
-                float beatDuration = (float)OsuContainer.CurrentBeatTimingPoint.BeatLength*2;
+                float beatDuration = (float)(OsuContainer.CurrentBeatTimingPoint?.BeatLength*2 ?? 1000);
 
                 lastBeat = OsuContainer.CurrentBeat;
                 totalBeats++;

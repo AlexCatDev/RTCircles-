@@ -21,7 +21,7 @@ namespace RTCircles
 
         private Vector4 color => new Vector4(Skin.Config.ColorFromIndex(colorIndex), 1f);
 
-        public readonly BetterSlider SliderPath = new BetterSlider();
+        public readonly ISlider SliderPath;
 
         private int repeatsDone = 0;
         private int lastRepeatsDone = 0;
@@ -39,6 +39,11 @@ namespace RTCircles
 
         public DrawableSlider(Slider slider, int colorIndex, int combo)
         {
+            if (GlobalOptions.UseFastSliders.Value)
+                SliderPath = new FastSlider();
+            else
+                SliderPath = new BetterSlider();
+
             repeatsDone = 0;
             this.slider = slider;
             this.colorIndex = colorIndex;
@@ -82,6 +87,8 @@ namespace RTCircles
 
             buffer.Add(new Vector2(slider.Position.X, slider.Position.Y));
 
+            //Todo: Process sliderpoints so that we only use the points up to slider.PixelLength, for correctness
+
             //Go through each slider control points
             for (int i = 0; i < slider.SliderPoints.Count; i++)
             {
@@ -120,7 +127,7 @@ namespace RTCircles
             //times an index
             float diff = (slider.EndTime - slider.StartTime) / slider.Repeats;
 
-            float beatProgress = Interpolation.ValueAt(OsuContainer.GetBeatProgressAt(slider.StartTime + (diff * index)), 1.3f, 1, 1, 0, EasingTypes.OutSine);
+            float beatProgress = Interpolation.ValueAt(OsuContainer.GetBeatProgressAt(slider.StartTime + (diff * index)), 1.5f, 1, 1, 0, EasingTypes.OutSine);
 
             Vector2 size = new Vector2(Size.Y, Size.Y / Skin.SliderReverse.Texture.Size.AspectRatio()) * Skin.GetScale(Skin.SliderReverse);
 
@@ -346,7 +353,7 @@ namespace RTCircles
 
         public override void OnRemove()
         {
-            SliderPath.DeleteFramebuffer();
+            SliderPath.Cleanup();
         }
 
         private bool IsHit;
@@ -586,7 +593,7 @@ namespace RTCircles
             }
         }
 
-        private Vector4 Shade(float amount, Vector4 c)
+        public static Vector4 Shade(float amount, Vector4 c)
         {
             if(amount < 0)
                 return Darken(-amount, c);
@@ -594,13 +601,13 @@ namespace RTCircles
                 return Lighten(amount, c);
         }
 
-        private Vector4 Darken(float amount, Vector4 c) {
+        public static Vector4 Darken(float amount, Vector4 c) {
             float scale = MathF.Max(1.0f, 1.0f + amount);
 
             return new Vector4(c.X / scale, c.Y / scale, c.Z / scale, c.W);
         }
 
-        private Vector4 Lighten(float amount, Vector4 c)
+        public static Vector4 Lighten(float amount, Vector4 c)
         {
             amount *= 0.5f;
 

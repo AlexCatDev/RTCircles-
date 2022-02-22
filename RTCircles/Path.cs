@@ -47,7 +47,7 @@ namespace RTCircles
                 if (length - dist <= 0)
                 {
                     float blend = length / dist;
-                    return MathUtils.Lerp(points[i], points[i + 1], blend);
+                    return Vector2.Lerp(points[i], points[i + 1], blend);
                 }
                 length -= dist;
             }

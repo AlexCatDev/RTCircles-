@@ -42,6 +42,8 @@ namespace RTCircles
 
         public readonly static Option<bool> RenderBackground = new Option<bool>("RenderBackground", true);
 
+        public readonly static Option<bool> UseFastSliders = new Option<bool>("UseFastSliders", false) { Description = "Enable low quality sliders (Requires map reload, Recommended to use slider snaking)"};
+
         public readonly static Option<bool> EnableMouseButtons = new Option<bool>("MouseButtons", false) { Description = "Enable Mouse Buttons?" };
         #endregion
         #region doubles
@@ -248,6 +250,7 @@ namespace RTCircles
 
         private Vector2? trueHoverSize = null;
         private Vector2? trueHoverPos = null;
+        private double ms = 0;
         private void drawFPSGraph(Graphics g)
         {
             if (GlobalOptions.ShowRenderGraphOverlay.Value)
@@ -292,7 +295,15 @@ namespace RTCircles
                 double trianglesPerSecond = (diffTriangles) * (1.0 / RenderDeltaTime);
 
                 const float scale = 0.35f;
-                string text = $"FPS: {FPS}/{1000.0 / FPS:F2}ms UPS: {UPS}/{1000.0 / UPS:F2}ms";
+
+                ms = Interpolation.Damp(ms, DeltaTime * 1000, 0.25, DeltaTime);
+
+                if (double.IsNaN(ms))
+                    ms = 0;
+
+                double mem = GC.GetTotalMemory(false) / 1048576d;
+
+                string text = $"Mem: {mem:F0}mb DrawCalls: {GL.DrawCalls} FPS: {FPS}/{ms:F2}ms";
 
                 Vector2 hoverSize = Font.DefaultFont.MessureString(text, scale);
                 Vector2 hoverPos = new Vector2(WindowWidth, WindowHeight) - hoverSize;
@@ -309,12 +320,13 @@ namespace RTCircles
                         $"Indices: {Utils.ToKMB(indicesPerSecond)}/s\n" +
                         $"Tris: {Utils.ToKMB(trianglesPerSecond)}/s\n" +
                         $"Textures: {Easy2D.Texture.TextureCount}\n" +
+                        $"DrawCalls: {GL.DrawCalls}\n" +
                         $"Framework: {RuntimeInformation.FrameworkDescription} {RuntimeInformation.ProcessArchitecture}\n" +
                         $"OS: {RuntimeInformation.OSDescription}\n" +
                         $"GL: {GL.GLVersion}\n" +
                         $"Renderer: {GL.GLRenderer}\n" +
                         $"GC: [{GC.CollectionCount(0)}, {GC.CollectionCount(1)}, {GC.CollectionCount(2)}]\n" +
-                        $"Mem: {GC.GetTotalMemory(false)}\n" +
+                        $"Mem: {mem:F2}\n" +
                         $"Last visit: {lastOpened}";
 
                     text += $"\nSchedulers [Pending: {Scheduler.TotalPendingWorkloads} Async: {Scheduler.TotalAsyncWorkloads}]";
@@ -323,6 +335,8 @@ namespace RTCircles
                 {
                     trueHoverSize = null;
                 }
+
+                GL.ResetStatistics();
 
                 Vector2 textSize = Font.DefaultFont.MessureString(text, scale);
                 Vector2 drawTextPos = new Vector2(WindowWidth, WindowHeight) - textSize - new Vector2(0);

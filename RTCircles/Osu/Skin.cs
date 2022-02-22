@@ -249,6 +249,15 @@ namespace RTCircles
         public static OsuTexture DTModIcon { get; private set; }
         public static OsuTexture EZModIcon { get;private set; }
 
+        public static OsuTexture RankingXH { get; private set; }
+        public static OsuTexture RankingX { get; private set; }
+        public static OsuTexture RankingSH { get; private set; }
+        public static OsuTexture RankingS { get; private set; }
+        public static OsuTexture RankingA { get; private set; }
+        public static OsuTexture RankingB { get; private set; }
+        public static OsuTexture RankingC { get; private set; }
+        public static OsuTexture RankingD { get; private set; }
+
         public static string CurrentPath { get; private set; }
 
         public static void Load(string path)
@@ -346,6 +355,15 @@ namespace RTCircles
             HRModIcon = LoadTexture(path, "selection-mod-hardrock");
             DTModIcon = LoadTexture(path, "selection-mod-doubletime");
             EZModIcon = LoadTexture(path, "selection-mod-easy");
+
+            RankingXH = LoadTexture(path, "ranking-XH-small");
+            RankingX = LoadTexture(path, "ranking-X-small");
+            RankingSH = LoadTexture(path, "ranking-SH-small");
+            RankingS = LoadTexture(path, "ranking-S-small");
+            RankingA = LoadTexture(path, "ranking-A-small");
+            RankingB = LoadTexture(path, "ranking-B-small");
+            RankingC = LoadTexture(path, "ranking-C-small");
+            RankingD = LoadTexture(path, "ranking-D-small");
         }
         
         //Better version

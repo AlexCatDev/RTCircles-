@@ -36,7 +36,7 @@ namespace Easy2D
             quadBuffer.UploadData(0, quad.Length, quad);
             quadVao.Bind();
 
-            GL.Instance.DrawArrays(PrimitiveType.Triangles, 0, 6);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
         }
     }
 }

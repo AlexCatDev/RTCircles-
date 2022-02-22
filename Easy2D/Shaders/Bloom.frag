@@ -136,11 +136,14 @@ void main() {
         
 		vec4 inputBloom = texture(u_CombineTexture, v_TexCoordinate);
 
-		vec3 tempColor = color.rgb + ACESFitted(inputBloom.rgb);
-        /*
-        //vec3 tempColor = ACESFitted(color.rgb + inputBloom.rgb);
-        //vec3 tempColor = RRTAndODTFit(color.rgb + inputBloom.rgb);
-        */
+        const float gamma = 1.6;
+        vec3 hdrColor = inputBloom.rgb;
+  
+        // reinhard tone mapping
+        vec3 tempColor = hdrColor / (hdrColor + vec3(1.0));
+        // gamma correction 
+        tempColor = pow(tempColor, vec3(1.0 / gamma)) + color.rgb;
+
 		color = vec4(tempColor, 1.0);
         //Else we're writing to another buffer
 	} else {

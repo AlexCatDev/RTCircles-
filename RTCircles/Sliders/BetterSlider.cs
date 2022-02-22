@@ -14,7 +14,7 @@ namespace RTCircles
     //+ optimize to use polylines for less vertices
 
     //Disable snaking on mobile?
-    public class BetterSlider
+    public class BetterSlider : ISlider
     {
         private const int CIRCLE_RESOLUTION = 40;
 
@@ -28,7 +28,7 @@ namespace RTCircles
             sliderShader.AttachShader(ShaderType.FragmentShader, Utils.GetResource("Sliders.slider.frag"));
         }
 
-        public Path Path = new Path();
+        public Path path = new Path();
 
         private float radius = -1;
 
@@ -138,15 +138,15 @@ namespace RTCircles
                     if (startLength - dist <= 0 && count == 0)
                     {
                         float blend = startLength / dist;
-                        start = MathUtils.Lerp(Path.Points[i], Path.Points[i + 1], blend) - posOffset;
+                        start = Vector2.Lerp(Path.Points[i], Path.Points[i + 1], blend) - posOffset;
                         drawCircle(start.Value, radius);
                         count++;
-                    } 
-                    
+                    }
+
                     if (endLength - dist <= 0 && end.HasValue == false)
                     {
                         float blend = endLength / dist;
-                        end = MathUtils.Lerp(Path.Points[i], Path.Points[i + 1], blend) - posOffset;
+                        end = Vector2.Lerp(Path.Points[i], Path.Points[i + 1], blend) - posOffset;
                         drawCircle(end.Value, radius);
                         count++;
                     }
@@ -223,29 +223,21 @@ namespace RTCircles
             this.endProgress = endProgress;
         }
 
-        public void DeleteFramebuffer()
-        {
-            GPUSched.Instance.Enqueue(() =>
-            {
-                frameBuffer.Delete();
-                hasBeenUpdated = true;
-            });
-        }
-
         private bool hasBeenUpdated = true;
+
+        private Matrix4 projectionMatrix;
+
+        public Path Path => path;
 
         /// <summary>
         /// Scaling of the final actual quad that gets drawn to screen
         /// </summary>
-        public float DrawScale = 1f;
+        public float DrawScale { get; set; } = 1f;
         /// <summary>
         /// The point to scale around, THIS WILL CHANGE THE RENDERED POSITION, Set to null to use the original position
         /// </summary>
-        public Vector2? ScalingOrigin;
-
-        public float Alpha;
-
-        private Matrix4 projectionMatrix;
+        public Vector2? ScalingOrigin { get; set; }
+        public float Alpha { get; set; }
 
         public void Render(Graphics g)
         {
@@ -326,6 +318,15 @@ namespace RTCircles
         public override string ToString()
         {
             return $"Points: {Path.Points.Count} Vertices: {sliderBatch.VertexRenderCount}";
+        }
+
+        public void Cleanup()
+        {
+            GPUSched.Instance.Enqueue(() =>
+            {
+                frameBuffer.Delete();
+                hasBeenUpdated = true;
+            });
         }
     }
 }

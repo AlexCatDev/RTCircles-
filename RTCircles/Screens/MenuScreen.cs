@@ -124,7 +124,7 @@ namespace RTCircles
 
                         GPUSched.Instance.Enqueue(() =>
                         {
-                            OsuContainer.SetMap(BeatmapMirror.DecodeBeatmap(System.IO.File.OpenRead(item.FullPath)), true, Mods.Auto);
+                            OsuContainer.SetMap(BeatmapMirror.DecodeBeatmap(System.IO.File.OpenRead(item.FullPath)), true, Mods.NM);
                             OsuContainer.Beatmap.Song.Volume = 0;
                             OsuContainer.SongPosition = (OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai))?.Offset - 2500 ?? 0;
                             OsuContainer.Beatmap.Song.Play(false);
@@ -396,7 +396,7 @@ namespace RTCircles
             visualizer.BarTexture = null;
             visualizer.Layer = -727;
             visualizer.MirrorCount = 2;
-            visualizer.LerpSpeed = 40f;
+            visualizer.LerpSpeed = 25f;
             visualizer.Thickness = 20f;
             visualizer.BarLength = 800f;
             visualizer.FreckleSpawnRate = float.MaxValue;
@@ -404,23 +404,21 @@ namespace RTCircles
             visualizer.StartRotation = -(MathF.PI / 4);
             visualizer.Style = SoundVisualizer.VisualizerStyle.Smooth;
 
-
             //Rainbow color wow
-            visualizer.ColorAt += (pos) =>
+            visualizer.ColorAt += (progress) =>
             {
-                Vector4 col = Vector4.Zero;
-                col.X = pos.X.Map(-visualizer.Radius, visualizer.Radius, 0f, 1f);
-                col.Y = pos.Y.Map(-visualizer.Radius, visualizer.Radius, 0f, 1f);
+                var currBeat = OsuContainer.IsKiaiTimeActive ? OsuContainer.CurrentBeat : 0;
+                var beat = currBeat.Map(0, 1, 0, MathF.PI / 2);
 
-                col.Z = 1f - col.X;
+                progress *= 3;
 
-                col = Colors.Tint(col, 2f);
+                float colorMultiplier = OsuContainer.IsKiaiTimeActive ? 2.2f : 1.5f;
 
-                col += visualizerColorAdditive;
+                float r = (float)Math.Sin(beat + 0 + progress).Map(-1, 1, 0, 1);
+                float g = (float)Math.Sin(beat + 2 + progress).Map(-1, 1, 0, 0.6);
+                float b = (float)Math.Sin(beat + 4 + progress).Map(-1, 1, 0, 1);
 
-                col.W = 1.0f;
-
-                return col;
+                return Colors.Tint(new Vector4(r, g, b, 1f), 1.5f) + visualizerColorAdditive;
             };
 
             //buttonPosition.Value = new Vector2(-310, -270);
@@ -500,7 +498,7 @@ namespace RTCircles
 
         public override void Render(Graphics g)
         {
-            Vector4 beatFlash = new Vector4(0.4f, 0.4f, 0.4f, 0f) * Interpolation.ValueAt(OsuContainer.BeatProgressKiai, 0f, 1f, 0f, 1f, EasingTypes.Out);
+            var beatFlash = new Vector4(0.4f, 0.4f, 0.4f, 0f) * visualizer.BeatValue;
             g.DrawRectangleCentered(visualizer.Position, logoSize, colorTransform + beatFlash, LogoTexture, null, false, rotationTransform);
 
             if (!logoExplodeKiaiAnim.HasCompleted)
@@ -528,15 +526,6 @@ namespace RTCircles
         {
             return false;
         }
-
-        /*
-        public override bool OnMouseMove(float x, float y)
-        {
-            slideBackTimer = 0;
-
-            return hover;
-        }
-        */
 
         private void slideToSide()
         {
@@ -605,7 +594,7 @@ namespace RTCircles
 
             if (OsuContainer.IsKiaiTimeActive && PostProcessing.Bloom)
             {
-                visualizerColorAdditive = Vector4.Lerp(visualizerColorAdditive, new Vector4(1f), delta * 10f);
+                visualizerColorAdditive = Vector4.Lerp(visualizerColorAdditive, new Vector4(1f, 1f, 1f, 0f), delta * 10f);
             }
             else
             {
@@ -679,7 +668,7 @@ namespace RTCircles
 
             triangles.Radius = Bounds.Size.X / 2 - 20f * MainGame.Scale;
             triangles.Position = Bounds.Center;
-            triangles.Speed = 50 + 1700 * visualizer.BeatValue;
+            triangles.Speed = (50 + 1700 * visualizer.BeatValue) * (OsuContainer.IsKiaiTimeActive ? 2 : 1);
 
             visualizer.Position = Bounds.Center;
             visualizer.Radius = Bounds.Size.X / 2f - 20f * MainGame.Scale;
@@ -707,8 +696,8 @@ namespace RTCircles
             //BASS KIAI LOGO VIBRATION 2.0, buggy sometimes the logo glitches suddenly to a side for some reason???
             if (OsuContainer.IsKiaiTimeActive)
             {
-                float dirX = RNG.TryChance() ? -50 : 50;
-                float dirY = RNG.TryChance() ? -50 : 50;
+                float dirX = RNG.TryChance() ? -75 : 75;
+                float dirY = RNG.TryChance() ? -75 : 75;
                 //Pick a random direction from negative Value to positive Value
                 Vector2 dist = new Vector2(dirX, dirY) * MainGame.Scale;
 
@@ -727,9 +716,9 @@ namespace RTCircles
             {
                 mapBackground.Zoom = 100f;
 
-                double cosHack = (OsuContainer.CurrentBeat / 8).Map(0f, 1f, -Math.PI, Math.PI);
+                //double cosHack = (OsuContainer.CurrentBeat / 16).Map(0f, 1f, -Math.PI, Math.PI);
 
-                //mapBackground.Rotation = (float)Math.Cos(cosHack).Map(-1f, 1f, -2f, 2f);
+                //mapBackground.Rotation = (float)Math.Cos(cosHack).Map(-1f, 1f, -4f, 4f);
             }
             else
             {

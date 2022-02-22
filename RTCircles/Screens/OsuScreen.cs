@@ -184,7 +184,8 @@ namespace RTCircles
         {
             if (next.BaseObject.StartTime - current.BaseObject.EndTime >= 3000)
             {
-                breakOverlay.Show(next.BaseObject.StartTime - 1100);
+                breakOverlay.Break(current, next);
+                //breakOverlay.Show(next.BaseObject.StartTime - 1000);
                 //Add(new WarningArrows(next.BaseObject.StartTime - 3000));
             }
         }

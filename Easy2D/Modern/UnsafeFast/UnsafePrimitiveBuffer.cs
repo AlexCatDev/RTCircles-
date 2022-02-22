@@ -168,7 +168,7 @@ namespace Easy2D
             //Copy cpu indices to gpu
             indexBuffer.UploadData(0, IndexRenderCount, indexPool);
 
-            GL.Instance.DrawElements(PrimitiveType.Triangles, IndexRenderCount, DrawElementsType.UnsignedInt, null);
+            GL.DrawElements(PrimitiveType.Triangles, IndexRenderCount, DrawElementsType.UnsignedInt, null);
 
             VertexRenderCount = 0;
             IndexRenderCount = 0;
