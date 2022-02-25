@@ -1,20 +1,10 @@
 # Easy2D
-A Pure 2D OpenGL Framework and various projects that use it
+A 2D OpenGL Framework/Game Framework i am making. (Nothing fancy)
 
 # RTCircles
 
-A osu! clone with various features
-![](https://cdn.discordapp.com/attachments/598945024322830365/930428648782180362/ezgif-2-7a7e01ce5a.gif)
+A very WIP osu! clone with various features
 
-# how to maek game
+https://user-images.githubusercontent.com/15963076/155161631-426e69dc-9958-4538-970a-1e4bde3e8bdd.mp4
 
-Create a .net standard project, that references Easy2D.Game
-
-1. Choose your main class and make it inherit the abstract class Game in Easy2D.Game
-2. Everything else is self explainatory i think
-3. Now make another project for your target platform
-4. Make that project reference your game project
-5. Create a Silk.NET window with the right flags
-6. Forward events from window to the game
-7. Run the window
-8. Profit yes
+Currently Runs on (Windows, Linux, MacOS, Android) (Can't test ios but im sure it works fine, along with tvos and android smartwatch lol)
