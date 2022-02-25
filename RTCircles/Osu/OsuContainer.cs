@@ -136,7 +136,7 @@ namespace RTCircles
 
         public static bool MuteHitsounds { get; set; }
 
-        public static bool CookieziMode => ScreenManager.ActiveScreen() is MapSelectScreen || Beatmap.Mods.HasFlag(Mods.Auto);
+        public static bool CookieziMode => ScreenManager.ActiveScreen() is SongSelectScreen || Beatmap.Mods.HasFlag(Mods.Auto);
 
         public static PlayableBeatmap Beatmap { get; private set; }
 
@@ -347,7 +347,7 @@ namespace RTCircles
                 if (songPos == totalOffset)
                     Beatmap.Song.Play(true);
             }
-            else if (songPos >= Beatmap.Song.PlaybackLength)
+            else if (songPos >= Beatmap.Song.PlaybackLength && Beatmap.Song.IsStopped)
             {
                 songPos += delta * 1000f * Beatmap.Song.PlaybackSpeed;
             }

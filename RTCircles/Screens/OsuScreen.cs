@@ -50,6 +50,8 @@ namespace RTCircles
                 bgAlpha.Value = 0.3f;
                 bgAlpha.TransformTo(0.1f, 1f, EasingTypes.Out);
             };
+
+            bgAlpha.Value = 0.3f;
         }
 
         public override void OnEntering()
@@ -194,7 +196,7 @@ namespace RTCircles
         private SmoothFloat bgAlpha = new SmoothFloat();
         private void drawBackground(Graphics g)
         {
-            var tex = OsuContainer.Beatmap?.Background;
+            var tex = OsuContainer.Beatmap.Background;
 
             if (tex is null || !GlobalOptions.RenderBackground.Value)
                 return;
@@ -217,7 +219,7 @@ namespace RTCircles
             if (bgSize.Y < MainGame.WindowHeight)
                 bgSize = new Vector2(height * aspectRatio, height);
 
-            g.DrawRectangleCentered(MainGame.WindowCenter, bgSize, new Vector4(1f, 1f, 1f, bgAlpha.Value), OsuContainer.Beatmap.Background);
+            g.DrawRectangleCentered(MainGame.WindowCenter, bgSize, new Vector4(1f, 1f, 1f, bgAlpha.Value), tex);
 
             //g.DrawRectangle(OsuContainer.FullPlayfield.Position, OsuContainer.FullPlayfield.Size, new Vector4(1f, 1f, 1f, 0.1f));
         }

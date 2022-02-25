@@ -316,7 +316,7 @@ namespace RTCircles
                 }
             }
 
-            Utils.EndProfiling("StrainCalculation", false, true);
+            Utils.EndProfiling("StrainCalculation");
         }
 
         public void GenerateHitObjects(Mods mods = Mods.NM)
@@ -446,9 +446,10 @@ namespace RTCircles
             }
 
             AutoGenerator.Sort();
-            generateStrainGraph();
 
             Utils.EndProfiling("Generate HitObjects");
+
+            generateStrainGraph();
         }
 
         private double mapDifficultyRange(double difficulty, double min, double mid, double max)

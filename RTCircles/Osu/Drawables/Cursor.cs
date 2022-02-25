@@ -140,8 +140,10 @@ namespace RTCircles
 
     public class Cursor
     {
+        public float CursorRadius = 240;
+
         public Vector2 TrailSize => getScaledSize(CursorSize, Skin.CursorTrail);
-        public Vector2 CursorSize { get; set; } = new Vector2(96*2);
+        public Vector2 CursorSize => new Vector2(CursorRadius) * MainGame.Scale;
 
         private const float TrailEmitRate = 1f / 60f;
 

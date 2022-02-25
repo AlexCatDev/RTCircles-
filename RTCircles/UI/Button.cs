@@ -110,7 +110,7 @@ namespace RTCircles
 
         public override void Render(Graphics g)
         {
-            frameBuffer.Resize(Size.X, Size.Y);
+            frameBuffer.EnsureSize(Size.X, Size.Y);
 
             float textScale = Size.Y / Font.DefaultFont.Size;
 

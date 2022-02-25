@@ -107,9 +107,10 @@ namespace RTCircles
         private float scale2 = 0;
         private float scaleTime2 = 0.4f;
 
-        private float unstableRateBarWidth => (float)OsuContainer.Beatmap.Window50 * 3f;
+        private float unstableRateBarWidth => (float)OsuContainer.Beatmap.Window50 * 3f * MainGame.Scale;
+        private float unstableRateBarHeight => 30 * MainGame.Scale;
 
-        private Rectangle unstableRateBar => new Rectangle(new Vector2(MainGame.WindowCenter.X - unstableRateBarWidth / 2f, 30), new Vector2(unstableRateBarWidth, 25f));
+        private Rectangle unstableRateBar => new Rectangle(new Vector2(MainGame.WindowCenter.X - unstableRateBarWidth / 2f, 30 * MainGame.Scale), new Vector2(unstableRateBarWidth, unstableRateBarHeight));
 
         public override Rectangle Bounds => throw new NotImplementedException();
 
@@ -176,7 +177,7 @@ namespace RTCircles
         {
             string comboText = $"{OsuContainer.Combo}x";
 
-            float comboScale = 80;
+            float comboScale = 80 * MainGame.Scale;
 
             Vector4 beatFlash = new Vector4(0.69f, 0.69f, 0.69f, 0f) * (float)OsuContainer.BeatProgressKiai;
 
@@ -215,26 +216,28 @@ namespace RTCircles
         private double rollingAcc;
         public override void Render(Graphics g)
         {
-            drawDifficultyGraph(g);
-
             drawURBar(g);
 
             drawComboText(g);
 
-            string scoreText = $"{((int)Math.Round(rollingScore, 0, MidpointRounding.AwayFromZero)).ToString("00000000.##")}";
-            Vector2 scoreSize = Skin.ScoreNumbers.Meassure(66, scoreText);
+            float scoreSizeScale = 66 * MainGame.Scale;
 
-            Skin.ScoreNumbers.Draw(g, new Vector2(MainGame.WindowWidth - scoreSize.X, 0), 66, Colors.White, scoreText);
+            string scoreText = $"{((int)Math.Round(rollingScore, 0, MidpointRounding.AwayFromZero)).ToString("00000000.##")}";
+            Vector2 scoreSize = Skin.ScoreNumbers.Meassure(scoreSizeScale, scoreText);
+
+            Skin.ScoreNumbers.Draw(g, new Vector2(MainGame.WindowWidth - scoreSize.X, 0), scoreSizeScale, Colors.White, scoreText);
+
+            float accSizeScale = 38 * MainGame.Scale;
 
             string accText = $"{rollingAcc:F2}%";
-            Vector2 accSize = Skin.ScoreNumbers.Meassure(38, accText);
-            Skin.ScoreNumbers.Draw(g, new Vector2(MainGame.WindowWidth - accSize.X, scoreSize.Y), 38, Colors.White, accText);
+            Vector2 accSize = Skin.ScoreNumbers.Meassure(accSizeScale, accText);
+            Skin.ScoreNumbers.Draw(g, new Vector2(MainGame.WindowWidth - accSize.X, scoreSize.Y), accSizeScale, Colors.White, accText);
 
             float endAngle = (float)MathUtils.Map(OsuContainer.SongPosition, 0, OsuContainer.Beatmap.HitObjects.Count == 0 ? 0 : OsuContainer.Beatmap.HitObjects[^1].BaseObject.EndTime, -90, 270);
 
             var col = Colors.LightGray;
 
-            float radius = 16f;
+            float radius = 16f * MainGame.Scale;
             Vector2 piePos = new Vector2(MainGame.WindowWidth - accSize.X - radius - 4, scoreSize.Y + radius);
 
             g.DrawEllipse(piePos, -90, endAngle, radius, 0, col);
@@ -288,7 +291,7 @@ namespace RTCircles
             drawKeyOverlay(g);
         }
 
-
+        /*
         private FrameBuffer strainFB = new FrameBuffer(1, 1);
         private bool shouldGenGraph = true;
         private void drawDifficultyGraph(Graphics g)
@@ -373,6 +376,7 @@ namespace RTCircles
             g.DrawRectangleCentered(songPosPos, poo, new Vector4(4f,4f,4f,1f), Skin.Arrow, null, false, 180);
             //g.DrawLine(songPosPos, new Vector2(songPosPos.X, songPosPos.Y + size.Y), Colors.Red, 5f);
         }
+        */
 
         private float dancerAlpha = 0f;
         public void drawDancer(Graphics g, Vector2 starPos, Vector2 starSize)
@@ -463,14 +467,6 @@ namespace RTCircles
                 key2Size = Vector2.Lerp(key2Size, new Vector2(size), delta * lerpSpeed);
                 key2Color = Vector4.Lerp(key2Color, Colors.White, delta * lerpSpeed);
             }
-        }
-
-        public HUD()
-        {
-            OsuContainer.BeatmapChanged += () =>
-            {
-                shouldGenGraph = true;
-            };
         }
     }
 }

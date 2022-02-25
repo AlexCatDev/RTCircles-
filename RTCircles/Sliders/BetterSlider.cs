@@ -181,7 +181,7 @@ namespace RTCircles
                 int beforeHeight = frameBuffer.Height;
 
                 //Make framebuffer the size of the slider bounding box, + the circle radius (circle radius and size is in osu pixels)
-                frameBuffer.Resize(Path.Bounds.Width + radius * 2, Path.Bounds.Height + radius * 2);
+                frameBuffer.EnsureSize(Path.Bounds.Width + radius * 2, Path.Bounds.Height + radius * 2);
 
                 //Cant really rely on a float comparison
                 if (beforeWidth != frameBuffer.Width || beforeHeight != frameBuffer.Height)

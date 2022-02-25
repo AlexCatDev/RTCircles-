@@ -111,7 +111,7 @@ namespace RTCircles
                 graphics = new Graphics(300, 300);
 
             //Fixed resolution for now..
-            triangleFramebuffer.Resize(1000, 1000);
+            triangleFramebuffer.EnsureSize(1000, 1000);
 
             graphics.DrawInFrameBuffer(triangleFramebuffer, () =>
             {

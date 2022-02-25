@@ -61,7 +61,7 @@ namespace Easy2D
             PostProcessing.drawSize = drawSize;
 
             viewPort = Viewport.CurrentViewport;
-            MainFrameBuffer.Resize(windowSize.X, windowSize.Y);
+            MainFrameBuffer.EnsureSize(windowSize.X, windowSize.Y);
             MainFrameBuffer.Bind();
             Viewport.SetViewport(0, 0, MainFrameBuffer.Width, MainFrameBuffer.Height);
             GL.Instance.Clear(ClearBufferMask.ColorBufferBit);
@@ -102,34 +102,34 @@ namespace Easy2D
                 bloomShader.SetFloat("u_BloomThreshold", BloomThreshold);
 
                 //Draw Framebuffer 1 to framebuffer 2, subtract color in shader
-                blurBuffer1.Resize(MainFrameBuffer.Width / 2, MainFrameBuffer.Height / 2);
+                blurBuffer1.EnsureSize(MainFrameBuffer.Width / 2, MainFrameBuffer.Height / 2);
 
                 bloomShader.SetBoolean("u_Subtract", true);
                 blitFramebuffer(MainFrameBuffer, blurBuffer1);
                 bloomShader.SetBoolean("u_Subtract", false);
 
                 bloomShader.SetBoolean("u_Blur", true);
-                blurBuffer2.Resize(blurBuffer1.Width / 2, blurBuffer1.Height / 2);
+                blurBuffer2.EnsureSize(blurBuffer1.Width / 2, blurBuffer1.Height / 2);
 
                 blitFramebuffer(blurBuffer1, blurBuffer2);
                 blitFramebuffer(blurBuffer2, blurBuffer2);
 
-                blurBuffer3.Resize(blurBuffer2.Width / 2, blurBuffer2.Height / 2);
+                blurBuffer3.EnsureSize(blurBuffer2.Width / 2, blurBuffer2.Height / 2);
 
                 blitFramebuffer(blurBuffer2, blurBuffer3);
                 blitFramebuffer(blurBuffer3, blurBuffer3);
 
-                blurBuffer4.Resize(blurBuffer3.Width / 2, blurBuffer3.Height / 2);
+                blurBuffer4.EnsureSize(blurBuffer3.Width / 2, blurBuffer3.Height / 2);
 
                 blitFramebuffer(blurBuffer3, blurBuffer4);
                 blitFramebuffer(blurBuffer4, blurBuffer4);
 
-                blurBuffer5.Resize(blurBuffer4.Width / 2, blurBuffer4.Height / 2);
+                blurBuffer5.EnsureSize(blurBuffer4.Width / 2, blurBuffer4.Height / 2);
 
                 blitFramebuffer(blurBuffer4, blurBuffer5);
                 blitFramebuffer(blurBuffer5, blurBuffer5);
 
-                blurBuffer6.Resize(blurBuffer5.Width / 2, blurBuffer5.Height / 2);
+                blurBuffer6.EnsureSize(blurBuffer5.Width / 2, blurBuffer5.Height / 2);
 
                 blitFramebuffer(blurBuffer5, blurBuffer6);
                 blitFramebuffer(blurBuffer6, blurBuffer6);
@@ -168,7 +168,7 @@ namespace Easy2D
 
         private static void motionBlur()
         {
-            motionBlurBuffer.Resize(MainFrameBuffer.Width, MainFrameBuffer.Height);
+            motionBlurBuffer.EnsureSize(MainFrameBuffer.Width, MainFrameBuffer.Height);
             motionBlurBuffer.Bind();
 
             motionBlurShader.Bind();

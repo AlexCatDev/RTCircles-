@@ -42,7 +42,7 @@ namespace Easy2D
         /// </summary>
         /// <param name="width"></param>
         /// <param name="height"></param>
-        public void Resize(float fWidth, float fHeight)
+        public void EnsureSize(float fWidth, float fHeight)
         {
             int width = (int)MathF.Max(fWidth, 1);
             int height = (int)MathF.Max(fHeight, 1);

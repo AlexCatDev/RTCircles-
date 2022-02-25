@@ -248,6 +248,14 @@ namespace RTCircles
             PostProcessing.PresentFinalResult();
         }
 
+        public void FakeWindowSize(Vector2 newSize, Action a)
+        {
+            var prev = WindowSize;
+            WindowSize = newSize;
+            a.Invoke();
+            WindowSize = prev;
+        }
+
         private Vector2? trueHoverSize = null;
         private Vector2? trueHoverPos = null;
         private double ms = 0;

@@ -200,12 +200,16 @@ namespace RTCircles
     {
         public override Rectangle Bounds => new Rectangle(0, 0, 1920, 1080);
 
-        public SmoothVector4 fadeColor = new SmoothVector4();
+        private SmoothVector4 fadeColor = new SmoothVector4();
 
         public float Opacity = 0.5f;
         public float KiaiFlash = 2.0f;
 
         public static Texture menuFlash;
+
+        public bool ShowMenuFlash = true;
+
+        public Texture TextureOverride;
 
         static MapBackground()
         {
@@ -248,7 +252,9 @@ namespace RTCircles
             if (OsuContainer.Beatmap is null)
                 return;
 
-            float aspectRatio = (float)OsuContainer.Beatmap.Background.Width / OsuContainer.Beatmap.Background.Height;
+            var tex = TextureOverride ?? OsuContainer.Beatmap.Background;
+
+            float aspectRatio = tex.Size.AspectRatio();
 
             float beatScale = (float)Interpolation.ValueAt(OsuContainer.BeatProgressKiai, 0, 1, 0, 1, EasingTypes.InOutSine);
 
@@ -261,9 +267,9 @@ namespace RTCircles
             if(bgSize.Y < MainGame.WindowHeight)
                 bgSize = new Vector2(height * aspectRatio, height) + new Vector2(ParallaxAmount * 2);
 
-            g.DrawRectangleCentered(MainGame.WindowCenter + ParallaxPosition, bgSize, fadeColor, OsuContainer.Beatmap.Background, null, false, Rotation);
+            g.DrawRectangleCentered(MainGame.WindowCenter + ParallaxPosition, bgSize, fadeColor, tex, null, false, Rotation);
 
-            if (OsuContainer.IsKiaiTimeActive)
+            if (OsuContainer.IsKiaiTimeActive && ShowMenuFlash)
             {
                 int beat = (int)Math.Floor(OsuContainer.CurrentBeat);
 
@@ -432,7 +438,12 @@ namespace RTCircles
             playButton.OnClick += (s, e) =>
             {
                 slideBack();
-                ScreenManager.SetScreen<MapSelectScreen>();
+                //ScreenManager.SetScreen<MapSelectScreen>();
+
+                if(Input.IsKeyDown(Key.ControlLeft))
+                    ScreenManager.SetScreen<MapSelectScreen>();
+                else
+                    ScreenManager.SetScreen<SongSelectScreen>();
             };
 
             multiPlayButton.Layer = -69;

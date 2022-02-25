@@ -170,6 +170,52 @@ namespace Easy2D
             DrawLine(startPosition, endPosition, color, color, thickness, texture);
         }
 
+        public void DrawOneSidedLine(Vector2 startPosition, Vector2 endPosition, Vector4 color1, Vector4 color2, float thickness, Texture texture = null)
+        {
+            Vector2 difference = endPosition - startPosition;
+            Vector2 perpen = new Vector2(difference.Y, -difference.X);
+
+            perpen.Normalize();
+
+            Vector2 topRight = new Vector2(startPosition.X + perpen.X * thickness,
+                startPosition.Y + perpen.Y * thickness);
+
+            Vector2 bottomRight = startPosition;
+
+            Vector2 topLeft = new Vector2(endPosition.X + perpen.X * thickness,
+                endPosition.Y + perpen.Y * thickness);
+
+            Vector2 bottomLeft = endPosition;
+
+            var quad = VertexBatch.GetQuad();
+
+            int slot = GetTextureSlot(texture);
+
+            quad[0].Rotation = 0;
+            quad[0].Color = color1;
+            quad[0].Position = topRight;
+            quad[0].TexCoord = new Vector2(0, 0);
+            quad[0].TextureSlot = slot;
+
+            quad[1].Rotation = 0;
+            quad[1].Color = color1;
+            quad[1].Position = bottomRight;
+            quad[1].TexCoord = new Vector2(0, 1);
+            quad[1].TextureSlot = slot;
+
+            quad[2].Rotation = 0;
+            quad[2].Color = color2;
+            quad[2].Position = bottomLeft;
+            quad[2].TexCoord = new Vector2(1, 1);
+            quad[2].TextureSlot = slot;
+
+            quad[3].Rotation = 0;
+            quad[3].Color = color2;
+            quad[3].Position = topLeft;
+            quad[3].TexCoord = new Vector2(1, 0);
+            quad[3].TextureSlot = slot;
+        }
+
         public void DrawLine(Vector2 startPosition, Vector2 endPosition, Vector4 color1, Vector4 color2, float thickness, Texture texture = null)
         {
             Vector2 difference = endPosition - startPosition;
@@ -258,7 +304,7 @@ namespace Easy2D
         #endregion
 
         #region Text
-        public void DrawString(string text, Font font, Vector2 position, Vector4 color, float scale = 1f)
+        public void DrawString(string text, Font font, Vector2 position, Vector4 color, float scale = 1f, float? spacing = null)
         {
             Vector2 startPosition = position;
 
@@ -319,6 +365,14 @@ namespace Easy2D
                 DrawRectangle(position, size, color, font.Texture, new Rectangle(character.X, character.Y, character.Width, character.Height), false);
 
                 position.Y -= bearing - smallestBearing;
+
+                if (spacing.HasValue)
+                {
+                    position.X += spacing.Value * scale;
+                    position.X += character.Width * scale;
+
+                    continue;
+                }
 
                 position.X += character.XAdvance * scale;
 
@@ -532,6 +586,61 @@ namespace Easy2D
             DrawRectangle(position, new Vector2(frameBuffer.Width, frameBuffer.Height), color, frameBuffer.Texture,
                 new Rectangle(0, frameBuffer.Texture.Height, frameBuffer.Texture.Width, -frameBuffer.Texture.Height), false);
         }
+
+        public void DrawQuadrilateral(Vector2 topLeft, Vector2 topRight, Vector2 bottomLeft, Vector2 bottomRight, Vector4 color)
+        {
+            int slot = GetTextureSlot(null);
+            var quad = VertexBatch.GetQuad();
+
+            quad[0].Position = topLeft;
+            quad[0].TextureSlot = slot;
+            quad[0].TexCoord = Vector2.Zero;
+            quad[0].Rotation = 0;
+            quad[0].Color = color;
+
+            quad[1].Position = topRight;
+            quad[1].TextureSlot = slot;
+            quad[1].TexCoord = Vector2.Zero;
+            quad[1].Rotation = 0;
+            quad[1].Color = color;
+
+            quad[2].Position = bottomLeft;
+            quad[2].TextureSlot = slot;
+            quad[2].TexCoord = Vector2.Zero;
+            quad[2].Rotation = 0;
+            quad[2].Color = color;
+
+            quad[3].Position = bottomRight;
+            quad[3].TextureSlot = slot;
+            quad[3].TexCoord = Vector2.Zero;
+            quad[3].Rotation = 0;
+            quad[3].Color = color;
+        }
+
+        public void DrawTriangle(Vector2 p1, Vector2 p2, Vector2 p3, Vector4 color)
+        {
+            int slot = GetTextureSlot(null);
+            var tri = VertexBatch.GetTriangle();
+
+            tri[0].TextureSlot = slot;
+            tri[0].Position = p1;
+            tri[0].TexCoord = Vector2.Zero;
+            tri[0].Rotation = 0;
+            tri[0].Color = color;
+
+            tri[1].TextureSlot = slot;
+            tri[1].Position = p2;
+            tri[1].TexCoord = Vector2.Zero;
+            tri[1].Rotation = 0;
+            tri[1].Color = color;
+
+            tri[2].TextureSlot = slot;
+            tri[2].Position = p3;
+            tri[2].TexCoord = Vector2.Zero;
+            tri[2].Rotation = 0;
+            tri[2].Color = color;
+        }
+
 
         public void DrawRectangle(Vector2 position, Vector2 size, Vector4 color, Texture texture = null, Rectangle? textureRectangle = null, bool uvNormalized = false, float rotDegrees = 0)
         {

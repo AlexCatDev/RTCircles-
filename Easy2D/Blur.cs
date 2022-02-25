@@ -1,57 +1,164 @@
-﻿using Silk.NET.OpenGLES;
-using OpenTK.Mathematics;
-using System.IO;
+﻿using OpenTK.Mathematics;
+using Silk.NET.OpenGLES;
 
 namespace Easy2D
 {
-    /*
     public static class Blur
     {
         private static Shader blurShader = new Shader();
-
+        
         static Blur()
         {
-            blurShader.AttachShader(ShaderType.VertexShader, new FileInfo("./Shaders/Blur.vert"));
-            blurShader.AttachShader(ShaderType.FragmentShader, new FileInfo("./Shaders/Blur.frag"));
+            blurShader.AttachShader(Silk.NET.OpenGLES.ShaderType.VertexShader, Utils.GetInternalResource("Shaders.Blur.vert"));
+            blurShader.AttachShader(Silk.NET.OpenGLES.ShaderType.FragmentShader, Utils.GetInternalResource("Shaders.Blur.frag"));
         }
 
-        public static FrameBuffer BlurTexture(Texture texture, float quality = 16f, float directions = 32f, float radius = 0.03f)
+        private static FrameBuffer destPong = new FrameBuffer(1,1, FramebufferAttachment.ColorAttachment0, InternalFormat.Rgb, PixelFormat.Rgb);
+
+        public static bool BlurTexture(Texture texture, FrameBuffer dest, float radius, int iterations)
         {
-            texture.UseAsyncLoading = false;
             texture.Bind(0);
 
-            FrameBuffer frameBuffer = new FrameBuffer(texture.Width, texture.Height);
-            frameBuffer.Bind();
+            if (texture.ImageDoneUploading)
+            {
+                var startViewport = Viewport.CurrentViewport;
 
-            var prevView = Viewport.CurrentViewport;
+                int w = texture.Width;
+                int h = texture.Height;
 
-            var projection = Matrix4.CreateOrthographicOffCenter(0, texture.Width, texture.Height, 0, 0, 1);
-            var viewport = new Vector4i(0, 0, texture.Width, texture.Height);
+                Vector2 quadSize = new Vector2(w, h);
 
-            BlurDrawTexture(projection, viewport, Vector2.Zero, texture.Size, texture, quality, directions, radius);
+                Vector2 horizontalBlur = new Vector2(radius, 0);
+                Vector2 verticalBlur = new Vector2(0, radius);
 
-            frameBuffer.Unbind();
-            Viewport.SetViewport(prevView);
+                dest.EnsureSize(w, h);
+                destPong.EnsureSize(w, h);
 
-            return frameBuffer;
+                dest.Bind();
+
+                Viewport.SetViewport(0, 0, w, h);
+
+                texture.Bind(0);
+
+                blurShader.Bind();
+                blurShader.SetMatrix("u_Projection", Matrix4.CreateOrthographicOffCenter(0, w, h, 0, -1, 1));
+                blurShader.SetInt("u_SrcTexture", 0);
+
+                blurShader.SetVector("u_Direction", horizontalBlur);
+                GLDrawing.DrawQuad(Vector2.Zero, quadSize);
+
+                var writeBuffer = destPong;
+                var readBuffer = dest;
+
+                //-1 because we already blured once into the dest buffer ^
+                for (int i = 0; i < iterations - 1; i++)
+                {
+                    writeBuffer.Bind();
+                    Viewport.SetViewport(0, 0, w, h);
+
+                    readBuffer.Texture.Bind(0);
+
+                    blurShader.SetVector("u_Direction", horizontalBlur);
+                    GLDrawing.DrawQuad(Vector2.Zero, quadSize);
+
+                    swap(ref writeBuffer, ref readBuffer);
+                }
+
+                for (int i = 0; i < iterations; i++)
+                {
+                    writeBuffer.Bind();
+                    Viewport.SetViewport(0, 0, w, h);
+
+                    readBuffer.Texture.Bind(0);
+
+                    blurShader.SetVector("u_Direction", verticalBlur);
+                    GLDrawing.DrawQuad(Vector2.Zero, quadSize);
+
+                    swap(ref writeBuffer, ref readBuffer);
+                }
+
+                /*
+                if (writeBuffer == dest)
+                {
+                    
+                    throw new System.Exception("Dude, du manger lige en ekstra pong her");
+                }
+                */
+
+                dest.Unbind();
+                Viewport.SetViewport(startViewport);
+
+                Utils.Log($"Blured {w}x{h} texture Radius: {radius} Iterations: {iterations}", LogLevel.Info);
+
+                return true;
+            }
+
+            return false;
         }
 
-        public static void BlurDrawTexture(Matrix4 projection, Vector4i viewport, Vector2 position, Vector2 size, Texture texture, float quality = 16f, float directions = 32f, float radius = 0.03f)
+        private static void swap(ref FrameBuffer a, ref FrameBuffer b)
         {
-            texture.UseAsyncLoading = false;
+            var c = a;
+
+            a = b;
+            b = c;
+        }
+
+        /*
+        public static bool BlurTexture(Texture texture, FrameBuffer dest, float radius, int iterations)
+        {
             texture.Bind(0);
 
-            blurShader.Bind();
-            blurShader.SetInt("u_Texture", 0);
-            blurShader.SetMatrix("u_Projection", projection);
+            if (texture.ImageDoneUploading)
+            {
+                int w = texture.Width;
+                int h = texture.Height;
 
-            blurShader.SetFloat("u_Quality", quality);
-            blurShader.SetFloat("u_Directions", directions);
-            blurShader.SetFloat("u_Radius", radius);
+                Vector2 quadSize = new Vector2(w, h);
 
-            Viewport.SetViewport(viewport);
-            GLDrawing.DrawQuad(position, size);
+                Vector2 horizontalBlur = new Vector2(radius, 0);
+                Vector2 verticalBlur = new Vector2(0, radius);
+
+                dest.EnsureSize(w, h);
+                dest.Bind();
+
+                var prevViewport = Viewport.CurrentViewport;
+
+                Viewport.SetViewport(0, 0, w, h);
+
+                texture.Bind(0);
+
+                blurShader.Bind();
+                blurShader.SetMatrix("u_Projection", Matrix4.CreateOrthographicOffCenter(0, w, h, 0, -1, 1));
+                blurShader.SetInt("u_SrcTexture", 0);
+
+                blurShader.SetVector("u_Direction", horizontalBlur);
+                GLDrawing.DrawQuad(Vector2.Zero, quadSize);
+                
+                dest.Texture.Bind(0);
+
+                for (int i = 0; i < iterations - 1; i++)
+                {
+                    blurShader.SetVector("u_Direction", horizontalBlur);
+                    GLDrawing.DrawQuad(Vector2.Zero, quadSize);
+                }
+
+                for (int i = 0; i < iterations; i++)
+                {
+                    blurShader.SetVector("u_Direction", verticalBlur);
+                    GLDrawing.DrawQuad(Vector2.Zero, quadSize);
+                }
+                
+                dest.Unbind();
+                Viewport.SetViewport(prevViewport);
+
+                Utils.Log($"Blured {w}x{h} texture Radius: {radius} Iterations: {iterations}", LogLevel.Info);
+
+                return true;
+            }
+
+            return false;
         }
+        */
     }
-    */
 }

@@ -194,39 +194,6 @@ namespace RTCircles
         }
     }
 
-    public class FloatingScreen<T> : Drawable where T : Screen
-    {
-        private FrameBuffer frameBuffer = new FrameBuffer(1920, 1080, textureComponentCount: Silk.NET.OpenGLES.InternalFormat.Rgb16f, pixelFormat: Silk.NET.OpenGLES.PixelFormat.Rgb, pixelType: Silk.NET.OpenGLES.PixelType.Float);
-
-        public Vector2 Position;
-        public Vector2 Size;
-
-        public override Rectangle Bounds => new Rectangle(Position, Size);
-
-        private Graphics graphics;
-
-        public override void Render(Graphics g)
-        {
-            if(graphics is null)
-                graphics = new Graphics();
-
-            frameBuffer.Resize(MainGame.WindowWidth, MainGame.WindowHeight);
-
-            graphics.DrawInFrameBuffer(frameBuffer, () =>
-            {
-                ScreenManager.GetScreen<T>().Render(graphics);
-            });
-
-            g.DrawRectangle(Position, Size, Colors.White, frameBuffer.Texture,
-                new Rectangle(0, frameBuffer.Texture.Height, frameBuffer.Texture.Width, -frameBuffer.Texture.Height));
-        }
-
-        public override void Update(float delta)
-        {
-            ScreenManager.GetScreen<T>().Update(delta);
-        }
-    }
-
     public class SongSelector : Drawable
     {
         public override Rectangle Bounds => new Rectangle();
@@ -255,7 +222,7 @@ namespace RTCircles
 
         private bool clickedSomewhere = false;
 
-        public FloatingScreen<OsuScreen> FloatingPlayScreen = new FloatingScreen<OsuScreen>() { Layer = 133769 };
+        public FloatingScreen FloatingPlayScreen = new FloatingScreen() { Layer = 133769 };
         public SmoothFloat ConfirmPlayAnimation = new SmoothFloat();
 
         private Mods mods = Mods.NM;
@@ -311,6 +278,7 @@ namespace RTCircles
 
         public override void OnAdd()
         {
+            FloatingPlayScreen.SetTarget<OsuScreen>();
             Container.Add(FloatingPlayScreen);
 
             downloadBtn = new BouncingButton(new Texture(Utils.GetResource("Skin.download-button.png")));
