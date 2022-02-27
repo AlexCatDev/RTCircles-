@@ -15,8 +15,7 @@ namespace RTCircles
 
         public void SetTarget<Type>() where Type : Screen
         {
-            GPUSched.Instance.Enqueue(() =>
-            {
+            GPUSched.Instance.Enqueue(() => {
                 targetScreen = ScreenManager.GetScreen<Type>();
 
                 if (targetScreen == null)
@@ -44,7 +43,7 @@ namespace RTCircles
 
                 g.EndDraw();
             });
-
+            
             g.Projection = prevProj;
             Viewport.SetViewport(prevView);
         }

@@ -157,7 +157,6 @@ namespace RTCircles
 
                     //When everything has been loaded, add the ui items
                     MapBackground mapBackground = new MapBackground();
-
                     Add(mapBackground);
                     Add(new MenuLogo(mapBackground));
 

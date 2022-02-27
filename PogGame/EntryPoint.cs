@@ -465,7 +465,7 @@ namespace PogGame
 
         public override void OnResize(int width, int height)
         {
-            GPUSched.Instance.Add(() =>
+            GPUSched.Instance.Enqueue(() =>
             {
                 WindowSize = new Vector2(width, height);
 

@@ -33,9 +33,8 @@ namespace RTCircles
             foreach (var type in Assembly.GetExecutingAssembly().GetTypes())
             {
                 if (type.IsInterface || type.IsAbstract)
-                {
                     continue;
-                }
+
                 else
                 {
                     if (typeof(Screen).IsAssignableFrom(type))

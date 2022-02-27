@@ -114,6 +114,7 @@
     <None Remove="Sliders\slidergradient.png" />
     <None Remove="Sliders\sliderPass.frag" />
     <None Remove="Sliders\sliderPass.vert" />
+    <None Remove="UI\Slider.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -232,6 +233,7 @@
     <EmbeddedResource Include="Sliders\slidergradient.png" />
     <EmbeddedResource Include="Sliders\sliderPass.frag" />
     <EmbeddedResource Include="Sliders\sliderPass.vert" />
+    <EmbeddedResource Include="UI\Slider.png" />
   </ItemGroup>
 
   <ItemGroup>

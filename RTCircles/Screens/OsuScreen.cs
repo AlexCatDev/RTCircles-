@@ -231,6 +231,8 @@ namespace RTCircles
 
             drawBackground(g);
 
+            DrawableStoryboard.Render(g);
+
             base.Render(g);
             OsuContainer.HUD.Render(g);
 

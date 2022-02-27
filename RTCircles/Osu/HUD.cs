@@ -233,7 +233,7 @@ namespace RTCircles
             Vector2 accSize = Skin.ScoreNumbers.Meassure(accSizeScale, accText);
             Skin.ScoreNumbers.Draw(g, new Vector2(MainGame.WindowWidth - accSize.X, scoreSize.Y), accSizeScale, Colors.White, accText);
 
-            float endAngle = (float)MathUtils.Map(OsuContainer.SongPosition, 0, OsuContainer.Beatmap.HitObjects.Count == 0 ? 0 : OsuContainer.Beatmap.HitObjects[^1].BaseObject.EndTime, -90, 270);
+            float endAngle = (float)MathUtils.Map(OsuContainer.SongPosition, 0, OsuContainer.Beatmap.HitObjects.Count == 0 ? 0 : OsuContainer.Beatmap.HitObjects[^1].BaseObject.EndTime, -90, 270).Clamp(-360, 360);
 
             var col = Colors.LightGray;
 
@@ -290,93 +290,6 @@ namespace RTCircles
 
             drawKeyOverlay(g);
         }
-
-        /*
-        private FrameBuffer strainFB = new FrameBuffer(1, 1);
-        private bool shouldGenGraph = true;
-        private void drawDifficultyGraph(Graphics g)
-        {
-            Vector2 position = new Vector2(0, 0);
-            Vector2 size = new Vector2(MainGame.WindowWidth, 100);
-
-            if (strainFB.Width != size.X || strainFB.Height != size.Y)
-            {
-                strainFB.Resize(size.X, size.Y);
-                shouldGenGraph = true;
-            }
-
-            if (shouldGenGraph)
-            {
-                List<Vector2> graph = new List<Vector2>();
-
-                foreach (var item in OsuContainer.Beatmap.DifficultyGraph)
-                {
-                    graph.Add(new Vector2(0, (float)item));
-                }
-
-                if (graph.Count == 0)
-                    return;
-
-                Utils.Log($"Generating strain graph framebuffer!", LogLevel.Info);
-
-                
-                g.DrawInFrameBuffer(strainFB, () =>
-                {
-                    graph = PathApproximator.ApproximateCatmull(graph);
-
-                    var vertices = g.VertexBatch.GetTriangleStrip(graph.Count * 2);
-
-                    int vertexIndex = 0;
-
-                    int textureSlot = g.GetTextureSlot(null);
-
-                    float stepX = size.X / graph.Count;
-
-                    Vector4 bottomColor = new Vector4(0.75f, 0.75f, 0.75f, 1f);
-                    Vector4 peakColor = new Vector4(1f, 1f, 1f, 1f);
-
-                    Vector2 movingPos = position;
-
-                    for (int i = 0; i < graph.Count; i++)
-                    {
-                            //float height = graph[i].Y.Map(0, 10, 0, size.Y);
-
-                            float height = graph[i].Y.Map(0, 10000, 0, size.Y);
-
-                            //Grundlinje
-                            vertices[vertexIndex].TextureSlot = textureSlot;
-                        vertices[vertexIndex].Color = bottomColor;
-                        vertices[vertexIndex].Position = movingPos;
-
-                        vertexIndex++;
-
-                        movingPos.Y += height;
-
-                            //TopLinje
-                            vertices[vertexIndex].TextureSlot = textureSlot;
-                        vertices[vertexIndex].Color = peakColor;
-                        vertices[vertexIndex].Position = movingPos;
-
-                        movingPos.Y -= height;
-                        movingPos.X += stepX;
-
-                        vertexIndex++;
-                    }
-                });
-
-                shouldGenGraph = false;
-                
-            }
-            g.DrawFrameBuffer(position, new Vector4(1f, 1f, 1f, 0.5f), strainFB);
-
-            Vector2 poo = new Vector2(64 * Skin.Arrow.Size.AspectRatio(), 64) * MainGame.Scale;
-
-            Vector2 songPosPos = new Vector2((float)OsuContainer.SongPosition.Map(OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime, OsuContainer.Beatmap.HitObjects[^1].BaseObject.StartTime, position.X, position.X + size.X), position.Y + poo.Y / 4);
-
-            g.DrawRectangleCentered(songPosPos, poo, new Vector4(4f,4f,4f,1f), Skin.Arrow, null, false, 180);
-            //g.DrawLine(songPosPos, new Vector2(songPosPos.X, songPosPos.Y + size.Y), Colors.Red, 5f);
-        }
-        */
 
         private float dancerAlpha = 0f;
         public void drawDancer(Graphics g, Vector2 starPos, Vector2 starSize)

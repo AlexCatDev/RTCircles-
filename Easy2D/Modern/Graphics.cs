@@ -170,22 +170,22 @@ namespace Easy2D
             DrawLine(startPosition, endPosition, color, color, thickness, texture);
         }
 
-        public void DrawOneSidedLine(Vector2 startPosition, Vector2 endPosition, Vector4 color1, Vector4 color2, float thickness, Texture texture = null)
+        public void DrawOneSidedLine(Vector2 startPosition, Vector2 endPosition, Vector4 color1, Vector4 color2, float thickness, Texture texture = null, Rectangle? textureRect = null)
         {
             Vector2 difference = endPosition - startPosition;
             Vector2 perpen = new Vector2(difference.Y, -difference.X);
 
             perpen.Normalize();
 
-            Vector2 topRight = new Vector2(startPosition.X + perpen.X * thickness,
-                startPosition.Y + perpen.Y * thickness);
-
-            Vector2 bottomRight = startPosition;
-
             Vector2 topLeft = new Vector2(endPosition.X + perpen.X * thickness,
                 endPosition.Y + perpen.Y * thickness);
 
-            Vector2 bottomLeft = endPosition;
+            Vector2 topRight = endPosition;
+
+            Vector2 bottomLeft = new Vector2(startPosition.X + perpen.X * thickness,
+                startPosition.Y + perpen.Y * thickness);
+
+            Vector2 bottomRight = startPosition;
 
             var quad = VertexBatch.GetQuad();
 
@@ -193,26 +193,26 @@ namespace Easy2D
 
             quad[0].Rotation = 0;
             quad[0].Color = color1;
-            quad[0].Position = topRight;
-            quad[0].TexCoord = new Vector2(0, 0);
+            quad[0].Position = topLeft;
+            quad[0].TexCoord = textureRect?.TopLeft ?? Vector2.Zero;
             quad[0].TextureSlot = slot;
 
             quad[1].Rotation = 0;
             quad[1].Color = color1;
-            quad[1].Position = bottomRight;
-            quad[1].TexCoord = new Vector2(0, 1);
+            quad[1].Position = topRight;
+            quad[1].TexCoord = textureRect?.TopRight ?? Vector2.Zero;
             quad[1].TextureSlot = slot;
 
             quad[2].Rotation = 0;
             quad[2].Color = color2;
-            quad[2].Position = bottomLeft;
-            quad[2].TexCoord = new Vector2(1, 1);
+            quad[2].Position = bottomRight;
+            quad[2].TexCoord = textureRect?.BottomRight ?? Vector2.Zero;
             quad[2].TextureSlot = slot;
 
             quad[3].Rotation = 0;
             quad[3].Color = color2;
-            quad[3].Position = topLeft;
-            quad[3].TexCoord = new Vector2(1, 0);
+            quad[3].Position = bottomLeft;
+            quad[3].TexCoord = textureRect?.BottomLeft ?? Vector2.Zero;
             quad[3].TextureSlot = slot;
         }
 

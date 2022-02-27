@@ -4,8 +4,8 @@ using OpenTK.Mathematics;
 using OsuParsers.Beatmaps;
 using OsuParsers.Beatmaps.Objects;
 using OsuParsers.Database.Objects;
-using OsuParsers.Decoders;
 using OsuParsers.Enums;
+using OsuParsers.Storyboards.Commands;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -187,6 +187,8 @@ namespace RTCircles
                 Background = new Texture(File.OpenRead(bgPath));
             else
                 Background = Skin.DefaultBackground;
+
+
         }
 
         private void applyMods(Mods mods)
