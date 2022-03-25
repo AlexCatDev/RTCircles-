@@ -108,13 +108,14 @@
     <None Remove="Skin\text-options.png" />
     <None Remove="Skin\text-singleplay.png" />
     <None Remove="Skin\visualizer-bar.png" />
-    <None Remove="Sliders\fastBody.png" />
+    <None Remove="Sliders\flatcircle.png" />
     <None Remove="Sliders\slider.frag" />
     <None Remove="Sliders\slider.vert" />
     <None Remove="Sliders\slidergradient.png" />
     <None Remove="Sliders\sliderPass.frag" />
     <None Remove="Sliders\sliderPass.vert" />
-    <None Remove="UI\Slider.png" />
+    <None Remove="UI\roboto_bold.fnt" />
+    <None Remove="UI\roboto_bold.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -227,13 +228,14 @@
     <EmbeddedResource Include="Skin\text-options.png" />
     <EmbeddedResource Include="Skin\text-singleplay.png" />
     <EmbeddedResource Include="Skin\visualizer-bar.png" />
-    <EmbeddedResource Include="Sliders\fastBody.png" />
+    <EmbeddedResource Include="Sliders\flatcircle.png" />
     <EmbeddedResource Include="Sliders\slider.frag" />
     <EmbeddedResource Include="Sliders\slider.vert" />
     <EmbeddedResource Include="Sliders\slidergradient.png" />
     <EmbeddedResource Include="Sliders\sliderPass.frag" />
     <EmbeddedResource Include="Sliders\sliderPass.vert" />
-    <EmbeddedResource Include="UI\Slider.png" />
+    <EmbeddedResource Include="UI\roboto_bold.fnt" />
+    <EmbeddedResource Include="UI\roboto_bold.png" />
   </ItemGroup>
 
   <ItemGroup>

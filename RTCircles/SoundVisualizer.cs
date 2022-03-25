@@ -78,8 +78,10 @@ namespace RTCircles
 
         public Vector2 FreckleOffset = Vector2.Zero;
 
-        public Vector4 StartColor;
-        public Vector4 EndColor;
+        public Vector4 BarStartColor;
+        public Vector4 BarEndColor;
+
+        public Vector3 BarHighlight;
 
         public Vector2 Position;
         public float Radius;
@@ -99,7 +101,7 @@ namespace RTCircles
 
         public override Rectangle Bounds => new Rectangle(Position - new Vector2(Radius), new Vector2(Radius * 2f));
 
-        public event Func<float, Vector4> ColorAt;
+        public event Func<float, float, Vector4> ColorAt;
 
         public Sound Sound;
 
@@ -161,7 +163,6 @@ namespace RTCircles
             int slot = g.GetTextureSlot(null);
 
             var points = PathApproximator.ApproximateBezier(controlPoints);
-            //var points = PathApproximator.ApproximateBSpline(controlPoints, 6);
             float theta = -MathF.PI / 2;
             float stepTheta = (MathF.PI * 2) / (points.Count);
 
@@ -178,14 +179,14 @@ namespace RTCircles
                 float progress = ((float)i / points.Count);
 
                 vertices[verticesIndex].Position = pos + Position;
-                vertices[verticesIndex].Color = ColorAt?.Invoke(progress) ?? StartColor;
+                vertices[verticesIndex].Color = ColorAt?.Invoke(progress, now) ?? BarStartColor;
                 vertices[verticesIndex].TextureSlot = slot;
                 vertices[verticesIndex].TexCoord = new Vector2(0, 0);
 
                 verticesIndex++;
 
                 vertices[verticesIndex].Position = pos2 + Position;
-                vertices[verticesIndex].Color = ColorAt?.Invoke(progress) ?? EndColor;
+                vertices[verticesIndex].Color = ColorAt?.Invoke(progress, now) ?? BarEndColor;
                 vertices[verticesIndex].TextureSlot = slot;
                 vertices[verticesIndex].TexCoord = new Vector2(1, 1);
 
@@ -321,7 +322,9 @@ namespace RTCircles
                     Vector2 pos2 = new Vector2(MathF.Cos(theta), MathF.Sin(theta)) * (Radius + (volume * BarLength));
                     pos2 += Position;
 
-                    g.DrawLine(pos2, pos, EndColor, StartColor, Thickness, BarTexture);
+                    var highlight = BarHighlight * volume;
+
+                    g.DrawLine(pos2, pos, BarEndColor + new Vector4(highlight, 0), BarStartColor + new Vector4(highlight, 0), Thickness, BarTexture);
                     theta += stepTheta;
                 }
             }

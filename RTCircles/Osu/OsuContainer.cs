@@ -76,27 +76,39 @@ namespace RTCircles
         /// </summary>
         public static double CircleExplodeScale = 1.5;
 
+        private static Vector2 lastViewport;
+
+        private static Rectangle _playfield;
         //Cache this?
         public static Rectangle Playfield
         {
             get
             {
-                float aspectRatio = 4f / 3f;
-
-                float PlayfieldHeight = MainGame.WindowHeight - (MainGame.WindowHeight * 0.2f);
-
-                float PlayfieldWidth = (int)(PlayfieldHeight * aspectRatio);
-
-                //Max pixel gap of 100 pixels or 50 on either side then haram and change viewport height instead to match
-                if (PlayfieldWidth > MainGame.WindowWidth - 100)
+                var windowSize = MainGame.WindowSize;
+                if (lastViewport != windowSize)
                 {
-                    PlayfieldWidth = MainGame.WindowWidth - 100;
-                    PlayfieldHeight = (PlayfieldWidth / aspectRatio);
+                    //Console.WriteLine("Cached viewport.");
+                    lastViewport = windowSize;
+
+                    float aspectRatio = 4f / 3f;
+
+                    float PlayfieldHeight = MainGame.WindowHeight - (MainGame.WindowHeight * 0.2f);
+
+                    float PlayfieldWidth = (int)(PlayfieldHeight * aspectRatio);
+
+                    //Max pixel gap of 100 pixels or 50 on either side then haram and change viewport height instead to match
+                    if (PlayfieldWidth > MainGame.WindowWidth - 100)
+                    {
+                        PlayfieldWidth = MainGame.WindowWidth - 100;
+                        PlayfieldHeight = (PlayfieldWidth / aspectRatio);
+                    }
+
+                    Vector2 PlayfieldTopLeft = new Vector2(MainGame.WindowCenter.X - PlayfieldWidth / 2f, MainGame.WindowCenter.Y - PlayfieldHeight / 2f);
+
+                    _playfield = new Rectangle(PlayfieldTopLeft, new Vector2(PlayfieldWidth, PlayfieldHeight));
                 }
 
-                Vector2 PlayfieldTopLeft = new Vector2(MainGame.WindowCenter.X - PlayfieldWidth / 2f, MainGame.WindowCenter.Y - PlayfieldHeight / 2f);
-
-                return new Rectangle(PlayfieldTopLeft, new Vector2(PlayfieldWidth, PlayfieldHeight));
+                return _playfield;
             }
         }
 
@@ -136,7 +148,7 @@ namespace RTCircles
 
         public static bool MuteHitsounds { get; set; }
 
-        public static bool CookieziMode => ScreenManager.ActiveScreen() is SongSelectScreen || Beatmap.Mods.HasFlag(Mods.Auto);
+        public static bool CookieziMode => ScreenManager.ActiveScreen is SongSelectScreen || ScreenManager.ActiveScreen is MapSelectScreen || Beatmap.Mods.HasFlag(Mods.Auto);
 
         public static PlayableBeatmap Beatmap { get; private set; }
 
@@ -232,6 +244,7 @@ namespace RTCircles
         public static void SetMap(PlayableBeatmap beatmap)
         {
             Beatmap = beatmap;
+            BeatmapChanged?.Invoke();
         }
 
         public static void SetMap(Beatmap beatmap, bool generateHitObjects = true, Mods mods = Mods.NM)
@@ -260,7 +273,7 @@ namespace RTCircles
         {
             if (ignoreMods == false && Beatmap.Mods.HasFlag(Mods.HR))
                 y = 384 - y;
-            
+
             x = MathUtils.Map(x, 0, 512, Playfield.Left, Playfield.Right);
 
             y = MathUtils.Map(y, 0, 384, Playfield.Top, Playfield.Bottom);
@@ -284,6 +297,59 @@ namespace RTCircles
             }
         }
 
+        public static void ScoreHit(HitObject obj)
+        {
+            Update(0f);
+
+            Vector2 position = CustomCursorPosition ?? Input.MousePosition;
+
+            Vector2 objPos = MapToPlayfield(obj.Position.X, obj.Position.Y);
+
+            //0 == outer edge, 1 == Spot on.
+            float distanceCenter = (position - objPos).Length.Map(0, Beatmap.CircleRadius, 1, 0);
+
+            double timeDiff = Math.Abs(obj.StartTime - SongPosition);
+
+            HitResult timeJudgement;
+            HitResult hitJudgement;
+
+            if (distanceCenter > 0.66)
+                hitJudgement = HitResult.Max;
+            else if (distanceCenter > 0.33)
+                hitJudgement = HitResult.Good;
+            else
+                hitJudgement = HitResult.Meh;
+
+            //0 == Badest possible value, right on the edge of a miss, 1 = perfectly on time
+            double distanceNextJudgement = 0;
+
+            if (timeDiff < Beatmap.Window300)
+            {
+                timeJudgement = HitResult.Max;
+                distanceNextJudgement = timeDiff.Map(Beatmap.Window300, 0, 0, 1);
+            }
+            else if (timeDiff < Beatmap.Window100)
+            {
+                timeJudgement = HitResult.Good;
+                distanceNextJudgement = timeDiff.Map(Beatmap.Window100, Beatmap.Window300, 0, 1);
+            }
+            else if (timeDiff < Beatmap.Window50)
+            {
+                timeJudgement = HitResult.Meh;
+                distanceNextJudgement = timeDiff.Map(Beatmap.Window50, Beatmap.Window100, 0, 1);
+            }
+            else
+                timeJudgement = HitResult.Miss;
+
+            //distanceCenter: 0 == outer edge of circle, 1 == Spot on.
+            //distanceNextJudgement: The more towards an upgrade to the next hitjudgement, the closer to 1, if judgement is 300, 1 is perfectly on time
+
+            int score = (int)Math.Floor(((double)timeJudgement * 0.90) + ((double)hitJudgement * 0.10) + (26 * distanceNextJudgement));
+
+            Console.WriteLine($"Scored hit! Result: {timeJudgement} centerHit: {distanceCenter:F4} perfectMS: {distanceNextJudgement:F4} score: {score}");
+        }
+
+        //Ad
         public static void PlayHitsound(HitSoundType type, SampleSet set)
         {
             if (MuteHitsounds)
@@ -333,7 +399,9 @@ namespace RTCircles
             }
         }
 
-        private static double totalOffset => Sound.DeviceLatency + 0;
+        public static int GlobalOffset => 0;
+
+        private static int totalOffset => Sound.DeviceLatency + GlobalOffset;
 
         public static void Update(float delta)
         {
@@ -355,9 +423,6 @@ namespace RTCircles
             {
                 songPos = Beatmap?.Song.PlaybackPosition + totalOffset ?? 0;
 
-                DeltaSongPosition = songPos - previousSongPos;
-                previousSongPos = songPos;
-
                 for (int i = 0; i < Beatmap.InternalBeatmap.TimingPoints.Count - 1; i++)
                 {
                     var nowTiming = Beatmap.InternalBeatmap.TimingPoints[i];
@@ -377,6 +442,9 @@ namespace RTCircles
                     }
                 }
             }
+
+            DeltaSongPosition = songPos - previousSongPos;
+            previousSongPos = songPos;
         }
         public static void MouseDown(MouseButton button)
         {
@@ -398,7 +466,7 @@ namespace RTCircles
                 Key2Down = true;
 
 #if DEBUG
-            if(e == Key.Space)
+            if(e == Key.End)
             {
                 if (Beatmap.Song.IsPlaying)
                     Beatmap.Song.Pause();

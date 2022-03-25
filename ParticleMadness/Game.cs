@@ -315,147 +315,16 @@ namespace ParticleMadness
 
         private List<Vector2> points = new List<Vector2>();
 
-        public (Vector2 topLeft, Vector2 topRight, Vector2 bottomLeft, Vector2 bottomRight) DrawLine(Vector2 startPosition, Vector2 endPosition, Vector4 color1, Vector4 color2, float thickness, int textureSlot)
-        {
-            Vector2 difference = endPosition - startPosition;
-            Vector2 perpen = new Vector2(difference.Y, -difference.X);
-
-            perpen.Normalize();
-
-            Vector2 topRight = new Vector2(startPosition.X + perpen.X * thickness,
-                startPosition.Y + perpen.Y * thickness);
-
-            Vector2 bottomRight = startPosition;
-
-            Vector2 topLeft = new Vector2(endPosition.X + perpen.X * thickness,
-                endPosition.Y + perpen.Y * thickness);
-
-            Vector2 bottomLeft = endPosition;
-
-            Vector2 tr = topRight;
-            Vector2 tl = topLeft;
-
-            var quad = g.VertexBatch.GetQuad();
-
-            quad[0].Color = color1;
-            quad[0].Position = topRight;
-            quad[0].TexCoord = new Vector2(0, 0);
-            quad[0].TextureSlot = textureSlot;
-
-            quad[1].Color = color1;
-            quad[1].Position = bottomRight;
-            quad[1].TexCoord = new Vector2(1, 0);
-            quad[1].TextureSlot = textureSlot;
-
-            quad[2].Color = color1;
-            quad[2].Position = bottomLeft;
-            quad[2].TexCoord = new Vector2(1, 1);
-            quad[2].TextureSlot = textureSlot;
-
-            quad[3].Color = color1;
-            quad[3].Position = topLeft;
-            quad[3].TexCoord = new Vector2(0, 1);
-            quad[3].TextureSlot = textureSlot;
-
-            topRight = startPosition;
-
-            bottomRight = new Vector2(startPosition.X - perpen.X * thickness,
-                                             startPosition.Y - perpen.Y * thickness);
-
-            topLeft = endPosition;
-
-            bottomLeft = new Vector2(endPosition.X - perpen.X * thickness,
-                                             endPosition.Y - perpen.Y * thickness);
-
-            Vector2 br = bottomRight;
-            Vector2 bl = bottomLeft;
-
-            quad = g.VertexBatch.GetQuad();
-
-            quad[0].Color = color1;
-            quad[0].Position = topRight;
-            quad[0].TexCoord = new Vector2(1, 1);
-            quad[0].TextureSlot = textureSlot;
-
-            quad[1].Color = color1;
-            quad[1].Position = bottomRight;
-            quad[1].TexCoord = new Vector2(0, 0);
-            quad[1].TextureSlot = textureSlot;
-
-            quad[2].Color = color1;
-            quad[2].Position = bottomLeft;
-            quad[2].TexCoord = new Vector2(0, 1);
-            quad[2].TextureSlot = textureSlot;
-
-            quad[3].Color = color1;
-            quad[3].Position = topLeft;
-            quad[3].TexCoord = new Vector2(1, 0);
-            quad[3].TextureSlot = textureSlot;
-
-            return (tr, tl, bl, br);
-        }
-
         private static Easy2D.Texture sliderTex = new Easy2D.Texture(File.OpenRead(@"C:\Users\user\Desktop\slidergradient.png"));
-
-        private List<Vector2> vertices = new List<Vector2>();
 
         public override void OnRender(double delta)
         {
-            /*
-            Vector2 difference = endPosition - startPosition;
-            Vector2 perpen = new Vector2(difference.Y, -difference.X);
-
-            perpen.Normalize();
-
-            Vector2 topLeft = new Vector2(startPosition.X + perpen.X * thickness / 2f,
-                startPosition.Y + perpen.Y * thickness / 2f);
-
-            Vector2 topRight = new Vector2(startPosition.X - perpen.X * thickness / 2f,
-                startPosition.Y - perpen.Y * thickness / 2f);
-
-            Vector2 bottomLeft = new Vector2(endPosition.X - perpen.X * thickness / 2f,
-                endPosition.Y - perpen.Y * thickness / 2f);
-
-            Vector2 bottomRight = new Vector2(endPosition.X + perpen.X * thickness / 2f,
-                endPosition.Y + perpen.Y * thickness / 2f);
-            */
-            Utils.Benchmark(() =>
-            {
-                Polyline.GetStrokeGeometry(points, Polyline.JointStyle.Round, Polyline.CapStyle.Round, 50f, vertices);
-
-                for (int i = 0; i < vertices.Count; i++)
-                {
-                    g.DrawRectangleCentered(vertices[i], new Vector2(4), new Vector4(0f, 1f, 0f, 0.1f));
-                }
-
-                for (int i = 0; i < vertices.Count; i+=3)
-                {
-                    var triangle = g.VertexBatch.GetTriangle();
-
-                    triangle[0].Color = new Vector4(1f, 1f, 1f, 0.2f);
-                    triangle[0].TextureSlot = 0;
-                    triangle[0].TexCoord = Vector2.Zero;
-                    triangle[0].Position = vertices[i];
-
-                    triangle[1].Color = new Vector4(1f, 1f, 1f, 0.2f);
-                    triangle[1].TextureSlot = 0;
-                    triangle[1].TexCoord = Vector2.Zero;
-                    triangle[1].Position = vertices[i + 1];
-
-                    triangle[2].Color = new Vector4(1f, 1f, 1f, 0.2f);
-                    triangle[2].TextureSlot = 0;
-                    triangle[2].TexCoord = Vector2.Zero;
-                    triangle[2].Position = vertices[i + 2];
-                }
-
-                for (int i = 0; i < points.Count; i++)
-                {
-                    g.DrawRectangleCentered(points[i], new Vector2(8), Colors.Red);
-                }
-                
-                g.Projection = projection;
-                g.EndDraw();
-            }, $"Draw : {vertices.Count}");
+            Vector2 pos = new Vector2(200, 200);
+            float radius = 50;
+            g.DrawEllipse(pos, 0, 360, radius, 0, MathUtils.IsPointInsideRadius(pos, Input.MousePosition, radius) ? Colors.Red : Colors.White);
+            Console.WriteLine(MathUtils.GetAngleFromOrigin(pos, Input.MousePosition, 90));
+            g.Projection = projection;
+            g.EndDraw();
         }
 
         public override void OnResize(int width, int height)

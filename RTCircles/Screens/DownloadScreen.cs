@@ -219,7 +219,7 @@ namespace RTCircles
             dragging = false;
             Vector2 dragEnd = Input.MousePosition;
 
-            if (MathUtils.PositionInsideRadius(dragEnd, dragStart, 100) && button == MouseButton.Left)
+            if (MathUtils.IsPointInsideRadius(dragEnd, dragStart, 100) && button == MouseButton.Left)
                 clickedSomewhere = true;
             else
             {

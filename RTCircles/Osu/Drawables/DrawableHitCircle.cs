@@ -91,6 +91,8 @@ namespace RTCircles
         {
             if (!playedSound && !IsHit && !IsMissed)
             {
+                OsuContainer.ScoreHit(circle);
+
                 hitTime = OsuContainer.SongPosition;
                 double t = Math.Abs(hittableTime);
 
@@ -207,7 +209,7 @@ namespace RTCircles
 
                 if (!IsHit || !IsMissed)
                 {
-                    if (MathUtils.PositionInsideRadius(OsuContainer.CursorPosition, Position, OsuContainer.Beatmap.CircleRadius * 2f))
+                    if (MathUtils.IsPointInsideRadius(OsuContainer.CursorPosition, Position, OsuContainer.Beatmap.CircleRadius))
                         return Hit();
                 }
             }
@@ -227,7 +229,7 @@ namespace RTCircles
 
                 if (!IsHit || !IsMissed)
                 {
-                    if (MathUtils.PositionInsideRadius(OsuContainer.CursorPosition, Position, OsuContainer.Beatmap.CircleRadius * 2f))
+                    if (MathUtils.IsPointInsideRadius(OsuContainer.CursorPosition, Position, OsuContainer.Beatmap.CircleRadius))
                         return Hit();
                 }
             }

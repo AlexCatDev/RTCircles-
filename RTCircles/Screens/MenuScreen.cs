@@ -16,45 +16,52 @@ namespace RTCircles
             private Vector2 size;
             private SmoothFloat alpha = new SmoothFloat() { Value = 1 };
 
-            private float speed;
-
             private Vector2 position;
             private Vector2 velocity;
             private float angle = 0;
 
+            private float scale = 0;
+
+            private static long layer = long.MaxValue;
+
             public Cum(Vector2 startPos, float angle)
             {
+                Layer = layer--;
+
                 position = startPos;
 
-                alpha.TransformTo(0f, 0.8f, EasingTypes.Out, () => {
+                alpha.Wait(0.1f);
+                alpha.TransformTo(0f, 0.8f, EasingTypes.Out, () =>
+                {
                     IsDead = true;
                 });
 
-                size = new Vector2(RNG.Next(64, 96));
+                size = new Vector2(RNG.Next(24, 64));
 
-                velocity = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
+                scale = size.X.Map(24, 64, 2000, 1500);
 
-                speed = size.X.Map(64, 96, 2500, 2000);
+                velocity = new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * scale;
+                velocity.X /= 1.5f;
                 angle = RNG.Next(0, 360);
             }
 
             public override void Render(Graphics g)
             {
-                g.DrawRectangleCentered(position, size * MainGame.Scale, new Vector4(1f, 1f, 1f, alpha), Skin.Star, rotDegrees: angle);
+                var rgb = Skin.Config.ColorFromIndex(RNG.Next(0, Skin.Config.ComboColors.Count - 1));
+                var color = new Vector4(rgb, alpha);
+
+                g.DrawRectangleCentered(position, size * MainGame.Scale * Skin.GetScale(Skin.HitCircle), color, Skin.HitCircle, rotDegrees: angle);
+                g.DrawRectangleCentered(position, size * MainGame.Scale * Skin.GetScale(Skin.HitCircleOverlay), new Vector4(1f, 1f, 1f, alpha), Skin.HitCircleOverlay, rotDegrees: angle);
+                Skin.CircleNumbers.DrawCentered(g, position, size.Y * MainGame.Scale / 2.7f, new Vector4(1f, 1f, 1f, alpha), "727");
             }
 
             public override void Update(float delta)
             {
-                position += velocity * delta * speed * MainGame.Scale;
-                angle += speed * delta / 3;
+                position += velocity * delta * MainGame.Scale;
+                angle += scale * delta / 10;
 
-                if (speed > 0)
-                    speed -= 4000 * delta;
-                else
-                    speed -= 100 * delta;
+                velocity.Y += 2400f * delta;
 
-                //speed -= 3000*delta;
-                //speed = MathF.Max(speed, -50);
                 alpha.Update(delta);
             }
         }
@@ -62,6 +69,7 @@ namespace RTCircles
         public CumSprayer()
         {
             OsuContainer.OnKiai += OsuContainer_OnKiai;
+            Layer = Int32.MaxValue;
         }
 
         private bool startSpawningCum;
@@ -71,6 +79,7 @@ namespace RTCircles
         private void OsuContainer_OnKiai()
         {
             startSpawningCum = true;
+            angle = 0;
         }
 
         public override void Render(Graphics g)
@@ -86,7 +95,7 @@ namespace RTCircles
             {
                 cumTimer += delta;
 
-                angle += 1.5f * delta;
+                angle += 2f * delta;
 
                 if (cumTimer >= spawnRate)
                 {
@@ -100,6 +109,12 @@ namespace RTCircles
                     angle = 0;
                 }
             }
+        }
+
+        public override bool OnKeyDown(Key key)
+        {
+            OsuContainer.KeyDown(key);
+            return base.OnKeyDown(key);
         }
     }
 
@@ -277,23 +292,23 @@ namespace RTCircles
 
                 if (beat - previousBeat > 0)
                 {
-                    float waitTime = 0.1f;
-                    float fadeInTime = 0.12f;
-                    float fadeOutTime = 0.3f;
+                    float waitTime = 0.05f;
+                    float fadeInTime = 0.15f;
+                    float fadeOutTime = 0.15f;
 
                     if (beat % 2 == 0)
                     {
                         beatFlash2.ClearTransforms();
                         beatFlash2.TransformTo(0.35f, fadeInTime, EasingTypes.Out);
                         beatFlash2.Wait(waitTime);
-                        beatFlash2.TransformTo(0f, fadeOutTime, EasingTypes.Out);
+                        beatFlash2.TransformTo(0f, fadeOutTime, EasingTypes.In);
                     }
                     else
                     {
                         beatFlash.ClearTransforms();
                         beatFlash.TransformTo(0.35f, fadeInTime, EasingTypes.Out);
                         beatFlash.Wait(waitTime);
-                        beatFlash.TransformTo(0f, fadeOutTime, EasingTypes.Out);
+                        beatFlash.TransformTo(0f, fadeOutTime, EasingTypes.In);
                     }
 
                     previousBeat = beat;
@@ -363,7 +378,7 @@ namespace RTCircles
 
         private SmoothFloat soundFade = new SmoothFloat();
 
-        private bool hover => MathUtils.PositionInsideRadius(Input.MousePosition, Bounds.Center, Bounds.Size.X);
+        private bool hover => MathUtils.IsPointInsideRadius(Input.MousePosition, Bounds.Center, Bounds.Size.X / 2);
         private bool lastHover;
 
         private bool sizeFadedIn;
@@ -402,16 +417,20 @@ namespace RTCircles
             visualizer.Layer = -727;
             visualizer.MirrorCount = 2;
             visualizer.LerpSpeed = 25f;
-            visualizer.Thickness = 20f;
+            visualizer.Thickness = 25;
             visualizer.BarLength = 800f;
             visualizer.FreckleSpawnRate = float.MaxValue;
             visualizer.BarTexture = Skin.VisualizerBar;
             visualizer.StartRotation = -(MathF.PI / 4);
-            visualizer.Style = SoundVisualizer.VisualizerStyle.Smooth;
+            visualizer.Style = SoundVisualizer.VisualizerStyle.Bars;
 
             //Rainbow color wow
-            visualizer.ColorAt += (progress) =>
+            visualizer.ColorAt += (progress, volume) =>
             {
+                var c = (Vector4)Color4.Crimson * volume * 25;
+                c.W = 1f;
+                return c;
+
                 var currBeat = OsuContainer.IsKiaiTimeActive ? OsuContainer.CurrentBeat : 0;
                 var beat = currBeat.Map(0, 1, 0, MathF.PI / 2);
 
@@ -437,12 +456,8 @@ namespace RTCircles
             playButton.OnClick += (s, e) =>
             {
                 slideBack();
-                //ScreenManager.SetScreen<MapSelectScreen>();
 
-                if(Input.IsKeyDown(Key.ControlLeft))
-                    ScreenManager.SetScreen<MapSelectScreen>();
-                else
-                    ScreenManager.SetScreen<SongSelectScreen>();
+                ScreenManager.SetScreen<MapSelectScreen>();
             };
 
             multiPlayButton.Layer = -69;
@@ -694,13 +709,15 @@ namespace RTCircles
 
             if (OsuContainer.IsKiaiTimeActive && PostProcessing.Bloom)
             {
-                visualizer.StartColor = Vector4.Lerp(visualizer.StartColor, new Vector4(Skin.Config.MenuGlow + new Vector3(1f, 1f, 1f), 0.7f), delta * 10f);
-                visualizer.EndColor = visualizer.StartColor;
+                visualizer.BarHighlight = Vector3.Lerp(visualizer.BarHighlight, new Vector3(2), 10f * delta);
+                visualizer.BarStartColor = Vector4.Lerp(visualizer.BarStartColor, new Vector4(Skin.Config.MenuGlow + new Vector3(1f, 1f, 1f), 1f), delta * 10f);
+                visualizer.BarEndColor = visualizer.BarStartColor;
             }
             else
             {
-                visualizer.StartColor = Vector4.Lerp(visualizer.StartColor, new Vector4(Skin.Config.MenuGlow * 2f, 0.7f), delta * 10f);
-                visualizer.EndColor = Vector4.Lerp(visualizer.StartColor, new Vector4(Skin.Config.MenuGlow * 2f, 0.7f), delta * 10f);
+                visualizer.BarHighlight = Vector3.Lerp(visualizer.BarHighlight, Vector3.Zero, 10f * delta);
+                visualizer.BarStartColor = Vector4.Lerp(visualizer.BarStartColor, new Vector4(1f, 1f, 1f, 0.5f), delta * 10f);
+                visualizer.BarEndColor = visualizer.BarStartColor;
             }
 
             //BASS KIAI LOGO VIBRATION 2.0, buggy sometimes the logo glitches suddenly to a side for some reason???

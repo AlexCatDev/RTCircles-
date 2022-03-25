@@ -587,6 +587,43 @@ namespace Easy2D
                 new Rectangle(0, frameBuffer.Texture.Height, frameBuffer.Texture.Width, -frameBuffer.Texture.Height), false);
         }
 
+
+        public void DrawRoundedRect(Vector2 position, Vector2 size, Vector4 color, float cornerRadius)
+        {
+            size.X -= cornerRadius * 2;
+            size.Y -= cornerRadius * 2;
+
+            Rectangle rect = new Rectangle(position - size * 0.5f, size);
+
+            Vector2 cornerSize = new Vector2(cornerRadius) * 1f;
+
+            var cornerTex = Texture.WhiteFlatCircle;
+
+            //Corner pieces
+            DrawRectangle(rect.TopLeft - cornerSize, cornerSize, color, cornerTex, new Rectangle(0, 0, 0.5f, 0.5f), true);
+
+            DrawRectangle(rect.TopRight - new Vector2(0, cornerRadius), cornerSize, color, cornerTex, new Rectangle(0.5f, 0f, 0.5f, 0.5f), true);
+
+            DrawRectangle(rect.BottomRight, cornerSize, color, cornerTex, new Rectangle(0.5f, 0.5f, 0.5f, 0.5f), true);
+
+            DrawRectangle(rect.BottomLeft - new Vector2(cornerRadius, 0), cornerSize, color, cornerTex, new Rectangle(0, 0.5f, 0.5f, 0.5f), true);
+
+            //Center
+            DrawRectangle(rect.TopLeft, size, color);
+
+            //Top
+            DrawRectangle(rect.TopLeft - new Vector2(0, cornerRadius), new Vector2(size.X, cornerRadius), color);
+
+            //Right
+            DrawRectangle(rect.TopRight, new Vector2(cornerRadius, size.Y), color);
+
+            //Bottom
+            DrawRectangle(rect.BottomLeft, new Vector2(size.X, cornerRadius), color);
+
+            //Left
+            DrawRectangle(rect.TopLeft - new Vector2(cornerRadius, 0), new Vector2(cornerRadius, size.Y), color);
+        }
+
         public void DrawQuadrilateral(Vector2 topLeft, Vector2 topRight, Vector2 bottomLeft, Vector2 bottomRight, Vector4 color)
         {
             int slot = GetTextureSlot(null);

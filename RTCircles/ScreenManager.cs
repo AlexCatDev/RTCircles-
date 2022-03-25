@@ -41,7 +41,6 @@ namespace RTCircles
                     {
                         Utils.Log($"Added screen: {type.Name}", LogLevel.Debug);
                         Screen screen = (Screen)Activator.CreateInstance(type);
-
                         screens.Add(screen);
                     }
                 }
@@ -68,7 +67,7 @@ namespace RTCircles
             return null;
         }
 
-        public static Screen ActiveScreen() => currentScreen;
+        public static Screen ActiveScreen => currentScreen;
         public static bool InTransition => inIntroSequence || inOutroSequence;
 
         private static Stack<Type> screenStack = new Stack<Type>();

@@ -53,8 +53,11 @@ namespace RTCircles
 
         public T GetOutputAtTime(double time)
         {
-            if (animStates.Count < 2)
+            if (animStates.Count == 0)
                 return DefaultValue;
+
+            if (time >= animStates[^1].Time)
+                return animStates[^1].EndValue;
 
             for (int i = 1; i < animStates.Count; i++)
             {
@@ -65,10 +68,7 @@ namespace RTCircles
                     return GetValueAt(time, prev.EndValue, now.EndValue, prev.Time, now.Time, now.EasingType);
             }
 
-            if (time >= animStates[^1].Time)
-                return animStates[^1].EndValue;
-            else
-                return animStates[0].EndValue;
+            return animStates[0].EndValue;
         }
 
         private struct AnimState
@@ -83,6 +83,10 @@ namespace RTCircles
         public void Add(double time, T endValue, EasingTypes easing = EasingTypes.None)
         {
             animStates.Add(new AnimState() { EasingType = easing, Time = time, EndValue = endValue });
+        }
+
+        public void Sort()
+        {
             animStates.Sort((a, b) => a.Time.CompareTo(b.Time));
         }
 

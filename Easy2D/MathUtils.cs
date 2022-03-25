@@ -25,10 +25,6 @@ namespace Easy2D
             return Marshal.SizeOf<T>() * t.Length;
         }
 
-        public static float HypotF(float x, float y) => MathF.Sqrt((x * x) + (y * y));
-
-        public static Vector2 Lerp(Vector2 start, Vector2 end, float t) => new Vector2(MathHelper.Lerp(start.X, end.X, t), MathHelper.Lerp(start.Y, end.Y, t));
-
         public static float OscillateValue(float input, float min, float max)
         {
             var range = max - min;
@@ -41,26 +37,20 @@ namespace Easy2D
             return min + Math.Abs(((input + range) % (range * 2)) - range);
         }
 
-        public static bool PositionInsideRadius(Vector2 point1, Vector2 point2, float radius)
-        {
-            var distance = HypotF(point1.X - point2.X , point1.Y - point2.Y);
-            if (distance < 2 + radius / 2)
-                return true;
+        public static bool IsPointInsideRadius(Vector2 point1, Vector2 point2, float radius) => (point1 - point2).LengthFast < radius;
 
-            return false;
-        }
+        public static bool IsPointInsideRect(Vector2 point, Rectangle rect) => point.X > rect.X && point.X < rect.X + rect.Width && point.Y > rect.Y && point.Y < rect.Y + rect.Height;
 
         public static float AtanVec(Vector2 pos1, Vector2 pos2) => MathF.Atan2(pos1.Y - pos2.Y, pos1.X - pos2.X); 
 
-        public static float GetAngleFromOrigin(Vector2 origin, Vector2 target)
+        public static float GetAngleFromOrigin(Vector2 origin, Vector2 target, float degreesOffset = 0)
         {
-            var n = 270f - (MathF.Atan2(origin.Y - target.Y, origin.X - target.X)) * 180 / MathF.PI;
+            var n = 270f - (MathF.Atan2(origin.Y - target.Y, origin.X - target.X) + (float)ToRadians(degreesOffset)) * 180 / MathF.PI;
             return n % 360;
         }
 
-        public static Vector2 RotateAroundOrigin(Vector2 point, Vector2 origin, float degrees)
+        public static Vector2 RotateAroundOrigin(Vector2 point, Vector2 origin, float radians)
         {
-            float radians = (float)ToRadians(degrees);
             float sin = MathF.Sin(radians);
             float cos = MathF.Cos(radians);
 
@@ -68,15 +58,20 @@ namespace Easy2D
             point.X -= origin.X;
             point.Y -= origin.Y;
 
-            // Rotate point
-            float xnew = point.X * cos - point.Y * sin;
-            float ynew = point.X * sin + point.Y * cos;
+            Vector2 newPoint;
 
-            // Translate point back
-            Vector2 newPoint = new Vector2(xnew + origin.X, ynew + origin.Y);
+            // Rotate point, then translate it back
+            newPoint.X = (point.X * cos - point.Y * sin) + origin.X;
+            newPoint.Y = (point.X * sin + point.Y * cos) + origin.Y;
+
             return newPoint;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="vector2"></param>
+        /// <returns>Returns the ratio x divided by y</returns>
         public static float AspectRatio(this Vector2 vector2) => vector2.X / vector2.Y;
 
         public static Vector2 Center(this Vector2 vector2) => vector2 / 2;
@@ -90,11 +85,13 @@ namespace Easy2D
         /// <param name="fromTarget"></param>
         /// <param name="toTarget"></param>
         /// <returns></returns>
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public static float Map(this float value, float fromSource, float toSource, float fromTarget, float toTarget)
         {
             return (value - fromSource) / (toSource - fromSource) * (toTarget - fromTarget) + fromTarget;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public static double Map(this double value, double fromSource, double toSource, double fromTarget, double toTarget)
         {
             return (value - fromSource) / (toSource - fromSource) * (toTarget - fromTarget) + fromTarget;

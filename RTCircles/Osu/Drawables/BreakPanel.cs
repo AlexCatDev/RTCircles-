@@ -17,7 +17,15 @@ namespace RTCircles
 
         private string breakText = "";
 
-        public void Break(IDrawableHitObject current, IDrawableHitObject next)
+        public BreakPanel()
+        {
+            OsuContainer.BeatmapChanged += () =>
+            {
+                showTime = double.MaxValue;
+            };
+        }
+
+        public void Show(IDrawableHitObject current, IDrawableHitObject next)
         {
             tree.Clear();
 

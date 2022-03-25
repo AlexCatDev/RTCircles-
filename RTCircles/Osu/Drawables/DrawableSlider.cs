@@ -281,7 +281,7 @@ namespace RTCircles
             if (IsHit == false && IsMissed == false)
             {
                 //Use the sliderball position, for the hitcircle position.
-                if (MathUtils.PositionInsideRadius(OsuContainer.CursorPosition, sliderballPosition, OsuContainer.Beatmap.CircleRadius * 2) || OsuContainer.CookieziMode)
+                if (MathUtils.IsPointInsideRadius(OsuContainer.CursorPosition, sliderballPosition, OsuContainer.Beatmap.CircleRadius) || OsuContainer.CookieziMode)
                 {
                     double hittableTime = Math.Abs(OsuContainer.SongPosition - slider.StartTime);
 
@@ -341,7 +341,7 @@ namespace RTCircles
             return false;
         }
 
-        private bool IsTracking => (OsuContainer.Key1Down || OsuContainer.Key2Down) && MathUtils.PositionInsideRadius(OsuContainer.CursorPosition, sliderballPosition, OsuContainer.Beatmap.CircleRadius * 4f) || OsuContainer.CookieziMode;
+        private bool IsTracking => (OsuContainer.Key1Down || OsuContainer.Key2Down) && MathUtils.IsPointInsideRadius(OsuContainer.CursorPosition, sliderballPosition, OsuContainer.Beatmap.CircleRadius * 2f) || OsuContainer.CookieziMode;
 
         //Allow 36ms releasing the slider too early
         private const double TrackingErrorAcceptance = 24;

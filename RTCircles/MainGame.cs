@@ -42,6 +42,8 @@ namespace RTCircles
 
         public readonly static Option<bool> RenderBackground = new Option<bool>("RenderBackground", true);
 
+        public readonly static Option<bool> RGBCircles = new Option<bool>("RGBCircles", false) { Description = "RGB ;) (Might not look good with all skins)" };
+
         public readonly static Option<bool> UseFastSliders = new Option<bool>("UseFastSliders", false) { Description = "Enable low quality sliders (Requires map reload, Recommended to use slider snaking)"};
 
         public readonly static Option<bool> EnableMouseButtons = new Option<bool>("MouseButtons", false) { Description = "Enable Mouse Buttons?" };
@@ -68,6 +70,188 @@ namespace RTCircles
         }
     }
 
+    public static class NotificationManager
+    {
+        public static bool DoNotDisturb;
+
+        public static int MaxVisibleNotifications = 16;
+
+        class Notification
+        {
+            public string Text;
+            public Vector3 Color;
+            public float Duration;
+
+            internal bool DeleteMe;
+
+            private SmoothFloat popupAnimation = new SmoothFloat();
+
+            private SmoothFloat alphaAnimation = new SmoothFloat();
+
+            public float Progress => popupAnimation.Value;
+
+            public float Alpha => alphaAnimation.Value;
+
+            public bool IsFinished;
+
+            internal Action ClickAction;
+
+            public Notification(string text, Vector3 color, float duration, Action clickAction)
+            {
+                this.Text = text;
+                this.Color = color;
+                this.Duration = duration;
+                this.ClickAction = clickAction;
+
+                popupAnimation.TransformTo(1f, 0.70f, EasingTypes.OutElasticHalf);
+                alphaAnimation.Value = 1;
+                alphaAnimation.Wait(Duration, () =>
+                {
+                    if (alphaAnimation.PendingTransformCount == 0)
+                        Fadeout(1f);
+                });
+            }
+
+            public void Fadeout(float duration)
+            {
+                alphaAnimation.ClearTransforms();
+                alphaAnimation.TransformTo(0f, duration, EasingTypes.OutQuint, () => { IsFinished = true; });
+            }
+
+            public void Update(float delta)
+            {
+                popupAnimation.Update(delta);
+                alphaAnimation.Update(delta);
+            }
+        }
+
+        static List<Notification> notifications = new List<Notification>();
+
+        static Queue<Notification> queue = new Queue<Notification>();
+
+        public static void Render(Graphics g)
+        {
+            Vector2 box = new Vector2(25) * MainGame.Scale;
+
+            float scale = 0.5f * MainGame.Scale;
+
+            float spacingY = Font.DefaultFont.Size * scale + box.Y / 2;
+
+            Vector2 position = Vector2.Zero;
+            position.X = MainGame.WindowWidth;
+            position.Y = MainGame.WindowHeight - spacingY;
+
+            float spacingX = 25 * MainGame.Scale;
+
+            for (int i = 0; i < notifications.Count; i++)
+            {
+                var notif = notifications[i];
+
+                Vector2 textSize = Font.DefaultFont.MessureString(notif.Text, scale);
+
+                Vector2 textOffset = Vector2.Zero;
+
+                textOffset.X -= notif.Progress.Map(0f, 1f, 0, textSize.X + spacingX);
+
+                Rectangle clickBox = new Rectangle(position + textOffset - box / 2, textSize + box);
+
+                //Bg rectangle
+                //g.DrawRectangle(clickBox.Position, clickBox.Size, new Vector4(notf.Color, notf.Alpha));
+
+                float cornerRadius = 12f;
+
+                g.DrawRoundedRect(clickBox.Center, clickBox.Size, new Vector4(notif.Color, notif.Alpha), cornerRadius);
+
+                float border = 0.88f;
+                clickBox = new Rectangle(position + textOffset - ((box * border) / 2), textSize + box * border);
+                Vector3 bgColor = (MathUtils.IsPointInsideRect(Input.MousePosition, clickBox) ? new Vector3(0.1f) : new Vector3(0));
+
+                g.DrawRoundedRect(clickBox.Center, clickBox.Size, new Vector4(bgColor, notif.Alpha), cornerRadius);
+
+                g.DrawString(notif.Text, Font.DefaultFont, position + textOffset, new Vector4(notif.Color, notif.Alpha), scale);
+                position.Y -= spacingY;
+            }
+        }
+
+        public static bool OnMouseDown(MouseButton mouseButton)
+        {
+            Vector2 box = new Vector2(25) * MainGame.Scale;
+
+            float scale = 0.5f * MainGame.Scale;
+
+            float spacingY = Font.DefaultFont.Size * scale + box.Y / 2;
+
+            Vector2 position = Vector2.Zero;
+            position.X = MainGame.WindowWidth;
+            position.Y = MainGame.WindowHeight - spacingY;
+
+            float spacingX = 25 * MainGame.Scale;
+
+            for (int i = 0; i < notifications.Count; i++)
+            {
+                var notf = notifications[i];
+
+                Vector2 textSize = Font.DefaultFont.MessureString(notf.Text, scale);
+
+                Vector2 textOffset = Vector2.Zero;
+
+                textOffset.X -= notf.Progress.Map(0f, 1f, 0, textSize.X + spacingX);
+
+                Rectangle clickBox = new Rectangle(position + textOffset - box / 2, textSize + box);
+
+                if (MathUtils.IsPointInsideRect(Input.MousePosition, clickBox) && notf.Alpha > 0.5f && !notf.IsFinished)
+                {
+                    notf.ClickAction?.Invoke();
+                    notf.Fadeout(0.25f);
+                    notf.IsFinished = true;
+                    return true;
+                }
+
+                position.Y -= spacingY;
+            }
+
+            return false;
+        }
+
+        public static void Update(float delta)
+        {
+            if (!DoNotDisturb && queue.Count > 0 && notifications.Count((o) => !o.IsFinished) <= MaxVisibleNotifications)
+                addWhereAvailable(queue.Dequeue());
+
+            bool cleanDead = false;
+            for (int i = notifications.Count - 1; i >= 0; i--)
+            {
+                notifications[i].Update(delta);
+
+                if(notifications[i].DeleteMe)
+                    cleanDead = true;
+            }
+
+            if(cleanDead)
+            notifications.RemoveAll((o) => o.DeleteMe);
+        }
+
+        private static void addWhereAvailable(Notification notif)
+        {
+            for (int i = 0; i < notifications.Count; i++)
+            {
+                if (notifications[i].IsFinished)
+                {
+                    notifications[i].DeleteMe = true;
+
+                    notifications.Insert(i, notif);
+
+                    return;
+                }
+            }
+
+            notifications.Add(notif);
+        }
+
+        public static void ShowMessage(string text, Vector3 color, float duration, Action clickAction = null) =>
+            queue.Enqueue(new Notification(text, color, duration, clickAction));
+    }
+
     public class MainGame : Game
     {
         private Graphics g;
@@ -80,10 +264,52 @@ namespace RTCircles
         public override void OnLoad()
         {
             //GlobalOptions.Init();
-            //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  ALEX BOBBLER");
-            Skin.Load(@"C:\Users\vitalia\AppData\Local\osu!\Skins-        # re;owoTuna v1.1 『MK』 #        -");
+            Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  Hvorfor laver jeg hele tiden nye skins");
+            //Skin.Load(@"C:\Users\vitalia\AppData\Local\osu!\Skins-        # re;owoTuna v1.1 『MK』 #        -");
 
             g = new Graphics();
+
+                NotificationManager.ShowMessage($"Under Construction!",
+                    ((Vector4)Color4.OrangeRed).Xyz, 5000);
+
+            GPUSched.Instance.EnqueueDelayed(() =>
+            {
+                NotificationManager.ShowMessage(
+                    $"Could not connect to service", ((Vector4)Color4.Crimson).Xyz, 5);
+            }, delay: 10000);
+
+            GPUSched.Instance.EnqueueDelayed(() =>
+            {
+                NotificationManager.ShowMessage(
+                    $"Btw that was fake news", ((Vector4)Color4.Orange).Xyz, 5);
+            }, delay: 13000);
+
+            GPUSched.Instance.EnqueueDelayed(() =>
+            {
+                NotificationManager.ShowMessage(
+                    $"There is no service", ((Vector4)Color4.LightGreen).Xyz, 5);
+            }, delay: 15500);
+
+            GPUSched.Instance.EnqueueDelayed(() =>
+            {
+                NotificationManager.ShowMessage($"Yet.. (click me)",
+                    ((Vector4)Color4.CornflowerBlue).Xyz, 5, () =>
+                    {
+                        for (int i = 0; i < 5; i++)
+                        {
+                            NotificationManager.ShowMessage($"Spam click_event {i} very pog framework", ((Vector4)Color4.Peru).Xyz, 1);
+                        }
+                    });
+            }, delay: 17000);
+
+            GPUSched.Instance.EnqueueDelayed(() =>
+            {
+                NotificationManager.ShowMessage($"New private message from: 'Your Mother' click here to view it",
+                    ((Vector4)Color4.HotPink).Xyz, 5, () =>
+                    {
+                        Skin.ComboBreak.Play(true);
+                    });
+            }, delay: 60000);
 
             OsuContainer.OnKiai += () =>
             {
@@ -94,6 +320,7 @@ namespace RTCircles
 
             Input.InputContext.Mice[0].MouseDown += (s, e) =>
             {
+                if(!NotificationManager.OnMouseDown(e))
                 ScreenManager.OnMouseDown(e);
             };
 
@@ -110,6 +337,10 @@ namespace RTCircles
             Input.InputContext.Keyboards[0].KeyDown += (s, e, x) =>
             {
                 ScreenManager.OnKeyDown(e);
+                /*
+                string notifText = $"Pressed: {e}";
+                NotificationManager.ShowMessage(notifText, Colors.Pink.Xyz, 1, () => { Console.WriteLine($"Clicked on {notifText}"); });
+                */
             };
 
             Input.InputContext.Keyboards[0].KeyUp += (s, e, x) =>
@@ -165,6 +396,7 @@ namespace RTCircles
             };
             */
 
+            /*
         float outroTime = 0;
         float outroDuration = 0.15f;
             ScreenManager.OnOutroTransition += (delta) =>
@@ -209,8 +441,44 @@ namespace RTCircles
 
                 return false;
             };
+            */
 
-        lastOpened = Settings.GetValue<DateTime>("LastOpened", out bool exists);
+            float outroTime = 0;
+            float outroDuration = 0.125f;
+            ScreenManager.OnOutroTransition += (delta) =>
+            {
+                outroTime += delta;
+                outroTime = outroTime.Clamp(0f, outroDuration);
+                float progress = Interpolation.ValueAt(outroTime, 1f, 0f, 0f, outroDuration, EasingTypes.None);
+                g.DrawRectangle(Vector2.Zero, WindowSize, new Vector4(0f, 0f, 0f, progress));
+                if (outroTime == outroDuration)
+                {
+                    outroTime = 0;
+                    return true;
+                }
+
+                return false;
+            };
+
+            float introDuration = 0.125f;
+            float introTime = 0;
+            ScreenManager.OnIntroTransition += (delta) =>
+            {
+                introTime += delta;
+                introTime = introTime.Clamp(0f, introDuration);
+                float progress = Interpolation.ValueAt(introTime, 0f, 1f, 0f, introDuration, EasingTypes.None);
+                g.DrawRectangle(Vector2.Zero, WindowSize, new Vector4(0f, 0f, 0f, progress));
+
+                if (introTime == introDuration)
+                {
+                    introTime = 0;
+                    return true;
+                }
+
+                return false;
+            };
+
+            lastOpened = Settings.GetValue<DateTime>("LastOpened", out bool exists);
             Settings.SetValue(DateTime.Now, "LastOpened");
 
             Input.OnBackPressed += () =>
@@ -243,7 +511,10 @@ namespace RTCircles
             drawFPSGraph(g);
             drawLog(g);
 
-            g.Projection = PostProcessing.MotionBlur && ScreenManager.ActiveScreen() is not MapSelectScreen ? shakeMatrix : Projection;
+            NotificationManager.Update((float)DeltaTime);
+            NotificationManager.Render(g);
+
+            g.Projection = PostProcessing.MotionBlur && (ScreenManager.ActiveScreen is MenuScreen or OsuScreen) ? shakeMatrix : Projection;
             g.EndDraw();
             PostProcessing.PresentFinalResult();
         }
@@ -328,13 +599,11 @@ namespace RTCircles
                         $"Indices: {Utils.ToKMB(indicesPerSecond)}/s\n" +
                         $"Tris: {Utils.ToKMB(trianglesPerSecond)}/s\n" +
                         $"Textures: {Easy2D.Texture.TextureCount}\n" +
-                        $"DrawCalls: {GL.DrawCalls}\n" +
                         $"Framework: {RuntimeInformation.FrameworkDescription} {RuntimeInformation.ProcessArchitecture}\n" +
                         $"OS: {RuntimeInformation.OSDescription}\n" +
                         $"GL: {GL.GLVersion}\n" +
                         $"Renderer: {GL.GLRenderer}\n" +
                         $"GC: [{GC.CollectionCount(0)}, {GC.CollectionCount(1)}, {GC.CollectionCount(2)}]\n" +
-                        $"Mem: {mem:F2}\n" +
                         $"Last visit: {lastOpened}";
 
                     text += $"\nSchedulers [Pending: {Scheduler.TotalPendingWorkloads} Async: {Scheduler.TotalAsyncWorkloads}]";
@@ -412,19 +681,17 @@ namespace RTCircles
             }
         }
 
-        public static Vector2 WindowSize { get; private set; }
-
-        public static Vector2 WindowCenter => WindowSize / 2f;
-
-        public static float WindowWidth => WindowSize.X;
-        public static float WindowHeight => WindowSize.Y;
-
-        public static readonly Vector2 TargetResolution = new Vector2(1920, 1080);
-
-        public static float Scale
+        private static Vector2 _windowSize;
+        public static Vector2 WindowSize
         {
             get
             {
+                return _windowSize;
+            }
+            set
+            {
+                _windowSize = value;
+
                 //Calculate the aspectratio of our virtual resolution
                 var aspectRatio = TargetResolution.X / TargetResolution.Y;
 
@@ -440,9 +707,18 @@ namespace RTCircles
                     width = (int)(height * aspectRatio);
                 }
 
-                return width / TargetResolution.X;
+                Scale = width / TargetResolution.X;
             }
         }
+
+        public static Vector2 WindowCenter => WindowSize / 2f;
+
+        public static float WindowWidth => WindowSize.X;
+        public static float WindowHeight => WindowSize.Y;
+
+        public static readonly Vector2 TargetResolution = new Vector2(1920, 1080);
+
+        public static float Scale { get; private set; }
 
         public static Vector2 AbsoluteScale => new Vector2(WindowWidth / TargetResolution.X, WindowHeight / TargetResolution.Y);
 
@@ -459,7 +735,7 @@ namespace RTCircles
 
         public override void OnUpdate(double delta)
         {
-            if (ScreenManager.ActiveScreen() is OsuScreen)
+            if (ScreenManager.ActiveScreen is OsuScreen)
                 PostProcessing.BloomThreshold = shakeKiai.Value.Map(2, 0, 0.2f, 1f);
             else
                 PostProcessing.BloomThreshold = 1f;

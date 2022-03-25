@@ -56,7 +56,7 @@ namespace RTCircles
             
         }
 
-        private static Easy2D.Texture circleTexture = new Easy2D.Texture(Utils.GetResource("Sliders.fastBody.png")) { GenerateMipmaps = false, MinFilter = TextureMinFilter.Nearest, MagFilter = TextureMagFilter.Nearest };
+        private static Easy2D.Texture circleTexture = new Easy2D.Texture(Utils.GetResource("Sliders.flatcircle.png")) { GenerateMipmaps = false, MinFilter = TextureMinFilter.Nearest, MagFilter = TextureMagFilter.Nearest };
 
         private Vector4 color = new Vector4(Skin.Config.SliderBorder ?? new Vector3(0.92f), 1f);
         public float Alpha

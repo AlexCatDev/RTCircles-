@@ -37,7 +37,7 @@ namespace RTCircles
 
             float blend = Interpolation.ValueAt(time, 0, 1, from.Time, to.Time);
 
-            var easing = (from.Position - to.Position).Length < OsuContainer.Beatmap.CircleRadiusInOsuPixels * 2 ? EasingTypes.None : EasingTypes.Out; 
+            var easing = (from.Position - to.Position).Length < OsuContainer.Beatmap.CircleRadiusInOsuPixels * 2 ? EasingTypes.None : EasingTypes.InOutQuad; 
 
             var vec2 = Vector2.Lerp(from.Position, to.Position, Interpolation.ValueAt(blend, 0, 1, 0, 1, easing));
 
@@ -90,7 +90,7 @@ namespace RTCircles
             if (first == null)
                 first = new KeyFrame() { Time = currentTime, Position = CurrentPosition };
 
-            if (currentTime > frames[frameIndex].Time)
+            while (currentTime > frames[frameIndex].Time)
             {
                 ++frameIndex;
 

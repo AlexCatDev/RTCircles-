@@ -83,6 +83,11 @@ namespace Easy2D
             }
         }
 
+        public void EnqueueDelayed(Action task, int delay)
+        {
+            EnqueueAsync(() => { return (true, 0); }, (i) => { task(); }, delay);
+        }
+
         public delegate (bool ShouldContinue, T Result) AsyncAction<T>();
 
         public void EnqueueAsync<T>(AsyncAction<T> asyncAction, Action<T> onCompletion, int delay = 0)

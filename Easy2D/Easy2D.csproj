@@ -18,6 +18,7 @@
     <None Remove="Shaders\MotionBlur.frag" />
     <None Remove="Shaders\MotionBlur.vert" />
     <None Remove="Textures\circle.png" />
+    <None Remove="Textures\flatcircle.png" />
     <None Remove="Textures\square.png" />
   </ItemGroup>
 
@@ -55,6 +56,7 @@
     <EmbeddedResource Include="Textures\circle.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="Textures\flatcircle.png" />
     <EmbeddedResource Include="Textures\square.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>

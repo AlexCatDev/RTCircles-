@@ -324,6 +324,7 @@ namespace RTCircles
         {
             GPUSched.Instance.Enqueue(() =>
             {
+                //Todo: Check if delete is still pending when this is called.         
                 frameBuffer.Delete();
                 hasBeenUpdated = true;
             });

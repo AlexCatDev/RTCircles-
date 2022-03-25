@@ -10,6 +10,9 @@ using System.Threading.Tasks;
 
 namespace RTCircles
 {
+    /// <summary>
+    /// All of this is so wrong, and idk how storyboards really work, and i dont care anymore
+    /// </summary>
     public static class DrawableStoryboard
     {
         private static Dictionary<string, Texture> cachedTextures = new Dictionary<string, Texture>();
@@ -24,7 +27,7 @@ namespace RTCircles
             public int EndTime { get; private set; } = int.MinValue;
 
             private AnimationTFloat fadeAnim = new AnimationTFloat() { DefaultValue = 1 };
-            private AnimationTVec4 colorAnim = new AnimationTVec4() { DefaultValue = new Vector4(1f,1f,1f,0f) };
+            private AnimationTVec4 colorAnim = new AnimationTVec4() { DefaultValue = new Vector4(1f, 1f, 1f, 0f) };
             private AnimationTFloat xAnim = new AnimationTFloat();
             private AnimationTFloat yAnim = new AnimationTFloat();
             private AnimationTFloat rotationAnim = new AnimationTFloat() { DefaultValue = 0 };
@@ -43,7 +46,10 @@ namespace RTCircles
                     if (File.Exists(texturePath))
                         texture = new Texture(File.OpenRead(texturePath));
                     else
+                    {
                         texture = Skin.DefaultBackground;
+                        Utils.Log($"Could not find storyboard texture: {texturePath}", LogLevel.Error);
+                    }
 
                     DrawableStoryboard.cachedTextures.Add(texturePath, texture);
 
@@ -57,7 +63,7 @@ namespace RTCircles
                     if (StartTime > cmd.StartTime)
                         StartTime = cmd.StartTime;
 
-                    if(EndTime < cmd.EndTime)
+                    if (EndTime < cmd.EndTime)
                         EndTime = cmd.EndTime;
 
                     var easing = (EasingTypes)cmd.Easing;
@@ -116,12 +122,18 @@ namespace RTCircles
                 }
                 xAnim.DefaultValue = sSprite.X;
                 yAnim.DefaultValue = sSprite.Y;
+                /*
+                colorAnim.Sort();
+                fadeAnim.Sort();
+                rotationAnim.Sort();
+                scaleAnim.Sort();
+                xAnim.Sort();
+                yAnim.Sort();
+                */
             }
 
             public void Render(Graphics g)
             {
-                OsuContainer.Beatmap.Mods |= Mods.Auto;
-
                 Vector4 color = colorAnim.GetOutputAtTime(OsuContainer.SongPosition);
                 color.W = fadeAnim.GetOutputAtTime(OsuContainer.SongPosition);
 
@@ -158,8 +170,11 @@ namespace RTCircles
 
         static DrawableStoryboard()
         {
+            /*
             OsuContainer.BeatmapChanged += () =>
             {
+                OsuContainer.Beatmap.Mods |= Mods.Auto;
+
                 spriteIndex = 0;
                 activeSprites.Clear();
                 sprites.Clear();
@@ -215,7 +230,9 @@ namespace RTCircles
                     }
                 }
                 sprites.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));
+
             };
+            */
         }
 
         private static List<DrawableStoryboardSprite> activeSprites = new List<DrawableStoryboardSprite>();
@@ -249,12 +266,13 @@ namespace RTCircles
                     activeSprites.RemoveAt(i);
             }
 
+            //If the storyboard is ahead of the current song time, then seek to the start, so it can sync from scratch
             if (sprites[(spriteIndex - 1).Clamp(0, sprites.Count - 1)].StartTime > OsuContainer.SongPosition)
             {
                 activeSprites.Clear();
                 spriteIndex = 0;
             }
-            System.Console.WriteLine($"Active sprites: {activeSprites.Count} Index: {spriteIndex}/{sprites.Count}");
+            //System.Console.WriteLine($"Active sprites: {activeSprites.Count} Index: {spriteIndex}/{sprites.Count}");
         }
     }
     /*

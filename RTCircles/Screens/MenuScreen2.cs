@@ -359,7 +359,7 @@ namespace RTCircles
 
         public override bool OnMouseDown(MouseButton button)
         {
-            if(button == MouseButton.Left && MathUtils.PositionInsideRadius(Input.MousePosition, position, size.X))
+            if(button == MouseButton.Left && MathUtils.IsPointInsideRadius(Input.MousePosition, position, size.X / 2))
                 clickedLogo();
 
             if (barAnim.Value > 0)

@@ -21,6 +21,8 @@ namespace RTCircles
 
         private GoodSliderBar testBar1 = new GoodSliderBar() { MaximumValue = 10 };
 
+        private Font robotoBold = new Font(Utils.GetResource("UI.roboto_bold.fnt"), Utils.GetResource("UI.roboto_bold.png"));
+
         public SongSelectScreen()
         {
             fs.SetTarget<OsuScreen>();
@@ -76,15 +78,15 @@ namespace RTCircles
             g.DrawRectangle(new Vector2(MainGame.WindowWidth - panelSize.X - spacing, spacing), panelSize, Colors.White, floatingPanel);
             */
 
-            drawShit(g);
+            drawFloatingWindowFrame(g);
 
             renderBackground(bg, g);
 
-            testBar1.Position = new Vector2(300, 300);
+            testBar1.Position = MainGame.WindowCenter;
             testBar1.BackgroundColor = new Vector4(1f, 1f, 1f, 0.1f);
             testBar1.ForegroundColor = difficultyToColor(OsuContainer.Beatmap.OD * 0.5f + OsuContainer.Beatmap.CS * 0.25f + OsuContainer.Beatmap.AR * 0.25f);
             //testBar1.Value = 0.666;
-            testBar1.Size = new Vector2(773, 34) / 2.25f;
+            testBar1.Size = new Vector2(773, 34);
         }
 
         private void renderBackground(MapBackground bg, Graphics g)
@@ -113,21 +115,24 @@ namespace RTCircles
         private Vector2 infoBarSize => new Vector2(fs.Size.X - fs.Size.X * 0.204f, 52 * MainGame.Scale);
         private Vector2 infoBarPosition => new Vector2(fs.Position.X + fs.Size.X - infoBarSize.X, fs.Position.Y + fs.Size.Y);
 
+        private Vector2 topBarSize => new Vector2(MainGame.WindowWidth, 68 * MainGame.Scale);
+
         private Vector2 triangleP1 => new Vector2(infoBarPosition.X - 52 * MainGame.Scale, infoBarPosition.Y);
         private Vector2 triangleP3 => new Vector2(infoBarPosition.X, infoBarPosition.Y + infoBarSize.Y);
 
-        private void drawShit(Graphics g)
+        private void drawFloatingWindowFrame(Graphics g)
         {
             drawDifficultyAdjustPanel(g);
             drawFrame(g);
 
             g.DrawRectangle(infoBarPosition, infoBarSize, color);
 
-            g.DrawRectangle(Vector2.Zero, new Vector2(68 * MainGame.Scale, MainGame.WindowHeight), color);
+            g.DrawRectangle(Vector2.Zero, topBarSize, color);
 
             g.DrawTriangle(triangleP1, infoBarPosition, triangleP3, color);
 
-            g.DrawString($"{OsuContainer.Beatmap.Artist} - {OsuContainer.Beatmap.SongName}\nMapped by {OsuContainer.Beatmap.InternalBeatmap.MetadataSection.Creator}", Font.DefaultFont, infoBarPosition + new Vector2(8, 5) * MainGame.Scale, Vector4.One, 0.25f * MainGame.Scale, 15);
+            drawSongNameInfo(g);
+            //g.DrawString($"{OsuContainer.Beatmap.Artist} - {OsuContainer.Beatmap.SongName}Mapped by: {OsuContainer.Beatmap.InternalBeatmap.MetadataSection.Creator}", robotoBold, infoBarPosition + new Vector2(8, 5) * MainGame.Scale, Vector4.One, 0.35f * MainGame.Scale, 15 * MainGame.Scale);
 
             //Button for drawDifficultyAdjustPanel ^^
             float rot = (1f - rotation) * 90;
@@ -136,6 +141,18 @@ namespace RTCircles
             drawDifficultyBar(g);
 
             drawDifficultyGraph(g);
+        }
+
+        private void drawSongNameInfo(Graphics g)
+        {
+            Vector2 pos = infoBarPosition + new Vector2(8, 5) * MainGame.Scale;
+
+            string songName = $"{OsuContainer.Beatmap.Artist} - {OsuContainer.Beatmap.SongName}";
+
+            float songNameScale = 0.5f * MainGame.Scale;
+
+            Vector2 songNameSize = robotoBold.MessureString(songName, songNameScale);
+            g.DrawString(songName, robotoBold, pos, Colors.White, songNameScale, 6f * MainGame.Scale);
         }
 
         private SmoothFloat rotation = new SmoothFloat() { Value = 0 };
@@ -374,7 +391,7 @@ namespace RTCircles
             float screenWidth = screenHeight * 1.77777777778f;
 
             fs.Size = new Vector2((int)screenWidth, (int)screenHeight);
-            fs.Position = new Vector2((int)(MainGame.WindowWidth - fs.Size.X - spacing), (int)spacing);
+            fs.Position = new Vector2((int)spacing, (int)spacing + topBarSize.Y);
 
             fs.Update(delta);
         }

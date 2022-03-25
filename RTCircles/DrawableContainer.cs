@@ -8,7 +8,6 @@ namespace RTCircles
     public class DrawableContainer
     {
         protected List<Drawable> children = new List<Drawable>();
-        private List<int> childrenToRemove = new List<int>();
 
         public IReadOnlyList<Drawable> Children => children.AsReadOnly();
 

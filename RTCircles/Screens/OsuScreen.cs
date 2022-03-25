@@ -28,7 +28,7 @@ namespace RTCircles
             //Debug rudimentary touch support 
             Input.OnFingerDown += (finger) =>
             {
-                if (ScreenManager.ActiveScreen() == this)
+                if (ScreenManager.ActiveScreen == this)
                 {
                     OnKeyDown(OsuContainer.Key1);
 
@@ -182,11 +182,36 @@ namespace RTCircles
                 Add(new FollowPoints(current.BaseObject, next.BaseObject));
         }
 
+        public bool IsCurrentlyBreakTime
+        {
+            get
+            {
+                if (OsuContainer.Beatmap.HitObjects.Count == 0)
+                    return true;
+
+                if (OsuContainer.SongPosition < OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime)
+                    return true;
+
+                if (objectIndex - 1 < 0)
+                    return true;
+
+                if (objectIndex >= OsuContainer.Beatmap.HitObjects.Count)
+                    return OsuContainer.SongPosition > OsuContainer.Beatmap.HitObjects[^1].BaseObject.EndTime;
+
+                var prevObject = OsuContainer.Beatmap.HitObjects[objectIndex - 1];
+                var currObject = OsuContainer.Beatmap.HitObjects[objectIndex];
+
+                if (currObject.BaseObject.StartTime - prevObject.BaseObject.EndTime >= 3000)
+                    return true;
+
+                return false;
+            }
+        }
         private void spawnWarningArrowsCheck(IDrawableHitObject current, IDrawableHitObject next)
         {
             if (next.BaseObject.StartTime - current.BaseObject.EndTime >= 3000)
             {
-                breakOverlay.Break(current, next);
+                breakOverlay.Show(current, next);
                 //breakOverlay.Show(next.BaseObject.StartTime - 1000);
                 //Add(new WarningArrows(next.BaseObject.StartTime - 3000));
             }
@@ -230,8 +255,6 @@ namespace RTCircles
                 return;
 
             drawBackground(g);
-
-            DrawableStoryboard.Render(g);
 
             base.Render(g);
             OsuContainer.HUD.Render(g);

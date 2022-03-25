@@ -30,12 +30,11 @@ namespace Easy2D
         {
             if (IsInitialized)
             {
-                Utils.Log($"Deleted GLObject<{this.ToString()}> Handle -> [{Handle}]", LogLevel.Debug);
                 delete();
-
                 Debug.Assert(IsInitialized == false, "You forgot to handle GLObject deletion, expected handle to be -1");
-
                 AllObjects.Remove(weakReference);
+
+                Utils.Log($"Deleted GLObject<{this.ToString()}> Handle -> [{Handle}]", LogLevel.Debug);
             };
         }
 
@@ -61,11 +60,15 @@ namespace Easy2D
 
         ~GLObject()
         {
-            //Just schedule a delete call lololololol
-            GPUSched.Instance.Enqueue(() =>
+            //If the object is initialized
+            if (IsInitialized)
             {
-                Delete();
-            });
+                //Schedule the delete call to the gpu thread scheduler, since the deconstructor is run on another thread in 60% of cases
+                GPUSched.Instance.Enqueue(() =>
+                {
+                    Delete();
+                });
+            }
         }
 
         protected abstract void initialize(int? slot);

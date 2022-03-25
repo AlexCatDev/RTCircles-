@@ -29,6 +29,7 @@ namespace Easy2D
 
         public static Texture WhiteSquare { get; private set; }
         public static Texture WhiteCircle { get; private set; }
+        public static Texture WhiteFlatCircle { get; private set; }
 
         public TextureMinFilter MinFilter { get; set; } = TextureMinFilter.Linear;
         public TextureMagFilter MagFilter { get; set; } = TextureMagFilter.Linear;
@@ -43,6 +44,7 @@ namespace Easy2D
         {
             WhiteSquare = new Texture(Utils.GetInternalResource("Textures.square.png"));
             WhiteCircle = new Texture(Utils.GetInternalResource("Textures.circle.png"));
+            WhiteFlatCircle = new Texture(Utils.GetInternalResource("Textures.flatcircle.png"));
         }
 
         public Texture(int width, int height, InternalFormat componentCount = InternalFormat.Rgba, 

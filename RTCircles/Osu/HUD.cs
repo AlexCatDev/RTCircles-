@@ -58,7 +58,7 @@ namespace RTCircles
 
             Vector4 color;
 
-            Vector2 size = new Vector2(4, 60);
+            Vector2 size = new Vector2(4, 60) * MainGame.Scale;
 
             public HitURJudgement(Vector2 pos, HitResult result)
             {
@@ -110,6 +110,8 @@ namespace RTCircles
         private float unstableRateBarWidth => (float)OsuContainer.Beatmap.Window50 * 3f * MainGame.Scale;
         private float unstableRateBarHeight => 30 * MainGame.Scale;
 
+        private float hp = 1;
+
         private Rectangle unstableRateBar => new Rectangle(new Vector2(MainGame.WindowCenter.X - unstableRateBarWidth / 2f, 30 * MainGame.Scale), new Vector2(unstableRateBarWidth, unstableRateBarHeight));
 
         public override Rectangle Bounds => throw new NotImplementedException();
@@ -154,12 +156,15 @@ namespace RTCircles
             {
                 case HitResult.Max:
                     OsuContainer.Count300++;
+                    hp += 0.125f;
                     break;
                 case HitResult.Good:
                     OsuContainer.Count100++;
+                    hp += 0.025f;
                     break;
                 case HitResult.Meh:
                     OsuContainer.Count50++;
+                    hp += 0;
                     break;
                 case HitResult.Miss:
                     if (OsuContainer.Combo > 20 && OsuContainer.MuteHitsounds == false)
@@ -167,6 +172,8 @@ namespace RTCircles
 
                     OsuContainer.Combo = 0;
                     OsuContainer.CountMiss++;
+
+                    hp -= 0.15f;
                     break;
                 default:
                     break;
@@ -286,30 +293,27 @@ namespace RTCircles
 
             piePos.X -= rankSize * 0.8f;
             rankSize /= 1.4f - 0.25f * beatProgress;
-            drawDancer(g, piePos, new Vector2(rankSize, rankSize * Skin.Star.Texture.Size.AspectRatio()));
 
             drawKeyOverlay(g);
+
+            drawHPBar(g);
         }
 
-        private float dancerAlpha = 0f;
-        public void drawDancer(Graphics g, Vector2 starPos, Vector2 starSize)
+        private float interpolatedHP = 0;
+        private void drawHPBar(Graphics g)
         {
-            dancerAlpha = MathHelper.Lerp(dancerAlpha, OsuContainer.IsKiaiTimeActive ? 1f : 0f, 5f * (float)MainGame.Instance.DeltaTime);
+            if(!ScreenManager.GetScreen<OsuScreen>().IsCurrentlyBreakTime)
+            hp -= 0.25f * (float)OsuContainer.DeltaSongPosition / 1000;
 
-            if (dancerAlpha <= 0.05f)
-                return;
+            Vector2 pos = new Vector2(20) * MainGame.Scale;
 
-            float angle = (int)Math.Floor(OsuContainer.CurrentBeat) % 2 == 0 ? 15 : -15f;
+            hp.ClampRef(0, 1);
+            interpolatedHP = MathHelper.Lerp(interpolatedHP, hp, (float)MainGame.Instance.DeltaTime * 25f);
 
-            float beatProgressKiai = Interpolation.ValueAt(OsuContainer.BeatProgressKiai, 0f, 1f, 0f, 1f, EasingTypes.InOutSine);
-
-            float rotation = MathUtils.Map(beatProgressKiai, 0f, 1f, -angle, angle);
-
-            float brightness = 1f + beatProgressKiai;
-
-            Vector4 color = new Vector4(brightness, brightness, brightness, dancerAlpha);
-
-            g.DrawRectangleCentered(starPos, starSize, color, Skin.Star, null, false, rotation);
+            Vector2 size = new Vector2(650 * interpolatedHP, 32) * MainGame.Scale;
+            Rectangle uv = new Rectangle(0, 0, interpolatedHP, 0);
+            g.DrawRectangle(new Vector2(0, 12 * MainGame.Scale), size, (Vector4)Color4.SteelBlue, Texture.WhiteSquare, uv, true);
+            //g.DrawRectangle(new Vector2(10) * MainGame.Scale, new Vector2(400, 32) * MainGame.Scale, Colors.Red);
         }
 
         private Vector2 key1Size = new Vector2(50);
