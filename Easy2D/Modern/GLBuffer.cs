@@ -88,7 +88,7 @@ namespace Easy2D
             uint sizeInBytes = objectCount * sizeOfTypeInBytes;
             uint offsetInBytes = startIndex * sizeOfTypeInBytes;
 
-            GL.Instance.BufferSubData(bufferType, (IntPtr)offsetInBytes, (nuint)sizeInBytes, data);
+            GL.Instance.BufferSubData(bufferType, (IntPtr)offsetInBytes, sizeInBytes, data);
 
         }
 

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -88,6 +89,8 @@ namespace Easy2D
             Rectangle value = new Rectangle(a.Position - b.Position, a.Size - b.Size);
             return value;
         }
+
+        public bool IsPointInside(Vector2 point) => point.X > X && point.X < X + Width && point.Y > Y && point.Y < Y + Height;
 
         public bool IntersectsWith(Rectangle rect) {
             return (rect.X < this.X + this.Width) &&

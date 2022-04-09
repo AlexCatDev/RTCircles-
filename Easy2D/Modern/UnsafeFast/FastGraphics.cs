@@ -32,7 +32,7 @@ namespace Easy2D
         public Matrix4 Projection;
 
         public readonly Shader Shader = new Shader();
-        public readonly UnsafePrimitiveBuffer<Vertex> VertexBatch;
+        public readonly UnsafePrimitiveBatch<Vertex> VertexBatch;
 
         public ulong VerticesDrawn { get; private set; }
         public ulong IndicesDrawn { get; private set; }
@@ -54,7 +54,7 @@ namespace Easy2D
 
         public FastGraphics(int vertexCount = 500000, int indexCount = 2000000)
         {
-            VertexBatch = new UnsafePrimitiveBuffer<Vertex>(vertexCount, indexCount);
+            VertexBatch = new UnsafePrimitiveBatch<Vertex>(vertexCount, indexCount);
 
             Shader.AttachShader(ShaderType.VertexShader, Utils.GetInternalResource("Shaders.Default.vert"));
             Shader.AttachShader(ShaderType.FragmentShader, Utils.GetInternalResource("Shaders.Default.frag"));

@@ -197,7 +197,8 @@ namespace RTCircles
                     float sliderBallAngle = MathF.Atan2(pos.Y - previousBallPos.Y, pos.X - previousBallPos.X);
                     g.DrawRectangleCentered(sliderballPosition, Size * Skin.GetScale(Skin.SliderBall), new Vector4(1f, 1f, 1f, 1f), Skin.SliderBall, rotDegrees: MathHelper.RadiansToDegrees(sliderBallAngle));
 
-                    previousBallPos = pos;
+                    if(Vector2.Distance(pos, previousBallPos) > 1)
+                        previousBallPos = pos;
                 }
 
                 float followCircleAlpha = sliderBallScaleAnim.Value.Map(1f, 2f, 0f, 1) * circleAlpha;
@@ -239,6 +240,7 @@ namespace RTCircles
         private Vector2 hitCirclePos;
         private void drawHitCircle(Graphics g)
         {
+            hitCirclePos = OsuContainer.MapToPlayfield(slider.Position.X, slider.Position.Y);
             if (IsMissed == false)
             {
                 float hitCircleAlpha = circleAlpha;
@@ -251,7 +253,8 @@ namespace RTCircles
                 else
                 {
                     //Only move along the hitcircle when it hasnt been hit.
-                    hitCirclePos = sliderballPosition;
+                    //hitCirclePos = sliderballPosition;
+                    
                 }
 
                 g.DrawRectangleCentered(hitCirclePos, Size * Skin.GetScale(Skin.SliderStartCircle) * scaleExplode, new Vector4(color.X, color.Y, color.Z, hitCircleAlpha), Skin.SliderStartCircle);
@@ -281,7 +284,7 @@ namespace RTCircles
             if (IsHit == false && IsMissed == false)
             {
                 //Use the sliderball position, for the hitcircle position.
-                if (MathUtils.IsPointInsideRadius(OsuContainer.CursorPosition, sliderballPosition, OsuContainer.Beatmap.CircleRadius) || OsuContainer.CookieziMode)
+                if (MathUtils.IsPointInsideRadius(OsuContainer.CursorPosition, hitCirclePos, OsuContainer.Beatmap.CircleRadius) || OsuContainer.CookieziMode)
                 {
                     double hittableTime = Math.Abs(OsuContainer.SongPosition - slider.StartTime);
 
@@ -341,10 +344,12 @@ namespace RTCircles
             return false;
         }
 
-        private bool IsTracking => (OsuContainer.Key1Down || OsuContainer.Key2Down) && MathUtils.IsPointInsideRadius(OsuContainer.CursorPosition, sliderballPosition, OsuContainer.Beatmap.CircleRadius * 2f) || OsuContainer.CookieziMode;
+        private const float SliderBallActiveScale = 2f;
+
+        private bool IsTracking => (OsuContainer.Key1Down || OsuContainer.Key2Down) && MathUtils.IsPointInsideRadius(OsuContainer.CursorPosition, sliderballPosition, OsuContainer.Beatmap.CircleRadius * SliderBallActiveScale) || OsuContainer.CookieziMode;
 
         //Allow 36ms releasing the slider too early
-        private const double TrackingErrorAcceptance = 24;
+        private const double TrackingErrorAcceptance = 36;
         private bool IsValidTrack => (OsuContainer.SongPosition - lastTrackingTime) <= TrackingErrorAcceptance || OsuContainer.CookieziMode;
 
         private bool previousTracking;
@@ -389,7 +394,7 @@ namespace RTCircles
                 if (IsTracking)
                 {
                     sliderBallScaleAnim.ClearTransforms();
-                    sliderBallScaleAnim.TransformTo(2f, 180f, EasingTypes.OutCirc);
+                    sliderBallScaleAnim.TransformTo(SliderBallActiveScale, 180f, EasingTypes.OutCirc);
                 }
             }
 
@@ -401,9 +406,7 @@ namespace RTCircles
 
             //yikes
             if(IsTracking && (Skin.SliderSlide.PlaybackPosition > Skin.SliderSlide.PlaybackLength - 50f || Skin.SliderSlide.IsPlaying == false) && OsuContainer.SongPosition > slider.StartTime && OsuContainer.SongPosition < slider.EndTime && (IsHit || IsMissed))
-            {
                Skin.SliderSlide.Play(true);
-            }
 
             float timeElapsed = (float)(OsuContainer.SongPosition - slider.StartTime + OsuContainer.Beatmap.Preempt);
 
@@ -446,7 +449,6 @@ namespace RTCircles
             }
 
             repeatsDone = (int)MathUtils.Map(OsuContainer.SongPosition, slider.StartTime, slider.EndTime, 0, slider.Repeats).Clamp(0, slider.Repeats);
-
             //I dont understand hitsounds fully, so this is pretty bs need to redo
             if (repeatsDone != lastRepeatsDone)
             {

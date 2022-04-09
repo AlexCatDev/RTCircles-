@@ -288,7 +288,7 @@ namespace RTCircles
             g.DrawString(difficultyString, Font.DefaultFont, difficultyBarPosition + difficultyBarSize / 2f - difficultyTextSize / 2f, Colors.White, difficultySize);
         }
 
-        private static Texture shadowTexture = new Texture(File.OpenRead(@"C:\Users\user\Desktop\shadow.png"));
+        private static Texture shadowTexture = null;
         private void drawFrame(Graphics g)
         {
             g.DrawOneSidedLine(fs.Bounds.TopLeft, fs.Bounds.BottomLeft, color, color, frameThickness);

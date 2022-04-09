@@ -235,6 +235,7 @@ namespace RTCircles
 
         public static Sound ComboBreak { get; private set; }
 
+        public static OsuTexture Hit300 { get; private set; }
         public static OsuTexture Hit100 { get; private set; }
         public static OsuTexture Hit50 { get; private set; }
         public static OsuTexture HitMiss { get; private set; }
@@ -297,6 +298,7 @@ namespace RTCircles
 
             SpinnerCircle = LoadTexture(path, "spinner-circle");
 
+            Hit300 = LoadTexture(path, "hit300");
             Hit100 = LoadTexture(path, "hit100");
             Hit50 = LoadTexture(path, "hit50");
             HitMiss = LoadTexture(path, "hit0");

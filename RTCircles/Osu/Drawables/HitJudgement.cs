@@ -17,6 +17,7 @@ namespace RTCircles
 
         public HitJudgement(Vector2 pos, HitResult result)
         {
+            //OsuContainer.Beatmap.Mods |= Mods.Auto;
             //Force stay on top and in order
             Layer = Lol--;
 
@@ -25,9 +26,9 @@ namespace RTCircles
 
             //Not sure if these values are accurate
             height.Value = 0;
-            height.TransformTo(OsuContainer.Beatmap.CircleRadius * 2f, 160f, EasingTypes.OutElasticHalf);
+            height.TransformTo(1f, 200f, EasingTypes.OutElasticHalf);
             alpha.Value = 0;
-            alpha.TransformTo(1f, 120f, EasingTypes.Out).Wait(350).TransformTo(0, 500, EasingTypes.In);
+            alpha.TransformTo(1f, 150f, EasingTypes.Out).Wait(150).TransformTo(0, 500, EasingTypes.In);
         }
 
         public override Rectangle Bounds => new Rectangle();
@@ -39,7 +40,8 @@ namespace RTCircles
             switch (result)
             {
                 case HitResult.Max:
-                    return;
+                    tex = Skin.Hit300;
+                    break;
                 case HitResult.Good:
                     tex = Skin.Hit100;
                     break;
@@ -53,7 +55,8 @@ namespace RTCircles
                     break;
             }
 
-            Vector2 s = new Vector2(height * tex.Texture.Size.AspectRatio(), height) * Skin.GetScale(tex);
+            float h = height.Value * OsuContainer.Beatmap.CircleRadius * 2f;
+            Vector2 s = new Vector2(h * tex.Texture.Size.AspectRatio(), h) * Skin.GetScale(tex);
 
             g.DrawRectangleCentered(pos, s, new Vector4(1f, 1f, 1f, alpha), tex, rotDegrees: rotation);
         }

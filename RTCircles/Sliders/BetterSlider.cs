@@ -37,7 +37,7 @@ namespace RTCircles
 
         //1mb for stupid aspire abuse sliders
         //Also optimize circle betweens points, so i can cut this down and in turn the amount of vertices to render
-        private static UnsafePrimitiveBuffer<Vector3> sliderBatch = new UnsafePrimitiveBuffer<Vector3>(50_000, 130_000);
+        private static UnsafePrimitiveBatch<Vector3> sliderBatch = new UnsafePrimitiveBatch<Vector3>(50_000, 130_000);
 
         private void drawLine(Vector2 startPosition, Vector2 endPosition, float radius)
         {

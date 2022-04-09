@@ -21,7 +21,9 @@ namespace RTCircles
 
         private Vector2 size { 
             get {
-                return new Vector2(OsuContainer.Playfield.Width * 0.9f);
+                float biggest = MathF.Max(OsuContainer.Playfield.Width, OsuContainer.Playfield.Height);
+
+                return new Vector2(biggest * 0.7f);
             } 
         }
         private Vector2 position;
@@ -82,14 +84,14 @@ namespace RTCircles
 
             float approachScale = (float)MathUtils.Map(OsuContainer.SongPosition, spinner.StartTime, spinner.EndTime, 1, 0).Clamp(0, 1);
 
-            float scale = Skin.GetScale(Skin.SpinnerApproachCircle, 384, 768);
+            float scale = Skin.GetScale(Skin.SpinnerCircle, 256, 512) * 0.5f;
 
             g.DrawRectangleCentered(position, size * scale * approachScale, color * colorBoost, Skin.SpinnerApproachCircle);
 
-            g.DrawRectangleCentered(position, size, color * colorBoost, Skin.SpinnerCircle, rotDegrees: rotation);
+            g.DrawRectangleCentered(position, size * scale, color * colorBoost, Skin.SpinnerCircle, rotDegrees: rotation);
 
             if (score > 0)
-                Skin.CircleNumbers.DrawCentered(g, OsuContainer.MapToPlayfield(512 / 2, 280, true), (size.Y / 9) * scoreBonusScale, new Vector4(1f, 1f, 1f, scoreBonusAlpha * color.W), score.ToString());
+                Skin.CircleNumbers.DrawCentered(g, OsuContainer.MapToPlayfield(512 / 2, 280, ignoreMods: true), (size.Y / 9) * scoreBonusScale, new Vector4(1f, 1f, 1f, scoreBonusAlpha * color.W), score.ToString());
 
             if (OsuContainer.SongPosition >= spinner.EndTime + OsuContainer.Fadeout)
                 IsDead = true;
@@ -155,6 +157,7 @@ namespace RTCircles
             {
                 lastRotation = rotation;
                 rotationCounter++;
+                OsuContainer.HUD.AddHP(0.1f);
 
                 if (rotationCounter > 1)
                 {

@@ -90,6 +90,8 @@ namespace RTCircles
                 OsuContainer.Beatmap.Song.Play();
 
             OsuContainer.Beatmap.AutoGenerator.Reset();
+
+            breakOverlay.Reset();
         }
 
         public void SyncObjectIndexToTime()

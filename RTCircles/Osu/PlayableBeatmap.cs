@@ -187,8 +187,6 @@ namespace RTCircles
                 Background = new Texture(File.OpenRead(bgPath));
             else
                 Background = Skin.DefaultBackground;
-
-
         }
 
         private void applyMods(Mods mods)
@@ -397,6 +395,10 @@ namespace RTCircles
                         AutoGenerator.AddDestination(new Vector2(circle.Position.X, circle.Position.Y), circle.StartTime, false);
                         break;
                     case Slider slider:
+                        //Cap aspire sliders!
+                        if(slider.EndTime - slider.StartTime < 1)
+                            slider.EndTime = slider.StartTime + 1;
+
                         DrawableSlider drawableSlider = new DrawableSlider(slider, colorIndex, combo++);
                         drawableSlider.Layer = layer;
                         HitObjects.Add(drawableSlider);
@@ -406,7 +408,7 @@ namespace RTCircles
 
                         if (slider.Repeats > 1)
                         {
-                            //Make sure to get the repeats with
+                            //Make sure to add all the repeats aswell
 
                             double repeatDuration = (slider.EndTime - slider.StartTime) / (double)slider.Repeats;
                             double offset = repeatDuration;

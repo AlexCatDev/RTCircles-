@@ -156,15 +156,14 @@ namespace RTCircles
             {
                 case HitResult.Max:
                     OsuContainer.Count300++;
-                    hp += 0.125f;
+                    AddHP(0.125f);
                     break;
                 case HitResult.Good:
                     OsuContainer.Count100++;
-                    hp += 0.025f;
+                    AddHP(0.025f);
                     break;
                 case HitResult.Meh:
                     OsuContainer.Count50++;
-                    hp += 0;
                     break;
                 case HitResult.Miss:
                     if (OsuContainer.Combo > 20 && OsuContainer.MuteHitsounds == false)
@@ -172,12 +171,18 @@ namespace RTCircles
 
                     OsuContainer.Combo = 0;
                     OsuContainer.CountMiss++;
-
-                    hp -= 0.15f;
+                    AddHP(-0.15f);
                     break;
                 default:
                     break;
             }
+        }
+
+        public void AddHP(float val)
+        {
+            hp += val;
+
+            hp.ClampRef(0, 1);
         }
 
         private void drawComboText(Graphics g)
@@ -302,8 +307,8 @@ namespace RTCircles
         private float interpolatedHP = 0;
         private void drawHPBar(Graphics g)
         {
-            if(!ScreenManager.GetScreen<OsuScreen>().IsCurrentlyBreakTime)
-            hp -= 0.25f * (float)OsuContainer.DeltaSongPosition / 1000;
+            if (!ScreenManager.GetScreen<OsuScreen>().IsCurrentlyBreakTime)
+                AddHP(-(0.25f * (float)OsuContainer.DeltaSongPosition / 1000));
 
             Vector2 pos = new Vector2(20) * MainGame.Scale;
 

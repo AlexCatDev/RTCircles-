@@ -239,6 +239,12 @@ namespace Easy2D
             }
         }
 
+        public void Reset()
+        {
+            VertexRenderCount = 0;
+            IndexRenderCount = 0;
+        }
+
         public void Clear()
         {
             //Either clear the array to reset everything to 0

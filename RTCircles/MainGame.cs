@@ -261,11 +261,13 @@ namespace RTCircles
         private Matrix4 shakeMatrix => 
             Matrix4.CreateTranslation(new Vector3(RNG.Next(-10, 10) * shakeKiai.Value, RNG.Next(-10, 10) * shakeKiai.Value, 0f)) * Projection;
 
+        private bool debugCameraActive = false;
+
         public override void OnLoad()
         {
             //GlobalOptions.Init();
-            Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  Hvorfor laver jeg hele tiden nye skins");
-            //Skin.Load(@"C:\Users\vitalia\AppData\Local\osu!\Skins-        # re;owoTuna v1.1 『MK』 #        -");
+            Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  idke 1.2 without sliderendcircle");
+            //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\- ModernDefault");
 
             g = new Graphics();
 
@@ -297,7 +299,7 @@ namespace RTCircles
                     {
                         for (int i = 0; i < 5; i++)
                         {
-                            NotificationManager.ShowMessage($"Spam click_event {i} very pog framework", ((Vector4)Color4.Peru).Xyz, 1);
+                            NotificationManager.ShowMessage($"Spam click_event {i}", ((Vector4)Color4.Peru).Xyz, 1);
                         }
                     });
             }, delay: 17000);
@@ -331,11 +333,32 @@ namespace RTCircles
 
             Input.InputContext.Mice[0].Scroll += (s, e) =>
             {
+                if (debugCameraActive && !Input.IsKeyDown(Key.ControlLeft))
+                {
+                    debugCameraScale += e.Y*0.03f;
+                    return;
+                }
+
                 ScreenManager.OnMouseWheel(e.Y);
             };
 
             Input.InputContext.Keyboards[0].KeyDown += (s, e, x) =>
             {
+                if(e == Key.A)
+                {
+                    if (Input.IsKeyDown(Key.ControlLeft) && Input.IsKeyDown(Key.AltLeft))
+                    {
+                        debugCameraActive = !debugCameraActive;
+                        return;
+                    }
+                }
+
+                if (debugCameraActive)
+                {
+                    if (e == Key.W || e == Key.A || e == Key.S || e == Key.D)
+                        return;
+                }
+
                 ScreenManager.OnKeyDown(e);
                 /*
                 string notifText = $"Pressed: {e}";
@@ -350,6 +373,12 @@ namespace RTCircles
 
             Input.InputContext.Keyboards[0].KeyChar += (s, e) =>
             {
+                if (debugCameraActive)
+                {
+                    if (e == 'w' || e == 'a' || e == 's' || e == 'd')
+                        return;
+                }
+
                 ScreenManager.OnTextInput(e);
             };
 
@@ -503,8 +532,32 @@ namespace RTCircles
 
         private List<double> renderTimes = new List<double>();
 
+        private Camera debugCamera = new Camera();
+        private float debugCameraScale = 1f;
+
         public override void OnRender(double delta)
         {
+            g.Projection = PostProcessing.MotionBlur && (ScreenManager.ActiveScreen is MenuScreen or OsuScreen) ? shakeMatrix : Projection;
+
+            if (debugCameraActive)
+            {
+                if (Input.IsKeyDown(Key.W))
+                    debugCamera.Position.Y -= (float)(1000 * delta);
+                else if (Input.IsKeyDown(Key.S))
+                    debugCamera.Position.Y += (float)(1000 * delta);
+
+                if (Input.IsKeyDown(Key.A))
+                    debugCamera.Position.X -= (float)(1000 * delta);
+                else if (Input.IsKeyDown(Key.D))
+                    debugCamera.Position.X += (float)(1000 * delta);
+
+                debugCamera.Size = new Vector2(WindowWidth, WindowHeight);
+                debugCamera.Scale = (float)Interpolation.Damp(debugCamera.Scale, debugCameraScale, 0.1, delta * 10);
+                debugCamera.Update();
+
+                g.Projection = debugCamera.Projection;
+            }
+
             PostProcessing.Use(new Vector2i((int)WindowWidth, (int)WindowHeight), new Vector2i((int)WindowWidth, (int)WindowHeight));
             ScreenManager.Render(g);
 
@@ -514,8 +567,17 @@ namespace RTCircles
             NotificationManager.Update((float)DeltaTime);
             NotificationManager.Render(g);
 
-            g.Projection = PostProcessing.MotionBlur && (ScreenManager.ActiveScreen is MenuScreen or OsuScreen) ? shakeMatrix : Projection;
             g.EndDraw();
+
+            if (debugCameraActive)
+            {
+                g.DrawString($"Camera mode", Font.DefaultFont, WindowCenter,
+                    new Vector4(1f, 1f, 0f,(float)Math.Cos(TotalTime*3).Map(-1, 1, 0.3, 1)));
+
+                g.Projection = Projection;
+                g.EndDraw();
+            }
+
             PostProcessing.PresentFinalResult();
         }
 

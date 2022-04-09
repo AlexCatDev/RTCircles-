@@ -102,7 +102,7 @@ namespace Easy2D
 
             if (genMips)
             {
-                GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (float)TextureMinFilter.LinearMipmapNearest);
+                GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (float)TextureMinFilter.LinearMipmapLinear);
 
                 //Gen mipmap
                 GL.Instance.GenerateMipmap(TextureTarget.Texture2D);

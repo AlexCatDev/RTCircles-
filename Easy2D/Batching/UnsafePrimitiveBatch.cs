@@ -10,7 +10,7 @@ namespace Easy2D
     /// Memory is not zeroed, so everything from the previous draw will still be there, remember to overwrite the vertices!
     /// </summary>
     /// <typeparam name="T">The vertex type.</typeparam>
-    public unsafe class UnsafePrimitiveBuffer<T> where T : unmanaged
+    public unsafe class UnsafePrimitiveBatch<T> where T : unmanaged
     {
         private GLBuffer<T> vertexBuffer;
         private GLBuffer<uint> indexBuffer;
@@ -24,7 +24,7 @@ namespace Easy2D
 
         public uint TriangleRenderCount => IndexRenderCount / 3;
 
-        public UnsafePrimitiveBuffer(int vertexCount, int indexCount)
+        public UnsafePrimitiveBatch(int vertexCount, int indexCount)
         {
             vao = new VertexArray<T>();
 
@@ -148,7 +148,8 @@ namespace Easy2D
             {
                 Draw();
                 Utils.Log($"IndexBuffer ran out of space, so the whole batch ha been FLUSHED", LogLevel.Warning);
-            }else if (VertexRenderCount + vertexCount > vertexBuffer.Capacity)
+            }
+            else if (VertexRenderCount + vertexCount > vertexBuffer.Capacity)
             {
                 Draw();
                 Utils.Log($"VertexBuffer ran out of space, so the whole batch ha been FLUSHED", LogLevel.Warning);
@@ -174,7 +175,13 @@ namespace Easy2D
             IndexRenderCount = 0;
         }
 
-        ~UnsafePrimitiveBuffer()
+        public void Reset()
+        {
+            VertexRenderCount = 0;
+            IndexRenderCount = 0;
+        }
+
+        ~UnsafePrimitiveBatch()
         {
             Marshal.FreeHGlobal(new IntPtr(vertexPool));
             Marshal.FreeHGlobal(new IntPtr(indexPool));

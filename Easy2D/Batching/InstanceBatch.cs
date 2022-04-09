@@ -7,7 +7,12 @@ using System.Runtime.InteropServices;
 
 namespace Easy2D
 {
-    public class ModelBatch<TVertex, TInstanceVertex> where TVertex : unmanaged where TInstanceVertex : unmanaged
+    /// <summary>
+    /// Name is slightly misleading, we're not batching instances together, just standard instanced rendering
+    /// </summary>
+    /// <typeparam name="TBaseVertex">The vertex type the model is made out of</typeparam>
+    /// <typeparam name="TInstanceVertex">The vertex type that is used for each instance</typeparam>
+    public class InstanceBatch<TBaseVertex, TInstanceVertex> where TBaseVertex : unmanaged where TInstanceVertex : unmanaged
     {
         private Dictionary<Type, (int Size, int ComponentCount, VertexAttribPointerType Type)> typeCache =
         new Dictionary<Type, (int Size, int ComponentCount, VertexAttribPointerType Type)>()
@@ -23,7 +28,7 @@ namespace Easy2D
                 { typeof(byte), (1, 1, VertexAttribPointerType.UnsignedByte) },
             };
 
-        private GLBuffer<TVertex> modelVbo;
+        private GLBuffer<TBaseVertex> modelVbo;
         private GLBuffer<int> modelIbo;
         private GLBuffer<TInstanceVertex> instanceVbo;
 
@@ -33,9 +38,9 @@ namespace Easy2D
 
         public PrimitiveType PrimitiveType { get; set; }
 
-        public ModelBatch(TVertex[] model, int[] indices)
+        public InstanceBatch(TBaseVertex[] model, int[] indices)
         {
-            modelVbo = new GLBuffer<TVertex>(BufferTargetARB.ArrayBuffer, BufferUsageARB.StaticDraw, model.Length);
+            modelVbo = new GLBuffer<TBaseVertex>(BufferTargetARB.ArrayBuffer, BufferUsageARB.StaticDraw, model.Length);
             modelVbo.UploadData(0, model.Length, model);
 
             if (indices is not null)
@@ -98,13 +103,13 @@ namespace Easy2D
             GL.Instance.BindVertexArray(vao);
 
             modelVbo.Bind();
-            scanType<TVertex>();
+            scanType<TBaseVertex>();
 
             instanceVbo.Bind();
             scanType<TInstanceVertex>();
         }
 
-        public void SetInstanceData(TInstanceVertex[] data)
+        public void UploadInstanceData(TInstanceVertex[] data)
         {
             instanceVbo.Resize(data.Length);
             instanceVbo.UploadData(0, data.Length, data);
@@ -113,10 +118,10 @@ namespace Easy2D
         public void Draw(int instanceCount)
         {
             GL.Instance.BindVertexArray(vao);
-
             if (modelIbo is null)
                 GL.Instance.DrawArraysInstanced(PrimitiveType, 0, (uint)elementCount, (uint)instanceCount);
-            else unsafe
+            else 
+                unsafe
                 {
                     GL.Instance.DrawElementsInstanced(PrimitiveType, (uint)elementCount, DrawElementsType.UnsignedInt, null, (uint)instanceCount);
                 }

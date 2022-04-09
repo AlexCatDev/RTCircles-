@@ -238,7 +238,7 @@ namespace RTCircles
         public static void UnloadMap()
         {
             Beatmap = null;
-            GC.Collect(2, GCCollectionMode.Forced, false);
+            //GC.Collect(2, GCCollectionMode.Forced, false);
         }
 
         public static void SetMap(PlayableBeatmap beatmap)
@@ -254,7 +254,7 @@ namespace RTCircles
             Beatmap = new PlayableBeatmap(beatmap);
 
             //FIIIIIIIIIIIX
-            GC.Collect(2, GCCollectionMode.Forced, false);
+            //GC.Collect(2, GCCollectionMode.Forced, false);
 
             if(generateHitObjects)
                 Beatmap.GenerateHitObjects(mods);
@@ -346,7 +346,7 @@ namespace RTCircles
 
             int score = (int)Math.Floor(((double)timeJudgement * 0.90) + ((double)hitJudgement * 0.10) + (26 * distanceNextJudgement));
 
-            Console.WriteLine($"Scored hit! Result: {timeJudgement} centerHit: {distanceCenter:F4} perfectMS: {distanceNextJudgement:F4} score: {score}");
+            //Console.WriteLine($"Scored hit! Result: {timeJudgement} centerHit: {distanceCenter:F4} perfectMS: {distanceNextJudgement:F4} score: {score}");
         }
 
         //Ad
