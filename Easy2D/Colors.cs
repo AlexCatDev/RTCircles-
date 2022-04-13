@@ -21,7 +21,10 @@ namespace Easy2D
         public static readonly Vector4 Pink = new Vector4(255f / 255f, 102f / 255f, 170f / 255f, 1f);
         public static readonly Vector4 DarkPink = new Vector4(255f / 255f, 77f / 255f, 157f / 255f, 1f);
 
-        public static Vector4 From255RGBA(float r, float g, float b, float a) => new Vector4(r / 255f, g / 255f, b / 255f, a / 255f);
+        private const float SCALE255 = 0.00392156862f;
+
+        public static Vector3 From255RGB(float r, float g, float b) => new Vector3(r * SCALE255, g * SCALE255, b * SCALE255);
+        public static Vector4 From255RGBA(float r, float g, float b, float a) => new Vector4(r * SCALE255, g * SCALE255, b * SCALE255, a * SCALE255);
 
         public static Vector4 Tint(Vector4 color, float maxValue)
         {

@@ -42,10 +42,12 @@ namespace RTCircles
         };
 
         public Vector3 ColorFromIndex(int index) {
-            if (!GlobalOptions.RGBCircles.Value)
+            if(!GlobalOptions.RGBCircles.Value)
+                return ComboColors[index % ComboColors.Count];
+            else if (!OsuContainer.IsKiaiTimeActive)
                 return ComboColors[index % ComboColors.Count];
 
-            var time = OsuContainer.SongPosition.Map(0, 1000, 0, Math.PI*2) + index;
+            var time = (OsuContainer.CurrentBeat + index).Map(0, 1, 0, Math.PI/2);
 
             var col = new Vector3(
             (float)Math.Cos(0 + time).Map(-1, 1, 0, 2),
@@ -73,6 +75,8 @@ namespace RTCircles
 
         public string ComboPrefix = "score";
         public float ComboOverlap = 3;
+
+        public bool HitCircleOverlayAboveNumber = true;
 
         public SkinConfiguration(Stream stream)
         {
@@ -179,6 +183,9 @@ namespace RTCircles
                     {
                         Utils.Log($"Error parsing combo color Option: {option} Value: {value}", LogLevel.Error);
                     }
+                }else if(option.StartsWith("hitcircleoverlayabovenumer") || option.StartsWith("hitcircleoverlayabovenumber"))
+                {
+                    HitCircleOverlayAboveNumber = Convert.ToBoolean(int.Parse(value));
                 }
             }
         }

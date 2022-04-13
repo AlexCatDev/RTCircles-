@@ -383,6 +383,13 @@ namespace Easy2D
             }
         }
 
+        public void DrawStringCentered(string text, Font font, Vector2 position, Vector4 color, float scale = 1f)
+        {
+            var size = font.MessureString(text, scale);
+
+            DrawString(text, font, position - size / 2f, color, scale);
+        }
+
         public void DrawStringNoAlign(string text, Font font, Vector2 position, Vector4 color, float scale = 1f)
         {
             scale = Math.Max(0, scale);

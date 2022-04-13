@@ -292,8 +292,8 @@ namespace RTCircles
 
                 if (beat - previousBeat > 0)
                 {
-                    float waitTime = 0.05f;
-                    float fadeInTime = 0.15f;
+                    float waitTime = 0.15f;
+                    float fadeInTime = 0.10f;
                     float fadeOutTime = 0.15f;
 
                     if (beat % 2 == 0)
@@ -709,19 +709,19 @@ namespace RTCircles
 
             if (OsuContainer.IsKiaiTimeActive && PostProcessing.Bloom)
             {
-                visualizer.BarHighlight = Vector3.Lerp(visualizer.BarHighlight, new Vector3(2), 10f * delta);
-                visualizer.BarStartColor = Vector4.Lerp(visualizer.BarStartColor, new Vector4(Skin.Config.MenuGlow + new Vector3(1f, 1f, 1f), 1f), delta * 10f);
+                visualizer.BarHighlight = Vector3.Lerp(visualizer.BarHighlight, new Vector3(4f), 10f * delta);
+                visualizer.BarStartColor = Vector4.Lerp(visualizer.BarStartColor, new Vector4(Skin.Config.MenuGlow, 1f), delta * 10f);
                 visualizer.BarEndColor = visualizer.BarStartColor;
             }
             else
             {
-                visualizer.BarHighlight = Vector3.Lerp(visualizer.BarHighlight, Vector3.Zero, 10f * delta);
-                visualizer.BarStartColor = Vector4.Lerp(visualizer.BarStartColor, new Vector4(1f, 1f, 1f, 0.5f), delta * 10f);
+                visualizer.BarHighlight = Vector3.Lerp(visualizer.BarHighlight, new Vector3(0.5f), 10f * delta);
+                visualizer.BarStartColor = Vector4.Lerp(visualizer.BarStartColor, new Vector4(Skin.Config.MenuGlow, 0.5f), delta * 10f);
                 visualizer.BarEndColor = visualizer.BarStartColor;
             }
 
             //BASS KIAI LOGO VIBRATION 2.0, buggy sometimes the logo glitches suddenly to a side for some reason???
-            if (OsuContainer.IsKiaiTimeActive)
+            if (OsuContainer.IsKiaiTimeActive && GlobalOptions.MotionBlur.Value)
             {
                 float dirX = RNG.TryChance() ? -75 : 75;
                 float dirY = RNG.TryChance() ? -75 : 75;
@@ -731,7 +731,6 @@ namespace RTCircles
                 //Set the offset to interpolate to this randomly chosen direction for this frame
                 //Interpolate faster towards the destination by how big the beat currently is
                 //fuck jeg er tørstig lol
-                //cock
                 //use perlin noise
                 var blend = (delta * 35f * visualizer.BeatValue).Clamp(0, 1);
                 offset = Vector2.Lerp(offset, dist, blend);

@@ -23,10 +23,11 @@ namespace RTCircles
             get {
                 float biggest = MathF.Max(OsuContainer.Playfield.Width, OsuContainer.Playfield.Height);
 
-                return new Vector2(biggest * 0.7f);
+                return new Vector2(biggest * 0.75f);
             } 
         }
-        private Vector2 position;
+
+        private Vector2 position => OsuContainer.Playfield.Center;
 
         private Spinner spinner;
         private Vector4 color;
@@ -105,8 +106,6 @@ namespace RTCircles
 
         public override void Update(float delta)
         {
-            position = OsuContainer.MapToPlayfield(spinner.Position.X, spinner.Position.Y);
-
             //Just complete all spinners with a duration of less than some value thats impossible to complete
 
             if (spinner.EndTime - spinner.StartTime < 250)

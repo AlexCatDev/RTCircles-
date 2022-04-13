@@ -8,6 +8,73 @@ using System.Collections.Generic;
 
 namespace RTCircles
 {
+    public class ExplodingSliderRepeat : Drawable
+    {
+        private Vector2 Size => new Vector2(OsuContainer.Beatmap.CircleRadius * 2);
+        private Vector2 position;
+
+        private ISlider slider;
+
+        private double spawnTime;
+
+        private int index = 0;
+
+        public ExplodingSliderRepeat(ISlider slider, int index)
+        {
+            this.slider = slider;
+            this.index = index;
+            spawnTime = OsuContainer.SongPosition;
+        }
+
+        public override void Render(Graphics g)
+        {
+            if(OsuContainer.SongPosition < spawnTime)
+            {
+                IsDead = true;
+                return;
+            }
+
+            if(index % 2 == 0)
+                position = OsuContainer.MapToPlayfield(slider.Path.Points[0]);
+            else
+                position = OsuContainer.MapToPlayfield(slider.Path.Points[^1]);
+
+            float alpha = (float)OsuContainer.SongPosition.Map(spawnTime, spawnTime + OsuContainer.Fadeout, 1, 0);
+            float scale = (float)OsuContainer.SongPosition.Map(spawnTime, spawnTime + OsuContainer.Fadeout, 1, OsuContainer.CircleExplodeScale);
+
+            Vector2 size = new Vector2(Size.Y, Size.Y / Skin.SliderReverse.Texture.Size.AspectRatio()) * Skin.GetScale(Skin.SliderReverse);
+
+            g.DrawRectangleCentered(position, size * scale, new Vector4(1f, 1f, 1f, alpha), Skin.SliderReverse, null, false, MathHelper.RadiansToDegrees(angle));
+
+            if(alpha<=0)
+                IsDead = true;
+        }
+
+        private float angle
+        {
+            get
+            {
+                //Console.WriteLine(index);
+                if (index % 2 == 0)
+                {
+                    var first = slider.Path.Points[0];
+                    var next = slider.Path.Points[1];
+
+                    return MathF.Atan2(next.Y - first.Y, next.X - first.X);
+                }
+                else
+                { 
+                    var last = slider.Path.Points[^1];
+                    var secondLast = slider.Path.Points[^2];
+
+                    return MathF.Atan2(secondLast.Y - last.Y, secondLast.X - last.X);
+                }
+            }
+        }
+
+        public override void Update(float delta) { }
+    }
+
     public class DrawableSlider : Drawable, IDrawableHitObject
     {
         //TODO: add
@@ -26,7 +93,7 @@ namespace RTCircles
         private int repeatsDone = 0;
         private int lastRepeatsDone = 0;
 
-        private SmoothFloat sliderBallScaleAnim = new SmoothFloat();
+        private SmoothFloat sliderFollowScaleAnim = new SmoothFloat();
 
         public override Rectangle Bounds => SliderPath.Path.Bounds;
 
@@ -136,6 +203,8 @@ namespace RTCircles
 
         private void drawSliderRepeatHead(Graphics g)
         {
+            if (!IsHit && !IsMissed)
+                return;
             //Get the angle of the first and second point. so we can rotate the sliderRepeat towards that for the head
             var first = SliderPath.Path.Points[0];
             var next = SliderPath.Path.Points[1];
@@ -190,7 +259,7 @@ namespace RTCircles
             //If i used progress here since progress is capped, the sliderball would stay visible for the entire duration of the slider
             //Either that or i have to basically throw away a frame at the end if only checking for < 1f
             //so uncap makes sense here, to not miss a frame
-            if ((IsHit == true || IsMissed == true) && OsuContainer.SongPosition >= slider.StartTime)
+            if (OsuContainer.SongPosition >= slider.StartTime)
             {
                 if (OsuContainer.SongPosition < slider.EndTime)
                 {
@@ -201,11 +270,11 @@ namespace RTCircles
                         previousBallPos = pos;
                 }
 
-                float followCircleAlpha = sliderBallScaleAnim.Value.Map(1f, 2f, 0f, 1) * circleAlpha;
-
+                float followCircleAlpha = sliderFollowScaleAnim.Value.Map(1f, 2f, 0f, 1) * circleAlpha;
+                
                 float fadeoutScale = Interpolation.ValueAt(circleAlpha.Clamp(0f, 1f), 1f, 0.75f, 1f, 0f, EasingTypes.OutQuad).Clamp(0.75f, 1f);
 
-                Vector2 followCircleSize = Size * sliderBallScaleAnim * Skin.GetScale(Skin.SliderFollowCircle, 256, 512) * fadeoutScale;
+                Vector2 followCircleSize = Size * sliderFollowScaleAnim * Skin.GetScale(Skin.SliderFollowCircle, 256, 512) * fadeoutScale;
 
                 g.DrawRectangleCentered(sliderballPosition, followCircleSize, new Vector4(1f, 1f, 1f, followCircleAlpha), Skin.SliderFollowCircle);
             }
@@ -379,7 +448,7 @@ namespace RTCircles
             lastRepeatsDone = 0;
             snakeIn = 0f;
             fadeout = false;
-            sliderBallScaleAnim.Value = 1f;
+            sliderFollowScaleAnim.Value = 1f;
             lastTrackingTime = 0;
             previousTracking = false;
             hitTime = null;
@@ -393,8 +462,8 @@ namespace RTCircles
 
                 if (IsTracking)
                 {
-                    sliderBallScaleAnim.ClearTransforms();
-                    sliderBallScaleAnim.TransformTo(SliderBallActiveScale, 180f, EasingTypes.OutCirc);
+                    sliderFollowScaleAnim.ClearTransforms();
+                    sliderFollowScaleAnim.TransformTo(SliderBallActiveScale, 180f, EasingTypes.OutCirc);
                 }
             }
 
@@ -402,7 +471,7 @@ namespace RTCircles
                 lastTrackingTime = OsuContainer.SongPosition;
 
             if (OsuContainer.SongPosition < slider.EndTime)
-                sliderBallScaleAnim.Update((float)OsuContainer.DeltaSongPosition);
+                sliderFollowScaleAnim.Update((float)OsuContainer.DeltaSongPosition);
 
             //yikes
             if(IsTracking && (Skin.SliderSlide.PlaybackPosition > Skin.SliderSlide.PlaybackLength - 50f || Skin.SliderSlide.IsPlaying == false) && OsuContainer.SongPosition > slider.StartTime && OsuContainer.SongPosition < slider.EndTime && (IsHit || IsMissed))
@@ -453,7 +522,8 @@ namespace RTCircles
             if (repeatsDone != lastRepeatsDone)
             {
                 lastRepeatsDone = repeatsDone;
-
+                if(repeatsDone < slider.Repeats && IsValidTrack)
+                    Container.Add(new ExplodingSliderRepeat(SliderPath, repeatsDone));
                 //var hitsound = slider.EdgeHitSounds?[1] ?? slider.HitSound;
                 //var sample = slider.EdgeAdditions?[1].Item1 ?? slider.Extras.SampleSet;
 
@@ -528,7 +598,7 @@ namespace RTCircles
             }
 
             //Fix only explode when there are no misses on the slider
-            //This whole piece here is for exploding the slider itself like it was a circle
+            //This piece of code is for exploding the slider itself like it was a circle
             if (fadeout && (IsHit || IsEndingHit) && GlobalOptions.SliderSnakeExplode.Value)
             {
                 if (GlobalOptions.SliderSnakeOut.Value)
@@ -541,6 +611,7 @@ namespace RTCircles
             else
             {
                 SliderPath.ScalingOrigin = null;
+                SliderPath.DrawScale = 1;
             }
 
             SliderPath.Alpha = circleAlpha;
@@ -549,7 +620,7 @@ namespace RTCircles
 
             if (OsuContainer.SongPosition > slider.StartTime + OsuContainer.Beatmap.Window50 && !IsHit && !IsMissed)
             {
-                OsuContainer.HUD.AddHit((float)OsuContainer.Beatmap.Window50, HitResult.Miss, sliderballPosition, true);
+                OsuContainer.HUD.AddHit((float)OsuContainer.Beatmap.Window50, HitResult.Miss, hitCirclePos, true);
                 IsMissed = true;
             }
 

@@ -143,7 +143,7 @@ namespace RTCircles
             }
 
             
-            if(displayJudgement)
+            if(displayJudgement && result != HitResult.Max)
                 ScreenManager.GetScreen<OsuScreen>().Add(new HitJudgement(position, result));
 
             //Console.WriteLine(result);
@@ -213,7 +213,7 @@ namespace RTCircles
 
             for (int i = 0; i < hitURJudgements.Count; i++)
             {
-                hitURJudgements[i].Update((float)MainGame.Instance.RenderDeltaTime);
+                hitURJudgements[i].Update((float)MainGame.Instance.DeltaTime);
                 hitURJudgements[i].Render(g);
             }
 

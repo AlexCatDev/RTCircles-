@@ -139,7 +139,7 @@ namespace RTCircles
         public static void Render(Graphics g) {
             currentScreen.Render(g);
 
-            float DeltaTime = (float)MainGame.Instance.RenderDeltaTime;
+            float DeltaTime = (float)MainGame.Instance.DeltaTime;
 
             if (inIntroSequence) {
                 bool? hasCompleted = OnIntroTransition?.Invoke(DeltaTime);

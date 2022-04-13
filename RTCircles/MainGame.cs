@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace RTCircles
 {
@@ -18,7 +19,7 @@ namespace RTCircles
             = Option<bool>.CreateProxy("Bloom", (value) => { GPUSched.Instance.Enqueue(() => { PostProcessing.Bloom = value; }); }, false, "Enable bloom fx - Huge performance hit");
 
         public readonly static Option<bool> MotionBlur
-            = Option<bool>.CreateProxy("MotionBlur", (value) => { GPUSched.Instance.Enqueue(() => { PostProcessing.MotionBlur = value; }); }, false, "Enable motion blur like effect, with kiai 'bass' shake - Big performance hit");
+            = Option<bool>.CreateProxy("MotionBlur", (value) => { GPUSched.Instance.Enqueue(() => { PostProcessing.MotionBlur = value; }); }, false, "Motion blur like effect, with kiai 'bass' shake, and logo kiai shake");
 
         public readonly static Option<bool> UseFancyCursorTrail = new Option<bool>("UseFancyCursorTrail", true);
 
@@ -44,7 +45,7 @@ namespace RTCircles
 
         public readonly static Option<bool> RGBCircles = new Option<bool>("RGBCircles", false) { Description = "RGB ;) (Might not look good with all skins)" };
 
-        public readonly static Option<bool> UseFastSliders = new Option<bool>("UseFastSliders", false) { Description = "Enable low quality sliders (Requires map reload, Recommended to use slider snaking)"};
+        public readonly static Option<bool> UseFastSliders = new Option<bool>("UseFastSliders", false) { Description = "Low quality sliders (Requires map reload, Recommended to use slider snaking)"};
 
         public readonly static Option<bool> EnableMouseButtons = new Option<bool>("MouseButtons", false) { Description = "Enable Mouse Buttons?" };
         #endregion
@@ -158,15 +159,15 @@ namespace RTCircles
                 //Bg rectangle
                 //g.DrawRectangle(clickBox.Position, clickBox.Size, new Vector4(notf.Color, notf.Alpha));
 
-                float cornerRadius = 12f;
+                float cornerRadius = 15f * MainGame.Scale;
 
-                g.DrawRoundedRect(clickBox.Center, clickBox.Size, new Vector4(notif.Color, notif.Alpha), cornerRadius);
+                g.DrawRoundedRect((Vector2i)clickBox.Center, clickBox.Size, new Vector4(notif.Color, notif.Alpha), cornerRadius);
 
                 float border = 0.88f;
                 clickBox = new Rectangle(position + textOffset - ((box * border) / 2), textSize + box * border);
-                Vector3 bgColor = (MathUtils.IsPointInsideRect(Input.MousePosition, clickBox) ? new Vector3(0.1f) : new Vector3(0));
+                Vector3 bgColor = (clickBox.IntersectsWith(Input.MousePosition) ? new Vector3(0.1f) : new Vector3(0));
 
-                g.DrawRoundedRect(clickBox.Center, clickBox.Size, new Vector4(bgColor, notif.Alpha), cornerRadius);
+                g.DrawRoundedRect((Vector2i)clickBox.Center, clickBox.Size, new Vector4(bgColor, notif.Alpha), cornerRadius);
 
                 g.DrawString(notif.Text, Font.DefaultFont, position + textOffset, new Vector4(notif.Color, notif.Alpha), scale);
                 position.Y -= spacingY;
@@ -199,7 +200,7 @@ namespace RTCircles
 
                 Rectangle clickBox = new Rectangle(position + textOffset - box / 2, textSize + box);
 
-                if (MathUtils.IsPointInsideRect(Input.MousePosition, clickBox) && notf.Alpha > 0.5f && !notf.IsFinished)
+                if (clickBox.IntersectsWith(Input.MousePosition) && notf.Alpha > 0.5f && !notf.IsFinished)
                 {
                     notf.ClickAction?.Invoke();
                     notf.Fadeout(0.25f);
@@ -265,6 +266,10 @@ namespace RTCircles
 
         public override void OnLoad()
         {
+            //Rens det her lort
+
+            MaxAllowedDeltaTime = 0.1;
+            //Skin.Load("");
             //GlobalOptions.Init();
             Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  idke 1.2 without sliderendcircle");
             //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\- ModernDefault");
@@ -277,24 +282,12 @@ namespace RTCircles
             GPUSched.Instance.EnqueueDelayed(() =>
             {
                 NotificationManager.ShowMessage(
-                    $"Could not connect to service", ((Vector4)Color4.Crimson).Xyz, 5);
+                    $"Could not connect to server", ((Vector4)Color4.Crimson).Xyz, 5);
             }, delay: 10000);
 
             GPUSched.Instance.EnqueueDelayed(() =>
             {
-                NotificationManager.ShowMessage(
-                    $"Btw that was fake news", ((Vector4)Color4.Orange).Xyz, 5);
-            }, delay: 13000);
-
-            GPUSched.Instance.EnqueueDelayed(() =>
-            {
-                NotificationManager.ShowMessage(
-                    $"There is no service", ((Vector4)Color4.LightGreen).Xyz, 5);
-            }, delay: 15500);
-
-            GPUSched.Instance.EnqueueDelayed(() =>
-            {
-                NotificationManager.ShowMessage($"Yet.. (click me)",
+                NotificationManager.ShowMessage($"Test message",
                     ((Vector4)Color4.CornflowerBlue).Xyz, 5, () =>
                     {
                         for (int i = 0; i < 5; i++)
@@ -302,11 +295,11 @@ namespace RTCircles
                             NotificationManager.ShowMessage($"Spam click_event {i}", ((Vector4)Color4.Peru).Xyz, 1);
                         }
                     });
-            }, delay: 17000);
+            }, delay: 20000);
 
             GPUSched.Instance.EnqueueDelayed(() =>
             {
-                NotificationManager.ShowMessage($"New private message from: 'Your Mother' click here to view it",
+                NotificationManager.ShowMessage($"Message from: 'Your Mother' click to view it",
                     ((Vector4)Color4.HotPink).Xyz, 5, () =>
                     {
                         Skin.ComboBreak.Play(true);
@@ -360,10 +353,6 @@ namespace RTCircles
                 }
 
                 ScreenManager.OnKeyDown(e);
-                /*
-                string notifText = $"Pressed: {e}";
-                NotificationManager.ShowMessage(notifText, Colors.Pink.Xyz, 1, () => { Console.WriteLine($"Clicked on {notifText}"); });
-                */
             };
 
             Input.InputContext.Keyboards[0].KeyUp += (s, e, x) =>
@@ -381,96 +370,6 @@ namespace RTCircles
 
                 ScreenManager.OnTextInput(e);
             };
-
-            /*
-            float introTime = 0;
-            float introDuration = 0.15f;
-            ScreenManager.OnIntroTransition += (delta) =>
-            {
-                introTime += delta;
-                introTime = introTime.Clamp(0f, introDuration);
-
-                float alpha = Interpolation.ValueAt(introTime, 0f, 1f, 0f, introDuration, EasingTypes.In);
-
-                g.DrawRectangle(Vector2.Zero, new Vector2(WindowWidth, WindowHeight), new Vector4(0f, 0f, 0f, alpha));
-
-                if (introTime == introDuration)
-                {
-                    introTime = 0;
-                    return true;
-                }
-
-                return false;
-            };
-
-            float outroTime = 0;
-            float outroDuration = 0.15f;
-            ScreenManager.OnOutroTransition += (delta) =>
-            {
-                outroTime += delta;
-                outroTime = outroTime.Clamp(0f, outroDuration);
-
-                float alpha = Interpolation.ValueAt(outroTime, 1f, 0f, 0f, outroDuration, EasingTypes.Out);
-
-                //Fade black fullscreen quad
-                g.DrawRectangle(new Vector2(0, 0), new Vector2(WindowWidth, WindowHeight), new Vector4(0f, 0f, 0f, alpha));
-
-                if (outroTime == outroDuration)
-                {
-                    outroTime = 0;
-                    return true;
-                }
-
-                return false;
-            };
-            */
-
-            /*
-        float outroTime = 0;
-        float outroDuration = 0.15f;
-            ScreenManager.OnOutroTransition += (delta) =>
-            {
-                outroTime += delta;
-                outroTime = outroTime.Clamp(0f, outroDuration);
-
-                float alpha = Interpolation.ValueAt(outroTime, 1f, 0f, 0f, outroDuration, EasingTypes.None);
-
-                //Fade black fullscreen quad
-                g.DrawRectangle(new Vector2(0, 0), WindowSize, new Vector4(0.1f, 0.1f, 0.1f, alpha));
-
-                if (outroTime == outroDuration)
-                {
-                    outroTime = 0;
-                    return true;
-                }
-
-                return false;
-            };
-
-        float introDuration = 0.15f;
-        float introTime = 0;
-            ScreenManager.OnIntroTransition += (delta) =>
-            {
-                introTime += delta;
-                introTime = introTime.Clamp(0f, introDuration);
-
-                float sizeX = WindowWidth / 2f;
-                float slideX = Interpolation.ValueAt(introTime, -sizeX, 0f, 0f, introDuration, EasingTypes.InOutQuad);
-
-                //Left door
-                g.DrawRectangle(new Vector2(slideX, 0), new Vector2(sizeX, WindowHeight), new Vector4(0.1f, 0.1f, 0.1f, 1f));
-                //Right door
-                g.DrawRectangle(new Vector2(sizeX - slideX, 0), new Vector2(sizeX, WindowHeight), new Vector4(0.1f, 0.1f, 0.1f, 1f));
-
-                if (introTime == introDuration)
-                {
-                    introTime = 0;
-                    return true;
-                }
-
-                return false;
-            };
-            */
 
             float outroTime = 0;
             float outroDuration = 0.125f;
@@ -515,9 +414,13 @@ namespace RTCircles
                 ScreenManager.GoBack();
             };
 
-            Utils.IgnoredLogLevels.Add(LogLevel.Debug);
-#if DEBUG
             Utils.WriteToConsole = true;
+
+            Utils.IgnoredLogLevels.Add(LogLevel.Debug);
+#if RELEASE
+            Utils.IgnoredLogLevels.Add(LogLevel.Info);
+            Utils.IgnoredLogLevels.Add(LogLevel.Important);
+            Utils.IgnoredLogLevels.Add(LogLevel.Success);
 #endif
             //IsMultiThreaded = true;
 
@@ -535,8 +438,26 @@ namespace RTCircles
         private Camera debugCamera = new Camera();
         private float debugCameraScale = 1f;
 
+        private double totalDeltaTimes = 0;
+        private int deltaTimesCount = 0;
+        private double averageDeltaTime = 1000;
+
         public override void OnRender(double delta)
         {
+            totalDeltaTimes += delta;
+            deltaTimesCount++;
+
+            if(totalDeltaTimes >= 1)
+            {
+                averageDeltaTime = totalDeltaTimes / deltaTimesCount;
+
+                totalDeltaTimes -= 1;
+                deltaTimesCount = 0;
+            }
+
+            if (delta > 0.033)
+                NotificationManager.ShowMessage($"<30fps Lag spike ! {delta*1000:F2}ms", ((Vector4)Color4.Yellow).Xyz, 3f);
+
             g.Projection = PostProcessing.MotionBlur && (ScreenManager.ActiveScreen is MenuScreen or OsuScreen) ? shakeMatrix : Projection;
 
             if (debugCameraActive)
@@ -599,7 +520,7 @@ namespace RTCircles
                 if (renderTimes.Count == 1000)
                     renderTimes.RemoveAt(0);
 
-                renderTimes.Add(RenderDeltaTime);
+                renderTimes.Add(DeltaTime);
 
                 Vector2 offset = Vector2.Zero;
                 float height20MS = 250;
@@ -629,11 +550,11 @@ namespace RTCircles
                 ulong diffTriangles = g.TrianglesDrawn - prevTriangles;
                 prevTriangles = g.TrianglesDrawn;
 
-                double verticesPerSecond = (diffVertices) * (1.0 / RenderDeltaTime);
+                double verticesPerSecond = (diffVertices) * (1.0 / DeltaTime);
 
-                double indicesPerSecond = (diffIndices) * (1.0 / RenderDeltaTime);
+                double indicesPerSecond = (diffIndices) * (1.0 / DeltaTime);
 
-                double trianglesPerSecond = (diffTriangles) * (1.0 / RenderDeltaTime);
+                double trianglesPerSecond = (diffTriangles) * (1.0 / DeltaTime);
 
                 const float scale = 0.35f;
 
@@ -725,7 +646,7 @@ namespace RTCircles
                     (log.Tag as SmoothFloat).TransformTo(0f, 0.5f, EasingTypes.OutElasticHalf);
                 }
 
-                (log.Tag as SmoothFloat).Update((float)RenderDeltaTime);
+                (log.Tag as SmoothFloat).Update((float)DeltaTime);
 
                 Vector2 animOffset = new Vector2((log.Tag as SmoothFloat).Value * MainGame.WindowWidth / 3, 0);
 

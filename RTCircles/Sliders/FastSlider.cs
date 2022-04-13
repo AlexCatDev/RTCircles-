@@ -136,7 +136,6 @@ namespace RTCircles
                 throw new Exception("Slider radius was less than 0????");
 
             radius = new Vector2(osuRadius * (OsuContainer.Playfield.Width / 512)) * DrawScale * 2;
-
             var prevRadius = radius;
             var prevColor = color;
 

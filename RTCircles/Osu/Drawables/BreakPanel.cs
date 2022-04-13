@@ -57,18 +57,28 @@ namespace RTCircles
 
             g.DrawRectangle(position, size, Colors.From255RGBA(37, 37, 37, 127));
 
+            int remainingBreakTime = (int)Math.Max((breakEnd - OsuContainer.SongPosition) / 1000, 0);
+
+            float textScale = size.Y / Font.DefaultFont.Size * 0.6f;
+
+            Rectangle rect = new Rectangle(position, size);
+
+            g.DrawStringCentered(remainingBreakTime.ToString(), Font.DefaultFont, rect.Center, new Vector4(1f, 1f, 1f, scrollProgress), textScale);
+
+            /*
             var remainingTime = (breakEnd - OsuContainer.SongPosition) / 1000;
 
             if (remainingTime < 0)
                 remainingTime = 0;
 
-            string txt = $"Break:        {remainingTime:F2}s";
+            string txt = $"{(int)remainingTime}";
 
             float textScale = size.Y / Font.DefaultFont.Size * 0.6f;
-            Vector2 textSize = Font.DefaultFont.MessureString("Break:        00.00s", textScale);
+            Vector2 textSize = Font.DefaultFont.MessureString("00", textScale);
             Vector2 textPos = new Vector2(position.X / 2f + size.X / 2 - textSize.X / 2, position.Y + size.Y / 2f - textSize.Y);
 
             g.DrawStringNoAlign(txt, Font.DefaultFont, textPos, new Vector4(1f,1f,1f,scrollProgress), textScale);
+            */
         }
 
         public override void Update(float delta)

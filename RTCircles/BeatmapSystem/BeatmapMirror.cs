@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Easy2D;
 using Newtonsoft.Json;
+using OpenTK.Mathematics;
 using OsuParsers.Beatmaps;
 using OsuParsers.Decoders;
 using Realms;
@@ -197,6 +198,7 @@ namespace RTCircles
                             Realm.Add(dBBeatmap, true);
                         });
                         OnNewBeatmapAvailable?.Invoke(dBBeatmap);
+                        NotificationManager.ShowMessage($"Imported {dBBeatmap.Folder}", ((Vector4)Color4.Green).Xyz, 3);
                         Utils.Log("Done!", LogLevel.Success);
                     });
                 }

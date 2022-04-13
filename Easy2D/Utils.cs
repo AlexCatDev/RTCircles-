@@ -36,10 +36,6 @@ namespace Easy2D
         /// </summary>
         Important,
         /// <summary>
-        /// Black text with white background
-        /// </summary>
-        Benchmark,
-        /// <summary>
         /// Black text with yellow background
         /// </summary>
         Performance,
@@ -182,8 +178,6 @@ namespace Easy2D
                     return ConsoleColor.White;
                 case LogLevel.Important:
                     return ConsoleColor.Magenta;
-                case LogLevel.Benchmark:
-                    return ConsoleColor.Gray;
                 default:
                     return ConsoleColor.DarkGray;
             }
@@ -205,8 +199,6 @@ namespace Easy2D
                     return Color4.White;
                 case LogLevel.Important:
                     return Color4.Magenta;
-                case LogLevel.Benchmark:
-                    return Color4.Gray;
                 default:
                     return Color4.DarkGray;
             }
@@ -243,21 +235,14 @@ namespace Easy2D
         }
 
         private static Dictionary<string, Stopwatch> benchmarks = new Dictionary<string, Stopwatch>();
-        public static void BeginProfiling(string name)
-        {
-            benchmarks.Add(name, Stopwatch.StartNew());
-        }
+        public static void BeginProfiling(string name) => benchmarks.Add(name, Stopwatch.StartNew());
 
-        public static double EndProfiling(string name, bool print = true, bool log = false)
+        public static double EndProfiling(string name)
         {
             var time = ((double)benchmarks[name].ElapsedTicks / Stopwatch.Frequency) * 1000.0;
             benchmarks.Remove(name);
 
-            if(print)
-                Console.WriteLine($"{name} took {time} milliseconds");
-
-            if (log)
-                Utils.Log($"{name} took {time} milliseconds", LogLevel.Benchmark);
+            Utils.Log($"{name} took {time} milliseconds", LogLevel.Performance);
 
             return time;
         }
@@ -274,7 +259,7 @@ namespace Easy2D
         public static void Benchmark(Action a, string name)
         {
             var time = Benchmark(a);
-            Console.WriteLine($"{name} took {time} ms");
+            Utils.Log($"{name} took {time} milliseconds", LogLevel.Performance);
         }
     }
 }

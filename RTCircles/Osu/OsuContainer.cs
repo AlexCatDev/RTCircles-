@@ -556,54 +556,5 @@ namespace RTCircles
                     return Ranking.D;
             }
         }
-        
-            /*
-        public static string GetRankingLetter(int count300, int count100, int count50, int countMiss)
-        {
-            int totalHits = count300 + count100 + count50 + countMiss;
-
-            var acc = ((count300 * 300.0) + (count100 * 100.0) + (count50 * 50.0)) / (totalHits * 300);
-
-            var percent50s = ((double)count50 / totalHits) * 100.0;
-            var percent300s = ((double)count300 / totalHits) * 100.0;
-
-            if (totalHits == 0)
-                acc = 1.0;
-
-            acc *= 100;
-
-            //SH = Hidden/Flashlight S
-            //XH = Hidden/Flashlight SS
-            //X = SS
-
-            if (countMiss == 0)
-            {
-                if (acc == 100)
-                    return Beatmap.Mods.HasFlag(Mods.HD) ? "XH" : "X";
-
-                if (percent50s < 1.0 && percent300s > 90.0)
-                    return Beatmap.Mods.HasFlag(Mods.HD) ? "SH" : "S";
-                else if (percent300s > 80.0)
-                    return "A";
-                else if (percent300s > 70.0)
-                    return "B";
-                else if (percent300s > 60.0)
-                    return "C";
-                else
-                    return "D";
-            }
-            else 
-            {
-                if (percent300s > 90.0)
-                    return "A";
-                else if (percent300s > 80.0)
-                    return "B";
-                else if (percent300s > 60.0)
-                    return "C";
-                else
-                    return "D";
-            }
-        }
-        */
     }
 }

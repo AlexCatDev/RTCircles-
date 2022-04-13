@@ -244,30 +244,26 @@ namespace Easy2D
         /// <param name="noBuffer">NoBuffer remedies this, but fft is broken among some other stuf probably</param>
         public Sound(Stream stream, bool useFX = false, bool noBuffer = false)
         {
-            if(stream is null)
+            if (stream is null)
             {
                 Utils.Log($"Error stream was null!", LogLevel.Error);
                 GC.SuppressFinalize(this);
                 return;
             }
+            
+            byte[] data = new byte[stream.Length];
+            stream.Read(data, 0, data.Length);
 
-            using (MemoryStream ms = new MemoryStream()) {
-                stream.CopyTo(ms);
-                byte[] data = ms.ToArray();
-                if (useFX)
-                {
-                    handle = BassFx.TempoCreate(Bass.CreateStream(data, 0, data.Length, BassFlags.Decode | BassFlags.Prescan), BassFlags.Default | BassFlags.FxFreeSource);
-                }
-                else
-                {
-                    handle = Bass.CreateStream(data, 0, data.Length, BassFlags.Prescan);
-                }
+            if (useFX)
+                handle = BassFx.TempoCreate(Bass.CreateStream(data, 0, data.Length, BassFlags.Decode | BassFlags.Prescan), BassFlags.Default | BassFlags.FxFreeSource);
+            else
+                handle = Bass.CreateStream(data, 0, data.Length, BassFlags.Prescan);
 
-                if (noBuffer)
-                {
-                    Bass.ChannelSetAttribute(handle, ChannelAttribute.Buffer, 0);
-                }
-            }
+            if (noBuffer)
+                Bass.ChannelSetAttribute(handle, ChannelAttribute.Buffer, 0);
+
+            if (noBuffer)
+                Bass.ChannelSetAttribute(handle, ChannelAttribute.Buffer, 0);
 
             DefaultFrequency = Frequency;
             SupportsFX = useFX;

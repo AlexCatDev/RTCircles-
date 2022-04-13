@@ -34,15 +34,15 @@ namespace RTCircles
 
             Viewport.SetViewport((int)Position.X, (int)(MainGame.WindowHeight - Position.Y - Size.Y), (int)Size.X, (int)Size.Y);
             g.Projection = Matrix4.CreateOrthographicOffCenter(0, Size.X, Size.Y, 0, -1, 1);
-            (MainGame.Instance as MainGame).FakeWindowSize(Size, () =>
+            (MainGame.Instance as MainGame).FakeWindowSize(Size, (Action)(() =>
             {
-                targetScreen.Update((float)MainGame.Instance.RenderDeltaTime);
+                targetScreen.Update((float)MainGame.Instance.DeltaTime);
 
                 g.DrawRectangle(Vector2.Zero, Size, Colors.Black);
                 targetScreen.Render(g);
 
                 g.EndDraw();
-            });
+            }));
             
             g.Projection = prevProj;
             Viewport.SetViewport(prevView);

@@ -132,10 +132,11 @@ void main() {
 		color = vec4(color.rgb + color2.rgb, 1.0);
 	} else if(u_Final) {
         //dst framebuffer
-        color = texture(u_Texture, v_TexCoordinate);
+        vec3 inputScene = texture(u_Texture, v_TexCoordinate).rgb;
         
-		vec4 inputBloom = texture(u_CombineTexture, v_TexCoordinate);
+		vec3 inputBloom = texture(u_CombineTexture, v_TexCoordinate).rgb;
 
+        /*
         const float gamma = 1.6;
         vec3 hdrColor = inputBloom.rgb;
   
@@ -143,8 +144,13 @@ void main() {
         vec3 tempColor = hdrColor / (hdrColor + vec3(1.0));
         // gamma correction 
         tempColor = pow(tempColor, vec3(1.0 / gamma)) + color.rgb;
+        */
 
-		color = vec4(tempColor, 1.0);
+        vec3 result = inputScene + ACESFitted(inputBloom);
+
+        //vec3 tempColor =
+
+		color = vec4(result, 1.0);
         //Else we're writing to another buffer
 	} else {
         color = texture(u_Texture, v_TexCoordinate);

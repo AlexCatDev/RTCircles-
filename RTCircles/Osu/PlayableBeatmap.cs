@@ -175,8 +175,12 @@ namespace RTCircles
 
             if (File.Exists(audioPath))
             {
-                Song = new Sound(File.OpenRead($"{folderPath}/{InternalBeatmap.GeneralSection.AudioFilename}"), true);
-                Song.Volume = GlobalOptions.SongVolume.Value;
+                using (FileStream fs = File.OpenRead($"{folderPath}/{InternalBeatmap.GeneralSection.AudioFilename}"))
+                {
+                    Song = new Sound(fs, true);
+                    Song.Volume = GlobalOptions.SongVolume.Value;
+                }
+
             }
             else
                 Song = new Sound(null);

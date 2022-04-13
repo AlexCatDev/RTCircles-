@@ -130,10 +130,17 @@ namespace RTCircles
 
         public override void Render(Graphics g)
         {
-            g.DrawRectangleCentered(Position, (Vector2)Size * explodeScale * Skin.GetScale(Skin.HitCircle), new Vector4(Color.X, Color.Y, Color.Z, alpha), Skin.HitCircle);
-
-            g.DrawRectangleCentered(Position, (Vector2)Size * explodeScale * Skin.GetScale(Skin.HitCircleOverlay), new Vector4(1f, 1f, 1f, alpha), Skin.HitCircleOverlay);
-
+            //lol
+            if (Skin.Config.HitCircleOverlayAboveNumber)
+            {
+                g.DrawRectangleCentered(Position, (Vector2)Size * explodeScale * Skin.GetScale(Skin.HitCircle), new Vector4(Color.X, Color.Y, Color.Z, alpha), Skin.HitCircle);
+                g.DrawRectangleCentered(Position, (Vector2)Size * explodeScale * Skin.GetScale(Skin.HitCircleOverlay), new Vector4(1f, 1f, 1f, alpha), Skin.HitCircleOverlay);
+            }
+            else
+            {
+                g.DrawRectangleCentered(Position, (Vector2)Size * explodeScale * Skin.GetScale(Skin.HitCircleOverlay), new Vector4(1f, 1f, 1f, alpha), Skin.HitCircleOverlay);
+                g.DrawRectangleCentered(Position, (Vector2)Size * explodeScale * Skin.GetScale(Skin.HitCircle), new Vector4(Color.X, Color.Y, Color.Z, alpha), Skin.HitCircle);
+            }
             
             if (!IsHit && !IsMissed)
             {

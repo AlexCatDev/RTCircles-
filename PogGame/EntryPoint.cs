@@ -353,7 +353,7 @@ namespace PogGame
 
     public class EntryPoint : Game
     {
-        public static Camera camera = new Camera(1,1);
+        public static Camera camera = new Camera();
         private Graphics graphics;
         private Drawable container = new Drawable();
 
@@ -417,14 +417,14 @@ namespace PogGame
             ulong diffTriangles = g.TrianglesDrawn - prevTriangles;
             prevTriangles = g.TrianglesDrawn;
 
-            double verticesPerSecond = (diffVertices) * (1.0 / RenderDeltaTime);
+            double verticesPerSecond = (diffVertices) * (1.0 / DeltaTime);
 
-            double indicesPerSecond = (diffIndices) * (1.0 / RenderDeltaTime);
+            double indicesPerSecond = (diffIndices) * (1.0 / DeltaTime);
 
-            double trianglesPerSecond = (diffTriangles) * (1.0 / RenderDeltaTime);
+            double trianglesPerSecond = (diffTriangles) * (1.0 / DeltaTime);
 
             float scale = 0.35f;
-            string text = $"FPS: {FPS}/{1000.0 / FPS:F2}ms UPS: {UPS}/{1000.0 / UPS:F2}ms\nVertices: {Utils.ToKMB(verticesPerSecond)}/s\nIndices: {Utils.ToKMB(indicesPerSecond)}/s\nTris: {Utils.ToKMB(trianglesPerSecond)}/s\nFramework: {RuntimeInformation.FrameworkDescription}\nOS: {RuntimeInformation.OSDescription}";
+            string text = $"FPS: {FPS}/{1000.0 / FPS:F2}ms\nVertices: {Utils.ToKMB(verticesPerSecond)}/s\nIndices: {Utils.ToKMB(indicesPerSecond)}/s\nTris: {Utils.ToKMB(trianglesPerSecond)}/s\nFramework: {RuntimeInformation.FrameworkDescription}\nOS: {RuntimeInformation.OSDescription}";
 
             g.DrawString(text, Font.DefaultFont, new Vector2(20), Colors.Yellow, scale);
         }

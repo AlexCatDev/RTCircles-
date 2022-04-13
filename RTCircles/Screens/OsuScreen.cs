@@ -263,6 +263,8 @@ namespace RTCircles
 
             breakOverlay.Render(g);
 
+            drawPauseOverlay(g);
+
             drawCursor(g);
         }
 
@@ -285,13 +287,75 @@ namespace RTCircles
             }
         }
 
+        private double pauseStart;
+
+        private bool isPaused;
+
+        private SmoothFloat pauseOverlayFade = new SmoothFloat();
+
+        private void drawPauseOverlay(Graphics g)
+        {
+            pauseOverlayFade.Update((float)MainGame.Instance.DeltaTime);
+
+            if(pauseOverlayFade.Value > 0)
+            {
+                g.DrawStringNoAlign("Paused!", Font.DefaultFont, MainGame.WindowCenter, new Vector4(1f,1f,1f,pauseOverlayFade.Value));
+            }
+        }
+
+        private bool showedPauseMessage;
+
         public override void OnKeyDown(Key key)
         {
             if (key == Key.Escape)
+            {
                 ScreenManager.GoBack();
+                return;
 
-            OsuContainer.KeyDown(key);
-            base.OnKeyDown(key);
+                //If the current beatmap is null or the map is finished just return for now
+                if (OsuContainer.SongPosition > OsuContainer.Beatmap?.HitObjects[^1].BaseObject.EndTime + 400 || (OsuContainer.Beatmap?.Song.IsStopped ?? true))
+                {
+                    ScreenManager.GoBack();
+                    return;
+                }
+
+                if (Math.Abs(pauseStart - MainGame.Instance.TotalTime) < 3 && !isPaused)
+                {
+                    if (!showedPauseMessage)
+                    {
+                        NotificationManager.ShowMessage("Please wait atleast 3 seconds between pauses", ((Vector4)Color4.SteelBlue).Xyz, 5);
+                        showedPauseMessage = true;
+                    }
+                }
+                else
+                {
+                    if(pauseOverlayFade.Value == 0)
+                    {
+                        OsuContainer.Beatmap?.Song.Pause();
+                        pauseStart = MainGame.Instance.TotalTime;
+
+                        isPaused = true;
+
+                        pauseOverlayFade.TransformTo(1f, 0.25f, EasingTypes.Out);
+
+                        showedPauseMessage = false;
+                    }
+                    else if(pauseOverlayFade.Value == 1)
+                    {
+                        pauseOverlayFade.TransformTo(0f, 0.5f, EasingTypes.In, () =>
+                        {
+                            isPaused = false;
+                            OsuContainer.Beatmap?.Song.Play(false);
+                        });
+                    }
+                }
+            }
+
+            if (!isPaused)
+            {
+                OsuContainer.KeyDown(key);
+                base.OnKeyDown(key);
+            }
         }
 
         public override void OnKeyUp(Key key)
@@ -302,8 +366,11 @@ namespace RTCircles
 
         public override void OnMouseDown(MouseButton button)
         {
-            OsuContainer.MouseDown(button);
-            base.OnMouseDown(button);
+            if (!isPaused)
+            {
+                OsuContainer.MouseDown(button);
+                base.OnMouseDown(button);
+            }
         }
 
         public override void OnMouseUp(MouseButton button)

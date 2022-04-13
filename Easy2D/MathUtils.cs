@@ -39,8 +39,6 @@ namespace Easy2D
 
         public static bool IsPointInsideRadius(Vector2 point1, Vector2 point2, float radius) => (point1 - point2).LengthFast < radius;
 
-        public static bool IsPointInsideRect(Vector2 point, Rectangle rect) => point.X > rect.X && point.X < rect.X + rect.Width && point.Y > rect.Y && point.Y < rect.Y + rect.Height;
-
         public static float AtanVec(Vector2 pos1, Vector2 pos2) => MathF.Atan2(pos1.Y - pos2.Y, pos1.X - pos2.X); 
 
         public static float GetAngleFromOrigin(Vector2 origin, Vector2 target, float degreesOffset = 0)

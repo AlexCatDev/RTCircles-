@@ -90,7 +90,7 @@ namespace Easy2D
             return value;
         }
 
-        public bool IsPointInside(Vector2 point) => point.X > X && point.X < X + Width && point.Y > Y && point.Y < Y + Height;
+        public bool IntersectsWith(Vector2 point) => point.X > X && point.X < X + Width && point.Y > Y && point.Y < Y + Height;
 
         public bool IntersectsWith(Rectangle rect) {
             return (rect.X < this.X + this.Width) &&
