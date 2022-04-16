@@ -131,8 +131,8 @@ namespace RTCircles
                 {
                     ScreenManager.GetScreen<MapSelectScreen>().LoadCarouselItems();
 
-                    var carouselItems = BeatmapCarousel.Items;
-                    if (BeatmapCarousel.Items.Count > 0)
+                    var carouselItems = BeatmapCollection.Items;
+                    if (BeatmapCollection.Items.Count > 0)
                     {
                         var item = carouselItems[RNG.Next(0, carouselItems.Count - 1)];
 
@@ -456,7 +456,6 @@ namespace RTCircles
             playButton.OnClick += (s, e) =>
             {
                 slideBack();
-
                 ScreenManager.SetScreen<MapSelectScreen>();
             };
 
@@ -469,7 +468,7 @@ namespace RTCircles
             multiPlayButton.OnClick += (s, e) =>
             {
                 slideBack();
-                //ScreenManager.SetScreen<MultiConnectScreen>();
+                ScreenManager.SetScreen<MultiplayerScreen>();
             };
 
             optionsButton.Layer = -69;
@@ -486,7 +485,7 @@ namespace RTCircles
 
             exitButton.Layer = -69;
             exitButton.Size = new Vector2(720, 120);
-            exitButton.Text = "Exit";
+            exitButton.Text = "Pause";
             exitButton.TextOffset = new Vector2(50, 0);
             exitButton.Color = Colors.From255RGBA(37, 37, 37, 37);
             exitButton.TextColor = Colors.White;
@@ -495,7 +494,7 @@ namespace RTCircles
                 slideBack();
                 //Game.Instance.Window.Close();
 
-                exitButton.Text = "ALT + F4 ty";
+                //exitButton.Text = "ALT + F4 ty";
 
                 if (OsuContainer.Beatmap is not null)
                 {

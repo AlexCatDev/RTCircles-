@@ -47,7 +47,32 @@ namespace RTCircles
                         texture = new Texture(File.OpenRead(texturePath));
                     else
                     {
-                        texture = Skin.DefaultBackground;
+                        if (texturePath.ToLower().Contains("hitcircle"))
+                            texture = Skin.HitCircle;
+                        else if (texturePath.ToLower().Contains("hitcircleoverlay"))
+                            texture = Skin.HitCircleOverlay;
+                        else if (texturePath.ToLower().Contains("approachcircle"))
+                            texture = Skin.ApproachCircle;
+                        else if (texturePath.ToLower().Contains("default-1"))
+                            texture = Skin.CircleNumbers.Numbers[1];
+                        else if (texturePath.ToLower().Contains("default-2"))
+                            texture = Skin.CircleNumbers.Numbers[2];
+                        else if (texturePath.ToLower().Contains("default-3"))
+                            texture = Skin.CircleNumbers.Numbers[3];
+                        else if (texturePath.ToLower().Contains("default-4"))
+                            texture = Skin.CircleNumbers.Numbers[4];
+                        else if (texturePath.ToLower().Contains("default-5"))
+                            texture = Skin.CircleNumbers.Numbers[5];
+                        else if (texturePath.ToLower().Contains("default-6"))
+                            texture = Skin.CircleNumbers.Numbers[6];
+                        else if (texturePath.ToLower().Contains("default-7"))
+                            texture = Skin.CircleNumbers.Numbers[7];
+                        else if (texturePath.ToLower().Contains("default-8"))
+                            texture = Skin.CircleNumbers.Numbers[8];
+                        else if (texturePath.ToLower().Contains("default-9"))
+                            texture = Skin.CircleNumbers.Numbers[9];
+
+                        //texture = Skin.DefaultBackground;
                         Utils.Log($"Could not find storyboard texture: {texturePath}", LogLevel.Error);
                     }
 

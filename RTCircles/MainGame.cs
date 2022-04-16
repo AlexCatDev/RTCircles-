@@ -357,6 +357,13 @@ namespace RTCircles
                     }
                 }
 
+                if(e == Key.F10)
+                {
+                    GlobalOptions.EnableMouseButtons.Value = !GlobalOptions.EnableMouseButtons.Value;
+
+                    NotificationManager.ShowMessage($"Mousebuttons: {GlobalOptions.EnableMouseButtons.Value}", ((Vector4)Color4.Violet).Xyz, 2f);
+                }
+
                 if (debugCameraActive)
                 {
                     if (e == Key.W || e == Key.A || e == Key.S || e == Key.D)

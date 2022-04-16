@@ -9,6 +9,8 @@ namespace RTCircles
     {
         private Dictionary<int, Texture> numbers = new Dictionary<int, Texture>();
 
+        public IReadOnlyDictionary<int, Texture> Numbers => numbers;
+
         private Texture commaTexture;
         private Texture percentTexture;
         private Texture xTexture;

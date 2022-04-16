@@ -42,6 +42,8 @@ namespace RTCircles
             }
         }
 
+        public float TextureRotation = 0;
+
         public bool Disabled;
 
         public Rectangle TextureRectangle = new Rectangle(0, 0, 1, 1);
@@ -122,7 +124,7 @@ namespace RTCircles
 
             float textScale = Size.Y / Font.DefaultFont.Size;
 
-            g.DrawRectangle(Position, Size, Disabled ? new Vector4(Color.Xyz, 0.2f) : Color, Texture, TextureRectangle, true);
+            g.DrawRectangle(Position, Size, Disabled ? new Vector4(Color.Xyz, 0.2f) : Color, Texture, TextureRectangle, true, TextureRotation);
 
             if (!buttonPressAnimation.IsCompleted || !buttonPressFadeAnimation.IsCompleted)
             {

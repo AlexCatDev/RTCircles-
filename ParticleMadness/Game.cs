@@ -287,6 +287,7 @@ namespace ParticleMadness
     }
     */
 
+    //Lets pretend this doesnt exist :D
     public class Game : Easy2D.Game.Game
     {
         private Matrix4 projection;

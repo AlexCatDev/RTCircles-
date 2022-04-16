@@ -198,7 +198,12 @@ namespace RTCircles
                             Realm.Add(dBBeatmap, true);
                         });
                         OnNewBeatmapAvailable?.Invoke(dBBeatmap);
-                        NotificationManager.ShowMessage($"Imported {dBBeatmap.Folder}", ((Vector4)Color4.Green).Xyz, 3);
+
+                        int id = dBBeatmap.ID;
+
+                        NotificationManager.ShowMessage($"Imported {dBBeatmap.File}", ((Vector4)Color4.LightGreen).Xyz, 3, () => {
+                            ScreenManager.GetScreen<MapSelectScreen>().SongSelector.SelectBeatmap(id);
+                        });
                         Utils.Log("Done!", LogLevel.Success);
                     });
                 }
