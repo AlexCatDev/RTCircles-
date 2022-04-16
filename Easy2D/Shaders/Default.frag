@@ -113,7 +113,7 @@ vec4 slider(vec4 sliderTexture) {
 
 
 void main() {
-    vec4 texColor = vec4(1.0);
+    vec4 texColor;
     //texColor = texture(u_Textures[v_TextureSlot], v_TexCoordinate) * v_Color;
     //Add_Switch_Statement^
     switch(v_TextureSlot) {

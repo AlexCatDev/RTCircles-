@@ -10,6 +10,17 @@ namespace Easy2D
 {
     public static class MathUtils
     {
+        public static Vector3 RainbowColor(double time)
+        {
+            var color = new Vector3();
+
+            color.X = (float)Math.Cos(time).Map(-1, 1, 0, 1);
+            color.Y = (float)Math.Cos(time + 2).Map(-1, 1, 0, 1);
+            color.Z = (float)Math.Cos(time + 4).Map(-1, 1, 0, 1);
+
+            return color;
+        }
+
         public static double ToRadians(double degrees)
         {
             return degrees * 0.017453292519943295769236907684886;

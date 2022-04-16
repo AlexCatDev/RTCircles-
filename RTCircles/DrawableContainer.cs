@@ -19,6 +19,8 @@ namespace RTCircles
 
         public void Add(params Drawable[] drawables) => childrenPendingAdd.AddRange(drawables);
 
+        public void Add(Drawable drawable) => childrenPendingAdd.Add(drawable);
+
         public void Clear<T>() where T : Drawable
         {
             for (int i = children.Count - 1; i >= 0; i--)
@@ -135,7 +137,8 @@ namespace RTCircles
                 if (children[i].IsDead)
                     continue;
 
-                children[i].Render(g);
+                if(children[i].IsVisible)
+                    children[i].Render(g);
             }
 
             for (int i = 0; i < childCount; i++)
@@ -193,8 +196,8 @@ namespace RTCircles
                     var newChild = childrenPendingAdd[i];
 
                     newChild.IsDead = false;
-                    hashedChildren.Add(newChild);
-                    children.Add(newChild);
+                    if (hashedChildren.Add(newChild))
+                        children.Add(newChild);
 
                     newChild.Container = this;
                     newChild.OnAdd();

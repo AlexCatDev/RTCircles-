@@ -114,6 +114,8 @@
     <None Remove="Sliders\slidergradient.png" />
     <None Remove="Sliders\sliderPass.frag" />
     <None Remove="Sliders\sliderPass.vert" />
+    <None Remove="UI\LockClosed.png" />
+    <None Remove="UI\LockOpen.png" />
     <None Remove="UI\roboto_bold.fnt" />
     <None Remove="UI\roboto_bold.png" />
   </ItemGroup>
@@ -234,6 +236,8 @@
     <EmbeddedResource Include="Sliders\slidergradient.png" />
     <EmbeddedResource Include="Sliders\sliderPass.frag" />
     <EmbeddedResource Include="Sliders\sliderPass.vert" />
+    <EmbeddedResource Include="UI\LockClosed.png" />
+    <EmbeddedResource Include="UI\LockOpen.png" />
     <EmbeddedResource Include="UI\roboto_bold.fnt" />
     <EmbeddedResource Include="UI\roboto_bold.png" />
   </ItemGroup>

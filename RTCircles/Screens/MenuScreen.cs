@@ -699,6 +699,7 @@ namespace RTCircles
             visualizer.Radius = Bounds.Size.X / 2f - 20f * MainGame.Scale;
             visualizer.FreckleOffset = parallaxPosition;
             visualizer.BarLength = 800 * MainGame.Scale;
+            visualizer.Thickness = 30f * MainGame.Scale;
 
             logoSize = Bounds.Size;
 
@@ -706,16 +707,21 @@ namespace RTCircles
                 visualizer.FreckleSpawnRate = 0.006f;
             else
                 visualizer.FreckleSpawnRate = float.MaxValue;
-
+            
             if (OsuContainer.IsKiaiTimeActive && PostProcessing.Bloom)
             {
-                visualizer.BarHighlight = Vector3.Lerp(visualizer.BarHighlight, new Vector3(4f), 10f * delta);
-                visualizer.BarStartColor = Vector4.Lerp(visualizer.BarStartColor, new Vector4(Skin.Config.MenuGlow, 1f), delta * 10f);
+                visualizer.BarHighlight = Vector3.Lerp(visualizer.BarHighlight, 
+                    new Vector3((float)Math.Cos(OsuContainer.CurrentBeat).Map(-1, 1, 0, 2) + 1, 
+                    (float)Math.Cos(OsuContainer.CurrentBeat + 2).Map(-1, 1, 0, 2) + 1,
+                    (float)Math.Cos(OsuContainer.CurrentBeat + 4).Map(-1, 1, 0, 2) + 1), 
+                    10f * delta);
+
+                visualizer.BarStartColor = Vector4.Lerp(visualizer.BarStartColor, new Vector4(0.95f, 0.95f, 0.95f, 1f), delta * 10f);
                 visualizer.BarEndColor = visualizer.BarStartColor;
             }
             else
             {
-                visualizer.BarHighlight = Vector3.Lerp(visualizer.BarHighlight, new Vector3(0.5f), 10f * delta);
+                visualizer.BarHighlight = Vector3.Lerp(visualizer.BarHighlight, new Vector3(0), 10f * delta);
                 visualizer.BarStartColor = Vector4.Lerp(visualizer.BarStartColor, new Vector4(Skin.Config.MenuGlow, 0.5f), delta * 10f);
                 visualizer.BarEndColor = visualizer.BarStartColor;
             }

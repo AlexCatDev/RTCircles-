@@ -14,6 +14,8 @@ namespace RTCircles
 
         public bool IsDead;
 
+        public bool IsVisible = true;
+
         public virtual void OnRemove() { }
 
         public virtual void OnAdd() { }

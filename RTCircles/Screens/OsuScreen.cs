@@ -13,8 +13,28 @@ using System.Text;
 
 namespace RTCircles
 {
+    public class Faderino : Drawable
+    {
+        private SmoothFloat fade = new SmoothFloat();
+
+        public void FadeTo(float opacity, float duration, EasingTypes easing) => fade.TransformTo(opacity, duration, easing);
+
+        public override void Render(Graphics g)
+        {
+            if(fade.Value > 0f)
+                g.DrawRectangle(Vector2.Zero, MainGame.WindowSize, new Vector4(0f, 0f, 0f, fade.Value));
+        }
+
+        public override void Update(float delta)
+        {
+            fade.Update(delta);
+        }
+    }
+
     public class OsuScreen : Screen
     {
+        private Faderino faderino = new Faderino();
+
         private BreakPanel breakOverlay = new BreakPanel();
 
         private int objectIndex = 0;
@@ -52,6 +72,25 @@ namespace RTCircles
             };
 
             bgAlpha.Value = 0.3f;
+
+            retryButton.OnClick += (s, e) =>
+            {
+                faderino.FadeTo(1f, 0.25f, EasingTypes.Out);
+
+                pauseOverlayFade.TransformTo(0f, 0.5f, EasingTypes.Out, () =>
+                {
+                    OnEntering();
+                    pauseStart = double.MaxValue;
+                    faderino.FadeTo(0f, 0.25f, EasingTypes.Out);
+                });
+            };
+
+            quitButton.OnClick += (s, e) =>
+            {
+                ScreenManager.GoBack();
+                OsuContainer.Beatmap.Song.Play(false);
+                pauseOverlayFade.Value = 0f;
+            };
         }
 
         public override void OnEntering()
@@ -145,6 +184,8 @@ namespace RTCircles
             if (OsuContainer.Beatmap is null)
                 return;
 
+            faderino.Update(delta);
+
             updateSpawnHitObjects();
 
             OsuContainer.HUD.Update(delta);
@@ -200,11 +241,11 @@ namespace RTCircles
                 if (objectIndex >= OsuContainer.Beatmap.HitObjects.Count)
                     return OsuContainer.SongPosition > OsuContainer.Beatmap.HitObjects[^1].BaseObject.EndTime;
 
-                var prevObject = OsuContainer.Beatmap.HitObjects[objectIndex - 1];
+                var prevObject = OsuContainer.Beatmap.HitObjects[objectIndex -1];
                 var currObject = OsuContainer.Beatmap.HitObjects[objectIndex];
 
                 if (currObject.BaseObject.StartTime - prevObject.BaseObject.EndTime >= 3000)
-                    return true;
+                    return OsuContainer.SongPosition > prevObject.BaseObject.EndTime && OsuContainer.SongPosition < currObject.BaseObject.StartTime;
 
                 return false;
             }
@@ -265,6 +306,8 @@ namespace RTCircles
 
             drawPauseOverlay(g);
 
+            faderino.Render(g);
+
             drawCursor(g);
         }
 
@@ -289,18 +332,33 @@ namespace RTCircles
 
         private double pauseStart;
 
-        private bool isPaused;
+        private bool isPaused => pauseOverlayFade.Value > 0;
 
         private SmoothFloat pauseOverlayFade = new SmoothFloat();
+        private Button retryButton = new Button() { Color = Colors.From255RGBA(255, 255, 0, 200), Text = "Retry" };
+        private Button quitButton = new Button() { Color = Colors.From255RGBA(0,100,255, 255), Text = "Quit"};
 
         private void drawPauseOverlay(Graphics g)
         {
             pauseOverlayFade.Update((float)MainGame.Instance.DeltaTime);
 
-            if(pauseOverlayFade.Value > 0)
-            {
-                g.DrawStringNoAlign("Paused!", Font.DefaultFont, MainGame.WindowCenter, new Vector4(1f,1f,1f,pauseOverlayFade.Value));
-            }
+            retryButton.Color.W = pauseOverlayFade.Value;
+            retryButton.TextColor.W = pauseOverlayFade.Value;
+
+            quitButton.TextColor.W = pauseOverlayFade.Value;
+            quitButton.Color.W = pauseOverlayFade.Value;
+
+            retryButton.Size = new Vector2(300, 50);
+            retryButton.Position = MainGame.WindowCenter - retryButton.Size / 2f;
+
+            quitButton.Position = retryButton.Position + new Vector2(0, retryButton.Size.Y + 20);
+            quitButton.Size = new Vector2(300, 50);
+
+            quitButton.Update((float)MainGame.Instance.DeltaTime);
+            quitButton.Render(g);
+
+            retryButton.Update((float)MainGame.Instance.DeltaTime);
+            retryButton.Render(g);
         }
 
         private bool showedPauseMessage;
@@ -309,9 +367,6 @@ namespace RTCircles
         {
             if (key == Key.Escape)
             {
-                ScreenManager.GoBack();
-                return;
-
                 //If the current beatmap is null or the map is finished just return for now
                 if (OsuContainer.SongPosition > OsuContainer.Beatmap?.HitObjects[^1].BaseObject.EndTime + 400 || (OsuContainer.Beatmap?.Song.IsStopped ?? true))
                 {
@@ -334,8 +389,6 @@ namespace RTCircles
                         OsuContainer.Beatmap?.Song.Pause();
                         pauseStart = MainGame.Instance.TotalTime;
 
-                        isPaused = true;
-
                         pauseOverlayFade.TransformTo(1f, 0.25f, EasingTypes.Out);
 
                         showedPauseMessage = false;
@@ -344,7 +397,6 @@ namespace RTCircles
                     {
                         pauseOverlayFade.TransformTo(0f, 0.5f, EasingTypes.In, () =>
                         {
-                            isPaused = false;
                             OsuContainer.Beatmap?.Song.Play(false);
                         });
                     }
@@ -371,12 +423,20 @@ namespace RTCircles
                 OsuContainer.MouseDown(button);
                 base.OnMouseDown(button);
             }
+            else
+            {
+                retryButton.OnMouseDown(button);
+                quitButton.OnMouseDown(button);
+            }
         }
 
         public override void OnMouseUp(MouseButton button)
         {
             OsuContainer.MouseUp(button);
             base.OnMouseUp(button);
+
+            retryButton.OnMouseUp(button);
+            quitButton.OnMouseUp(button);
         }
 
         public override void OnMouseWheel(float position)

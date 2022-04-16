@@ -171,7 +171,10 @@ namespace RTCircles
 
                     OsuContainer.Combo = 0;
                     OsuContainer.CountMiss++;
-                    AddHP(-0.15f);
+
+                    float dmg = OsuContainer.Beatmap.HP.Map(0, 10, -0.05f, -0.25f);
+
+                    AddHP(dmg);
                     break;
                 default:
                     break;
@@ -307,13 +310,14 @@ namespace RTCircles
         private float interpolatedHP = 0;
         private void drawHPBar(Graphics g)
         {
-            if (!ScreenManager.GetScreen<OsuScreen>().IsCurrentlyBreakTime)
-                AddHP(-(0.25f * (float)OsuContainer.DeltaSongPosition / 1000));
+            if (!ScreenManager.GetScreen<OsuScreen>().IsCurrentlyBreakTime && OsuContainer.Beatmap != null)
+            {
+                AddHP((-0.25f * (float)OsuContainer.DeltaSongPosition / 1000));
+            }
 
             Vector2 pos = new Vector2(20) * MainGame.Scale;
 
-            hp.ClampRef(0, 1);
-            interpolatedHP = MathHelper.Lerp(interpolatedHP, hp, (float)MainGame.Instance.DeltaTime * 25f);
+            interpolatedHP = MathHelper.Lerp(interpolatedHP, hp, (float)MainGame.Instance.DeltaTime * 30f);
 
             Vector2 size = new Vector2(650 * interpolatedHP, 32) * MainGame.Scale;
             Rectangle uv = new Rectangle(0, 0, interpolatedHP, 0);

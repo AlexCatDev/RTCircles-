@@ -32,7 +32,15 @@ namespace RTCircles
 
         public Vector2 TextOffset;
 
-        public Vector2 Size { get; set; }
+        private Vector2i _size;
+        public Vector2 Size 
+        { 
+            get { return _size; }
+            set
+            {
+                _size = (Vector2i)value;
+            }
+        }
 
         public bool Disabled;
 
@@ -91,11 +99,11 @@ namespace RTCircles
         {
             if (hasFocus)
             {
+                hasFocus = false;
+
                 OnClick?.Invoke(this, EventArgs.Empty);
 
                 buttonPressFadeAnimation.IsPaused = false;
-
-                hasFocus = false;
 
                 Skin.Click.Play(true);
             }
@@ -120,16 +128,14 @@ namespace RTCircles
             {
                 g.DrawInFrameBuffer(frameBuffer, () =>
                 {
-                    AnimationColor.W = buttonPressFadeAnimation.Output;
-
-                    g.DrawRectangleCentered(buttonPressLocation, new Vector2(buttonPressAnimation.Output * 2), AnimationColor);
+                    g.DrawRectangleCentered(buttonPressLocation, new Vector2(buttonPressAnimation.Output * 2), new Vector4(AnimationColor.Xyz, AnimationColor.W * buttonPressFadeAnimation.Output), Texture.WhiteCircle);
                 });
             }
 
             if(frameBuffer.Texture is not null && frameBuffer.IsInitialized)
                 g.DrawFrameBuffer(Position, Colors.White, frameBuffer);
 
-            if (string.IsNullOrEmpty(Text) == false)
+            if (!string.IsNullOrEmpty(Text))
             {
                 Vector2 textSize = Font.DefaultFont.MessureString(Text, textScale);
                 Vector2 textPos = new Vector2(Position.X + (Size.X / 2f) - textSize.X / 2f, Position.Y + (Size.Y / 2f) - textSize.Y / 2f) + TextOffset;

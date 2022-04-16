@@ -109,6 +109,8 @@ namespace New
                 }
             }
 
+            g.DrawRectangleCentered(Input.MousePosition, new Vector2(Width*2), new Vector4(1f), Texture.WhiteCircle);
+
             base.Render(g);
         }
 
@@ -399,7 +401,7 @@ namespace New
             animOffset.X = MathF.Cos(angle - MathF.PI / 4) * 30f * attackAnim.Value;
             animOffset.Y = MathF.Sin(angle - MathF.PI / 4) * 30f * attackAnim.Value;
 
-            g.DrawRectangleCentered(wepPos + animOffset, wepSize, new Vector4(1f), tex, rotDegrees: MathHelper.RadiansToDegrees(angle));
+            g.DrawRectangleCentered(wepPos + animOffset, wepSize, new Vector4(new Vector3(1f) + new Vector3(1) * attackAnim.Value, 1f), tex, rotDegrees: MathHelper.RadiansToDegrees(angle));
 
             drawHUD(g);
         }
@@ -598,22 +600,24 @@ namespace New
             Utils.WriteToConsole = true;
             Instance = this;
 
+            Input.InputContext.Mice[0].Cursor.CursorMode = CursorMode.Hidden;
+
             sound = new Sound(Utils.GetResource("hit.wav"));
 
             graphics = new FastGraphics(400_000 * 5, 600_000 * 5);
 
-            //container.Add(new Test());
+            
             container.Add(new PerformanceCounter());
 
             Width = 1280;
             Height = 720;
 
-            /*
+            
             for (int i = 0; i < 100000; i++)
             {
                 container.Add(new BouncingCube());
             }
-            */
+            
             container.Add(new FancyCursorTrail() { Width = 10});
             container.Add(new TestPlayerSword());
 
@@ -621,7 +625,7 @@ namespace New
             Input.InputContext.Keyboards[0].KeyDown += (s, e, x) =>
             {
                 container.OnKeyDown(e);
-                sound.Play(true);
+                //sound.Play(true);
             };
 
             Input.InputContext.Mice[0].MouseDown += (s, e) =>
@@ -638,10 +642,10 @@ namespace New
             //PrintFPS = true;
             if (RuntimeInformation.ProcessArchitecture == Architecture.X86 || RuntimeInformation.ProcessArchitecture == Architecture.X64)
             {
-                //PostProcessing.Bloom = true;
-                //PostProcessing.MotionBlur = true;
+                PostProcessing.Bloom = true;
+                PostProcessing.MotionBlur = true;
             }
-
+            
             //View.VSync = true;
         }
 
@@ -742,6 +746,8 @@ namespace New
 
         public override void OnRender(double delta)
         {
+            return;
+
             PostProcessing.Use(new Vector2i(Width, Height), new Vector2i(Width, Height));
 
             container.Render(graphics);
@@ -901,8 +907,6 @@ namespace New
 
         public override void Render(FastGraphics g)
         {
-            frame++;
-
             double delta = ((double)sw.ElapsedTicks / Stopwatch.Frequency);
             sw.Restart();
 
@@ -948,11 +952,12 @@ namespace New
         public override void OnUpdate()
         {
             update++;
-
+            frame++;
             elapsed += Delta;
 
             if (elapsed >= 1.0)
             {
+                Console.WriteLine(frame.ToString());
                 drawString = $"FPS: {frame} UPS: {update} Drawables: {Parent.ChildrenCount} R&U_ID: {Thread.CurrentThread.ManagedThreadId} GC [zero:{GC.CollectionCount(0)}] [one:{GC.CollectionCount(1)}] [two:{GC.CollectionCount(2)}] mem: {GC.GetTotalMemory(false)}";
                 elapsed -= 1.0;
                 update = 0;

@@ -264,6 +264,8 @@ namespace RTCircles
 
         private bool debugCameraActive = false;
 
+        private SmoothFloat volumeBarFade = new SmoothFloat();
+
         public override void OnLoad()
         {
             //Rens det her lort
@@ -272,7 +274,7 @@ namespace RTCircles
             //Skin.Load("");
             //GlobalOptions.Init();
             Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  idke 1.2 without sliderendcircle");
-            //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\- ModernDefault");
+            //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\- default");
 
             g = new Graphics();
 
@@ -326,6 +328,15 @@ namespace RTCircles
 
             Input.InputContext.Mice[0].Scroll += (s, e) =>
             {
+                if (Input.IsKeyDown(Key.AltLeft))
+                {
+                    volumeBarFade.Value = 1;
+                    volumeBarFade.Wait(1f);
+                    volumeBarFade.TransformTo(0, 0.5f, EasingTypes.Out);
+                    GlobalOptions.GlobalVolume.Value = (GlobalOptions.GlobalVolume.Value + e.Y * 0.01f).Clamp(0, 1);
+                    return;
+                }
+
                 if (debugCameraActive && !Input.IsKeyDown(Key.ControlLeft))
                 {
                     debugCameraScale += e.Y*0.03f;
@@ -488,6 +499,8 @@ namespace RTCircles
             NotificationManager.Update((float)DeltaTime);
             NotificationManager.Render(g);
 
+            drawVolumeBar(g);
+
             g.EndDraw();
 
             if (debugCameraActive)
@@ -508,6 +521,21 @@ namespace RTCircles
             WindowSize = newSize;
             a.Invoke();
             WindowSize = prev;
+        }
+
+        private void drawVolumeBar(Graphics g)
+        {
+            volumeBarFade.Update((float)DeltaTime);
+            if (volumeBarFade.Value == 0)
+                return;
+
+            Vector2 pos = new Vector2(10, 10);
+            Vector2 size = new Vector2(500, 30);
+
+            g.DrawRectangle(pos, size, Colors.From255RGBA(31, 31, 31, 127 *volumeBarFade.Value));
+            g.DrawRectangle(pos, new Vector2(size.X * (float)GlobalOptions.GlobalVolume.Value, size.Y), Colors.From255RGBA(0, 255, 128, 255 * volumeBarFade.Value));
+
+            g.DrawStringCentered($"Volume: {GlobalOptions.GlobalVolume.Value * 100:F0}", Font.DefaultFont, pos + size / 2f, new Vector4(1f, 1f, 1f, volumeBarFade.Value), 0.5f);
         }
 
         private Vector2? trueHoverSize = null;

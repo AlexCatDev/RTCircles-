@@ -30,7 +30,9 @@ namespace Easy2D
         public static Texture WhiteSquare { get; private set; }
         public static Texture WhiteCircle { get; private set; }
         public static Texture WhiteFlatCircle { get; private set; }
+        public static Texture WhiteFlatCircle2 { get; private set; }
 
+        public TextureMinFilter MipmapFilter { get; set; } = TextureMinFilter.LinearMipmapLinear;
         public TextureMinFilter MinFilter { get; set; } = TextureMinFilter.Linear;
         public TextureMagFilter MagFilter { get; set; } = TextureMagFilter.Linear;
 
@@ -45,6 +47,7 @@ namespace Easy2D
             WhiteSquare = new Texture(Utils.GetInternalResource("Textures.square.png"));
             WhiteCircle = new Texture(Utils.GetInternalResource("Textures.circle.png"));
             WhiteFlatCircle = new Texture(Utils.GetInternalResource("Textures.flatcircle.png"));
+            WhiteFlatCircle2 = new Texture(Utils.GetInternalResource("Textures.flatcircle.png")) { MipmapFilter = TextureMinFilter.NearestMipmapNearest };
         }
 
         public Texture(int width, int height, InternalFormat componentCount = InternalFormat.Rgba, 
@@ -102,7 +105,7 @@ namespace Easy2D
 
             if (genMips)
             {
-                GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (float)TextureMinFilter.LinearMipmapLinear);
+                GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (float)MipmapFilter);
 
                 //Gen mipmap
                 GL.Instance.GenerateMipmap(TextureTarget.Texture2D);

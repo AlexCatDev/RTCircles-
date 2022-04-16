@@ -236,6 +236,31 @@ namespace RTCircles
             }
         }
 
+        public void SetOD(float od)
+        {
+            OD = od;
+            Window50 = mapDifficultyRange(OD, 200, 150, 100);
+            Window100 = mapDifficultyRange(OD, 140, 100, 60);
+            Window300 = mapDifficultyRange(OD, 80, 50, 20);
+        }
+
+        public void SetAR(float ar)
+        {
+            AR = ar;
+            Preempt = mapDifficultyRange(AR, 1800, 1200, 450);
+            Fadein = 400 * Math.Min(1, Preempt / 450);
+        }
+
+        public void SetCS(float cs)
+        {
+            CS = cs;
+        }
+
+        public void SetHP(float hp)
+        {
+            HP = hp;
+        }
+
         //split these up
         public void OverrideDifficulty(float cs, float ar, float od, float hp)
         {

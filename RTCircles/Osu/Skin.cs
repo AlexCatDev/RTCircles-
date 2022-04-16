@@ -42,23 +42,12 @@ namespace RTCircles
         };
 
         public Vector3 ColorFromIndex(int index) {
-            if(!GlobalOptions.RGBCircles.Value)
-                return ComboColors[index % ComboColors.Count];
-            else if (!OsuContainer.IsKiaiTimeActive)
-                return ComboColors[index % ComboColors.Count];
+            var col = ComboColors[index % ComboColors.Count];
 
-            var time = (OsuContainer.CurrentBeat + index).Map(0, 1, 0, Math.PI/2);
+            if (GlobalOptions.RGBCircles.Value && OsuContainer.IsKiaiTimeActive)
+                col += new Vector3(1f);
 
-            var col = new Vector3(
-            (float)Math.Cos(0 + time).Map(-1, 1, 0, 2),
-            (float)Math.Cos(2 + time).Map(-1, 1, 0, 2),
-            (float)Math.Cos(4 + time).Map(-1, 1, 0, 2));
-            /*
-            col.X += 1;
-            col.Y += 1;
-            col.Z += 1;
-            */
-            return col;
+                return col;
         }
 
         public Vector3 MenuGlow = new Vector3(1f,0.8f,0f);

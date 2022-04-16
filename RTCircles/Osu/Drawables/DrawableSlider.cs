@@ -639,20 +639,17 @@ namespace RTCircles
             Vector3 sliderBorder = new Vector3(Skin.Config.SliderBorder ?? new Vector3(1f, 1f, 1f));
             Vector3 sliderTrack = new Vector3(Skin.Config.SliderTrackOverride ?? Skin.Config.ColorFromIndex(colorIndex));
 
-            /*
-            double p = OsuContainer.CurrentBeat.OscillateValue(0, 2).Map(0, 2, 0, MathF.PI);
-            float red = (float)Math.Sin(p) + 1;
-            float grn = (float)Math.Sin(p + 2f) + 1;
-            float blu = (float)Math.Sin(p + 4f) + 1;
-            g.BorderColorInner = new Vector3(red, grn, blu);
-            */
+            if (OsuContainer.IsKiaiTimeActive && GlobalOptions.RGBCircles.Value)
+            {
+                sliderBorder.X = (float)Math.Cos(OsuContainer.CurrentBeat).Map(-1, 1, 0, 1) + 1;
+                sliderBorder.Y = (float)Math.Cos(OsuContainer.CurrentBeat + 2).Map(-1, 1, 0, 1) + 1;
+                sliderBorder.Z = (float)Math.Cos(OsuContainer.CurrentBeat + 4).Map(-1, 1, 0, 1) + 1;
+            }
+
             g.BorderColorInner = sliderBorder;
             g.BorderColorOuter = g.BorderColorInner;
 
             g.ShadowColor = new Vector4(0, 0, 0, 0.5f);
-
-            //g.BorderColorOuter = sliderBorder;
-            //g.BorderColorInner = sliderBorder;
 
             g.TrackColorOuter = Shade(-0.1f, new Vector4(sliderTrack, 1.0f)).Xyz;
             g.TrackColorInner = Shade(0.5f, new Vector4(sliderTrack, 1.0f)).Xyz;

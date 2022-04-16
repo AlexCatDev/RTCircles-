@@ -422,24 +422,27 @@ namespace RTCircles
             else
             {
                 songPos = Beatmap?.Song.PlaybackPosition + totalOffset ?? 0;
+            }
 
-                for (int i = 0; i < Beatmap.InternalBeatmap.TimingPoints.Count - 1; i++)
+            if (CurrentTimingPoint?.Offset > songPos)
+                CurrentTimingPoint = null;
+
+            for (int i = 0; i < Beatmap.InternalBeatmap.TimingPoints.Count - 1; i++)
+            {
+                var nowTiming = Beatmap.InternalBeatmap.TimingPoints[i];
+                var nextTiming = Beatmap.InternalBeatmap.TimingPoints[i + 1];
+
+                if (nowTiming.BeatLength > 0)
+                    CurrentBeatTimingPoint = nowTiming;
+
+                if (songPos >= nowTiming.Offset && songPos < nextTiming.Offset)
                 {
-                    var nowTiming = Beatmap.InternalBeatmap.TimingPoints[i];
-                    var nextTiming = Beatmap.InternalBeatmap.TimingPoints[i + 1];
+                    if (nowTiming.Effects == Effects.Kiai && CurrentTimingPoint?.Effects != Effects.Kiai)
+                        OnKiai?.Invoke();
 
-                    if (nowTiming.BeatLength > 0)
-                        CurrentBeatTimingPoint = nowTiming;
+                    CurrentTimingPoint = nowTiming;
 
-                    if (songPos >= nowTiming.Offset && songPos < nextTiming.Offset)
-                    {
-                        if (nowTiming.Effects == Effects.Kiai && CurrentTimingPoint?.Effects != Effects.Kiai)
-                            OnKiai?.Invoke();
-
-                        CurrentTimingPoint = nowTiming;
-
-                        break;
-                    }
+                    break;
                 }
             }
 
