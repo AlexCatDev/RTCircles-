@@ -15,6 +15,7 @@ namespace RTCircles
         public bool IsDead;
 
         public bool IsVisible = true;
+        public bool IsAcceptingInput = true;
 
         public virtual void OnRemove() { }
 

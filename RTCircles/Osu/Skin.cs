@@ -45,7 +45,7 @@ namespace RTCircles
             var col = ComboColors[index % ComboColors.Count];
 
             if (GlobalOptions.RGBCircles.Value && OsuContainer.IsKiaiTimeActive)
-                col += new Vector3(1f);
+                col = Colors.Tint(new Vector4(col, 1), 2f).Xyz + new Vector3(1);
 
                 return col;
         }

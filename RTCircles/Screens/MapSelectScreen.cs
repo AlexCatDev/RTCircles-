@@ -70,7 +70,7 @@ namespace RTCircles
     {
         public string Text { get; private set; }
 
-        public int ID { get; private set; }
+        public string Hash { get; private set; }
 
         private Guid id = Guid.NewGuid();
 
@@ -85,12 +85,12 @@ namespace RTCircles
 
         public bool IsVisible;
 
-        public void SetDBBeatmap(DBBeatmap dbBeatmap)
+        public void SetDBBeatmap(DBBeatmapInfo dbBeatmap)
         {
-            Text = dbBeatmap.File;
-            ID = dbBeatmap.ID;
-            FullPath = $"{BeatmapMirror.SongsFolder}/{dbBeatmap.Folder}/{dbBeatmap.File}";
-            BackgroundPath = dbBeatmap.Background is not null ? $"{BeatmapMirror.SongsFolder}/{dbBeatmap.Folder}/{dbBeatmap.Background}" : null;
+            Text = dbBeatmap.Filename;
+            Hash = dbBeatmap.Hash;
+            FullPath = $"{BeatmapMirror.SongsFolder}/{dbBeatmap.SetInfo.Foldername}/{dbBeatmap.Filename}";
+            BackgroundPath = dbBeatmap.BackgroundFilename is not null ? $"{BeatmapMirror.SongsFolder}/{dbBeatmap.SetInfo.Foldername}/{dbBeatmap.BackgroundFilename}" : null;
         }
 
         public bool OnShow()
@@ -184,24 +184,35 @@ namespace RTCircles
     {
         public SongSelector SongSelector { get; private set; } = new SongSelector();
 
+        private bool shouldGenGraph;
+
         public MapSelectScreen()
         {
             BeatmapMirror.OnNewBeatmapAvailable += (beatmap) =>
             {
                 AddBeatmapToCarousel(beatmap);
+                string hash = beatmap.Hash;
+                NotificationManager.ShowMessage($"Imported {beatmap.Filename}", ((Vector4)Color4.LightGreen).Xyz, 3, () => {
+                    ScreenManager.GetScreen<MapSelectScreen>().SongSelector.SelectBeatmap(hash);
+                });
+            };
+
+            OsuContainer.BeatmapChanged += () =>
+            {
+                shouldGenGraph = true;
             };
 
             Add(SongSelector);
         }
 
-        public void AddBeatmapToCarousel(DBBeatmap dBBeatmap)
+        public void AddBeatmapToCarousel(DBBeatmapInfo dBBeatmap)
         {
             //Dont add to carousel if we already have this item
-            Utils.Log($"Adding DBBeatmap: {dBBeatmap.File} Current carousel item count: {BeatmapCollection.Items.Count}", LogLevel.Debug);
+            Utils.Log($"Adding DBBeatmap: {dBBeatmap.Filename} Current carousel item count: {BeatmapCollection.Items.Count}", LogLevel.Debug);
 
             for (int i = 0; i < BeatmapCollection.Items.Count; i++)
             {
-                if (BeatmapCollection.Items[i].ID == dBBeatmap.ID)
+                if (BeatmapCollection.Items[i].Hash == dBBeatmap.Hash)
                 {
                     Utils.Log($"A duplicate map was added to the carousel, the old map was changed to the new one", LogLevel.Warning);
                     BeatmapCollection.Items[i].SetDBBeatmap(dBBeatmap);
@@ -217,10 +228,10 @@ namespace RTCircles
 
         public void LoadCarouselItems()
         {
-            foreach (var item in BeatmapMirror.Realm.All<DBBeatmap>())
+            foreach (var item in BeatmapMirror.Realm.All<DBBeatmapInfo>())
             {
                 AddBeatmapToCarousel(item);
-                Utils.Log($"Loaded DBBeatmap: {item.File}", LogLevel.Debug);
+                Utils.Log($"Loaded DBBeatmap: {item.Filename}", LogLevel.Debug);
             }
         }
 
@@ -318,10 +329,105 @@ namespace RTCircles
             ScreenManager.GetScreen<OsuScreen>().SyncObjectIndexToTime();
         }
 
+        private FrameBuffer strainFB = new FrameBuffer(1, 1);
+        private void drawDifficultyGraph(Graphics g)
+        {
+            if (OsuContainer.Beatmap?.DifficultyGraph.Count == 0)
+                return;
+
+            Vector2 size = new Vector2(MainGame.WindowWidth, 100);
+
+            if (strainFB.Width != size.X || strainFB.Height != size.Y)
+            {
+                strainFB.EnsureSize(size.X, size.Y);
+                shouldGenGraph = true;
+            }
+
+            if (shouldGenGraph)
+            {
+                Utils.BeginProfiling("StrainGraphGeneration");
+
+                List<Vector2> graph = new List<Vector2>();
+
+                foreach (var item in OsuContainer.Beatmap.DifficultyGraph)
+                {
+                    graph.Add(new Vector2(0, (float)item));
+                }
+
+                g.DrawInFrameBuffer(strainFB, () =>
+                {
+                    graph = PathApproximator.ApproximateCatmull(graph);
+
+                    var vertices = g.VertexBatch.GetTriangleStrip(graph.Count * 2);
+
+                    int vertexIndex = 0;
+
+                    int textureSlot = g.GetTextureSlot(null);
+
+                    float stepX = size.X / graph.Count;
+
+                    Vector4 bottomColor = new Vector4(1f, 1f, 1f, 1f);
+                    Vector4 peakColor = new Vector4(1f, 1f, 1f, 1f);
+
+                    Vector2 movingPos = Vector2.Zero;
+
+                    for (int i = 0; i < graph.Count; i++)
+                    {
+                        //float height = graph[i].Y.Map(0, 10, 0, size.Y);
+
+                        float height = graph[i].Y.Map(0, 10000, 10, size.Y);
+
+                        //Grundlinje
+                        vertices[vertexIndex].TextureSlot = textureSlot;
+                        vertices[vertexIndex].Color = bottomColor;
+                        vertices[vertexIndex].Position = movingPos;
+
+                        vertexIndex++;
+
+                        movingPos.Y += height;
+
+                        //TopLinje
+                        vertices[vertexIndex].TextureSlot = textureSlot;
+                        vertices[vertexIndex].Color = peakColor;
+                        vertices[vertexIndex].Position = movingPos;
+
+                        movingPos.Y -= height;
+                        movingPos.X += stepX;
+
+                        vertexIndex++;
+                    }
+                });
+
+                shouldGenGraph = false;
+
+                Utils.EndProfiling("StrainGraphGeneration");
+            }
+
+
+            Vector2 position = new Vector2(0, MainGame.WindowHeight - size.Y);
+
+            //Vector2 songPosPos = new Vector2((float)OsuContainer.SongPosition.Map(OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime, OsuContainer.Beatmap.HitObjects[^1].BaseObject.StartTime, position.X, position.X + size.X), position.Y + poo.Y / 4);
+
+            float songX = (float)OsuContainer.SongPosition.Map(OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime, OsuContainer.Beatmap.HitObjects[^1].BaseObject.StartTime, 0, 1).Clamp(0, 1);
+
+            Vector4 progressColor = new Vector4(1f, 0f, 0f, 0.25f);
+            Vector4 progressNotColor = new Vector4(1f, 1f, 1f, 0.25f);
+
+            Rectangle texRectProgress = new Rectangle(0, 0, songX, 1);
+
+            Vector2 sizeProgress = new Vector2(strainFB.Texture.Width * songX, strainFB.Texture.Height);
+
+            //Progress
+            g.DrawRectangle(position, sizeProgress, progressColor, strainFB.Texture, texRectProgress, true);
+
+            //Not progress
+            g.DrawRectangle(position, strainFB.Texture.Size, progressNotColor, strainFB.Texture);
+        }
+
         public override void Render(Graphics g)
         {
-
             base.Render(g);
+            drawDifficultyGraph(g);
         }
 
         public override void OnMouseWheel(float delta)

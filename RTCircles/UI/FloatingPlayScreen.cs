@@ -37,12 +37,20 @@ namespace RTCircles
             Container.Add(difficultAdjustPanelBtn);
             Container.Add(difficultyAdjuster);
 
+            difficultyAdjuster.ToggleInput(false);
+
             difficultAdjustPanelBtn.OnClick += (s, e) =>
             {
-                if(adjustPanelPopProgress.Value == 0f)
-                    adjustPanelPopProgress.TransformTo(1f, 0.25f, EasingTypes.OutSine);
-                else if(adjustPanelPopProgress.Value == 1f)
-                    adjustPanelPopProgress.TransformTo(0f, 0.25f, EasingTypes.InSine);
+                if (adjustPanelPopProgress.Value == 0f)
+                {
+                    adjustPanelPopProgress.TransformTo(1f, 0.25f, EasingTypes.OutElasticHalf);
+                    difficultyAdjuster.ToggleInput(true);
+                }
+                else if (adjustPanelPopProgress.Value == 1f)
+                {
+                    adjustPanelPopProgress.TransformTo(0f, 0.25f, EasingTypes.InBack);
+                    difficultyAdjuster.ToggleInput(false);
+                }
             };
         }
 

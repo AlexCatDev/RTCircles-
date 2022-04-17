@@ -143,7 +143,7 @@ namespace RTCircles
             }
 
             
-            if(displayJudgement && result != HitResult.Max)
+            if(displayJudgement)
                 ScreenManager.GetScreen<OsuScreen>().Add(new HitJudgement(position, result));
 
             //Console.WriteLine(result);
@@ -305,6 +305,9 @@ namespace RTCircles
             drawKeyOverlay(g);
 
             drawHPBar(g);
+
+            if (OsuContainer.CookieziMode)
+                g.DrawString("Auto", Font.DefaultFont, new Vector2(10) * MainGame.Scale, new Vector4(1f, 1f, 0f, (float)Math.Cos(MainGame.Instance.TotalTime * 1.6).Map(-1, 1, 0.25f, 0.5f)), 1f * MainGame.Scale);
         }
 
         private float interpolatedHP = 0;
@@ -313,6 +316,12 @@ namespace RTCircles
             if (!ScreenManager.GetScreen<OsuScreen>().IsCurrentlyBreakTime && OsuContainer.Beatmap != null)
             {
                 AddHP((-0.25f * (float)OsuContainer.DeltaSongPosition / 1000));
+            }
+
+            if(hp == 0)
+            {
+                ScreenManager.GetScreen<OsuScreen>().dieLol();
+                return;
             }
 
             Vector2 pos = new Vector2(20) * MainGame.Scale;

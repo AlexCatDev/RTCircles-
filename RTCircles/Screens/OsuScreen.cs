@@ -80,7 +80,6 @@ namespace RTCircles
                 pauseOverlayFade.TransformTo(0f, 0.5f, EasingTypes.Out, () =>
                 {
                     OnEntering();
-                    pauseStart = double.MaxValue;
                     faderino.FadeTo(0f, 0.25f, EasingTypes.Out);
                 });
             };
@@ -101,6 +100,9 @@ namespace RTCircles
             Clear<HitJudgement>();
             Clear<WarningArrows>();
             Clear<FollowPoints>();
+
+            pauseStart = double.MaxValue;
+            dieFlag = false;
 
             bgZoom = 100;
             bgAlpha.Value = 1f;
@@ -189,6 +191,9 @@ namespace RTCircles
             updateSpawnHitObjects();
 
             OsuContainer.HUD.Update(delta);
+
+            dieAnim.Update(delta);
+
             base.Update(delta);
         }
 
@@ -299,7 +304,10 @@ namespace RTCircles
 
             drawBackground(g);
 
+            drawSmoke(g);
+
             base.Render(g);
+
             OsuContainer.HUD.Render(g);
 
             breakOverlay.Render(g);
@@ -309,6 +317,37 @@ namespace RTCircles
             faderino.Render(g);
 
             drawCursor(g);
+        }
+
+        private List<(Vector2, double)> smokePoints = new List<(Vector2, double)>();
+        private Vector2 lastPos;
+
+        private void drawSmoke(Graphics g)
+        {
+            Vector2 smokeParticleSize = new Vector2(32f) * MainGame.Scale;
+
+            if ((lastPos - Input.MousePosition).Length > smokeParticleSize.X / 2)
+            {
+                lastPos = Input.MousePosition;
+                if (Input.IsKeyDown(OsuContainer.SmokeKey))
+                    smokePoints.Add((lastPos, MainGame.Instance.TotalTime));
+            }
+
+            for (int i = smokePoints.Count - 2; i >= 0; i--)
+            {
+                var cur = smokePoints[i];
+                var next = smokePoints[i + 1];
+
+                double time = MainGame.Instance.TotalTime - cur.Item2;
+
+                Vector4 color = new Vector4(1f);
+                color.W = (float)MainGame.Instance.TotalTime.Map(cur.Item2, cur.Item2 + 10, 10, 0).Clamp(0, 1);
+
+                if (color.W == 0)
+                    smokePoints.RemoveAt(i);
+
+                g.DrawDottedLine(cur.Item1, next.Item1, Skin.Smoke, color, smokeParticleSize, smokeParticleSize.X / 2);
+            }
         }
 
         private void drawCursor(Graphics g)
@@ -361,6 +400,24 @@ namespace RTCircles
             retryButton.Render(g);
         }
 
+        private SmoothFloat dieAnim = new SmoothFloat() { Value = 1f };
+
+        private bool dieFlag;
+        public void dieLol()
+        {
+            return;
+
+            if (!dieFlag && ScreenManager.ActiveScreen == this)
+            {
+                dieFlag = true;
+                dieAnim.Value = 1;
+                dieAnim.TransformTo(0f, 0.5f, EasingTypes.Out, () =>
+                {
+                    ScreenManager.GoBack();
+                });
+            }
+        }
+
         private bool showedPauseMessage;
 
         public override void OnKeyDown(Key key)
@@ -390,11 +447,12 @@ namespace RTCircles
                         pauseStart = MainGame.Instance.TotalTime;
 
                         pauseOverlayFade.TransformTo(1f, 0.25f, EasingTypes.Out);
-
+                        OnExit();
                         showedPauseMessage = false;
                     }
                     else if(pauseOverlayFade.Value == 1)
                     {
+                        OnEnter();
                         pauseOverlayFade.TransformTo(0f, 0.5f, EasingTypes.In, () =>
                         {
                             OsuContainer.Beatmap?.Song.Play(false);

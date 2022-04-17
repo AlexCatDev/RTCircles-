@@ -77,7 +77,8 @@ namespace RTCircles
                 if (OsuContainer.Beatmap.Background != null)
                     shouldGenBlur = true;
 
-                int index = BeatmapCollection.SearchItems.FindIndex((o) => o.ID == OsuContainer.Beatmap.InternalBeatmap.MetadataSection.BeatmapID);
+                int index = BeatmapCollection.SearchItems.FindIndex((o) => o.Hash == OsuContainer.Beatmap.Hash);
+                //int index = -1;
 
                 if (index == -1)
                 {
@@ -97,14 +98,15 @@ namespace RTCircles
             };
         }
 
-        public void SelectBeatmap(int id)
+        public void SelectBeatmap(string id)
         {
-            var bmp = BeatmapCollection.SearchItems.Find((o) => o.ID == id);
+            var bmp = BeatmapCollection.SearchItems.Find((o) => o.Hash == id);
 
             if (bmp != null)
                 selectMap(bmp);
             else
                 NotificationManager.ShowMessage("WTF", new Vector3(255, 0, 0), 5f);
+            
         }
 
         private BouncingButton downloadBtn, settingsBtn, modsBtn;
@@ -334,6 +336,8 @@ namespace RTCircles
 
             if (Input.IsKeyDown(Key.ControlRight) || Input.IsKeyDown(Key.ControlLeft))
                 OsuContainer.Beatmap.Mods |= Mods.Auto;
+            else
+                OsuContainer.Beatmap.Mods &= ~Mods.Auto;
 
             ScreenManager.SetScreen<OsuScreen>();
             return;
@@ -500,7 +504,8 @@ namespace RTCircles
         {
             var beatmap = BeatmapMirror.DecodeBeatmap(File.OpenRead(item.FullPath));
 
-            OsuContainer.SetMap(beatmap, true, mods);
+            OsuContainer.SetMap(beatmap, item.Hash, true, mods);
+
             ScreenManager.GetScreen<OsuScreen>().OnEntering();
 
             int previewTime = OsuContainer.Beatmap.InternalBeatmap.GeneralSection.PreviewTime;

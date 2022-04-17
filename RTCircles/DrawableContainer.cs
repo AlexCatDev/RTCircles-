@@ -54,7 +54,7 @@ namespace RTCircles
         {
             for (int i = children.Count - 1; i >= 0; i--)
             {
-                if (children[i].IsDead)
+                if (children[i].IsDead || !children[i].IsAcceptingInput)
                     continue;
 
                 if (children[i].OnTextInput(args))
@@ -66,7 +66,7 @@ namespace RTCircles
         {
             for (int i = children.Count - 1; i >= 0; i--)
             {
-                if (children[i].IsDead)
+                if (children[i].IsDead || !children[i].IsAcceptingInput)
                     continue;
 
                 if (children[i].OnKeyDown(key))
@@ -78,7 +78,7 @@ namespace RTCircles
         {
             for (int i = children.Count - 1; i >= 0; i--)
             {
-                if (children[i].IsDead)
+                if (children[i].IsDead || !children[i].IsAcceptingInput)
                     continue;
 
                 if (children[i].OnKeyUp(key))
@@ -90,7 +90,7 @@ namespace RTCircles
         {
             for (int i = children.Count - 1; i >= 0; i--)
             {
-                if (children[i].IsDead)
+                if (children[i].IsDead || !children[i].IsAcceptingInput)
                     continue;
 
                 if (children[i].OnMouseDown(args))
@@ -102,7 +102,7 @@ namespace RTCircles
         {
             for (int i = children.Count - 1; i >= 0; i--)
             {
-                if (children[i].IsDead)
+                if (children[i].IsDead || !children[i].IsAcceptingInput)
                     continue;
 
                 if (children[i].OnMouseUp(args))
@@ -114,7 +114,7 @@ namespace RTCircles
         {
             for (int i = children.Count - 1; i >= 0; i--)
             {
-                if (children[i].IsDead)
+                if (children[i].IsDead || !children[i].IsAcceptingInput)
                     continue;
 
                 if (children[i].OnMouseWheel(delta))
@@ -134,11 +134,10 @@ namespace RTCircles
 
             for (int i = 0; i < childCount; i++)
             {
-                if (children[i].IsDead)
+                if (children[i].IsDead || !children[i].IsVisible)
                     continue;
 
-                if(children[i].IsVisible)
-                    children[i].Render(g);
+                children[i].Render(g);
             }
 
             for (int i = 0; i < childCount; i++)

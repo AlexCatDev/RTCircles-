@@ -372,7 +372,7 @@ namespace RTCircles
                     var hitsound = slider.EdgeHitSounds?[0] ?? slider.HitSound;
                     var sample = slider.EdgeAdditions?[0].Item1 ?? slider.Extras.SampleSet;
                     OsuContainer.PlayHitsound(hitsound, sample);
-                    OsuContainer.HUD.AddHit((float)hittableTime, HitResult.Max, SliderPath.Path.Points[0], false);
+                    OsuContainer.HUD.AddHit((float)hittableTime, HitResult.Max, sliderballPosition, true);
 
                     return true;
                 }

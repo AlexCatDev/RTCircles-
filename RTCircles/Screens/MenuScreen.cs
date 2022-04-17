@@ -139,7 +139,7 @@ namespace RTCircles
 
                         GPUSched.Instance.Enqueue(() =>
                         {
-                            OsuContainer.SetMap(BeatmapMirror.DecodeBeatmap(System.IO.File.OpenRead(item.FullPath)), true, Mods.NM);
+                            OsuContainer.SetMap(BeatmapMirror.DecodeBeatmap(System.IO.File.OpenRead(item.FullPath)), item.Hash, true, Mods.NM);
                             OsuContainer.Beatmap.Song.Volume = 0;
                             OsuContainer.SongPosition = (OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai))?.Offset - 2500 ?? 0;
                             OsuContainer.Beatmap.Song.Play(false);
@@ -171,7 +171,7 @@ namespace RTCircles
                     }
 
                     //When everything has been loaded, add the ui items
-                    MapBackground mapBackground = new MapBackground();
+                    MapBackground mapBackground = new MapBackground() { BEAT_SIZE = 10 };
                     Add(mapBackground);
                     Add(new MenuLogo(mapBackground));
 
@@ -261,6 +261,8 @@ namespace RTCircles
         private SmoothFloat beatFlash2 = new SmoothFloat();
         private int previousBeat;
 
+        private float beatScale = 0;
+
         public override void Render(Graphics g)
         {
             if (OsuContainer.Beatmap is null)
@@ -270,7 +272,7 @@ namespace RTCircles
 
             float aspectRatio = tex.Size.AspectRatio();
 
-            float beatScale = (float)Interpolation.ValueAt(OsuContainer.BeatProgressKiai, 0, 1, 0, 1, EasingTypes.InOutSine);
+            beatScale = (float)Interpolation.Damp(beatScale, OsuContainer.BeatProgressKiai, 0.95, MainGame.Instance.DeltaTime * 1000);
 
             float width = MainGame.WindowWidth + (BEAT_SIZE * beatScale) + Zoom;
             float height = MainGame.WindowHeight + (BEAT_SIZE * beatScale) + Zoom;
@@ -292,23 +294,19 @@ namespace RTCircles
 
                 if (beat - previousBeat > 0)
                 {
-                    float waitTime = 0.15f;
-                    float fadeInTime = 0.10f;
-                    float fadeOutTime = 0.15f;
+                    EasingTypes fadeOutEasing = EasingTypes.InQuad;
+                    float fadeOutTime = 0.4f;
+                    float fadeOutOpacity = 0.35f;
 
                     if (beat % 2 == 0)
                     {
-                        beatFlash2.ClearTransforms();
-                        beatFlash2.TransformTo(0.35f, fadeInTime, EasingTypes.Out);
-                        beatFlash2.Wait(waitTime);
-                        beatFlash2.TransformTo(0f, fadeOutTime, EasingTypes.In);
+                        beatFlash2.Value = fadeOutOpacity;
+                        beatFlash2.TransformTo(0f, fadeOutTime, fadeOutEasing);
                     }
                     else
                     {
-                        beatFlash.ClearTransforms();
-                        beatFlash.TransformTo(0.35f, fadeInTime, EasingTypes.Out);
-                        beatFlash.Wait(waitTime);
-                        beatFlash.TransformTo(0f, fadeOutTime, EasingTypes.In);
+                        beatFlash.Value = fadeOutOpacity;
+                        beatFlash.TransformTo(0f, fadeOutTime, fadeOutEasing);
                     }
 
                     previousBeat = beat;
@@ -317,7 +315,7 @@ namespace RTCircles
 
             if (beatFlash.HasCompleted == false || beatFlash2.HasCompleted == false)
             {
-                Vector2 flashSize = new Vector2(MainGame.WindowWidth / 6, MainGame.WindowHeight);
+                Vector2 flashSize = new Vector2(MainGame.WindowWidth / 4, MainGame.WindowHeight);
 
                 g.DrawRectangle(Vector2.Zero, flashSize, new Vector4(1f, 1f, 1f, beatFlash.Value), menuFlash, new Rectangle(1, 0, -1, 1), true);
 
@@ -416,7 +414,7 @@ namespace RTCircles
             visualizer.BarTexture = null;
             visualizer.Layer = -727;
             visualizer.MirrorCount = 2;
-            visualizer.LerpSpeed = 25f;
+            visualizer.LerpSpeed = 40f;
             visualizer.Thickness = 25;
             visualizer.BarLength = 800f;
             visualizer.FreckleSpawnRate = float.MaxValue;
@@ -726,10 +724,12 @@ namespace RTCircles
             }
 
             //BASS KIAI LOGO VIBRATION 2.0, buggy sometimes the logo glitches suddenly to a side for some reason???
-            if (OsuContainer.IsKiaiTimeActive && GlobalOptions.MotionBlur.Value)
+            if (OsuContainer.IsKiaiTimeActive && GlobalOptions.MotionBlur.Value || true)
             {
+                /*
                 float dirX = RNG.TryChance() ? -75 : 75;
                 float dirY = RNG.TryChance() ? -75 : 75;
+
                 //Pick a random direction from negative Value to positive Value
                 Vector2 dist = new Vector2(dirX, dirY) * MainGame.Scale;
 
@@ -739,6 +739,22 @@ namespace RTCircles
                 //use perlin noise
                 var blend = (delta * 35f * visualizer.BeatValue).Clamp(0, 1);
                 offset = Vector2.Lerp(offset, dist, blend);
+                */
+
+                Vector2 dist;
+
+                float vibrateScale = (OsuContainer.IsKiaiTimeActive ? 1 : .5f);
+
+                float shakeAmount = 75 * visualizer.BeatValue * vibrateScale;
+
+                float shakeTime = visualizer.BeatValue * 10;
+
+                dist.X = (float)Perlin.Instance.Noise(shakeTime, 0, 0) * shakeAmount;
+                dist.Y = (float)Perlin.Instance.Noise(0, shakeTime, 0) * shakeAmount;
+                dist.X -= shakeAmount / 2f;
+                dist.Y -= shakeAmount / 2f;
+
+                offset = dist;
             }
             else
                 offset = Vector2.Lerp(offset, Vector2.Zero, delta * 10f);

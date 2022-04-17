@@ -273,8 +273,8 @@ namespace RTCircles
             MaxAllowedDeltaTime = 0.1;
             //Skin.Load("");
             //GlobalOptions.Init();
-            Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  idke 1.2 without sliderendcircle");
-            //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\- default");
+            //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  idke 1.2 without sliderendcircle");
+            Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  AlexSkin 1.0");
 
             g = new Graphics();
 

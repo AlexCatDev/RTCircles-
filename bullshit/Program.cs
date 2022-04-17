@@ -8,15 +8,7 @@ using System.Reflection;
 using System.Runtime;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-
-class DBObject : RealmObject
-{
-    [PrimaryKey]
-    public int ID { get; set; }
-
-    public IList<string> Keys { get; }
-}
-
+using RTCircles;
 class Program
 {
 
@@ -24,6 +16,24 @@ class Program
     {
         GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
         Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.High;
+
+        /*
+        DBBeatmapSetInfo lol = new DBBeatmapSetInfo();
+        lol.Foldername = "veryfoldername";
+
+        lol.Beatmaps.Add(new DBBeatmapInfo() { Filename = "test123", Hash = "Weed420", SetInfo = lol });
+        */
+        Realm s = Realm.GetInstance("bullshit.realm");
+        s.Error += (e, x) =>
+        {
+            Console.WriteLine(x.Exception.Message);
+        };
+
+        var set = s.All<DBBeatmapInfo>().First().SetInfo;
+        s.Write(() => {
+            set.Beatmaps.Add(new DBBeatmapInfo() { Filename = "test123", Hash = "Weed420727" });
+        });
+
         /*
         DBObject k = new DBObject();
         k.ID = 0;
@@ -43,7 +53,7 @@ class Program
         }).Start();
         */
 
-        BenchmarkRunner.Run<Benchmarks>();
+        //BenchmarkRunner.Run<Benchmarks>();
         Console.WriteLine("- FIN -");
         Console.ReadLine();
     }

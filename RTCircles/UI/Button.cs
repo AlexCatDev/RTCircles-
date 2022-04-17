@@ -92,6 +92,8 @@ namespace RTCircles
                 buttonPressFadeAnimation.IsPaused = true;
 
                 buttonPressFadeAnimation.Reset();
+
+                return true;
             }
 
             return false;
@@ -108,6 +110,8 @@ namespace RTCircles
                 buttonPressFadeAnimation.IsPaused = false;
 
                 Skin.Click.Play(true);
+
+                return true;
             }
 
             return false;

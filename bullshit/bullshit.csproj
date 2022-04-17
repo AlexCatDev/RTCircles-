@@ -10,11 +10,11 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
-    <PackageReference Include="Realm" Version="10.7.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Easy2D\Easy2D.csproj" />
+    <ProjectReference Include="..\RTCircles\RTCircles.csproj" />
   </ItemGroup>
 
 </Project>

@@ -20,8 +20,8 @@ using Realms;
 
 namespace RTCircles
 {
-        public static class BeatmapMirror
-        {
+    public static class BeatmapMirror
+    {
         public enum RankStatus
         {
             Graveyard = -2,
@@ -79,10 +79,10 @@ namespace RTCircles
 
         public static Realm Realm;
 
-        public static event Action<DBBeatmap> OnNewBeatmapAvailable;
+        public static event Action<DBBeatmapInfo> OnNewBeatmapAvailable;
         //public static ConcurrentQueue<DBBeatmap> NewBeatmaps = new ConcurrentQueue<DBBeatmap>();
 
-        private static MD5 md5;
+        public static MD5 MD5 { get; private set; }
 
         public static string SongsFolder { get; private set; }
 
@@ -99,6 +99,7 @@ namespace RTCircles
             {
                 Realm = Realm.GetInstance(new RealmConfiguration("RTCircles.realm") { SchemaVersion = 1 });
                 Utils.Log($"Realm Path: {Realm.Config.DatabasePath}", LogLevel.Important);
+
                 while (MainGame.Instance.View.IsClosing == false)
                 {
                     Scheduler.RunPendingTasks();
@@ -112,8 +113,8 @@ namespace RTCircles
 
             Utils.Log($"SongsFolder: {SongsFolder}", LogLevel.Important);
 
-            md5 = MD5.Create();
-            md5.Initialize();
+            MD5 = MD5.Create();
+            MD5.Initialize();
         }
 
         public static void ImportBeatmap(Stream oszStream)
@@ -125,6 +126,8 @@ namespace RTCircles
 
             int setID = -1;
 
+            DBBeatmapSetInfo setInfo = new DBBeatmapSetInfo();
+
             foreach (var item in beatmapFiles)
             {
                 Utils.Log($"Processing beatmap: {item.FullName}", LogLevel.Info);
@@ -133,7 +136,7 @@ namespace RTCircles
                 {
                     stream.CopyTo(beatmapStream);
 
-                    var hash = md5.ComputeHash(beatmapStream.ToArray());
+                    var hash = MD5.ComputeHash(beatmapStream.ToArray());
                     var hashString = Convert.ToBase64String(hash);
                     Utils.Log($"\tHash: {hashString}", LogLevel.Success);
 
@@ -147,67 +150,61 @@ namespace RTCircles
                         Utils.Log($"\tSkipping ID: {beatmap.MetadataSection.BeatmapID} NOT A STANDARD MAP!!", LogLevel.Warning);
                         continue;
                     }
-                    else if (beatmap.MetadataSection.BeatmapID == 0)
+                    else
                     {
-                        //If the beatmapID is 0?
-                        //This could be due to an old map, and we would have to fetch it from somewhere
+                        DBBeatmapInfo beatmapInfo = new DBBeatmapInfo();
+                        //PrimaryKey
+                        beatmapInfo.Hash = hashString;
 
-                        Utils.Log($"\tSkipping ID: {beatmap.MetadataSection.BeatmapID} Beatmap id was 0 which means a beatmap decoder error.", LogLevel.Error);
-                        continue;
+                        beatmapInfo.SetInfo = setInfo;
+
+                        beatmapInfo.Filename = item.FullName;
+                        beatmapInfo.BackgroundFilename = beatmap.EventsSection.BackgroundImage;
+
+                        setInfo.Beatmaps.Add(beatmapInfo);
                     }
 
                     if (setID == -1)
-                    {
                         setID = beatmap.MetadataSection.BeatmapSetID;
-                        //Handle when the beatmap already exists and is open, just ignore it?
-                        Directory.CreateDirectory($"{SongsFolder}/{setID}");
-                        try
-                        {
-                            archive.ExtractToDirectory($"{SongsFolder}/{setID}", true);
-                        } catch (Exception ex)
-                        {
-                            Utils.Log($"Extracting archive failed due to: {ex.Message} import process aborted :(", LogLevel.Error);
-                            archive.Dispose();
-
-                            setID = -1;
-
-                            return;
-                        }
-                    }
-
-                    Debug.Assert(setID != -1);
-
-                    Utils.Log("Writing to database...", LogLevel.Info);
-                    DBBeatmap dBBeatmap = new DBBeatmap();
-                    dBBeatmap.ID = beatmap.MetadataSection.BeatmapID;
-                    dBBeatmap.SetID = beatmap.MetadataSection.BeatmapSetID;
-                    dBBeatmap.Hash = hashString;
-                    dBBeatmap.Folder = setID.ToString();
-                    dBBeatmap.File = item.FullName;
-                    dBBeatmap.Difficulty = 69;
-
-                    if (File.Exists($"{SongsFolder}/{dBBeatmap.Folder}/{beatmap.EventsSection.BackgroundImage}"))
-                        dBBeatmap.Background = beatmap.EventsSection.BackgroundImage;
-                    else
-                        dBBeatmap.Background = null;
-
-                    Scheduler.Enqueue(() =>
-                    {
-                        Realm.Write(() =>
-                        {
-                            Realm.Add(dBBeatmap, true);
-                        });
-                        OnNewBeatmapAvailable?.Invoke(dBBeatmap);
-
-                        int id = dBBeatmap.ID;
-
-                        NotificationManager.ShowMessage($"Imported {dBBeatmap.File}", ((Vector4)Color4.LightGreen).Xyz, 3, () => {
-                            ScreenManager.GetScreen<MapSelectScreen>().SongSelector.SelectBeatmap(id);
-                        });
-                        Utils.Log("Done!", LogLevel.Success);
-                    });
                 }
             }
+
+            Debug.Assert(setID != -1);
+
+            //Handle when the beatmap already exists and is open, just ignore it?
+            Directory.CreateDirectory($"{SongsFolder}/{setID}");
+            try
+            {
+                archive.ExtractToDirectory($"{SongsFolder}/{setID}", true);
+            }
+            catch (Exception ex)
+            {
+                Utils.Log($"Extracting archive failed due to: {ex.Message} import process aborted :(", LogLevel.Error);
+                archive.Dispose();
+
+                setID = -1;
+
+                return;
+            }
+
+            Utils.Log("Writing to database...", LogLevel.Info);
+
+            setInfo.Foldername = setID.ToString();
+
+            Scheduler.Enqueue(() =>
+            {
+                Realm.Write(() =>
+                {
+                    Realm.Add(setInfo, true);
+                });
+
+                foreach (var item in setInfo.Beatmaps)
+                {
+                    OnNewBeatmapAvailable?.Invoke(item);
+                }
+
+                Utils.Log("Done!", LogLevel.Success);
+            });
         }
 
         /// <summary>

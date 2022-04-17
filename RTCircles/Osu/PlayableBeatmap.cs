@@ -143,6 +143,8 @@ namespace RTCircles
         public float OD { get; private set; }
         public float HP { get; private set; }
 
+        public string Hash { get; private set; }
+
         public float CircleRadius => (OsuContainer.Playfield.Width / 16f) * (1f - (0.7f * (CS - 5f) / 5f));
         public float CircleRadiusInOsuPixels => 54.4f - 4.48f * CS;
 
@@ -159,11 +161,13 @@ namespace RTCircles
             Hitsounds = hitsounds;
         }
 
-        public PlayableBeatmap(Beatmap beatmap)
+        public PlayableBeatmap(Beatmap beatmap, string hash)
         {
             string folderPath = $"{BeatmapMirror.SongsFolder}/{beatmap.MetadataSection.BeatmapSetID}";
 
             InternalBeatmap = beatmap;
+
+            Hash = hash;
 
             if (GlobalOptions.AllowMapHitSounds.Value)
             {
@@ -180,7 +184,6 @@ namespace RTCircles
                     Song = new Sound(fs, true);
                     Song.Volume = GlobalOptions.SongVolume.Value;
                 }
-
             }
             else
                 Song = new Sound(null);

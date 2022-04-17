@@ -26,6 +26,20 @@ namespace RTCircles
         private static Texture lockTexture = new Texture(Utils.GetResource("UI.Assets.LockClosed.png"));
         private static Texture unlockTexture = new Texture(Utils.GetResource("UI.Assets.LockOpen.png"));
 
+        public void ToggleInput(bool canAcceptInput)
+        {
+            csSliderBar.IsAcceptingInput = canAcceptInput;
+            odSliderBar.IsAcceptingInput = canAcceptInput;
+            arSliderBar.IsAcceptingInput = canAcceptInput;
+            hpSliderBar.IsAcceptingInput = canAcceptInput;
+            speedSliderBar.IsAcceptingInput = canAcceptInput;
+
+            csSliderLockBtn.IsAcceptingInput = canAcceptInput;
+            arSliderLockBtn.IsAcceptingInput = canAcceptInput;
+            odSliderLockBtn.IsAcceptingInput = canAcceptInput;
+            hpSliderLockBtn.IsAcceptingInput = canAcceptInput;
+        }
+
         public DifficultyAdjuster()
         {
             OsuContainer.BeatmapChanged += () =>

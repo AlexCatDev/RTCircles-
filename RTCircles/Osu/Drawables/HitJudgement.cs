@@ -26,9 +26,9 @@ namespace RTCircles
 
             //Not sure if these values are accurate
             height.Value = 0;
-            height.TransformTo(1f, 200f, EasingTypes.OutElasticHalf);
+            height.TransformTo(1f, (float)OsuContainer.Fadeout, EasingTypes.OutElasticHalf);
             alpha.Value = 0;
-            alpha.TransformTo(1f, 150f, EasingTypes.Out).Wait(150).TransformTo(0, 500, EasingTypes.In);
+            alpha.TransformTo(1f, 150f, EasingTypes.Out).Wait(200).TransformTo(0, 500, EasingTypes.In);
         }
 
         public override Rectangle Bounds => new Rectangle();

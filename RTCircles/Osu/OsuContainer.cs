@@ -247,11 +247,11 @@ namespace RTCircles
             BeatmapChanged?.Invoke();
         }
 
-        public static void SetMap(Beatmap beatmap, bool generateHitObjects = true, Mods mods = Mods.NM)
+        public static void SetMap(Beatmap beatmap, string hash, bool generateHitObjects = true, Mods mods = Mods.NM)
         {
             Beatmap?.Song.Stop();
 
-            Beatmap = new PlayableBeatmap(beatmap);
+            Beatmap = new PlayableBeatmap(beatmap, hash);
 
             //FIIIIIIIIIIIX
             //GC.Collect(2, GCCollectionMode.Forced, false);
