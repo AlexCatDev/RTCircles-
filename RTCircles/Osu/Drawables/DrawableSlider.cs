@@ -309,6 +309,12 @@ namespace RTCircles
         private Vector2 hitCirclePos;
         private void drawHitCircle(Graphics g)
         {
+            void drawNumber()
+            {
+                if (IsHit == false && IsMissed == false)
+                    Skin.CircleNumbers.DrawCentered(g, hitCirclePos, Size.X / 2.7f, new Vector4(1f, 1f, 1f, circleAlpha), combo.ToString());
+            }
+
             hitCirclePos = OsuContainer.MapToPlayfield(slider.Position.X, slider.Position.Y);
             if (IsMissed == false)
             {
@@ -328,12 +334,17 @@ namespace RTCircles
 
                 g.DrawRectangleCentered(hitCirclePos, Size * Skin.GetScale(Skin.SliderStartCircle) * scaleExplode, new Vector4(color.X, color.Y, color.Z, hitCircleAlpha), Skin.SliderStartCircle);
 
+                if (Skin.Config.HitCircleOverlayAboveNumber)
+                    drawNumber();
+
                 g.DrawRectangleCentered(hitCirclePos, Size * Skin.GetScale(Skin.SliderStartCircleOverlay) * scaleExplode, new Vector4(1f, 1f, 1f, hitCircleAlpha), Skin.SliderStartCircleOverlay);
+
+                if (!Skin.Config.HitCircleOverlayAboveNumber)
+                    drawNumber();
             }
 
             //Circle numbers dont need to fade or explode, just dissappear instantly
-            if(IsHit == false && IsMissed == false)
-                Skin.CircleNumbers.DrawCentered(g, hitCirclePos, Size.X / 2.7f, new Vector4(1f, 1f, 1f, circleAlpha), combo.ToString());
+            
         }
 
         public override void AfterRender(Graphics g)

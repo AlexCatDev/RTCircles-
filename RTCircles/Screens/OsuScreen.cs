@@ -75,6 +75,8 @@ namespace RTCircles
 
             retryButton.OnClick += (s, e) =>
             {
+                OnEnter();
+
                 faderino.FadeTo(1f, 0.25f, EasingTypes.Out);
 
                 pauseOverlayFade.TransformTo(0f, 0.5f, EasingTypes.Out, () =>
@@ -193,7 +195,8 @@ namespace RTCircles
             OsuContainer.HUD.Update(delta);
 
             dieAnim.Update(delta);
-
+            if (!dieAnim.HasCompleted && OsuContainer.Beatmap != null)
+                OsuContainer.Beatmap.Song.Frequency = dieAnim.Value;
             base.Update(delta);
         }
 
@@ -308,6 +311,7 @@ namespace RTCircles
 
             base.Render(g);
 
+            if(ScreenManager.ActiveScreen==this)
             OsuContainer.HUD.Render(g);
 
             breakOverlay.Render(g);
@@ -410,10 +414,12 @@ namespace RTCircles
             if (!dieFlag && ScreenManager.ActiveScreen == this)
             {
                 dieFlag = true;
-                dieAnim.Value = 1;
-                dieAnim.TransformTo(0f, 0.5f, EasingTypes.Out, () =>
+                var start = OsuContainer.Beatmap.Song.Frequency;
+                dieAnim.Value = (float)start;
+                dieAnim.TransformTo(0f, 3f, EasingTypes.OutQuad, () =>
                 {
                     ScreenManager.GoBack();
+                    OsuContainer.Beatmap.Song.Frequency = start;
                 });
             }
         }
@@ -424,7 +430,7 @@ namespace RTCircles
         {
             if (key == Key.Escape)
             {
-                //If the current beatmap is null or the map is finished just return for now
+                //hvis der ikk er flere hitobjects eller beatmap er null så fuck off
                 if (OsuContainer.SongPosition > OsuContainer.Beatmap?.HitObjects[^1].BaseObject.EndTime + 400 || (OsuContainer.Beatmap?.Song.IsStopped ?? true))
                 {
                     ScreenManager.GoBack();

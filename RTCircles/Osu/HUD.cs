@@ -330,7 +330,7 @@ namespace RTCircles
 
             Vector2 size = new Vector2(650 * interpolatedHP, 32) * MainGame.Scale;
             Rectangle uv = new Rectangle(0, 0, interpolatedHP, 0);
-            g.DrawRectangle(new Vector2(0, 12 * MainGame.Scale), size, (Vector4)Color4.SteelBlue, Texture.WhiteSquare, uv, true);
+            g.DrawRectangle(new Vector2(0, 12 * MainGame.Scale), size, new Vector4(new Vector3(0.9f), 1), Texture.WhiteSquare, uv, true);
             //g.DrawRectangle(new Vector2(10) * MainGame.Scale, new Vector2(400, 32) * MainGame.Scale, Colors.Red);
         }
 

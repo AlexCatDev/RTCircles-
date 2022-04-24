@@ -47,12 +47,18 @@ namespace RTCircles
 
             public override void Render(Graphics g)
             {
-                var rgb = Skin.Config.ColorFromIndex(RNG.Next(0, Skin.Config.ComboColors.Count - 1));
+                var rgb = Skin.Config.ColorFromIndex(0);
                 var color = new Vector4(rgb, alpha);
 
                 g.DrawRectangleCentered(position, size * MainGame.Scale * Skin.GetScale(Skin.HitCircle), color, Skin.HitCircle, rotDegrees: angle);
+
+                if (Skin.Config.HitCircleOverlayAboveNumber)
+                    Skin.CircleNumbers.DrawCentered(g, position, size.Y * MainGame.Scale / 2.7f, new Vector4(1f, 1f, 1f, alpha), "727");
+
                 g.DrawRectangleCentered(position, size * MainGame.Scale * Skin.GetScale(Skin.HitCircleOverlay), new Vector4(1f, 1f, 1f, alpha), Skin.HitCircleOverlay, rotDegrees: angle);
-                Skin.CircleNumbers.DrawCentered(g, position, size.Y * MainGame.Scale / 2.7f, new Vector4(1f, 1f, 1f, alpha), "727");
+
+                if (!Skin.Config.HitCircleOverlayAboveNumber)
+                    Skin.CircleNumbers.DrawCentered(g, position, size.Y * MainGame.Scale / 2.7f, new Vector4(1f, 1f, 1f, alpha), "727");
             }
 
             public override void Update(float delta)
@@ -71,6 +77,8 @@ namespace RTCircles
             OsuContainer.OnKiai += OsuContainer_OnKiai;
             Layer = Int32.MaxValue;
         }
+
+        public Vector2? Position;
 
         private bool startSpawningCum;
         private float cumTimer;
@@ -100,7 +108,7 @@ namespace RTCircles
                 if (cumTimer >= spawnRate)
                 {
                     cumTimer -= spawnRate;
-                    Container.Add(new Cum(Input.MousePosition, startAngle + angle));
+                    Container.Add(new Cum(Position ?? Input.MousePosition, startAngle + angle));
                 }
 
                 if(angle >= MathF.PI - MathF.PI / 3)
@@ -174,7 +182,6 @@ namespace RTCircles
                     MapBackground mapBackground = new MapBackground() { BEAT_SIZE = 10 };
                     Add(mapBackground);
                     Add(new MenuLogo(mapBackground));
-
                     //and fade the loading animation out
                     introFade.TransformTo(new Vector4(0f, 0f, 0f, 0f), 0.3f, EasingTypes.Out, () =>
                     {
@@ -219,16 +226,11 @@ namespace RTCircles
         public float Opacity = 0.5f;
         public float KiaiFlash = 2.0f;
 
-        public static Texture menuFlash;
+        public static readonly Texture FlashTexture = new Texture(Utils.GetResource("Skin.menu-flash.png")) { GenerateMipmaps = false };
 
         public bool ShowMenuFlash = true;
 
         public Texture TextureOverride;
-
-        static MapBackground()
-        {
-            menuFlash = new Texture(Utils.GetResource("Skin.menu-flash.png"));
-        }
 
         public MapBackground()
         {
@@ -263,6 +265,28 @@ namespace RTCircles
 
         private float beatScale = 0;
 
+
+        private FrameBuffer fb = new FrameBuffer(1,1);
+        private FrameBuffer bluredFB = new FrameBuffer(1, 1);
+        private void test(Graphics g)
+        {
+            fb.EnsureSize(MainGame.WindowWidth/6, MainGame.WindowHeight/6);
+            g.DrawInFrameBuffer(fb, () => {
+                (MainGame.Instance as MainGame).FakeWindowSize(fb.Texture.Size, () =>
+                {
+                    OsuContainer.MuteHitsounds = true;
+                    OsuContainer.Beatmap.Mods |= Mods.Auto;
+                    ScreenManager.GetScreen<OsuScreen>().Update((float)MainGame.Instance.DeltaTime);
+                    ScreenManager.GetScreen<OsuScreen>().Render(g);
+                });
+            });
+
+            bluredFB.EnsureSize(fb.Width, fb.Height);
+
+            Blur.BlurTexture(fb.Texture, bluredFB, 1, 2);
+            g.DrawRectangleCentered(MainGame.WindowCenter, MainGame.WindowSize, new Vector4(new Vector3(1f),1f), bluredFB.Texture, new Rectangle(0, 1, 1, -1), true);
+        }
+
         public override void Render(Graphics g)
         {
             if (OsuContainer.Beatmap is null)
@@ -295,17 +319,29 @@ namespace RTCircles
                 if (beat - previousBeat > 0)
                 {
                     EasingTypes fadeOutEasing = EasingTypes.InQuad;
-                    float fadeOutTime = 0.4f;
-                    float fadeOutOpacity = 0.35f;
+                    float fadeOutTime = 400f;
+
+                    EasingTypes fadeInEasing = EasingTypes.OutQuad;
+                    float fadeInTime = 50f;
+
+                    if (OsuContainer.CurrentBeatTimingPoint != null)
+                        fadeOutTime = (float)OsuContainer.CurrentBeatTimingPoint?.BeatLength;
+
+                    fadeOutTime /= 1000;
+                    fadeInTime /= 1000;
+
+                    float fadeOutOpacity = 0.4f;
 
                     if (beat % 2 == 0)
                     {
-                        beatFlash2.Value = fadeOutOpacity;
+                        beatFlash2.Value = 0;
+                        beatFlash2.TransformTo(fadeOutOpacity, fadeInTime, fadeInEasing);
                         beatFlash2.TransformTo(0f, fadeOutTime, fadeOutEasing);
                     }
                     else
                     {
-                        beatFlash.Value = fadeOutOpacity;
+                        beatFlash.Value = 0;
+                        beatFlash.TransformTo(fadeOutOpacity, fadeInTime, fadeInEasing);
                         beatFlash.TransformTo(0f, fadeOutTime, fadeOutEasing);
                     }
 
@@ -317,9 +353,9 @@ namespace RTCircles
             {
                 Vector2 flashSize = new Vector2(MainGame.WindowWidth / 4, MainGame.WindowHeight);
 
-                g.DrawRectangle(Vector2.Zero, flashSize, new Vector4(1f, 1f, 1f, beatFlash.Value), menuFlash, new Rectangle(1, 0, -1, 1), true);
+                g.DrawRectangle(Vector2.Zero, flashSize, new Vector4(1f, 1f, 1f, beatFlash.Value), FlashTexture, new Rectangle(1, 0, -1, 1), true);
 
-                g.DrawRectangle(new Vector2(MainGame.WindowWidth - flashSize.X, 0), flashSize, new Vector4(1f, 1f, 1f, beatFlash2.Value), menuFlash);
+                g.DrawRectangle(new Vector2(MainGame.WindowWidth - flashSize.X, 0), flashSize, new Vector4(1f, 1f, 1f, beatFlash2.Value), FlashTexture);
             }
         }
 
@@ -340,12 +376,8 @@ namespace RTCircles
 
     public class MenuLogo : Drawable
     {
-        public static Texture LogoTexture { get; private set; }
-
-        static MenuLogo()
-        {
-            LogoTexture = new Texture(Utils.GetResource("Skin.logo.png"));
-        }
+        public static readonly Texture LogoTexture = new Texture(Utils.GetResource("Skin.logo.png")) { GenerateMipmaps = false };
+        public static readonly Texture LogoTextTexture = new Texture(Utils.GetResource("UI.Assets.LogoText.png")) { GenerateMipmaps = false };
 
         private SmoothVector2 positionTransform = new SmoothVector2();
         private SmoothFloat rotationTransform = new SmoothFloat();
@@ -355,7 +387,6 @@ namespace RTCircles
 
         private Vector2 position = new Vector2();
         private Vector2 size => new Vector2(750) * MainGame.Scale + new Vector2(300) * visualizer.BeatValue * MainGame.Scale;
-        private Vector2 logoSize;
 
         private Vector2 parallaxPosition => mapBackground.ParallaxPosition * 2f;
         private Vector2 offset = Vector2.Zero;
@@ -387,6 +418,8 @@ namespace RTCircles
 
         private SmoothFloat logoExplodeKiaiAnim = new SmoothFloat();
 
+        private double logoShakeTime = 0;
+
         public MenuLogo(MapBackground mapBackground)
         {
             this.mapBackground = mapBackground;
@@ -394,7 +427,7 @@ namespace RTCircles
             OsuContainer.OnKiai += () =>
             {
                 logoExplodeKiaiAnim.Value = 1f;
-                logoExplodeKiaiAnim.TransformTo(0f, 0.5f, EasingTypes.Out);
+                logoExplodeKiaiAnim.TransformTo(0f, 0.5f, EasingTypes.None);
             };
 
             sizeTransform.Value = -size;
@@ -520,13 +553,12 @@ namespace RTCircles
 
         public override void Render(Graphics g)
         {
-            var beatFlash = new Vector4(0.4f, 0.4f, 0.4f, 0f) * visualizer.BeatValue;
-            g.DrawRectangleCentered(visualizer.Position, logoSize, colorTransform + beatFlash, LogoTexture, null, false, rotationTransform);
+            g.DrawRectangleCentered(visualizer.Position, Bounds.Size, colorTransform, LogoTexture, null, false, rotationTransform);
 
             if (!logoExplodeKiaiAnim.HasCompleted)
             {
-                float scale = logoExplodeKiaiAnim.Value.Map(1f, 0f, 1f, 1.35f);
-                g.DrawRectangleCentered(visualizer.Position, logoSize * scale, new Vector4(1f, 1f, 1f, logoExplodeKiaiAnim.Value), LogoTexture);
+                float logoExplodeScale = logoExplodeKiaiAnim.Value.Map(1f, 0f, 1f, 2f);
+                g.DrawRectangleCentered(visualizer.Position, Bounds.Size * logoExplodeScale, new Vector4(1f, 1f, 1f, LogoTextTexture.ImageDoneUploading ? logoExplodeKiaiAnim.Value : 0), LogoTextTexture);
             }
         }
 
@@ -690,15 +722,13 @@ namespace RTCircles
 
             triangles.Radius = Bounds.Size.X / 2 - 20f * MainGame.Scale;
             triangles.Position = Bounds.Center;
-            triangles.Speed = (50 + 1700 * visualizer.BeatValue) * (OsuContainer.IsKiaiTimeActive ? 2 : 1);
+            triangles.Speed = (50 + 1700 * visualizer.BeatValue) * (OsuContainer.IsKiaiTimeActive ? 1.75f : 1);
 
             visualizer.Position = Bounds.Center;
             visualizer.Radius = Bounds.Size.X / 2f - 20f * MainGame.Scale;
             visualizer.FreckleOffset = parallaxPosition;
             visualizer.BarLength = 800 * MainGame.Scale;
             visualizer.Thickness = 30f * MainGame.Scale;
-
-            logoSize = Bounds.Size;
 
             if (OsuContainer.IsKiaiTimeActive)
                 visualizer.FreckleSpawnRate = 0.006f;
@@ -724,8 +754,9 @@ namespace RTCircles
             }
 
             //BASS KIAI LOGO VIBRATION 2.0, buggy sometimes the logo glitches suddenly to a side for some reason???
-            if (OsuContainer.IsKiaiTimeActive && GlobalOptions.MotionBlur.Value || true)
+            if (OsuContainer.IsKiaiTimeActive)
             {
+                logoShakeTime += delta * visualizer.BeatValue * 30;
                 /*
                 float dirX = RNG.TryChance() ? -75 : 75;
                 float dirY = RNG.TryChance() ? -75 : 75;
@@ -743,14 +774,10 @@ namespace RTCircles
 
                 Vector2 dist;
 
-                float vibrateScale = (OsuContainer.IsKiaiTimeActive ? 1 : .5f);
+                float shakeAmount = 75 * visualizer.BeatValue * MainGame.Scale;
 
-                float shakeAmount = 75 * visualizer.BeatValue * vibrateScale;
-
-                float shakeTime = visualizer.BeatValue * 10;
-
-                dist.X = (float)Perlin.Instance.Noise(shakeTime, 0, 0) * shakeAmount;
-                dist.Y = (float)Perlin.Instance.Noise(0, shakeTime, 0) * shakeAmount;
+                dist.X = (float)Perlin.Instance.Noise(logoShakeTime, 0, 0) * shakeAmount;
+                dist.Y = (float)Perlin.Instance.Noise(0, logoShakeTime, 0) * shakeAmount;
                 dist.X -= shakeAmount / 2f;
                 dist.Y -= shakeAmount / 2f;
 

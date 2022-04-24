@@ -297,6 +297,22 @@ namespace RTCircles
             }
         }
 
+        public static HitResult CheckHitResult(HitObject obj)
+        {
+            double t = Math.Abs(SongPosition - obj.StartTime);
+
+            if (t < Beatmap.Window300)
+                return HitResult.Max;
+
+            if (t < Beatmap.Window100)
+                return HitResult.Good;
+
+            if (t < Beatmap.Window50)
+                return HitResult.Meh;
+
+            return HitResult.Miss;
+        }
+
         public static void ScoreHit(HitObject obj)
         {
             Update(0f);

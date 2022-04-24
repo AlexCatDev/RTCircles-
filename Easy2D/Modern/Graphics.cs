@@ -604,7 +604,7 @@ namespace Easy2D
 
             Vector2 cornerSize = new Vector2(cornerRadius) * 1f;
 
-            var cornerTex = Texture.WhiteFlatCircle;
+            var cornerTex = Texture.WhiteFlatCircle2;
 
             //Corner pieces
             DrawRectangle(rect.TopLeft - cornerSize, cornerSize, color, cornerTex, new Rectangle(0, 0, 0.5f, 0.5f), true);

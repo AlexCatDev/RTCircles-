@@ -218,7 +218,7 @@ namespace RTCircles
                 var playbackSpeed = OsuContainer.Beatmap.Song.PlaybackSpeed;
                 var currentBPM = (60000 / OsuContainer.CurrentBeatTimingPoint?.BeatLength) * playbackSpeed;
 
-                g.DrawStringCentered($"Song Speed: {playbackSpeed:F1}x ({currentBPM:F0} BPM)", Font.DefaultFont, speedSliderBar.Position + speedSliderBar.Size / 2, Colors.White, textScale);
+                g.DrawStringCentered($"Song Speed: {playbackSpeed:F2}x ({currentBPM:F0} BPM)", Font.DefaultFont, speedSliderBar.Position + speedSliderBar.Size / 2, Colors.White, textScale);
             }
         }
 

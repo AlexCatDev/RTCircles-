@@ -152,11 +152,15 @@ namespace RTCircles
             if (shouldGenBlur)
             {
                 //Todo: Istedet for at resize blur buffer, så have blur bufferen relateret til screen resolution, og så render texture med offset i den og så blur den efterfølgende
-                if (Blur.BlurTexture(OsuContainer.Beatmap.Background, blurBuffer, 2f, 8))
+                if (OsuContainer.Beatmap.Background.ImageDoneUploading)
                 {
+                    blurBuffer.EnsureSize(OsuContainer.Beatmap.Background.Width / 4, OsuContainer.Beatmap.Background.Height / 4);
+                    Blur.BlurTexture(OsuContainer.Beatmap.Background, blurBuffer, 1f, 2);
                     bg.TextureOverride = blurBuffer.Texture;
                     shouldGenBlur = false;
                 }
+                else
+                    OsuContainer.Beatmap.Background.Bind(0);
             }
 
             Vector2 offset = new Vector2();

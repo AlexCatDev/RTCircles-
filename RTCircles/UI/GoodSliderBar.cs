@@ -47,7 +47,8 @@ namespace RTCircles
 
         public override void Render(Graphics g)
         {
-            if ((int)Size.X != texture.Width || (int)Size.Y != texture.Height)
+            
+            if ((int)Size.X != texture.Width || (int)Size.Y != texture.Height || true)
             {
                 texture.EnsureSize(Size.X, Size.Y);
                 g.DrawInFrameBuffer(texture, () =>
@@ -63,7 +64,7 @@ namespace RTCircles
                     g.DrawRectangle(new Vector2(Size.X - ellipseSize.X, 0), ellipseSize, Colors.White, Texture.WhiteFlatCircle2, new Rectangle(0.5f, 0, 0.5f, 1), true);
                 });
             }
-
+            /*
             var sliderTexture = texture.Texture;
             g.DrawRectangle(Position, Size, BackgroundColor, sliderTexture);
 
@@ -71,9 +72,38 @@ namespace RTCircles
 
             Vector2 foregroundSize = new Vector2((float)(Size.X * zeroOne), Size.Y);
             g.DrawRectangle(Position, foregroundSize, ForegroundColor, sliderTexture, new Rectangle(0, 0, (float)zeroOne, 1), true);
-            
+            */
+
+
+            drawBar(g, BackgroundColor, 1);
+            drawBar(g, ForegroundColor, smoothInternalValue.Map(MinimumValue, MaximumValue, 0, 1));
+
             //g.DrawString($"Value: {Value}", Font.DefaultFont, Input.MousePosition, Colors.Red);
             //g.DrawFrameBuffer(Input.MousePosition + new Vector2(50), Colors.White, texture);
+        }
+
+        private void drawBar(Graphics g, Vector4 color, double progress)
+        {
+            var capTexture = Texture.WhiteFlatCircle2;
+
+            Vector2 circleSize = new Vector2(Size.Y / 2f, Size.Y);
+
+            Vector2 leftCircleSize = new Vector2((float)progress.Map(0, 1, 0, Size.X).Clamp(0, circleSize.X), circleSize.Y);
+            float leftCircleUV = leftCircleSize.X.Map(0, circleSize.X, 0, 0.5f);
+            //Venstre halv cirkel
+            g.DrawRectangle(Position, leftCircleSize, color, capTexture, new Rectangle(0, 0, leftCircleUV, 1), true);
+
+            Vector2 barSize = new Vector2((float)(progress.Map(0, 1, 0, Size.X) - circleSize.X).Clamp(0, Size.X - circleSize.X * 2), circleSize.Y);
+
+            //Midbar
+            g.DrawRectangle(Position + new Vector2(circleSize.X, 0), barSize, color);
+
+            Vector2 rightCircleSize = new Vector2((float)(progress.Map(0, 1, 0, Size.X) - Size.X + circleSize.X).Clamp(0, circleSize.X), circleSize.Y);
+            float rightCircleUV = rightCircleSize.X.Map(0, circleSize.X, 0, 0.5f);
+
+            //Højre halv cirkel
+            g.DrawRectangle(Position + new Vector2(Size.X - circleSize.X, 0), rightCircleSize, color, capTexture, new Rectangle(0.5f, 0, rightCircleUV, 1), true, 0);
+
         }
 
         private Vector2? mouseDownPos;

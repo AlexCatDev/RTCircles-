@@ -65,6 +65,7 @@
     <None Remove="Skin\hover.wav" />
     <None Remove="Skin\loading.png" />
     <None Remove="Skin\logo.png" />
+    <None Remove="Skin\logoad.png" />
     <None Remove="Skin\menu-flash.png" />
     <None Remove="Skin\message-button.png" />
     <None Remove="Skin\normal-hitclap.wav" />
@@ -114,6 +115,7 @@
     <None Remove="Sliders\slidergradient.png" />
     <None Remove="Sliders\sliderPass.frag" />
     <None Remove="Sliders\sliderPass.vert" />
+    <None Remove="UI\Assets\LogoText.png" />
     <None Remove="UI\LockClosed.png" />
     <None Remove="UI\LockOpen.png" />
     <None Remove="UI\roboto_bold.fnt" />
@@ -187,6 +189,7 @@
     <EmbeddedResource Include="Skin\hover.wav" />
     <EmbeddedResource Include="Skin\loading.png" />
     <EmbeddedResource Include="Skin\logo.png" />
+    <EmbeddedResource Include="Skin\logoad.png" />
     <EmbeddedResource Include="Skin\menu-flash.png" />
     <EmbeddedResource Include="Skin\message-button.png" />
     <EmbeddedResource Include="Skin\normal-hitclap.wav" />
@@ -238,6 +241,7 @@
     <EmbeddedResource Include="Sliders\sliderPass.vert" />
     <EmbeddedResource Include="UI\Assets\LockClosed.png" />
     <EmbeddedResource Include="UI\Assets\LockOpen.png" />
+    <EmbeddedResource Include="UI\Assets\LogoText.png" />
     <EmbeddedResource Include="UI\Assets\roboto_bold.fnt" />
     <EmbeddedResource Include="UI\Assets\roboto_bold.png" />
   </ItemGroup>

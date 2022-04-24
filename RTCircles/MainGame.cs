@@ -274,7 +274,8 @@ namespace RTCircles
             //Skin.Load("");
             //GlobalOptions.Init();
             //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  idke 1.2 without sliderendcircle");
-            Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  AlexSkin 1.0");
+            //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  AlexSkin 1.0");
+            Skin.Load(@"C:\Users\user\Desktop\whitecat skin");
 
             g = new Graphics();
 
@@ -481,14 +482,14 @@ namespace RTCircles
             if (debugCameraActive)
             {
                 if (Input.IsKeyDown(Key.W))
-                    debugCamera.Position.Y -= (float)(1000 * delta);
-                else if (Input.IsKeyDown(Key.S))
                     debugCamera.Position.Y += (float)(1000 * delta);
+                else if (Input.IsKeyDown(Key.S))
+                    debugCamera.Position.Y -= (float)(1000 * delta);
 
                 if (Input.IsKeyDown(Key.A))
-                    debugCamera.Position.X -= (float)(1000 * delta);
-                else if (Input.IsKeyDown(Key.D))
                     debugCamera.Position.X += (float)(1000 * delta);
+                else if (Input.IsKeyDown(Key.D))
+                    debugCamera.Position.X -= (float)(1000 * delta);
 
                 debugCamera.Size = new Vector2(WindowWidth, WindowHeight);
                 debugCamera.Scale = (float)Interpolation.Damp(debugCamera.Scale, debugCameraScale, 0.1, delta * 10);
@@ -611,16 +612,16 @@ namespace RTCircles
                 if (trueHoverPos is null)
                     trueHoverPos = hoverPos;
 
-                if (new Rectangle(Input.MousePosition, Vector2.One).IntersectsWith(new Rectangle(trueHoverPos.Value, trueHoverSize.Value)))
+                if (new Rectangle(trueHoverPos.Value, trueHoverSize.Value).IntersectsWith(Input.MousePosition))
                 {
-                    text+= $"\nVertices: {Utils.ToKMB(verticesPerSecond)}/s\n" +
+                    text+= $"\nGPU: {GL.GLRenderer}\n" +
+                        $"OpenGL: {GL.GLVersion}\n" +
+                        $"Vertices: {Utils.ToKMB(verticesPerSecond)}/s\n" +
                         $"Indices: {Utils.ToKMB(indicesPerSecond)}/s\n" +
                         $"Tris: {Utils.ToKMB(trianglesPerSecond)}/s\n" +
                         $"Textures: {Easy2D.Texture.TextureCount}\n" +
                         $"Framework: {RuntimeInformation.FrameworkDescription} {RuntimeInformation.ProcessArchitecture}\n" +
                         $"OS: {RuntimeInformation.OSDescription}\n" +
-                        $"GL: {GL.GLVersion}\n" +
-                        $"Renderer: {GL.GLRenderer}\n" +
                         $"GC: [{GC.CollectionCount(0)}, {GC.CollectionCount(1)}, {GC.CollectionCount(2)}]\n" +
                         $"Last visit: {lastOpened}";
 
@@ -634,7 +635,7 @@ namespace RTCircles
                 GL.ResetStatistics();
 
                 Vector2 textSize = Font.DefaultFont.MessureString(text, scale);
-                Vector2 drawTextPos = new Vector2(WindowWidth, WindowHeight) - textSize - new Vector2(0);
+                Vector2 drawTextPos = new Vector2(WindowWidth, WindowHeight) - textSize - new Vector2(25);
 
                 trueHoverPos = drawTextPos;
                 trueHoverSize = textSize;
@@ -648,7 +649,9 @@ namespace RTCircles
                 else
                     color = Interpolation.ValueAt(value, Colors.Red, Colors.Yellow, 0f, 0.5f);
 
-                g.DrawRectangle(drawTextPos, textSize, new Vector4(0f, 0f, 0f, 0.5f));
+                var boxSize = textSize + new Vector2(25f);
+                g.DrawRoundedRect(drawTextPos + textSize/2f, boxSize, new Vector4(0f, 0f, 0f, 0.5f), 15f);
+
                 g.DrawString(text, Font.DefaultFont, drawTextPos, color, scale);
             }
         }
@@ -754,9 +757,9 @@ namespace RTCircles
         public override void OnUpdate(double delta)
         {
             if (ScreenManager.ActiveScreen is OsuScreen)
-                PostProcessing.BloomThreshold = shakeKiai.Value.Map(2, 0, 0.2f, 1f);
+                PostProcessing.BloomThreshold = shakeKiai.Value.Map(2, 0, 0.2f, 0.8f);
             else
-                PostProcessing.BloomThreshold = 1f;
+                PostProcessing.BloomThreshold = 0.8f;
 
             shakeKiai.Update((float)delta);
             OsuContainer.Update((float)delta);

@@ -160,7 +160,9 @@ namespace RTCircles
 
                 if (rotationCounter > 1)
                 {
+                    if(!OsuContainer.MuteHitsounds)
                     Skin.SpinnerBonus.Play(true);
+
                     scoreBonusAlpha.Value = 1f;
                     scoreBonusAlpha.TransformTo(0f, 1000f, EasingTypes.None);
 
