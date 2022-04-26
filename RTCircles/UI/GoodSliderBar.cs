@@ -10,8 +10,6 @@ namespace RTCircles
 {
     public class GoodSliderBar : Drawable
     {
-        private FrameBuffer texture = new FrameBuffer(1, 1);
-
         public Vector2 Position;
 
         public Vector2 Size;
@@ -47,39 +45,8 @@ namespace RTCircles
 
         public override void Render(Graphics g)
         {
-            
-            if ((int)Size.X != texture.Width || (int)Size.Y != texture.Height || true)
-            {
-                texture.EnsureSize(Size.X, Size.Y);
-                g.DrawInFrameBuffer(texture, () =>
-                {
-                    Vector2 ellipseSize = new Vector2(Size.Y / 2, Size.Y);
-
-                    Vector2 barSize = new Vector2(Size.X - ellipseSize.X * 2, Size.Y);
-
-                    //Højre halv cirkel
-                    g.DrawRectangle(Vector2.Zero, ellipseSize, Colors.White, Texture.WhiteFlatCircle2, new Rectangle(0, 0, 0.5f, 1), true);
-                    g.DrawRectangle(new Vector2(ellipseSize.X, 0), barSize, Colors.White);
-                    //Venstre halv cirkel
-                    g.DrawRectangle(new Vector2(Size.X - ellipseSize.X, 0), ellipseSize, Colors.White, Texture.WhiteFlatCircle2, new Rectangle(0.5f, 0, 0.5f, 1), true);
-                });
-            }
-            /*
-            var sliderTexture = texture.Texture;
-            g.DrawRectangle(Position, Size, BackgroundColor, sliderTexture);
-
-            double zeroOne = smoothInternalValue.Map(MinimumValue, MaximumValue, 0, 1);
-
-            Vector2 foregroundSize = new Vector2((float)(Size.X * zeroOne), Size.Y);
-            g.DrawRectangle(Position, foregroundSize, ForegroundColor, sliderTexture, new Rectangle(0, 0, (float)zeroOne, 1), true);
-            */
-
-
             drawBar(g, BackgroundColor, 1);
             drawBar(g, ForegroundColor, smoothInternalValue.Map(MinimumValue, MaximumValue, 0, 1));
-
-            //g.DrawString($"Value: {Value}", Font.DefaultFont, Input.MousePosition, Colors.Red);
-            //g.DrawFrameBuffer(Input.MousePosition + new Vector2(50), Colors.White, texture);
         }
 
         private void drawBar(Graphics g, Vector4 color, double progress)

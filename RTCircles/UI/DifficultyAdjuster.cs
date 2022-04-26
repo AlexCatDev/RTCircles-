@@ -40,6 +40,15 @@ namespace RTCircles
             hpSliderLockBtn.IsAcceptingInput = canAcceptInput;
         }
 
+        public void ToggleVisibility(bool isVisible)
+        {
+            IsVisible = isVisible;
+            arSliderLockBtn.IsVisible = isVisible;
+            hpSliderLockBtn.IsVisible = isVisible;
+            odSliderLockBtn.IsVisible = isVisible;
+            csSliderLockBtn.IsVisible = isVisible;
+        }
+
         public DifficultyAdjuster()
         {
             OsuContainer.BeatmapChanged += () =>

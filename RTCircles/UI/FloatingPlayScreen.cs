@@ -43,13 +43,13 @@ namespace RTCircles
             {
                 if (adjustPanelPopProgress.Value == 0f)
                 {
-                    difficultyAdjuster.IsVisible = true;
-                    adjustPanelPopProgress.TransformTo(1f, 0.25f, EasingTypes.OutElasticHalf);
+                    difficultyAdjuster.ToggleVisibility(true);
                     difficultyAdjuster.ToggleInput(true);
+                    adjustPanelPopProgress.TransformTo(1f, 0.25f, EasingTypes.OutQuint);
                 }
                 else if (adjustPanelPopProgress.Value == 1f)
                 {
-                    adjustPanelPopProgress.TransformTo(0f, 0.25f, EasingTypes.InBack, () => { difficultyAdjuster.IsVisible = false; });
+                    adjustPanelPopProgress.TransformTo(0f, 0.25f, EasingTypes.InBack, () => { difficultyAdjuster.ToggleVisibility(false); });
                     difficultyAdjuster.ToggleInput(false);
                 }
             };
@@ -135,7 +135,7 @@ namespace RTCircles
         {
             adjustPanelPopProgress.Update(delta);
 
-            difficultAdjustPanelBtn.Size = new Vector2(64, 64) * MainGame.Scale;
+            difficultAdjustPanelBtn.Size = new Vector2(64) * MainGame.Scale;
             difficultAdjustPanelBtn.Position = Position + new Vector2(Size.X - difficultAdjustPanelBtn.Size.X, 
                 Size.Y - difficultAdjustPanelBtn.Size.Y);
             difficultAdjustPanelBtn.TextureRotation = adjustPanelPopProgress.Value.Map(0, 1, 90, 0);
