@@ -2,7 +2,7 @@
 //I really have no fucking clue what precision should be and how it matters so...
 precision mediump float;
 
-uniform sampler2D u_Textures[16];
+//uniform sampler2D u_Textures[];
 
 in vec2 v_TexCoordinate;
 in vec4 v_Color;
@@ -116,6 +116,10 @@ void main() {
     vec4 texColor;
     //texColor = texture(u_Textures[v_TextureSlot], v_TexCoordinate) * v_Color;
     //Add_Switch_Statement^
+
+    //#SWITCH
+
+    /*
     switch(v_TextureSlot) {
         case 0:
         texColor = texture(u_Textures[0], v_TexCoordinate);
@@ -166,6 +170,7 @@ void main() {
         texColor = texture(u_Textures[15], v_TexCoordinate);
         break;
     }
+    */
 
     //Red color hack to choose a slider lol
     if(v_Color.r < 1000.0)

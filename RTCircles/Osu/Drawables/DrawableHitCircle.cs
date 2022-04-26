@@ -185,17 +185,23 @@ namespace RTCircles
             else
             {
                 var start = hitTime;
-                var to = (float)(hitTime + OsuContainer.Fadeout);
+                var to = hitTime + OsuContainer.Fadeout;
+                var time = OsuContainer.SongPosition.Clamp(start, to);
 
                 if (IsHit)
                 {
-                    explodeScale = (float)MathUtils.Map(OsuContainer.SongPosition, start, to, 1, OsuContainer.CircleExplodeScale);
-                    alpha = (float)MathUtils.Map(OsuContainer.SongPosition, start, to, hitAlpha, 0).Clamp(0, 1);
+                    //explodeScale = (float)MathUtils.Map(OsuContainer.SongPosition, start, to, 1, OsuContainer.CircleExplodeScale);
+                    //alpha = (float)MathUtils.Map(OsuContainer.SongPosition, start, to, hitAlpha, 0).Clamp(0, 1);
+
+                    explodeScale = (float)Interpolation.ValueAt(time, 1, OsuContainer.CircleExplodeScale, start, to, EasingTypes.OutSine);
+                    alpha = (float)Interpolation.ValueAt(time, hitAlpha, 0, start, to, EasingTypes.None);
                 }
                 else if (IsMissed)
                 {
-                    explodeScale = (float)MathUtils.Map(OsuContainer.SongPosition, start, to - 120, 1, 0).Clamp(0, 1);
-                    alpha = (float)MathUtils.Map(OsuContainer.SongPosition, start, to - 120, hitAlpha, 0).Clamp(0, 1);
+                    to = hitTime + OsuContainer.Fadeout - 120;
+                    time = OsuContainer.SongPosition.Clamp(start, to);
+
+                    alpha = (float)Interpolation.ValueAt(time, hitAlpha, 0, start, to, EasingTypes.None);
                 }
 
                 if (alpha == 0)

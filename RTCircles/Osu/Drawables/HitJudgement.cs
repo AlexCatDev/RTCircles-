@@ -11,13 +11,12 @@ namespace RTCircles
         private float rotation;
         private SmoothFloat height = new SmoothFloat();
 
-        private static int Lol = Int32.MaxValue;
+        private static long Lol = long.MaxValue;
 
         private HitResult result;
 
         public HitJudgement(Vector2 pos, HitResult result)
         {
-            //OsuContainer.Beatmap.Mods |= Mods.Auto;
             //Force stay on top and in order
             Layer = Lol--;
 
@@ -61,9 +60,11 @@ namespace RTCircles
             g.DrawRectangleCentered(pos, s, new Vector4(1f, 1f, 1f, alpha), tex, rotDegrees: rotation);
         }
 
+        private float velocity = 0.060f;
+
         public override void Update(float delta)
         {
-            delta = (float)(OsuContainer.DeltaSongPosition);
+            delta = (float)OsuContainer.DeltaSongPosition;
 
             height.Update(delta);
 
@@ -71,7 +72,8 @@ namespace RTCircles
 
             if (result == HitResult.Miss)
             {
-                pos.Y += 0.060f * delta;
+                pos.Y += velocity * delta;
+                velocity += 0.00025f * delta;
                 rotation += 0.045f * delta;
             }
 

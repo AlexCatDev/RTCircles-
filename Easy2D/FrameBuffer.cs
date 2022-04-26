@@ -85,7 +85,7 @@ namespace Easy2D
 
             Status = GL.Instance.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
 
-            Utils.Log($"Created framebuffer {Handle} : {Status}", Status == GLEnum.FramebufferComplete ? LogLevel.Success : LogLevel.Error);
+            Utils.Log($"Created framebuffer {Handle} : {Status}", Status == GLEnum.FramebufferComplete ? LogLevel.Info : LogLevel.Error);
         }
 
         protected override void bind(int? slot)

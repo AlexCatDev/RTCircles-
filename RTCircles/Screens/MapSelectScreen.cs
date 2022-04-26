@@ -96,7 +96,7 @@ namespace RTCircles
         public bool OnShow()
         {
             if (Texture?.ImageDoneUploading == true)
-                sFloat.Update((float)Game.Instance.DeltaTime);
+                sFloat.Update((float)MainGame.Instance.DeltaTime);
 
             TextureAlpha = sFloat.Value;
 

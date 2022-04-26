@@ -30,7 +30,7 @@ namespace RTCircles
             floatingScreen.SetTarget<OsuScreen>();
         }
 
-        private DifficultyAdjuster difficultyAdjuster = new DifficultyAdjuster() { Layer = 6969 };
+        private DifficultyAdjuster difficultyAdjuster = new DifficultyAdjuster() { Layer = 6969, IsVisible = false };
 
         public override void OnAdd()
         {
@@ -43,12 +43,13 @@ namespace RTCircles
             {
                 if (adjustPanelPopProgress.Value == 0f)
                 {
+                    difficultyAdjuster.IsVisible = true;
                     adjustPanelPopProgress.TransformTo(1f, 0.25f, EasingTypes.OutElasticHalf);
                     difficultyAdjuster.ToggleInput(true);
                 }
                 else if (adjustPanelPopProgress.Value == 1f)
                 {
-                    adjustPanelPopProgress.TransformTo(0f, 0.25f, EasingTypes.InBack);
+                    adjustPanelPopProgress.TransformTo(0f, 0.25f, EasingTypes.InBack, () => { difficultyAdjuster.IsVisible = false; });
                     difficultyAdjuster.ToggleInput(false);
                 }
             };

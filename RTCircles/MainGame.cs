@@ -253,8 +253,15 @@ namespace RTCircles
             queue.Enqueue(new Notification(text, color, duration, clickAction));
     }
 
-    public class MainGame : Game
+    public class MainGame : GameBase
     {
+        public static MainGame Instance { get; private set; }
+
+        public MainGame()
+        {
+            Instance = this;
+        }
+
         private Graphics g;
         public static Matrix4 Projection { get; private set; }
 
@@ -268,19 +275,30 @@ namespace RTCircles
 
         public override void OnLoad()
         {
+            Utils.WriteToConsole = true;
+
+            Utils.IgnoredLogLevels.Add(LogLevel.Debug);
+#if RELEASE
+            Utils.IgnoredLogLevels.Add(LogLevel.Info);
+            Utils.IgnoredLogLevels.Add(LogLevel.Success);
+#endif
+            //IsMultiThreaded = true;
+
+            VSync = false;
+
             //Rens det her lort
 
             MaxAllowedDeltaTime = 0.1;
-            //Skin.Load("");
+            Skin.Load("");
             //GlobalOptions.Init();
             //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  idke 1.2 without sliderendcircle");
             //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  AlexSkin 1.0");
-            Skin.Load(@"C:\Users\user\Desktop\whitecat skin");
+            //Skin.Load(@"C:\Users\user\Desktop\whitecat skin");
 
             g = new Graphics();
 
                 NotificationManager.ShowMessage($"Under Construction!",
-                    ((Vector4)Color4.OrangeRed).Xyz, 5000);
+                    ((Vector4)Color4.Orange).Xyz, 10);
 
             GPUSched.Instance.EnqueueDelayed(() =>
             {
@@ -433,16 +451,6 @@ namespace RTCircles
                 ScreenManager.GoBack();
             };
 
-            Utils.WriteToConsole = true;
-
-            Utils.IgnoredLogLevels.Add(LogLevel.Debug);
-#if RELEASE
-            Utils.IgnoredLogLevels.Add(LogLevel.Info);
-            Utils.IgnoredLogLevels.Add(LogLevel.Important);
-            Utils.IgnoredLogLevels.Add(LogLevel.Success);
-#endif
-            //IsMultiThreaded = true;
-
             ScreenManager.SetScreen<MenuScreen>(false);
         }
 
@@ -461,9 +469,9 @@ namespace RTCircles
         private int deltaTimesCount = 0;
         private double averageDeltaTime = 1000;
 
-        public override void OnRender(double delta)
+        public override void OnRender()
         {
-            totalDeltaTimes += delta;
+            totalDeltaTimes += DeltaTime;
             deltaTimesCount++;
 
             if(totalDeltaTimes >= 1)
@@ -474,25 +482,25 @@ namespace RTCircles
                 deltaTimesCount = 0;
             }
 
-            if (delta > 0.033)
-                NotificationManager.ShowMessage($"<30fps Lag spike ! {delta*1000:F2}ms", ((Vector4)Color4.Yellow).Xyz, 3f);
+            if (DeltaTime > 0.033)
+                NotificationManager.ShowMessage($"<30fps Lag spike ! {DeltaTime *1000:F2}ms", ((Vector4)Color4.Yellow).Xyz, 3f);
 
             g.Projection = PostProcessing.MotionBlur && (ScreenManager.ActiveScreen is MenuScreen or OsuScreen) ? shakeMatrix : Projection;
 
             if (debugCameraActive)
             {
                 if (Input.IsKeyDown(Key.W))
-                    debugCamera.Position.Y += (float)(1000 * delta);
+                    debugCamera.Position.Y += (float)(1000 * DeltaTime);
                 else if (Input.IsKeyDown(Key.S))
-                    debugCamera.Position.Y -= (float)(1000 * delta);
+                    debugCamera.Position.Y -= (float)(1000 * DeltaTime);
 
                 if (Input.IsKeyDown(Key.A))
-                    debugCamera.Position.X += (float)(1000 * delta);
+                    debugCamera.Position.X += (float)(1000 * DeltaTime);
                 else if (Input.IsKeyDown(Key.D))
-                    debugCamera.Position.X -= (float)(1000 * delta);
+                    debugCamera.Position.X -= (float)(1000 * DeltaTime);
 
                 debugCamera.Size = new Vector2(WindowWidth, WindowHeight);
-                debugCamera.Scale = (float)Interpolation.Damp(debugCamera.Scale, debugCameraScale, 0.1, delta * 10);
+                debugCamera.Scale = (float)Interpolation.Damp(debugCamera.Scale, debugCameraScale, 0.1, DeltaTime * 10);
                 debugCamera.Update();
 
                 g.Projection = debugCamera.Projection;
@@ -745,28 +753,28 @@ namespace RTCircles
 
         public override void OnResize(int width, int height)
         {
+            WindowSize = new Vector2(width, height);
+
             GPUSched.Instance.Enqueue(() =>
             {
-                WindowSize = new Vector2(width, height);
-
                 Viewport.SetViewport(0, 0, width, height);
                 Projection = Matrix4.CreateOrthographicOffCenter(0, width, height, 0, -1, 1);
             });
         }
 
-        public override void OnUpdate(double delta)
+        public override void OnUpdate()
         {
             if (ScreenManager.ActiveScreen is OsuScreen)
                 PostProcessing.BloomThreshold = shakeKiai.Value.Map(2, 0, 0.2f, 0.8f);
             else
                 PostProcessing.BloomThreshold = 0.8f;
 
-            shakeKiai.Update((float)delta);
-            OsuContainer.Update((float)delta);
-            ScreenManager.Update((float)delta);
+            shakeKiai.Update((float)DeltaTime);
+            OsuContainer.Update((float)DeltaTime);
+            ScreenManager.Update((float)DeltaTime);
         }
 
-        public override void OnImportFile(string path)
+        public override void OnOpenFile(string path)
         {
             Utils.Log($"Somebody wants to open a file with this program and the path is: {path}", LogLevel.Info);
 

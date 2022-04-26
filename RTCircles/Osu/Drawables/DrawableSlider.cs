@@ -8,6 +8,31 @@ using System.Collections.Generic;
 
 namespace RTCircles
 {
+    public static class ObjectPool<T> where T : new()
+    {
+        private static Stack<T> pool = new Stack<T>();
+
+        public static int TotalCreated { get; private set; }
+
+        public static int UnusedObjectsCount => pool.Count;
+
+        public static T Take()
+        {
+            if(pool.TryPop(out T result))
+                return result;
+
+            T newObj = new T();
+            TotalCreated++;
+
+            return newObj;
+        }
+
+        public static void ClearUnusedObjects() => pool.Clear();
+
+        public static void Return(T t) => pool.Push(t);
+    }
+
+    //Remove this shit
     public class ExplodingSliderRepeat : Drawable
     {
         private Vector2 Size => new Vector2(OsuContainer.Beatmap.CircleRadius * 2);
@@ -39,7 +64,7 @@ namespace RTCircles
             else
                 position = OsuContainer.MapToPlayfield(slider.Path.Points[^1]);
 
-            float alpha = (float)OsuContainer.SongPosition.Map(spawnTime, spawnTime + OsuContainer.Fadeout, 1, 0);
+            float alpha = (float)OsuContainer.SongPosition.Map(spawnTime, spawnTime + OsuContainer.Fadeout, 1, 0).Clamp(0, 1);
             float scale = (float)OsuContainer.SongPosition.Map(spawnTime, spawnTime + OsuContainer.Fadeout, 1, OsuContainer.CircleExplodeScale);
 
             Vector2 size = new Vector2(Size.Y, Size.Y / Skin.SliderReverse.Texture.Size.AspectRatio()) * Skin.GetScale(Skin.SliderReverse);

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 
 namespace Easy2D
 {
@@ -15,15 +16,37 @@ namespace Easy2D
     {
         private static int MaxTextureSlots;
 
+        private static readonly Dictionary<string, string> fragmentPreprocessor = new Dictionary<string, string>();
+        private static readonly int[] textureSlots;
+
         static Graphics()
         {
-            GL.Instance.GetInteger(GetPName.MaxVertexTextureImageUnits, out MaxTextureSlots);
+            GL.Instance.GetInteger(GetPName.MaxTextureImageUnits, out MaxTextureSlots);
+            /*
             if (MaxTextureSlots == 0)
                 MaxTextureSlots = 8;
 
             MaxTextureSlots = 16;
+            */
+            Utils.Log($"Max Available Texture Slots: {MaxTextureSlots}", LogLevel.Important);
 
-            Utils.Log($"MaxTextureSlots: {MaxTextureSlots}", LogLevel.Info);
+            textureSlots = new int[MaxTextureSlots];
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("switch(v_TextureSlot) {");
+            for (int i = 0; i < MaxTextureSlots; i++)
+            {
+                textureSlots[i] = i;
+
+                sb.AppendLine($"case {i}: texColor = texture(u_Textures[{i}], v_TexCoordinate); break;");
+            }
+            sb.AppendLine("}");
+
+            fragmentPreprocessor = new()
+            {
+                { "//#SWITCH", sb.ToString() },
+                { "//uniform sampler2D u_Textures[];", $"uniform sampler2D u_Textures[{MaxTextureSlots}];" }
+            };
         }
 
         private int bindTextureIndex = 0;
@@ -59,6 +82,8 @@ namespace Easy2D
 
             Shader.AttachShader(ShaderType.VertexShader, Utils.GetInternalResource("Shaders.Default.vert"));
             Shader.AttachShader(ShaderType.FragmentShader, Utils.GetInternalResource("Shaders.Default.frag"));
+
+            Shader.AttachPreprocessor(ShaderType.FragmentShader, fragmentPreprocessor);
         }
 
         public void Recompile()
@@ -883,7 +908,7 @@ namespace Easy2D
             }
 
             Shader.Bind();
-            Shader.SetIntArray("u_Textures", texturesToBind.Values.ToArray());
+            Shader.SetIntArray("u_Textures", textureSlots);
 
             #region SliderUniforms
             Shader.SetFloat("u_BorderWidth", BorderWidth);

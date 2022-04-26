@@ -395,14 +395,14 @@ namespace PogGame
         {
             graphics.Projection = camera.Projection;
 
-            //PostProcessing.Use(((Vector2i)WindowSize), ((Vector2i)WindowSize));
+            PostProcessing.Use(((Vector2i)WindowSize), ((Vector2i)WindowSize));
 
             container.Render(graphics);
 
             renderStatistics(graphics);
 
             graphics.EndDraw();
-            //PostProcessing.PresentFinalResult();
+            PostProcessing.PresentFinalResult();
         }
 
         private ulong prevVertices, prevIndices, prevTriangles;

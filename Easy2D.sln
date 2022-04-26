@@ -29,6 +29,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RTCircles.Android", "RTCirc
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "New.Droid", "New.Droid\New.Droid.csproj", "{ECC56D42-C549-41D4-A991-5C6A5B27210D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestECS", "TestECS\TestECS.csproj", "{F94E1A5C-2FDB-4772-9596-52CC6969497C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestECS.Desktop", "TestECS.Desktop\TestECS.Desktop.csproj", "{7E4BB0FF-E6D9-402A-8F5D-A7EA40E948A4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -91,6 +95,14 @@ Global
 		{ECC56D42-C549-41D4-A991-5C6A5B27210D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ECC56D42-C549-41D4-A991-5C6A5B27210D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{ECC56D42-C549-41D4-A991-5C6A5B27210D}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{F94E1A5C-2FDB-4772-9596-52CC6969497C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F94E1A5C-2FDB-4772-9596-52CC6969497C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F94E1A5C-2FDB-4772-9596-52CC6969497C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F94E1A5C-2FDB-4772-9596-52CC6969497C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E4BB0FF-E6D9-402A-8F5D-A7EA40E948A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E4BB0FF-E6D9-402A-8F5D-A7EA40E948A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E4BB0FF-E6D9-402A-8F5D-A7EA40E948A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E4BB0FF-E6D9-402A-8F5D-A7EA40E948A4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

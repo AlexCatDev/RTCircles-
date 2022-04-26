@@ -16,13 +16,7 @@ class Program
     {
         GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
         Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.High;
-
         /*
-        DBBeatmapSetInfo lol = new DBBeatmapSetInfo();
-        lol.Foldername = "veryfoldername";
-
-        lol.Beatmaps.Add(new DBBeatmapInfo() { Filename = "test123", Hash = "Weed420", SetInfo = lol });
-        */
         Realm s = Realm.GetInstance("bullshit.realm");
         s.Error += (e, x) =>
         {
@@ -33,26 +27,7 @@ class Program
         s.Write(() => {
             set.Beatmaps.Add(new DBBeatmapInfo() { Filename = "test123", Hash = "Weed420727" });
         });
-
-        /*
-        DBObject k = new DBObject();
-        k.ID = 0;
-        k.Keys.Add("Penis");
-
-        Realm s = Realm.GetInstance("test.db");
-        s.Error += (e, x) =>
-        {
-            Console.WriteLine(x.Exception.Message);
-        };
-
-        var obj = s.Find<DBObject>(0).Freeze();
-
-        new Thread(() =>
-        {
-            Console.WriteLine(obj.ID);
-        }).Start();
         */
-
         //BenchmarkRunner.Run<Benchmarks>();
         Console.WriteLine("- FIN -");
         Console.ReadLine();
@@ -129,7 +104,51 @@ public unsafe class Benchmarks
     /// Note to self: Indexing a pointer is as fast/faster than using -> then incrementing it
     /// </summary>
 
-    [Benchmark]
+    private Dictionary<Texture, int> textureMap = new Dictionary<Texture, int>();
+    private int textureMapSlotIndex = 0;
+    private int getTextureSlotDict(Texture tex)
+    {
+        if (textureMap.TryGetValue(tex, out int slot))
+            return slot;
+
+        textureMap.Add(tex, textureMapSlotIndex++);
+
+        return textureMapSlotIndex;
+    }
+
+    private uint[] textureSlots = new uint[32];
+    private int textureSlotsCount;
+    private int getTextureSlotArray(Texture tex)
+    {
+        for (int i = 0; i < textureSlotsCount; i++)
+        {
+            if (textureSlots[i] == tex.Handle)
+                return i;
+        }
+
+        textureSlots[textureSlotsCount] = tex.Handle;
+
+        return textureSlotsCount++;
+    }
+
+    private void clearArray()
+    {
+        for (int i = 0; i < textureSlotsCount; i++)
+        {
+            textureSlots[i] = uint.MaxValue;
+        }
+        textureSlotsCount = 0;
+    }
+
+    public void testDict()
+    {
+        for (int i = 0; i < 32; i++)
+        {
+            int val = getTextureSlotDict((Texture)i);
+        }
+    }
+
+    //[Benchmark]
     public void testSafe()
     {
         for (int i = 0; i < Test; i++)
@@ -156,7 +175,7 @@ public unsafe class Benchmarks
         safePrimitiveBatch.Reset();
     }
 
-    [Benchmark]
+    //[Benchmark]
     public void testUnsafeNoIndex()
     {
         for (int i = 0; i < Test; i++)
@@ -186,7 +205,7 @@ public unsafe class Benchmarks
         unsafePrimitiveBatch.Reset();
     }
 
-    [Benchmark]
+    //[Benchmark]
     public void testUnsafe()
     {
         for (int i = 0; i < Test; i++)
@@ -211,45 +230,5 @@ public unsafe class Benchmarks
         }
 
         unsafePrimitiveBatch.Reset();
-    }
-
-    public void testRectangle()
-    {
-        Rectangle rect = new Rectangle();
-
-        rect.X = 15;
-        rect.Y = 30;
-        rect.Width = 69;
-        rect.Height = 727;
-
-        Console.WriteLine($"X: {rect.X} Y: {rect.Y} Width: {rect.Width} Height: {rect.Height}");
-
-        Console.WriteLine($"Pos: {rect.Position} Size: {rect.Size}");
-
-        Console.WriteLine($"Vec4: {rect.Xyzw}");
-
-        Console.WriteLine("SizeInBytes: " + Marshal.SizeOf(rect));
-    }
-
-    [StructLayout(LayoutKind.Explicit)]
-    public struct Rectangle
-    {
-        [FieldOffset(0)]
-        public float X;
-        [FieldOffset(4)]
-        public float Y;
-        [FieldOffset(8)]
-        public float Width;
-        [FieldOffset(12)]
-        public float Height;
-
-        [FieldOffset(0)]
-        public Vector2 Position;
-
-        [FieldOffset(8)]
-        public Vector2 Size;
-
-        [FieldOffset(0)]
-        public Vector4 Xyzw;
     }
 }
