@@ -641,8 +641,9 @@ namespace RTCircles
                 visualizerColorAdditive = Vector4.Lerp(visualizerColorAdditive, Vector4.Zero, delta * 3f);
             }
 
-                if (hover && !lastHover)
+            if (hover && !lastHover)
             {
+                sizeTransform.TransformTo(new Vector2(70*MainGame.Scale), 0.2f, EasingTypes.Out);
                 Skin.Hover.Play(true);
             }
             else if (!hover && lastHover)

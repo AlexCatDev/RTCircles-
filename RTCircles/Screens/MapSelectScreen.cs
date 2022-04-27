@@ -359,7 +359,12 @@ namespace RTCircles
                 {
                     //graph = PathApproximator.ApproximateCatmull(graph);
 
+                    shouldGenGraph = false;
+
                     var vertices = g.VertexBatch.GetTriangleStrip(graph.Count * 2);
+
+                    if (vertices.Length == 0)
+                        return;
 
                     int vertexIndex = 0;
 
@@ -399,8 +404,6 @@ namespace RTCircles
                         vertexIndex++;
                     }
                 });
-
-                shouldGenGraph = false;
 
                 Utils.EndProfiling("StrainGraphGeneration");
             }
