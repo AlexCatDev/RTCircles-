@@ -98,17 +98,6 @@ namespace RTCircles
             };
         }
 
-        public void SelectBeatmap(string id)
-        {
-            var bmp = BeatmapCollection.SearchItems.Find((o) => o.Hash == id);
-
-            if (bmp != null)
-                selectMap(bmp);
-            else
-                NotificationManager.ShowMessage("WTF", new Vector3(255, 0, 0), 5f);
-            
-        }
-
         private BouncingButton downloadBtn, settingsBtn, modsBtn;
 
         public override void OnAdd()
@@ -229,7 +218,7 @@ namespace RTCircles
                         }
                         else
                         {
-                            selectMap(currentItem);
+                            SelectBeatmap(currentItem);
                         }
                         selectedItem = currentItem;
                     }
@@ -478,7 +467,7 @@ namespace RTCircles
             {
                 var randomBeatmap = BeatmapCollection.SearchItems[RNG.Next(0, BeatmapCollection.SearchItems.Count - 1)];
 
-                selectMap(randomBeatmap);
+                SelectBeatmap(randomBeatmap);
             }
 
             if (key == Key.Up && selectedItem is not null)
@@ -488,7 +477,7 @@ namespace RTCircles
                 if (newIndex < 0)
                     return false;
 
-                selectMap(BeatmapCollection.SearchItems[newIndex]);
+                SelectBeatmap(BeatmapCollection.SearchItems[newIndex]);
             }
 
             if (key == Key.Down && selectedItem is not null)
@@ -498,30 +487,19 @@ namespace RTCircles
                 if (newIndex == 0 || newIndex == BeatmapCollection.SearchItems.Count)
                     return false;
 
-                selectMap(BeatmapCollection.SearchItems[newIndex]);
+                SelectBeatmap(BeatmapCollection.SearchItems[newIndex]);
             }
 
             return false;
         }
 
-        public void selectMap(CarouselItem item, bool onlySelectMap = false)
+        public void SelectBeatmap(CarouselItem item)
         {
-            OsuParsers.Beatmaps.Beatmap beatmap;
-            try
+            if (!OsuContainer.SetMap(item, true, mods))
             {
-                beatmap = BeatmapMirror.DecodeBeatmap(File.OpenRead(item.FullPath));
-            }
-            catch (Exception ex)
-            {
-                NotificationManager.ShowMessage($"An error occoured:\n{ex.Message}", Colors.Red.Xyz, 5f);
-                BeatmapCollection.DeleteMap(item);
+                BeatmapCollection.SearchItems.Remove(item);
                 return;
             }
-
-            OsuContainer.SetMap(beatmap, item.Hash, true, mods);
-
-            if (onlySelectMap)
-                return;
 
             ScreenManager.GetScreen<OsuScreen>().OnEntering();
 
@@ -543,16 +521,6 @@ namespace RTCircles
 
             OsuContainer.SongPosition = previewTime;
             ScreenManager.GetScreen<OsuScreen>().SyncObjectIndexToTime();
-        }
-
-        public void DeleteSelectedItem()
-        {
-            if (selectedItem != null)
-            {
-                BeatmapCollection.SearchItems.Remove(selectedItem);
-                BeatmapCollection.Items.Remove(selectedItem);
-                selectedItem = null;
-            }
         }
     }
 }

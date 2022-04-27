@@ -76,6 +76,7 @@ namespace RTCircles
         private Guid id = Guid.NewGuid();
 
         public string FullPath { get; private set; }
+        public string Folder { get; private set; }
 
         private string BackgroundPath { get; set; }
 
@@ -90,6 +91,7 @@ namespace RTCircles
         {
             Text = dbBeatmap.Filename;
             Hash = dbBeatmap.Hash;
+            Folder = dbBeatmap.SetInfo.Foldername;
             FullPath = $"{BeatmapMirror.SongsFolder}/{dbBeatmap.SetInfo.Foldername}/{dbBeatmap.Filename}";
             BackgroundPath = dbBeatmap.BackgroundFilename is not null ? $"{BeatmapMirror.SongsFolder}/{dbBeatmap.SetInfo.Foldername}/{dbBeatmap.BackgroundFilename}" : null;
         }
@@ -218,7 +220,13 @@ namespace RTCircles
                 AddBeatmapToCarousel(beatmap);
                 string hash = beatmap.Hash;
                 NotificationManager.ShowMessage($"Imported {beatmap.Filename}", ((Vector4)Color4.LightGreen).Xyz, 3, () => {
-                    ScreenManager.GetScreen<MapSelectScreen>().SongSelector.SelectBeatmap(hash);
+                    
+                    var foundBeatmap = BeatmapCollection.SearchItems.Find((o)=>o.Hash == hash);
+
+                    if (foundBeatmap != null)
+                        this.SongSelector.SelectBeatmap(foundBeatmap);
+                    else
+                        NotificationManager.ShowMessage("The beatmap was somehow not found even though you just imported it?", Colors.White.Xyz, 5f);
                 });
             };
 
@@ -258,20 +266,6 @@ namespace RTCircles
                 AddBeatmapToCarousel(item);
                 Utils.Log($"Loaded DBBeatmap: {item.Filename}", LogLevel.Debug);
             }
-        }
-
-        public override void OnKeyDown(Key key)
-        {
-            if (key == Key.Delete && Input.IsKeyDown(Key.ControlLeft))
-            {
-                BeatmapMirror.Scheduler.Enqueue(() =>
-                {
-                    SongSelector.DeleteSelectedItem();
-                    OsuContainer.UnloadMap();
-                });
-            }
-
-            base.OnKeyDown(key);
         }
 
         private static float searchTimer;

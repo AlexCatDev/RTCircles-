@@ -238,7 +238,6 @@ namespace RTCircles
         public static void UnloadMap()
         {
             Beatmap = null;
-            //GC.Collect(2, GCCollectionMode.Forced, false);
         }
 
         public static void SetMap(PlayableBeatmap beatmap)
@@ -247,25 +246,29 @@ namespace RTCircles
             BeatmapChanged?.Invoke();
         }
 
-        public static void SetMap(Beatmap beatmap, string hash, bool generateHitObjects = true, Mods mods = Mods.NM)
+        public static bool SetMap(CarouselItem carouselItem, bool generateHitObjects = true, Mods mods = Mods.NM)
         {
+            var bm = PlayableBeatmap.FromCarouselItem(carouselItem);
+
+            if (bm == null)
+                return false;
+
             Beatmap?.Song.Stop();
 
-            Beatmap = new PlayableBeatmap(beatmap, hash);
+            Beatmap = bm;
 
-            //FIIIIIIIIIIIX
-            //GC.Collect(2, GCCollectionMode.Forced, false);
-
-            if(generateHitObjects)
+            if (generateHitObjects)
                 Beatmap.GenerateHitObjects(mods);
 
-            Utils.Log($"Map set to: {beatmap} GenObjects: {generateHitObjects} Mods: {mods}", LogLevel.Info);
+            Utils.Log($"Map set to: {carouselItem.FullPath} GenObjects: {generateHitObjects} Mods: {mods}", LogLevel.Info);
             Utils.Log($"Preempt: {Beatmap.Preempt} Fadein: {Beatmap.Fadein} AR: {Beatmap.AR}", LogLevel.Info);
             Utils.Log($"Window300 {Beatmap.Window300} Window100 {Beatmap.Window100} Window50 {Beatmap.Window50} OD: {Beatmap.OD}", LogLevel.Info);
             Utils.Log($"CircleRadius {Beatmap?.CircleRadius ?? 0} CS: {Beatmap.CS}", LogLevel.Info);
             Utils.Log($"PlayfieldWidth {Playfield.Width} PlayfieldHeight {Playfield.Height}", LogLevel.Info);
-            
+
             BeatmapChanged?.Invoke();
+
+            return true;
         }
 
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]

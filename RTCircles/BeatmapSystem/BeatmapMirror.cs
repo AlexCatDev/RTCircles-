@@ -125,9 +125,11 @@ namespace RTCircles
             var beatmapFiles = archive.Entries.Where((o) => o.FullName.EndsWith(".osu"));
             Utils.Log($"Importing Beatmap archive, found {beatmapFiles.Count()} beatmaps in archive...", LogLevel.Info);
 
-            int setID = -1;
-
             DBBeatmapSetInfo setInfo = new DBBeatmapSetInfo();
+
+            string folderGUID = Guid.NewGuid().ToString();
+
+
 
             foreach (var item in beatmapFiles)
             {
@@ -164,33 +166,25 @@ namespace RTCircles
 
                         setInfo.Beatmaps.Add(beatmapInfo);
                     }
-
-                    if (setID == -1)
-                        setID = beatmap.MetadataSection.BeatmapSetID;
                 }
             }
 
-            Debug.Assert(setID != -1);
-
             //Handle when the beatmap already exists and is open, just ignore it?
-            Directory.CreateDirectory($"{SongsFolder}/{setID}");
+            Directory.CreateDirectory($"{SongsFolder}/{folderGUID}");
             try
             {
-                archive.ExtractToDirectory($"{SongsFolder}/{setID}", true);
+                archive.ExtractToDirectory($"{SongsFolder}/{folderGUID}", true);
             }
             catch (Exception ex)
             {
                 Utils.Log($"Extracting archive failed due to: {ex.Message} import process aborted :(", LogLevel.Error);
                 archive.Dispose();
-
-                setID = -1;
-
                 return;
             }
 
             Utils.Log("Writing to database...", LogLevel.Info);
 
-            setInfo.Foldername = setID.ToString();
+            setInfo.Foldername = folderGUID;
 
             Scheduler.Enqueue(() =>
             {

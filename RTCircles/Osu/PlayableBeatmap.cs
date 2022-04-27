@@ -145,6 +145,8 @@ namespace RTCircles
 
         public string Hash { get; private set; }
 
+        public CarouselItem CarouselItem { get; private set; }
+
         public float CircleRadius => (OsuContainer.Playfield.Width / 16f) * (1f - (0.7f * (CS - 5f) / 5f));
         public float CircleRadiusInOsuPixels => 54.4f - 4.48f * CS;
 
@@ -161,39 +163,61 @@ namespace RTCircles
             Hitsounds = hitsounds;
         }
 
-        public PlayableBeatmap(Beatmap beatmap, string hash)
+        private PlayableBeatmap() { }
+
+        /// <param name="item"></param>
+        /// <returns>Null if the beatmap couldn't be found.</returns>
+        public static PlayableBeatmap FromCarouselItem(CarouselItem item)
         {
-            string folderPath = $"{BeatmapMirror.SongsFolder}/{beatmap.MetadataSection.BeatmapSetID}";
+            PlayableBeatmap playableBeatmap = new PlayableBeatmap();
 
-            InternalBeatmap = beatmap;
+            string folderPath = $"{BeatmapMirror.SongsFolder}/{item.Folder}";
 
-            Hash = hash;
+            OsuParsers.Beatmaps.Beatmap beatmap;
+
+            if (File.Exists(item.FullPath))
+            {
+                beatmap = BeatmapMirror.DecodeBeatmap(File.OpenRead(item.FullPath));
+            }
+            else
+            {
+                NotificationManager.ShowMessage($"'{item.FullPath}' not found", new Vector3(1f, 0.1f, 0.1f), 5f);
+                return null;
+            }
+
+            playableBeatmap.CarouselItem = item;
+
+            playableBeatmap.InternalBeatmap = beatmap;
+
+            playableBeatmap.Hash = item.Hash;
 
             if (GlobalOptions.AllowMapHitSounds.Value)
             {
-                Hitsounds = new HitsoundStore(folderPath, false);
-                Hitsounds.SetVolume(GlobalOptions.SkinVolume.Value);
+                playableBeatmap.Hitsounds = new HitsoundStore(folderPath, false);
+                playableBeatmap.Hitsounds.SetVolume(GlobalOptions.SkinVolume.Value);
             }
 
-            string audioPath = $"{folderPath}/{InternalBeatmap.GeneralSection.AudioFilename}";
+            string audioPath = $"{folderPath}/{playableBeatmap.InternalBeatmap.GeneralSection.AudioFilename}";
 
             if (File.Exists(audioPath))
             {
-                using (FileStream fs = File.OpenRead($"{folderPath}/{InternalBeatmap.GeneralSection.AudioFilename}"))
+                using (FileStream fs = File.OpenRead(audioPath))
                 {
-                    Song = new Sound(fs, true);
-                    Song.Volume = GlobalOptions.SongVolume.Value;
+                    playableBeatmap.Song = new Sound(fs, true);
+                    playableBeatmap.Song.Volume = GlobalOptions.SongVolume.Value;
                 }
             }
             else
-                Song = new Sound(null);
+                playableBeatmap.Song = new Sound(null);
 
-            string bgPath = $"{folderPath}/{InternalBeatmap.EventsSection.BackgroundImage}";
+            string bgPath = $"{folderPath}/{playableBeatmap.InternalBeatmap.EventsSection.BackgroundImage}";
 
             if (File.Exists(bgPath))
-                Background = new Texture(File.OpenRead(bgPath));
+                playableBeatmap.Background = new Texture(File.OpenRead(bgPath));
             else
-                Background = Skin.DefaultBackground;
+                playableBeatmap.Background = Skin.DefaultBackground;
+
+            return playableBeatmap;
         }
 
         private void applyMods(Mods mods)
@@ -262,22 +286,6 @@ namespace RTCircles
         public void SetHP(float hp)
         {
             HP = hp;
-        }
-
-        //split these up
-        public void OverrideDifficulty(float cs, float ar, float od, float hp)
-        {
-            CS = cs;
-            AR = ar;
-            OD = od;
-            HP = hp;
-
-            Window50 = mapDifficultyRange(OD, 200, 150, 100);
-            Window100 = mapDifficultyRange(OD, 140, 100, 60);
-            Window300 = mapDifficultyRange(OD, 80, 50, 20);
-
-            Preempt = mapDifficultyRange(AR, 1800, 1200, 450);
-            Fadein = 400 * Math.Min(1, Preempt / 450);
         }
 
         private void generateStrainGraph()
@@ -353,6 +361,9 @@ namespace RTCircles
 
         public void GenerateHitObjects(Mods mods = Mods.NM)
         {
+            if (InternalBeatmap.HitObjects.Count == 0 || HitObjects.Count > 0)
+                return;
+
             Utils.Log($"Generating Drawable Hitobjects for {InternalBeatmap.HitObjects.Count} hitobjects!", LogLevel.Info);
 
             Utils.BeginProfiling("Generate HitObjects");
@@ -500,370 +511,4 @@ namespace RTCircles
 
         }
     }
-    /*
-    public class PlayableBeatmap
-    {
-        public HitsoundStore Hitsounds { get; private set; }
-        public Sound Song { get; private set; }
-
-        /// <summary>
-        /// 1 = normal speed, 2 = double speed, 0.5 = half speed etc..
-        /// </summary>
-        public double PlaybackSpeed { get { return Song.PlaybackSpeed; } set { Song.PlaybackSpeed = value; } }
-
-        public Texture Background { get; private set; }
-
-        public Beatmap Beatmap { get; private set; }
-
-        public int MaxCombo { get; private set; }
-
-        public string Artist => Beatmap.MetadataSection.Artist;
-        public string SongName => Beatmap.MetadataSection.Title;
-        public string DifficultyName => Beatmap.MetadataSection.Version;
-
-        public double Window50 { get; private set; }
-        public double Window100 { get; private set; }
-        public double Window300 { get; private set; }
-
-        public double Fadein { get; private set; }
-        public double Preempt { get; private set; }
-
-        public List<IDrawableHitObject> HitObjects = new List<IDrawableHitObject>();
-
-        public Mods Mods { get; private set; }
-
-        public float CS { get; set; }
-
-        private float _ar;
-        public float AR
-        {
-            get
-            {
-                return _ar;
-            }
-            set
-            {
-                _ar = value;
-
-                Preempt = mapDifficultyRange(_ar, 1800, 1200, 450);
-                Fadein = 400 * Math.Min(1, Preempt / 450);
-            }
-        }
-
-        private float _od;
-        public float OD
-        {
-            get
-            {
-                return _od;
-            }
-            set
-            {
-                _od = value;
-
-                Window50 = mapDifficultyRange(_od, 200, 150, 100);
-                Window100 = mapDifficultyRange(_od, 140, 100, 60);
-                Window300 = mapDifficultyRange(_od, 80, 50, 20);
-            }
-        }
-
-        public float HP { get; set; }
-
-        public float CircleRadius => (OsuContainer.Playfield.Width / 16f) * (1f - (0.7f * (CS - 5f) / 5f));
-        public float CircleRadiusInOsuPixels => 54.4f - 4.48f * CS;
-
-        public readonly AutoGenerator AutoGenerator = new AutoGenerator();
-
-        public PlayableBeatmap(Beatmap beatmap, Sound song, Texture background = null, HitsoundStore hitsounds = null)
-        {
-            Beatmap = beatmap;
-            Song = song;
-
-            Background = background ?? Skin.DefaultBackground;
-            Hitsounds = hitsounds;
-
-            ApplyMods();
-        }
-
-        public PlayableBeatmap(Beatmap beatmap)
-        {
-            string folderPath = $"{BeatmapMirror.SongsFolder}/{beatmap.MetadataSection.BeatmapSetID}";
-
-            Beatmap = beatmap;
-
-            if (GlobalOptions.AllowMapHitSounds.Value)
-            {
-                Hitsounds = new HitsoundStore(folderPath, false);
-                Hitsounds.SetVolume(GlobalOptions.SkinVolume.Value);
-            }
-
-            string audioPath = $"{folderPath}/{Beatmap.GeneralSection.AudioFilename}";
-
-            if (File.Exists(audioPath))
-            {
-                Song = new Sound(File.OpenRead($"{folderPath}/{Beatmap.GeneralSection.AudioFilename}"), true);
-                Song.Volume = GlobalOptions.SongVolume.Value;
-            }
-            else
-                Song = new Sound(null);
-
-            string bgPath = $"{folderPath}/{Beatmap.EventsSection.BackgroundImage}";
-
-            if (File.Exists(bgPath))
-                Background = new Texture(File.OpenRead(bgPath));
-            else
-                Background = Skin.DefaultBackground;
-
-            ApplyMods();
-        }
-
-        public void ApplyMods(Mods mods = Mods.NM)
-        {
-            float cs = Beatmap.DifficultySection.CircleSize;
-            float ar = Beatmap.DifficultySection.ApproachRate;
-            float od = Beatmap.DifficultySection.OverallDifficulty;
-            float hp = Beatmap.DifficultySection.HPDrainRate;
-
-            Mods = mods;
-
-            if (mods.HasFlag(Mods.HR))
-            {
-                //HR increases CS by 30%
-                cs *= 1.3f;
-                cs = cs.Clamp(0, 10);
-
-                //And all other difficulty attributes by 40%
-                ar *= 1.4f;
-                ar = ar.Clamp(0, 10);
-
-                od *= 1.4f;
-                od = od.Clamp(0, 10);
-
-                hp *= 1.4f;
-                hp = hp.Clamp(0, 10);
-            }
-
-            //DT makes song 1.5x times faster
-            //TODO: Fix nightcore pitch beat using bass_fx
-            if (mods.HasFlag(Mods.DT))
-                Song.PlaybackSpeed = 1.5;
-            else if (mods.HasFlag(Mods.HT))
-                Song.PlaybackSpeed = 0.75;
-            else
-                Song.PlaybackSpeed = 1;
-
-            if (mods.HasFlag(Mods.EZ))
-            {
-                //The Easy mod decreases circle size (CS), approach rate (AR), overall difficulty (OD), and HP drain (HP) by half.
-                cs /= 2f;
-                ar /= 2f;
-                od /= 2f;
-                hp /= 2f;
-            }
-
-            CS = cs;
-            AR = ar;
-            OD = od;
-            HP = hp;
-        }
-
-        public void GenerateDifficultyGraph(List<double> input)
-        {
-            if (HitObjects.Count == 0)
-                throw new Exception("Can't generate difficulty graph for a beatmap with 0 objects.");
-
-            Utils.BeginProfiling("StrainCalculation");
-
-            input.Clear();
-
-            //the amount of time between each strain
-            const int CHUNK_DURATION = 1000;
-
-            int objectIndex = 0;
-
-            int currentObjectCount = 0;
-
-            int timer = CHUNK_DURATION;
-
-            //the resolution of a tick
-            int tick = 50;
-
-            System.Numerics.Vector2? prevPos = null;
-
-            float distance = 0;
-
-            for (int i = HitObjects[0].BaseObject.StartTime; i < HitObjects[^1].BaseObject.StartTime; i += tick)
-            {
-                timer -= tick;
-
-                while (i > HitObjects[objectIndex].BaseObject.StartTime - CHUNK_DURATION)
-                {
-                    var pos = HitObjects[objectIndex].BaseObject.Position;
-
-                    if (prevPos is null)
-                        prevPos = pos;
-
-                    distance += System.Numerics.Vector2.Distance(pos, prevPos.Value);
-
-                    prevPos = pos;
-
-                    objectIndex++;
-                    currentObjectCount++;
-
-                    if (objectIndex >= HitObjects.Count)
-                    {
-                        timer = 0;
-                        break;
-                    }
-                }
-
-                if (timer <= 0)
-                {
-                    //Difficulty is:
-                    //The sum of the distances of all objects in that time slice
-                    //The amount of objects that occoured in that time slice
-                    //Add the two together??? profit???
-
-                    input.Add(MathF.Pow(distance, 1.15f) + MathF.Pow(currentObjectCount * 100, 1.1f));
-
-                    if (objectIndex >= HitObjects.Count)
-                        break;
-
-                    prevPos = null;
-                    distance = 0;
-
-                    timer = CHUNK_DURATION;
-                    currentObjectCount = 0;
-                }
-            }
-
-            Utils.EndProfiling("StrainCalculation", false, true);
-        }
-
-        public void GenerateHitObjects()
-        {
-            Utils.Log($"Generating Drawable Hitobjects for {Beatmap.HitObjects.Count} hitobjects!", LogLevel.Info);
-
-            HitObjects.Clear();
-
-            int colorIndex = 0;
-            int combo = 1;
-
-            for (int i = 0; i < Beatmap.HitObjects.Count; i++)
-            {
-                var hitObject = Beatmap.HitObjects[i];
-
-                //Fix this shitty stacking mechanism
-                for (int j = i; j < Beatmap.HitObjects.Count - 1; j++)
-                {
-                    var previous = Beatmap.HitObjects[j];
-                    var next = Beatmap.HitObjects[j + 1];
-
-                    if (next is Spinner)
-                        break;
-
-                    if (next.StartTime - previous.StartTime < 25)
-                        break;
-
-                    if (hitObject.Position == next.Position)
-                    {
-                        next.Position += new System.Numerics.Vector2(3, 3);
-
-                        if(next is Slider nextSlider)
-                        {
-                            for (int k = 0; k < nextSlider.SliderPoints.Count; k++)
-                            {
-                                nextSlider.SliderPoints[k] += new System.Numerics.Vector2(3, 3);
-                            }
-                        }
-                    }
-                    else
-                        break;
-                }
-
-                if (hitObject.IsNewCombo)
-                {
-                    combo = 1;
-                    colorIndex++;
-                }
-
-                int layer = 1337_727 + (Beatmap.HitObjects.Count - i);
-
-                switch (hitObject)
-                {
-                    case HitCircle circle:
-                        DrawableHitCircle drawableCircle = new DrawableHitCircle(circle, colorIndex, combo++);
-                        drawableCircle.Layer = layer;
-                        HitObjects.Add(drawableCircle);
-                        MaxCombo++;
-
-                        AutoGenerator.AddDestination(new Vector2(circle.Position.X, circle.Position.Y), circle.StartTime, false);
-                        break;
-                    case Slider slider:
-                        DrawableSlider drawableSlider = new DrawableSlider(slider, colorIndex, combo++);
-                        drawableSlider.Layer = layer;
-                        HitObjects.Add(drawableSlider);
-                        MaxCombo += slider.Repeats + 1;
-
-                        AutoGenerator.AddDestination(new Vector2(slider.Position.X, slider.Position.Y), slider.StartTime, false);
-
-                        if (slider.Repeats > 1)
-                        {
-                            //Make sure to get the repeats with
-
-                            double repeatDuration = (slider.EndTime - slider.StartTime) / (double)slider.Repeats;
-                            double offset = repeatDuration;
-                            for (int repeat = 0; repeat < slider.Repeats; repeat++)
-                            {
-                                if(repeat % 2 == 0)
-                                    AutoGenerator.AddDestination(drawableSlider.SliderPath.Path.CalculatePositionAtProgress(1f), slider.StartTime + offset, true);
-                                else
-                                    AutoGenerator.AddDestination(drawableSlider.SliderPath.Path.CalculatePositionAtProgress(0f), slider.StartTime + offset, true);
-
-                                offset += repeatDuration;
-                            }
-                        }
-                        else
-                        {
-                            AutoGenerator.AddDestination(drawableSlider.SliderPath.Path.CalculatePositionAtProgress(1f), slider.EndTime, true);
-                        }
-
-                        break;
-                    case Spinner spinner:
-                        DrawableSpinner drawableSpinner = new DrawableSpinner(spinner, colorIndex, combo++);
-                        drawableSpinner.Layer = -layer;
-                        HitObjects.Add(drawableSpinner);
-                        MaxCombo++;
-
-                        for (int spinTime = spinner.StartTime; spinTime < spinner.EndTime; spinTime+=16)
-                        {
-                            if (spinTime >= spinner.EndTime)
-                                spinTime = spinner.EndTime;
-
-                            Vector2 spinPos = new Vector2(spinner.Position.X, spinner.Position.Y);
-
-                            spinPos.X += MathF.Cos(spinTime / 20f) * 50;
-                            spinPos.Y += MathF.Sin(spinTime / 20f) * 50;
-                            AutoGenerator.AddDestination(spinPos, spinTime, false);
-                        }
-                        break;
-                }
-            }
-
-            AutoGenerator.Sort();
-        }
-
-        private double mapDifficultyRange(double difficulty, double min, double mid, double max)
-        {
-            if (difficulty > 5.0f)
-                return mid + (max - mid) * (difficulty - 5.0f) / 5.0f;
-
-            if (difficulty < 5.0f)
-                return mid - (mid - min) * (5.0f - difficulty) / 5.0f;
-
-            return mid;
-
-        }
-    }
-    */
 }

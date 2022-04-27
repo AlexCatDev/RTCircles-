@@ -142,10 +142,9 @@ namespace RTCircles
                 {
                     var item = carouselItems[RNG.Next(0, carouselItems.Count - 1)];
 
-
                     GPUSched.Instance.Enqueue(() =>
                     {
-                        ScreenManager.GetScreen<MapSelectScreen>().SongSelector.selectMap(item, onlySelectMap: true);
+                        OsuContainer.SetMap(item);
                         OsuContainer.Beatmap.Song.Volume = 0;
                         OsuContainer.SongPosition = (OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai))?.Offset - 500 ?? 0;
                         OsuContainer.Beatmap.Song.Play(false);

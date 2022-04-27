@@ -333,6 +333,11 @@ namespace RTCircles
                 shakeKiai.TransformTo(0f, 1f, EasingTypes.OutQuart);
             };
 
+            OsuContainer.BeatmapChanged += () =>
+            {
+
+            };
+
             Input.InputContext.Mice[0].MouseDown += (s, e) =>
             {
                 if(!NotificationManager.OnMouseDown(e))

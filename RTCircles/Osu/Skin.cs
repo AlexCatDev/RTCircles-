@@ -430,7 +430,8 @@ namespace RTCircles
             }
             else
             {
-                texture?.Delete();
+                texture?.
+        ();
                 texture = tex;
 
                 return;
