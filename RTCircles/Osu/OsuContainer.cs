@@ -74,7 +74,7 @@ namespace RTCircles
         /// <summary>
         /// The end scale for hitobjects when they have been hit
         /// </summary>
-        public static double CircleExplodeScale = 1.5;
+        public static double CircleExplodeScale = 1.4;
 
         private static Vector2 lastViewport;
 

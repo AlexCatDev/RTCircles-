@@ -197,6 +197,10 @@ namespace RTCircles
             dieAnim.Update(delta);
             if (!dieAnim.HasCompleted && OsuContainer.Beatmap != null)
                 OsuContainer.Beatmap.Song.Frequency = dieAnim.Value;
+
+            if (OsuContainer.SongPosition > OsuContainer.Beatmap?.HitObjects[^1].BaseObject.EndTime + 400 && ScreenManager.ActiveScreen == this)
+                ScreenManager.SetScreen<ResultScreen>(false);
+
             base.Update(delta);
         }
 
@@ -335,6 +339,7 @@ namespace RTCircles
                 lastPos = Input.MousePosition;
                 if (Input.IsKeyDown(OsuContainer.SmokeKey))
                     smokePoints.Add((lastPos, MainGame.Instance.TotalTime));
+
             }
 
             for (int i = smokePoints.Count - 2; i >= 0; i--)
@@ -430,18 +435,24 @@ namespace RTCircles
         {
             if (key == Key.Escape)
             {
-                //hvis der ikk er flere hitobjects eller beatmap er null så fuck off
-                if (OsuContainer.SongPosition > OsuContainer.Beatmap?.HitObjects[^1].BaseObject.EndTime + 400 || (OsuContainer.Beatmap?.Song.IsStopped ?? true))
+                if(OsuContainer.Beatmap == null || OsuContainer.SongPosition <= 0)
                 {
                     ScreenManager.GoBack();
                     return;
                 }
 
-                if (Math.Abs(pauseStart - MainGame.Instance.TotalTime) < 3 && !isPaused)
+                //Hvis mappet er slut, og man trykker esc så bliver man sendt til result screen
+                if (OsuContainer.SongPosition > OsuContainer.Beatmap.HitObjects[^1].BaseObject.EndTime + 400)
+                {
+                    ScreenManager.SetScreen<ResultScreen>(false);
+                    return;
+                }
+
+                if (Math.Abs(pauseStart - MainGame.Instance.TotalTime) < 2 && !isPaused)
                 {
                     if (!showedPauseMessage)
                     {
-                        NotificationManager.ShowMessage("Please wait atleast 3 seconds between pauses", ((Vector4)Color4.SteelBlue).Xyz, 5);
+                        NotificationManager.ShowMessage("Please wait atleast 2 seconds between pauses", ((Vector4)Color4.SteelBlue).Xyz, 5);
                         showedPauseMessage = true;
                     }
                 }
@@ -450,7 +461,6 @@ namespace RTCircles
                     if(pauseOverlayFade.Value == 0)
                     {
                         OsuContainer.Beatmap?.Song.Pause();
-                        pauseStart = MainGame.Instance.TotalTime;
 
                         pauseOverlayFade.TransformTo(1f, 0.25f, EasingTypes.Out);
                         OnExit();
@@ -458,6 +468,7 @@ namespace RTCircles
                     }
                     else if(pauseOverlayFade.Value == 1)
                     {
+                        pauseStart = MainGame.Instance.TotalTime;
                         OnEnter();
                         pauseOverlayFade.TransformTo(0f, 0.5f, EasingTypes.In, () =>
                         {

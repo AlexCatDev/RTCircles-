@@ -553,12 +553,13 @@ namespace RTCircles
 
         public override void Render(Graphics g)
         {
+            colorTransform.Value = new Vector4(1);
             g.DrawRectangleCentered(visualizer.Position, Bounds.Size, colorTransform, LogoTexture, null, false, rotationTransform);
 
             if (!logoExplodeKiaiAnim.HasCompleted)
             {
                 float logoExplodeScale = logoExplodeKiaiAnim.Value.Map(1f, 0f, 1f, 2f);
-                g.DrawRectangleCentered(visualizer.Position, Bounds.Size * logoExplodeScale, new Vector4(1f, 1f, 1f, LogoTextTexture.ImageDoneUploading ? logoExplodeKiaiAnim.Value : 0), LogoTextTexture);
+                g.DrawRectangleCentered(visualizer.Position, Bounds.Size * logoExplodeScale, new Vector4(colorTransform.Value.Xyz, LogoTextTexture.ImageDoneUploading ? logoExplodeKiaiAnim.Value : 0), LogoTextTexture);
             }
         }
 

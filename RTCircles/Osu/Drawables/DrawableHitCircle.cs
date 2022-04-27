@@ -193,7 +193,7 @@ namespace RTCircles
                     //explodeScale = (float)MathUtils.Map(OsuContainer.SongPosition, start, to, 1, OsuContainer.CircleExplodeScale);
                     //alpha = (float)MathUtils.Map(OsuContainer.SongPosition, start, to, hitAlpha, 0).Clamp(0, 1);
 
-                    explodeScale = (float)Interpolation.ValueAt(time, 1, OsuContainer.CircleExplodeScale, start, to, EasingTypes.OutSine);
+                    explodeScale = (float)Interpolation.ValueAt(time, 1, OsuContainer.CircleExplodeScale, start, to, EasingTypes.Out);
                     alpha = (float)Interpolation.ValueAt(time, hitAlpha, 0, start, to, EasingTypes.None);
                 }
                 else if (IsMissed)

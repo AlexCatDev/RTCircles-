@@ -344,6 +344,8 @@ namespace Easy2D.Game
                     }
                     window.WindowState = WindowState.Normal;
                 }
+
+                OnResize(View.Size.X, View.Size.Y);
             }
         }
 

@@ -357,7 +357,7 @@ namespace RTCircles
 
                 g.DrawInFrameBuffer(strainFB, () =>
                 {
-                    graph = PathApproximator.ApproximateCatmull(graph);
+                    //graph = PathApproximator.ApproximateCatmull(graph);
 
                     var vertices = g.VertexBatch.GetTriangleStrip(graph.Count * 2);
 
@@ -367,8 +367,9 @@ namespace RTCircles
 
                     float stepX = size.X / graph.Count;
 
-                    Vector4 bottomColor = new Vector4(1f, 1f, 1f, 1f);
-                    Vector4 peakColor = new Vector4(1f, 1f, 1f, 1f);
+                    //Fake anti aliasing, only the tippy top of graph fades to 0 opacity
+                    Vector4 peakColor = new Vector4(1f, 1f, 1f, 0f);
+                    Vector4 bottomColor = new Vector4(1f, 1f, 1f, 10f);
 
                     Vector2 movingPos = Vector2.Zero;
 

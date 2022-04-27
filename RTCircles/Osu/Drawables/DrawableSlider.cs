@@ -65,7 +65,7 @@ namespace RTCircles
                 position = OsuContainer.MapToPlayfield(slider.Path.Points[^1]);
 
             float alpha = (float)OsuContainer.SongPosition.Map(spawnTime, spawnTime + OsuContainer.Fadeout, 1, 0).Clamp(0, 1);
-            float scale = (float)OsuContainer.SongPosition.Map(spawnTime, spawnTime + OsuContainer.Fadeout, 1, OsuContainer.CircleExplodeScale);
+            float scale = (float)Interpolation.ValueAt(OsuContainer.SongPosition, 1, OsuContainer.CircleExplodeScale, spawnTime, spawnTime + OsuContainer.Fadeout, EasingTypes.Out);
 
             Vector2 size = new Vector2(Size.Y, Size.Y / Skin.SliderReverse.Texture.Size.AspectRatio()) * Skin.GetScale(Skin.SliderReverse);
 
@@ -348,7 +348,7 @@ namespace RTCircles
                 if (hitTime.HasValue)
                 {
                     hitCircleAlpha = (float)OsuContainer.SongPosition.Map(hitTime.Value, hitTime.Value + OsuContainer.Fadeout, circleAlpha, 0).Clamp(0, 1f);
-                    scaleExplode = (float)OsuContainer.SongPosition.Map(hitTime.Value, hitTime.Value + OsuContainer.Fadeout, 1, OsuContainer.CircleExplodeScale);
+                    scaleExplode = (float)Interpolation.ValueAt(OsuContainer.SongPosition, 1, OsuContainer.CircleExplodeScale, hitTime.Value, hitTime.Value + OsuContainer.Fadeout, EasingTypes.Out);
                 }
                 else
                 {
@@ -642,7 +642,7 @@ namespace RTCircles
                 else
                     SliderPath.ScalingOrigin = OsuContainer.MapToPlayfield(SliderPath.Path.Bounds.Center);
 
-                SliderPath.DrawScale = circleAlpha.Map(1f, 0f, 1f, (float)OsuContainer.CircleExplodeScale);
+                SliderPath.DrawScale = (float)Interpolation.ValueAt(circleAlpha, 1, OsuContainer.CircleExplodeScale, 1, 0, EasingTypes.Out);
             }
             else
             {
