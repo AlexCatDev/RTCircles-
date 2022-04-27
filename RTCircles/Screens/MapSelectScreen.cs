@@ -35,7 +35,8 @@ namespace RTCircles
             }
             else
             {
-                var tex = new Texture(System.IO.File.OpenRead(path));
+                var tex = System.IO.File.Exists(path) ? 
+                    new Texture(System.IO.File.OpenRead(path)) : Skin.DefaultBackground;
 
                 var toAdd = (tex, new List<Guid>() { id });
                 textureCache.Add(path, toAdd);
