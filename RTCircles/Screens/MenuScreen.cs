@@ -128,87 +128,80 @@ namespace RTCircles
 
     public class MenuScreen : Screen
     {
-        private SmoothVector4 introFade = new SmoothVector4();
+        private MapBackground mapBG;
+        private MenuLogo logo;
 
         public MenuScreen()
         {
-            //Fade loader in
-            introFade.TransformTo(new Vector4(0f, 0f, 0f, 1f), 0.3f, EasingTypes.Out, () =>
+            BeatmapMirror.Scheduler.Enqueue(() =>
             {
-                BeatmapMirror.Scheduler.Enqueue(() =>
+                ScreenManager.GetScreen<MapSelectScreen>().LoadCarouselItems();
+
+                var carouselItems = BeatmapCollection.Items;
+                if (BeatmapCollection.Items.Count > 0)
                 {
-                    ScreenManager.GetScreen<MapSelectScreen>().LoadCarouselItems();
+                    var item = carouselItems[RNG.Next(0, carouselItems.Count - 1)];
 
-                    var carouselItems = BeatmapCollection.Items;
-                    if (BeatmapCollection.Items.Count > 0)
+
+                    GPUSched.Instance.Enqueue(() =>
                     {
-                        var item = carouselItems[RNG.Next(0, carouselItems.Count - 1)];
-
-
-                        GPUSched.Instance.Enqueue(() =>
-                        {
-                            OsuContainer.SetMap(BeatmapMirror.DecodeBeatmap(System.IO.File.OpenRead(item.FullPath)), item.Hash, true, Mods.NM);
-                            OsuContainer.Beatmap.Song.Volume = 0;
-                            OsuContainer.SongPosition = (OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai))?.Offset - 2500 ?? 0;
-                            OsuContainer.Beatmap.Song.Play(false);
-                        });
-
-                    }
-                    else
-                    {
-                        PlayableBeatmap playingBeatmap = new PlayableBeatmap(
-                            BeatmapMirror.DecodeBeatmap(Utils.GetResource("Maps.BuildIn.map.osu")),
-                            new Sound(Utils.GetResource("Maps.BuildIn.audio.mp3"), true),
-                            new Texture(Utils.GetResource("Maps.BuildIn.eleventea.jpg")));
-
-                        OsuContainer.SetMap(playingBeatmap);
-
-                        playingBeatmap.GenerateHitObjects(Mods.NM);
-
-                        OsuContainer.SongPosition = (OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai))?.Offset - 2500 ?? 0;
+                        OsuContainer.SetMap(BeatmapMirror.DecodeBeatmap(System.IO.File.OpenRead(item.FullPath)), item.Hash, true, Mods.NM);
                         OsuContainer.Beatmap.Song.Volume = 0;
+                        OsuContainer.SongPosition = (OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai))?.Offset - 500 ?? 0;
                         OsuContainer.Beatmap.Song.Play(false);
-
-                        GPUSched.Instance.EnqueueAsync(() =>
-                        {
-                            return (true, 0);
-                        }, (obj) =>
-                        {
-                            ScreenManager.SetScreen<OsuScreen>();
-                        }, delay: 20000);
-                    }
-
-                    //When everything has been loaded, add the ui items
-                    MapBackground mapBackground = new MapBackground() { BEAT_SIZE = 10 };
-                    Add(mapBackground);
-                    Add(new MenuLogo(mapBackground));
-                    //and fade the loading animation out
-                    introFade.TransformTo(new Vector4(0f, 0f, 0f, 0f), 0.3f, EasingTypes.Out, () =>
-                    {
-                        //Fade background in
-                        mapBackground.TriggerFadeIn();
                     });
+
+                }
+                else
+                {
+                    PlayableBeatmap playingBeatmap = new PlayableBeatmap(
+                        BeatmapMirror.DecodeBeatmap(Utils.GetResource("Maps.BuildIn.map.osu")),
+                        new Sound(Utils.GetResource("Maps.BuildIn.audio.mp3"), true),
+                        new Texture(Utils.GetResource("Maps.BuildIn.eleventea.jpg")));
+
+                    OsuContainer.SetMap(playingBeatmap);
+
+                    playingBeatmap.GenerateHitObjects(Mods.NM);
+
+                    OsuContainer.SongPosition = (OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai))?.Offset - 500 ?? 0;
+                    OsuContainer.Beatmap.Song.Volume = 0;
+                    OsuContainer.Beatmap.Song.Play(false);
+
+                    GPUSched.Instance.EnqueueAsync(() =>
+                    {
+                        return (true, 0);
+                    }, (obj) =>
+                    {
+                        ScreenManager.SetScreen<OsuScreen>();
+                    }, delay: 20000);
+                }
+
+                logo.soundFade.TransformTo((float)GlobalOptions.SongVolume.Value, 0.5f);
+
+                logo.sizeTransform.Value = new Vector2(1000);
+
+                logo.sizeTransform.TransformTo(Vector2.Zero, 0.565f, EasingTypes.InQuint, () =>
+                {
+                    //Fade background in
+                    mapBG.TriggerFadeIn();
                 });
             });
+
+            mapBG = new MapBackground() { BEAT_SIZE = 10 };
+            logo = new MenuLogo(mapBG);
+
+            Add(mapBG);
+            Add(logo);
         }
 
         public override void Update(float delta)
         {
-            introFade.Update(delta);
-
             base.Update(delta);
         }
 
         public override void Render(Graphics g)
         {
             base.Render(g);
-
-            float alpha = introFade.Value.W;
-
-            float explode = (1f - alpha) * (float)OsuContainer.CircleExplodeScale;
-
-            if(alpha > 0f)
-                g.DrawRectangleCentered(MainGame.WindowCenter, new Vector2(800) + new Vector2(800) * explode, new Vector4(1f, 1f, 1f, alpha), MenuLogo.LogoTexture);
         }
 
         public override void OnEnter()
@@ -381,7 +374,7 @@ namespace RTCircles
 
         private SmoothVector2 positionTransform = new SmoothVector2();
         private SmoothFloat rotationTransform = new SmoothFloat();
-        private SmoothVector2 sizeTransform = new SmoothVector2();
+        public SmoothVector2 sizeTransform = new SmoothVector2();
 
         private SmoothVector4 colorTransform = new SmoothVector4();
 
@@ -405,12 +398,10 @@ namespace RTCircles
 
         private MapBackground mapBackground;
 
-        private SmoothFloat soundFade = new SmoothFloat();
+        public SmoothFloat soundFade = new SmoothFloat();
 
         private bool hover => MathUtils.IsPointInsideRadius(Input.MousePosition, Bounds.Center, Bounds.Size.X / 2);
         private bool lastHover;
-
-        private bool sizeFadedIn;
 
         private Vector4 visualizerColorAdditive = Vector4.Zero;
 
@@ -429,12 +420,6 @@ namespace RTCircles
                 logoExplodeKiaiAnim.Value = 1f;
                 logoExplodeKiaiAnim.TransformTo(0f, 0.5f, EasingTypes.None);
             };
-
-            sizeTransform.Value = -size;
-            sizeTransform.TransformTo(new Vector2(0), 0.25f, EasingTypes.Out, () => { sizeFadedIn = true; });
-
-            soundFade.Value = 0f;
-            soundFade.TransformTo(1f, (float)GlobalOptions.SongVolume.Value);
 
             buttonAlpha.Value = 0f;
 
@@ -659,14 +644,9 @@ namespace RTCircles
                 if (hover && !lastHover)
             {
                 Skin.Hover.Play(true);
-                if (sizeFadedIn)
-                    sizeTransform.ClearTransforms();
-                sizeTransform.TransformTo(new Vector2(100) * MainGame.Scale, 0.2f, EasingTypes.OutElasticHalf);
             }
             else if (!hover && lastHover)
             {
-                if (sizeFadedIn)
-                    sizeTransform.ClearTransforms();
                 sizeTransform.TransformTo(new Vector2(0), 0.2f, EasingTypes.Out);
             }
             lastHover = hover;

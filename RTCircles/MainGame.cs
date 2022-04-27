@@ -21,7 +21,7 @@ namespace RTCircles
         public readonly static Option<bool> MotionBlur
             = Option<bool>.CreateProxy("MotionBlur", (value) => { GPUSched.Instance.Enqueue(() => { PostProcessing.MotionBlur = value; }); }, false, "This only looks good if you get over 800 fps");
 
-        public readonly static Option<bool> UseFancyCursorTrail = new Option<bool>("UseFancyCursorTrail", true);
+        public readonly static Option<bool> UseFancyCursorTrail = new Option<bool>("UseFancyCursorTrail", false);
 
         public readonly static Option<bool> SliderSnakeIn = new Option<bool>("SliderSnakeIn", true) { Description = "Negligible performance hit" };
 
@@ -37,11 +37,11 @@ namespace RTCircles
 
         public readonly static Option<bool> ShowFPS = new Option<bool>("ShowFPS", true);
 
-        public readonly static Option<bool> KiaiCatJam = new Option<bool>("KiaiCatJam", true);
+        public readonly static Option<bool> KiaiCatJam = new Option<bool>("KiaiCatJam", false);
 
         public readonly static Option<bool> AllowMapHitSounds = new Option<bool>("AllowMapHitSounds", true);
 
-        public readonly static Option<bool> RenderBackground = new Option<bool>("RenderBackground", true);
+        public readonly static Option<bool> RenderBackground = new Option<bool>("RenderBackground", false);
 
         public readonly static Option<bool> RGBCircles = new Option<bool>("RGBCircles", false) { Description = "RGB ;) (Might not look good with all skins)" };
 
@@ -280,6 +280,7 @@ namespace RTCircles
             build = "DEBUG";
 #endif
 
+            //Make some sort of build versioning idk
             Version = $"{new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds()}";
 
             Utils.WriteToConsole = true;
@@ -483,7 +484,7 @@ namespace RTCircles
             if (DeltaTime > 0.033)
                 NotificationManager.ShowMessage($"<30fps Lag spike ! {DeltaTime *1000:F2}ms", ((Vector4)Color4.Yellow).Xyz, 3f);
 
-            g.Projection = PostProcessing.MotionBlur && (ScreenManager.ActiveScreen is MenuScreen or OsuScreen) ? shakeMatrix : Projection;
+            g.Projection = PostProcessing.MotionBlur && (ScreenManager.ActiveScreen is OsuScreen) || ScreenManager.ActiveScreen is MenuScreen ? shakeMatrix : Projection;
 
             if (debugCameraActive)
             {
