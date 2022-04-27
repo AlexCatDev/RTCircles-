@@ -97,7 +97,6 @@ namespace RTCircles
             currentScreen.OnExiting();
             screenToTransitionTo = screen;
             OnScreenChange?.Invoke(currentScreen, screenToTransitionTo);
-
         }
 
         public static void SetScreen<T>(bool allowGoBack = true, bool force = false) where T : Screen {

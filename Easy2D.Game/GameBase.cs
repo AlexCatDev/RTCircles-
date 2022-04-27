@@ -25,6 +25,8 @@ namespace Easy2D.Game
 
         public readonly IView View;
 
+        public string Version;
+
         public string WindowTitle
         {
             get
@@ -108,7 +110,14 @@ namespace Easy2D.Game
                         OnOpenFile(file);
                     }
                 };
+
+                wnd.FocusChanged += Wnd_FocusChanged;
             }
+        }
+
+        private void Wnd_FocusChanged(bool hasFocus)
+        {
+            VSync = !hasFocus;
         }
 
         private void View_Resize(Vector2D<int> obj)

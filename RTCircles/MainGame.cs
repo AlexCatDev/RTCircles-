@@ -16,10 +16,10 @@ namespace RTCircles
     {
         #region booleans
         public readonly static Option<bool> Bloom
-            = Option<bool>.CreateProxy("Bloom", (value) => { GPUSched.Instance.Enqueue(() => { PostProcessing.Bloom = value; }); }, false, "Enable bloom fx - Huge performance hit");
+            = Option<bool>.CreateProxy("Bloom", (value) => { GPUSched.Instance.Enqueue(() => { PostProcessing.Bloom = value; }); }, false, "Looks like shit lmao");
 
         public readonly static Option<bool> MotionBlur
-            = Option<bool>.CreateProxy("MotionBlur", (value) => { GPUSched.Instance.Enqueue(() => { PostProcessing.MotionBlur = value; }); }, false, "Motion blur like effect, with kiai 'bass' shake, and logo kiai shake");
+            = Option<bool>.CreateProxy("MotionBlur", (value) => { GPUSched.Instance.Enqueue(() => { PostProcessing.MotionBlur = value; }); }, false, "This only looks good if you get over 800 fps");
 
         public readonly static Option<bool> UseFancyCursorTrail = new Option<bool>("UseFancyCursorTrail", true);
 
@@ -275,6 +275,13 @@ namespace RTCircles
 
         public override void OnLoad()
         {
+            string build = "RELEASE";
+#if DEBUG
+            build = "DEBUG";
+#endif
+
+            Version = $"{new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds()}";
+
             Utils.WriteToConsole = true;
 
             Utils.IgnoredLogLevels.Add(LogLevel.Debug);
@@ -297,7 +304,7 @@ namespace RTCircles
 
             g = new Graphics();
 
-                NotificationManager.ShowMessage($"Under Construction!",
+                NotificationManager.ShowMessage($"Under Construction !",
                     ((Vector4)Color4.Orange).Xyz, 10);
 
             GPUSched.Instance.EnqueueDelayed(() =>
@@ -308,24 +315,15 @@ namespace RTCircles
 
             GPUSched.Instance.EnqueueDelayed(() =>
             {
-                NotificationManager.ShowMessage($"Test message",
+                NotificationManager.ShowMessage($"test clickable notification",
                     ((Vector4)Color4.CornflowerBlue).Xyz, 5, () =>
                     {
                         for (int i = 0; i < 5; i++)
                         {
-                            NotificationManager.ShowMessage($"Spam click_event {i}", ((Vector4)Color4.Peru).Xyz, 1);
+                            NotificationManager.ShowMessage($"{i}", ((Vector4)Color4.Peru).Xyz, 1);
                         }
                     });
             }, delay: 20000);
-
-            GPUSched.Instance.EnqueueDelayed(() =>
-            {
-                NotificationManager.ShowMessage($"Message from: 'Your Mother' click to view it",
-                    ((Vector4)Color4.HotPink).Xyz, 5, () =>
-                    {
-                        Skin.ComboBreak.Play(true);
-                    });
-            }, delay: 60000);
 
             OsuContainer.OnKiai += () =>
             {
