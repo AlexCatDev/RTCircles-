@@ -150,6 +150,30 @@ namespace RTCircles
             FindText(SearchQuery);
         }
 
+        public static void DeleteMap(CarouselItem item)
+        {
+            Items.Remove(item);
+            SearchItems.Remove(item);
+
+            bool fileExists = false;
+            if (System.IO.File.Exists(item.FullPath))
+            {
+                fileExists = true;
+                System.IO.File.Delete(item.FullPath);
+            }
+
+            BeatmapMirror.Scheduler.Enqueue(() => {
+                var bm = BeatmapMirror.Realm.Find<DBBeatmapInfo>(item.Hash);
+                BeatmapMirror.Realm.Write(() =>
+                {
+                    bm.SetInfo.Beatmaps.Remove(bm);
+                    BeatmapMirror.Realm.Remove(bm);
+                });
+            });
+
+            NotificationManager.ShowMessage($"Beatmap with hash: {item.Hash} has been deleted! File: {(fileExists ? "Existed" : "Did not exist")}", ((Vector4)Color4.CornflowerBlue).Xyz, 5f);
+        }
+
         public static void FindText(string text)
         {
             SearchQuery = text;

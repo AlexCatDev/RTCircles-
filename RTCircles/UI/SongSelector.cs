@@ -504,11 +504,24 @@ namespace RTCircles
             return false;
         }
 
-        private void selectMap(CarouselItem item)
+        public void selectMap(CarouselItem item, bool onlySelectMap = false)
         {
-            var beatmap = BeatmapMirror.DecodeBeatmap(File.OpenRead(item.FullPath));
+            OsuParsers.Beatmaps.Beatmap beatmap;
+            try
+            {
+                beatmap = BeatmapMirror.DecodeBeatmap(File.OpenRead(item.FullPath));
+            }
+            catch (Exception ex)
+            {
+                NotificationManager.ShowMessage($"An error occoured:\n{ex.Message}", Colors.Red.Xyz, 5f);
+                BeatmapCollection.DeleteMap(item);
+                return;
+            }
 
             OsuContainer.SetMap(beatmap, item.Hash, true, mods);
+
+            if (onlySelectMap)
+                return;
 
             ScreenManager.GetScreen<OsuScreen>().OnEntering();
 

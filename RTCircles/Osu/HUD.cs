@@ -143,7 +143,7 @@ namespace RTCircles
             }
 
             
-            if(displayJudgement)
+            if(displayJudgement && result != HitResult.Max)
                 ScreenManager.GetScreen<OsuScreen>().Add(new HitJudgement(position, result));
 
             //Console.WriteLine(result);

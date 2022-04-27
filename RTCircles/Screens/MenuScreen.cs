@@ -145,7 +145,7 @@ namespace RTCircles
 
                     GPUSched.Instance.Enqueue(() =>
                     {
-                        OsuContainer.SetMap(BeatmapMirror.DecodeBeatmap(System.IO.File.OpenRead(item.FullPath)), item.Hash, true, Mods.NM);
+                        ScreenManager.GetScreen<MapSelectScreen>().SongSelector.selectMap(item, onlySelectMap: true);
                         OsuContainer.Beatmap.Song.Volume = 0;
                         OsuContainer.SongPosition = (OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai))?.Offset - 500 ?? 0;
                         OsuContainer.Beatmap.Song.Play(false);
