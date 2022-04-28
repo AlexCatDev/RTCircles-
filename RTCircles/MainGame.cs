@@ -39,6 +39,8 @@ namespace RTCircles
 
         public readonly static Option<bool> KiaiCatJam = new Option<bool>("KiaiCatJam", false);
 
+        public readonly static Option<bool> UseGameplayAsBackgroundSrc = new Option<bool>("UseGameplayAsBackgroundSrc", true) { Description = "Use current gameplay as background in the main menu?"};
+
         public readonly static Option<bool> AllowMapHitSounds = new Option<bool>("AllowMapHitSounds", true);
 
         public readonly static Option<bool> RenderBackground = new Option<bool>("RenderBackground", false);
@@ -54,6 +56,16 @@ namespace RTCircles
 
         public readonly static Option<double> SkinVolume = Option<double>.CreateProxy("SkinVolume", (volume) => {
             Skin.Hitsounds?.SetVolume(volume);
+
+            if(Skin.ComboBreak != null)
+                Skin.ComboBreak.Volume = volume;
+
+            if (Skin.SliderSlide != null)
+                Skin.SliderSlide.Volume = volume;
+
+            if (Skin.SliderSlide != null)
+                Skin.SpinnerBonus.Volume = volume;
+
             OsuContainer.Beatmap?.Hitsounds?.SetVolume(volume);
         }, 1);
 
@@ -272,6 +284,7 @@ namespace RTCircles
         private bool debugCameraActive = false;
 
         private SmoothFloat volumeBarFade = new SmoothFloat();
+        private Option<double> volumeSource = GlobalOptions.GlobalVolume;
 
         public override void OnLoad()
         {
@@ -302,29 +315,12 @@ namespace RTCircles
             //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  idke 1.2 without sliderendcircle");
             //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  AlexSkin 1.0");
             //Skin.Load(@"C:\Users\user\Desktop\whitecat skin");
-
             g = new Graphics();
 
-                NotificationManager.ShowMessage($"Under Construction !",
-                    ((Vector4)Color4.Orange).Xyz, 10);
-
             GPUSched.Instance.EnqueueDelayed(() =>
             {
-                NotificationManager.ShowMessage(
-                    $"Could not connect to server", ((Vector4)Color4.Crimson).Xyz, 5);
-            }, delay: 10000);
-
-            GPUSched.Instance.EnqueueDelayed(() =>
-            {
-                NotificationManager.ShowMessage($"test clickable notification",
-                    ((Vector4)Color4.CornflowerBlue).Xyz, 5, () =>
-                    {
-                        for (int i = 0; i < 5; i++)
-                        {
-                            NotificationManager.ShowMessage($"{i}", ((Vector4)Color4.Peru).Xyz, 1);
-                        }
-                    });
-            }, delay: 20000);
+                NotificationManager.ShowMessage($"Work in progress", ((Vector4)Color4.Yellow).Xyz, 10);
+            }, 1000);
 
             OsuContainer.OnKiai += () =>
             {
@@ -356,7 +352,7 @@ namespace RTCircles
                     volumeBarFade.Value = 1;
                     volumeBarFade.Wait(1f);
                     volumeBarFade.TransformTo(0, 0.5f, EasingTypes.Out);
-                    GlobalOptions.GlobalVolume.Value = (GlobalOptions.GlobalVolume.Value + e.Y * 0.01f).Clamp(0, 1);
+                    volumeSource.Value = (volumeSource.Value + e.Y * 0.01f).Clamp(0, 1);
                     return;
                 }
 
@@ -486,8 +482,8 @@ namespace RTCircles
                 deltaTimesCount = 0;
             }
 
-            if (DeltaTime > 0.033)
-                NotificationManager.ShowMessage($"<30fps Lag spike ! {DeltaTime *1000:F2}ms", ((Vector4)Color4.Yellow).Xyz, 3f);
+            //if (DeltaTime > 0.033)
+            //    NotificationManager.ShowMessage($"<30fps Lag spike ! {DeltaTime *1000:F2}ms", ((Vector4)Color4.Yellow).Xyz, 3f);
 
             g.Projection = PostProcessing.MotionBlur && (ScreenManager.ActiveScreen is OsuScreen) || ScreenManager.ActiveScreen is MenuScreen ? shakeMatrix : Projection;
 
@@ -552,10 +548,35 @@ namespace RTCircles
             Vector2 pos = new Vector2(10, 10);
             Vector2 size = new Vector2(500, 30);
 
-            g.DrawRectangle(pos, size, Colors.From255RGBA(31, 31, 31, 127 *volumeBarFade.Value));
+            float padding = 20;
+
+            if (new Rectangle(pos, size).IntersectsWith(Input.MousePosition))
+                volumeSource = GlobalOptions.GlobalVolume;
+
+            g.DrawRectangle(pos, size, Colors.From255RGBA(31, 31, 31, 127 * volumeBarFade.Value));
             g.DrawRectangle(pos, new Vector2(size.X * (float)GlobalOptions.GlobalVolume.Value, size.Y), Colors.From255RGBA(0, 255, 128, 255 * volumeBarFade.Value));
 
             g.DrawStringCentered($"Volume: {GlobalOptions.GlobalVolume.Value * 100:F0}", Font.DefaultFont, pos + size / 2f, new Vector4(1f, 1f, 1f, volumeBarFade.Value), 0.5f);
+
+            pos.Y += size.Y + padding;
+
+            if (new Rectangle(pos, size).IntersectsWith(Input.MousePosition))
+                volumeSource = GlobalOptions.SongVolume;
+
+            g.DrawRectangle(pos, size, Colors.From255RGBA(31, 31, 31, 127 * volumeBarFade.Value));
+            g.DrawRectangle(pos, new Vector2(size.X * (float)GlobalOptions.SongVolume.Value, size.Y), Colors.From255RGBA(0, 255, 128, 255 * volumeBarFade.Value));
+
+            g.DrawStringCentered($"Song Volume: {GlobalOptions.SongVolume.Value * 100:F0}", Font.DefaultFont, pos + size / 2f, new Vector4(1f, 1f, 1f, volumeBarFade.Value), 0.5f);
+
+            pos.Y += size.Y + padding;
+
+            if (new Rectangle(pos, size).IntersectsWith(Input.MousePosition))
+                volumeSource = GlobalOptions.SkinVolume;
+
+            g.DrawRectangle(pos, size, Colors.From255RGBA(31, 31, 31, 127 * volumeBarFade.Value));
+            g.DrawRectangle(pos, new Vector2(size.X * (float)GlobalOptions.SkinVolume.Value, size.Y), Colors.From255RGBA(0, 255, 128, 255 * volumeBarFade.Value));
+
+            g.DrawStringCentered($"Skin Volume: {GlobalOptions.SkinVolume.Value * 100:F0}", Font.DefaultFont, pos + size / 2f, new Vector4(1f, 1f, 1f, volumeBarFade.Value), 0.5f);
         }
 
         private Vector2? trueHoverSize = null;

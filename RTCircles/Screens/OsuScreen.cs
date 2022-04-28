@@ -143,31 +143,72 @@ namespace RTCircles
             if (OsuContainer.Beatmap is null || OsuContainer.Beatmap.HitObjects.Count == 0)
                 return;
 
-            //Don't sync if the object index is still legit
-            //Brain: Songpos: 500 - CurrentIndexStartTime: 550
-            // 500 - 550
-            //-50, so the current object is still 50 milliseconds behind, the click time. and is still valid
-            if (OsuContainer.SongPosition - OsuContainer.Beatmap.HitObjects[objectIndex.Clamp(0, OsuContainer.Beatmap.HitObjects.Count - 1)].BaseObject.StartTime < 0)
-                return;
-
-            Clear<DrawableHitCircle>();
-            Clear<DrawableSpinner>();
-            Clear<DrawableSlider>();
-            Clear<HitJudgement>();
-            Clear<WarningArrows>();
-            Clear<FollowPoints>();
-
-            objectIndex = -1;
-
+            //If the song position is behind the first object, the object index is always 0
             if (OsuContainer.SongPosition < OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime)
+            {
                 objectIndex = 0;
-            else
-                objectIndex = OsuContainer.Beatmap.HitObjects.FindIndex((o) => o.BaseObject.EndTime > OsuContainer.SongPosition);
+                return;
+            }
 
-            if (objectIndex == -1)
+            //If the song position is infront of the last object, the object index is always bigger than the last object
+            if(OsuContainer.SongPosition > OsuContainer.Beatmap.HitObjects[^1].BaseObject.StartTime)
+            {
                 objectIndex = OsuContainer.Beatmap.HitObjects.Count;
+                return;
+            }
 
-            OsuContainer.Beatmap.AutoGenerator.SyncToTime(OsuContainer.SongPosition);
+            //Warning: None of this made sense in my head, and i'm just guessing, and it's likely to crash when i least expect it
+
+            var maxCount = OsuContainer.Beatmap.HitObjects.Count - 1;
+
+            var previous = OsuContainer.Beatmap.HitObjects[(objectIndex - 1).Clamp(0, maxCount)].BaseObject;
+            var now = OsuContainer.Beatmap.HitObjects[objectIndex.Clamp(0, maxCount)].BaseObject;
+
+            //If the song position is greater than the object's start time at the current object index, the index is behind.
+            bool isIndexBehind = OsuContainer.SongPosition > now.StartTime;
+
+            //If the song position is smaller than the previously spawned object's time, the index is too far ahead
+            bool isIndexInfront = OsuContainer.SongPosition < previous.StartTime - OsuContainer.Beatmap.Preempt;
+
+            //If both of these are true, im doing something wrong
+            System.Diagnostics.Debug.Assert(!(isIndexBehind && isIndexInfront));
+
+            if(isIndexBehind || isIndexInfront)
+            {
+                if(isIndexBehind)
+                    Utils.Log($"The index was behind! {objectIndex}", LogLevel.Important);
+                else
+                    Utils.Log($"The index was infront! {objectIndex}", LogLevel.Important);
+
+                OsuContainer.Beatmap.AutoGenerator.SyncToTime(OsuContainer.SongPosition);
+                Clear<DrawableHitCircle>();
+                Clear<DrawableSpinner>();
+                Clear<DrawableSlider>();
+                Clear<HitJudgement>();
+                Clear<WarningArrows>();
+                Clear<FollowPoints>();
+
+                while (true)
+                {
+                    if (isIndexBehind)
+                    {
+                        objectIndex++;
+                        if (OsuContainer.SongPosition < OsuContainer.Beatmap.HitObjects[objectIndex].BaseObject.StartTime)
+                            break;
+                    }
+                    else
+                    {
+                        objectIndex--;
+                        if (OsuContainer.SongPosition > OsuContainer.Beatmap.HitObjects[objectIndex].BaseObject.StartTime - OsuContainer.Beatmap.Preempt)
+                        {
+                            objectIndex++;
+                            break;
+                        }
+                    }
+                }
+
+                Utils.Log($"The new index: {objectIndex}", LogLevel.Important);
+            }
         }
 
         public override void OnExiting()
@@ -206,7 +247,7 @@ namespace RTCircles
             if (!dieAnim.HasCompleted && OsuContainer.Beatmap != null)
                 OsuContainer.Beatmap.Song.Frequency = dieAnim.Value;
 
-            if (OsuContainer.SongPosition > OsuContainer.Beatmap?.HitObjects[^1].BaseObject.EndTime + 400 && ScreenManager.ActiveScreen == this)
+            if (OsuContainer.SongPosition > OsuContainer.Beatmap?.HitObjects[^1].BaseObject.EndTime + 1000 && ScreenManager.ActiveScreen == this)
                 ScreenManager.SetScreen<ResultScreen>(false);
 
             base.Update(delta);
@@ -237,6 +278,7 @@ namespace RTCircles
 
             if (OsuContainer.Combo % 50 == 0 && ComboBurst.CanSpawn && OsuContainer.Combo > 0 && Skin.ComboBurst is not null)
                 Add(new ComboBurst());
+
         }
 
         private void spawnFollowPointsCheck(IDrawableHitObject current, IDrawableHitObject next)

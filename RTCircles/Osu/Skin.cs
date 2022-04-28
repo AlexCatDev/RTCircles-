@@ -300,6 +300,7 @@ namespace RTCircles
             HitMiss = LoadTexture(path, "hit0");
 
             ComboBreak = LoadSound(path, "combobreak");
+            ComboBreak.Volume = GlobalOptions.SkinVolume.Value;
 
             CircularMetre = LoadTexture(path, "circular-metre");
 

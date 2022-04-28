@@ -187,7 +187,7 @@ namespace RTCircles
                 });
             });
 
-            mapBG = new MapBackground() { BEAT_SIZE = 10, UseBluredGameplayAsBackgroundSource = true };
+            mapBG = new MapBackground() { BEAT_SIZE = 10 };
             logo = new MenuLogo(mapBG);
 
             logo.sizeTransform.Value = new Vector2(1000);
@@ -204,6 +204,7 @@ namespace RTCircles
 
         public override void Update(float delta)
         {
+            mapBG.UseBluredGameplayAsBackgroundSource = GlobalOptions.UseGameplayAsBackgroundSrc.Value;
             base.Update(delta);
         }
 
@@ -288,8 +289,6 @@ namespace RTCircles
             bluredFB.EnsureSize(fb.Width, fb.Height);
 
             Blur.BlurTexture(fb.Texture, bluredFB, 1, 2);
-
-            TextureOverride = bluredFB.Texture;
         }
 
         public override void Render(Graphics g)
@@ -300,6 +299,8 @@ namespace RTCircles
             var color = fadeColor.Value;
             var textureRectangle = new Rectangle(0, 0, 1, 1);
 
+            var tex = TextureOverride ?? OsuContainer.Beatmap.Background;
+
             if (UseBluredGameplayAsBackgroundSource)
             {
                 drawBluredGameplay(g);
@@ -307,9 +308,9 @@ namespace RTCircles
                 color.X += 1f;
                 color.Y += 1f;
                 color.Z += 1f;
-            }
 
-            var tex = TextureOverride ?? OsuContainer.Beatmap.Background;
+                tex = bluredFB.Texture;
+            }
 
             float aspectRatio = tex.Size.AspectRatio();
 

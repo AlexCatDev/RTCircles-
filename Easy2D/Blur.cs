@@ -83,7 +83,7 @@ namespace Easy2D
             dest.Unbind();
             Viewport.SetViewport(startViewport);
 
-            Utils.Log($"Blured {w}x{h} texture Radius: {radius} Iterations: {iterations}", LogLevel.Info);
+            //Utils.Log($"Blured {w}x{h} texture Radius: {radius} Iterations: {iterations}", LogLevel.Info);
         }
 
         private static void swap(ref FrameBuffer a, ref FrameBuffer b)
