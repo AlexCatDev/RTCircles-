@@ -139,15 +139,23 @@ namespace RTCircles
 
         public void SyncObjectIndexToTime()
         {
+            //Dont do shit if the beatmap is null lol 
+            if (OsuContainer.Beatmap is null || OsuContainer.Beatmap.HitObjects.Count == 0)
+                return;
+
+            //Don't sync if the object index is still legit
+            //Brain: Songpos: 500 - CurrentIndexStartTime: 550
+            // 500 - 550
+            //-50, so the current object is still 50 milliseconds behind, the click time. and is still valid
+            if (OsuContainer.SongPosition - OsuContainer.Beatmap.HitObjects[objectIndex.Clamp(0, OsuContainer.Beatmap.HitObjects.Count - 1)].BaseObject.StartTime < 0)
+                return;
+
             Clear<DrawableHitCircle>();
             Clear<DrawableSpinner>();
             Clear<DrawableSlider>();
             Clear<HitJudgement>();
             Clear<WarningArrows>();
             Clear<FollowPoints>();
-
-            if (OsuContainer.Beatmap is null || OsuContainer.Beatmap.HitObjects.Count == 0)
-                return;
 
             objectIndex = -1;
 

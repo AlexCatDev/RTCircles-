@@ -104,50 +104,6 @@ public unsafe class Benchmarks
     /// Note to self: Indexing a pointer is as fast/faster than using -> then incrementing it
     /// </summary>
 
-    private Dictionary<Texture, int> textureMap = new Dictionary<Texture, int>();
-    private int textureMapSlotIndex = 0;
-    private int getTextureSlotDict(Texture tex)
-    {
-        if (textureMap.TryGetValue(tex, out int slot))
-            return slot;
-
-        textureMap.Add(tex, textureMapSlotIndex++);
-
-        return textureMapSlotIndex;
-    }
-
-    private uint[] textureSlots = new uint[32];
-    private int textureSlotsCount;
-    private int getTextureSlotArray(Texture tex)
-    {
-        for (int i = 0; i < textureSlotsCount; i++)
-        {
-            if (textureSlots[i] == tex.Handle)
-                return i;
-        }
-
-        textureSlots[textureSlotsCount] = tex.Handle;
-
-        return textureSlotsCount++;
-    }
-
-    private void clearArray()
-    {
-        for (int i = 0; i < textureSlotsCount; i++)
-        {
-            textureSlots[i] = uint.MaxValue;
-        }
-        textureSlotsCount = 0;
-    }
-
-    public void testDict()
-    {
-        for (int i = 0; i < 32; i++)
-        {
-            int val = getTextureSlotDict((Texture)i);
-        }
-    }
-
     //[Benchmark]
     public void testSafe()
     {

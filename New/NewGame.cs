@@ -577,18 +577,13 @@ namespace New
         }
     }
 
-    public class NewGame : Game
+    public class NewGame : GameBase
     {
-        public new static NewGame Instance { get; private set; }
+        public static NewGame Instance { get; private set; }
 
         public int Width;
         public int Height;
         public Vector2 Center;
-
-        public override void OnImportFile(string path)
-        {
-            
-        }
 
         private Drawable container = new Drawable();
 
@@ -744,7 +739,7 @@ namespace New
             }
         }
 
-        public override void OnRender(double delta)
+        public override void OnRender()
         {
             return;
 
@@ -808,9 +803,14 @@ namespace New
             Center = new Vector2(Width, Height) / 2;
         }
 
-        public override void OnUpdate(double delta)
+        public override void OnUpdate()
         {
             container.Update(TotalTime);
+        }
+
+        public override void OnOpenFile(string fullpath)
+        {
+            throw new NotImplementedException();
         }
     }
 

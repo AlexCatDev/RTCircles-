@@ -351,7 +351,7 @@ namespace PogGame
         }
     }
 
-    public class EntryPoint : Game
+    public class EntryPoint : GameBase
     {
         public static Camera camera = new Camera();
         private Graphics graphics;
@@ -359,11 +359,6 @@ namespace PogGame
 
         public static DrawableMonster Monster = new DrawableMonster();
         public static DrawablePlayer Player = new DrawablePlayer();
-
-        public override void OnImportFile(string path)
-        {
-            
-        }
 
         public override void OnLoad()
         {
@@ -391,7 +386,7 @@ namespace PogGame
             };
         }
 
-        public override void OnRender(double delta)
+        public override void OnRender()
         {
             graphics.Projection = camera.Projection;
 
@@ -474,10 +469,15 @@ namespace PogGame
             });
         }
 
-        public override void OnUpdate(double delta)
+        public override void OnUpdate()
         {
             camera.Update();
             container.Update(TotalTime);
+        }
+
+        public override void OnOpenFile(string fullpath)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -146,9 +146,20 @@ namespace RTCircles
         public static int Count50;
         public static int CountMiss;
 
-        public static bool MuteHitsounds { get; set; }
+        private static bool _muteHitsounds;
+        public static bool MuteHitsounds
+        {
+            get
+            {
+                return ScreenManager.ActiveScreen is MenuScreen ? true : _muteHitsounds;
+            }
+            set
+            {
+                _muteHitsounds = value;
+            }
+        }
 
-        public static bool CookieziMode => ScreenManager.ActiveScreen is MapSelectScreen || Beatmap.Mods.HasFlag(Mods.Auto);
+        public static bool CookieziMode => ScreenManager.ActiveScreen is not OsuScreen || Beatmap.Mods.HasFlag(Mods.Auto);
 
         public static PlayableBeatmap Beatmap { get; private set; }
 

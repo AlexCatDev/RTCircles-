@@ -187,7 +187,7 @@ namespace RTCircles
                 });
             });
 
-            mapBG = new MapBackground() { BEAT_SIZE = 10 };
+            mapBG = new MapBackground() { BEAT_SIZE = 10, UseBluredGameplayAsBackgroundSource = true };
             logo = new MenuLogo(mapBG);
 
             logo.sizeTransform.Value = new Vector2(1000);
@@ -266,32 +266,48 @@ namespace RTCircles
 
         private float beatScale = 0;
 
+        public bool UseBluredGameplayAsBackgroundSource;
 
         private FrameBuffer fb = new FrameBuffer(1,1);
         private FrameBuffer bluredFB = new FrameBuffer(1, 1);
-        private void test(Graphics g)
+        private void drawBluredGameplay(Graphics g)
         {
+            var osuScreen = ScreenManager.GetScreen<OsuScreen>();
+
             fb.EnsureSize(MainGame.WindowWidth/6, MainGame.WindowHeight/6);
+
             g.DrawInFrameBuffer(fb, () => {
-                (MainGame.Instance as MainGame).FakeWindowSize(fb.Texture.Size, () =>
+                MainGame.Instance.FakeWindowSize(fb.Texture.Size, () =>
                 {
-                    OsuContainer.MuteHitsounds = true;
-                    OsuContainer.Beatmap.Mods |= Mods.Auto;
-                    ScreenManager.GetScreen<OsuScreen>().Update((float)MainGame.Instance.DeltaTime);
-                    ScreenManager.GetScreen<OsuScreen>().Render(g);
+                    osuScreen.SyncObjectIndexToTime();
+                    osuScreen.Update((float)MainGame.Instance.DeltaTime);
+                    osuScreen.Render(g);
                 });
             });
 
             bluredFB.EnsureSize(fb.Width, fb.Height);
 
             Blur.BlurTexture(fb.Texture, bluredFB, 1, 2);
-            g.DrawRectangleCentered(MainGame.WindowCenter, MainGame.WindowSize, new Vector4(new Vector3(1f),1f), bluredFB.Texture, new Rectangle(0, 1, 1, -1), true);
+
+            TextureOverride = bluredFB.Texture;
         }
 
         public override void Render(Graphics g)
         {
             if (OsuContainer.Beatmap is null)
                 return;
+
+            var color = fadeColor.Value;
+            var textureRectangle = new Rectangle(0, 0, 1, 1);
+
+            if (UseBluredGameplayAsBackgroundSource)
+            {
+                drawBluredGameplay(g);
+                textureRectangle = new Rectangle(0, 1, 1, -1);
+                color.X += 1f;
+                color.Y += 1f;
+                color.Z += 1f;
+            }
 
             var tex = TextureOverride ?? OsuContainer.Beatmap.Background;
 
@@ -308,7 +324,7 @@ namespace RTCircles
             if(bgSize.Y < MainGame.WindowHeight)
                 bgSize = new Vector2(height * aspectRatio, height) + new Vector2(ParallaxAmount * 2);
 
-            g.DrawRectangleCentered(MainGame.WindowCenter + ParallaxPosition, bgSize, fadeColor, tex, null, false, Rotation);
+            g.DrawRectangleCentered(MainGame.WindowCenter + ParallaxPosition, bgSize, color, tex, textureRectangle, true, Rotation);
 
             if (OsuContainer.IsKiaiTimeActive && ShowMenuFlash)
             {
@@ -364,7 +380,9 @@ namespace RTCircles
         {
             beatFlash.Update(delta);
             beatFlash2.Update(delta);
+
             fadeColor.Update(delta);
+
             Vector2 mousePosition = Input.MousePosition;
 
             position = Vector2.Lerp(position, mousePosition, delta * ParallaxSmooth);

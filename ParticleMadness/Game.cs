@@ -288,15 +288,10 @@ namespace ParticleMadness
     */
 
     //Lets pretend this doesnt exist :D
-    public class Game : Easy2D.Game.Game
+    public class Game : GameBase
     {
         private Matrix4 projection;
         private Graphics g;
-
-        public override void OnImportFile(string path)
-        {
-
-        }
 
         public override void OnLoad()
         {
@@ -318,7 +313,7 @@ namespace ParticleMadness
 
         private static Easy2D.Texture sliderTex = new Easy2D.Texture(File.OpenRead(@"C:\Users\user\Desktop\slidergradient.png"));
 
-        public override void OnRender(double delta)
+        public override void OnRender()
         {
             Vector2 pos = new Vector2(200, 200);
             float radius = 50;
@@ -334,9 +329,14 @@ namespace ParticleMadness
             projection = Matrix4.CreateOrthographicOffCenter(0, width, height, 0, -1, 1);
         }
 
-        public override void OnUpdate(double delta)
+        public override void OnUpdate()
         {
 
+        }
+
+        public override void OnOpenFile(string fullpath)
+        {
+            throw new NotImplementedException();
         }
     }
 }
