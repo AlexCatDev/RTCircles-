@@ -136,7 +136,6 @@ namespace RTCircles
             BeatmapMirror.Scheduler.Enqueue(() =>
             {
                 ScreenManager.GetScreen<MapSelectScreen>().LoadCarouselItems();
-
                 var carouselItems = BeatmapCollection.Items;
                 if (BeatmapCollection.Items.Count > 0)
                 {
@@ -145,11 +144,14 @@ namespace RTCircles
                     GPUSched.Instance.Enqueue(() =>
                     {
                         OsuContainer.SetMap(item);
-                        OsuContainer.Beatmap.Song.Volume = 0;
-                        OsuContainer.SongPosition = (OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai))?.Offset - 500 ?? 0;
-                        OsuContainer.Beatmap.Song.Play(false);
-                    });
 
+                        if (OsuContainer.Beatmap != null)
+                        {
+                            OsuContainer.Beatmap.Song.Volume = 0;
+                            OsuContainer.SongPosition = (OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai))?.Offset - 500 ?? 0;
+                            OsuContainer.Beatmap.Song.Play(false);
+                        }
+                    });
                 }
                 else
                 {
@@ -177,10 +179,9 @@ namespace RTCircles
 
                 logo.soundFade.TransformTo((float)GlobalOptions.SongVolume.Value, 0.5f);
 
-                logo.sizeTransform.Value = new Vector2(1000);
-
                 logo.sizeTransform.TransformTo(Vector2.Zero, 0.565f, EasingTypes.InQuint, () =>
                 {
+                    logo.ToggleInput(true);
                     //Fade background in
                     mapBG.TriggerFadeIn();
                 });
@@ -189,8 +190,16 @@ namespace RTCircles
             mapBG = new MapBackground() { BEAT_SIZE = 10 };
             logo = new MenuLogo(mapBG);
 
+            logo.sizeTransform.Value = new Vector2(1000);
+            logo.ToggleInput(false);
+
             Add(mapBG);
             Add(logo);
+        }
+
+        public override void OnMouseDown(MouseButton args)
+        {
+            base.OnMouseDown(args);
         }
 
         public override void Update(float delta)
@@ -547,6 +556,15 @@ namespace RTCircles
             }
         }
 
+        public void ToggleInput(bool input)
+        {
+            IsAcceptingInput = input;
+            playButton.IsAcceptingInput = input;
+            optionsButton.IsAcceptingInput = input;
+            exitButton.IsAcceptingInput = input;
+            multiPlayButton.IsAcceptingInput = input;
+        }
+
         public override bool OnMouseDown(MouseButton args)
         {
             if (hover && args == MouseButton.Left)
@@ -640,16 +658,19 @@ namespace RTCircles
                 visualizerColorAdditive = Vector4.Lerp(visualizerColorAdditive, Vector4.Zero, delta * 3f);
             }
 
-            if (hover && !lastHover)
+            if (IsAcceptingInput)
             {
-                sizeTransform.TransformTo(new Vector2(70*MainGame.Scale), 0.2f, EasingTypes.Out);
-                Skin.Hover.Play(true);
+                if (hover && !lastHover)
+                {
+                    sizeTransform.TransformTo(new Vector2(70 * MainGame.Scale), 0.2f, EasingTypes.Out);
+                    Skin.Hover.Play(true);
+                }
+                else if (!hover && lastHover)
+                {
+                    sizeTransform.TransformTo(new Vector2(0), 0.2f, EasingTypes.Out);
+                }
+                lastHover = hover;
             }
-            else if (!hover && lastHover)
-            {
-                sizeTransform.TransformTo(new Vector2(0), 0.2f, EasingTypes.Out);
-            }
-            lastHover = hover;
 
             //slideBackTimer += delta;
             if (slideBackTimer >= 7f)

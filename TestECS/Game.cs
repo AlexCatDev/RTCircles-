@@ -24,6 +24,8 @@ namespace TestECS
 
         public override void OnLoad()
         {
+            VSync = false;
+
             Renderer = new Graphics();
 
             player = scene.CreateEntity();
@@ -33,7 +35,6 @@ namespace TestECS
             player.AddComponent(new Controller());
             player.AddComponent(new BoundsCheck());
             player.AddComponent(new Rainbow());
-            player.ID = 6969;
 
             player2 = scene.CreateEntity();
             player2.AddComponent(new Transform() { Size = new Vector2(8) });
@@ -41,8 +42,8 @@ namespace TestECS
             player2.AddComponent(new SpriteRenderer());
             player2.AddComponent(new MouseController());
             player2.AddComponent(new BoundsCheck());
-            player2.ID = 6969;
 
+            
             for (int i = 0; i < 100_000; i++)
             {
                 Entity entity = scene.CreateEntity();
@@ -72,7 +73,7 @@ namespace TestECS
 
         public override void OnRender()
         {
-            scene.UpdateComponents<SpriteRenderer>();
+            //scene.UpdateComponents<SpriteRenderer>();
             Renderer.DrawString($"UPS: {UPS} FPS: {FPS} SpriteRenderes: {scene.GetCount<SpriteRenderer>()}", Font.DefaultFont, Vector2.Zero, Colors.White);
             Renderer.Projection = Projection;
             Renderer.EndDraw();

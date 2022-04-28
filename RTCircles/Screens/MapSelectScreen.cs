@@ -351,7 +351,7 @@ namespace RTCircles
         private FrameBuffer strainFB = new FrameBuffer(1, 1);
         private void drawDifficultyGraph(Graphics g)
         {
-            if (OsuContainer.Beatmap?.DifficultyGraph.Count == 0)
+            if (OsuContainer.Beatmap == null || OsuContainer.Beatmap.DifficultyGraph.Count == 0)
                 return;
 
             Vector2 size = new Vector2(MainGame.WindowWidth, 100);
