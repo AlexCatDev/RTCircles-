@@ -107,8 +107,8 @@ namespace RTCircles
         private float scale2 = 0;
         private float scaleTime2 = 0.4f;
 
-        private float unstableRateBarWidth => (float)OsuContainer.Beatmap.Window50 * 3f * MainGame.Scale;
-        private float unstableRateBarHeight => 30 * MainGame.Scale;
+        private float unstableRateBarWidth => (float)OsuContainer.Beatmap.Window50 * 4f * MainGame.Scale;
+        private float unstableRateBarHeight => 15 * MainGame.Scale;
 
         private float hp = 1;
 

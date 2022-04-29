@@ -1,5 +1,7 @@
 ﻿using Easy2D;
+using Easy2D.Game;
 using OpenTK.Mathematics;
+using Silk.NET.Input;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,6 +15,9 @@ namespace RTCircles
         {
             easingTypes = Enum.GetValues(typeof(EasingTypes));
         }
+
+        private Shaker shaker = new Shaker() { Duration = 1, Radius = 250, Speed = 40 };
+
         private Vector2 scrollOffset = new Vector2(400, 20);
         public override void Render(Graphics g)
         {
@@ -40,7 +45,20 @@ namespace RTCircles
                 startPos.Y += spacing;
             }
 
+            shaker.Update();
+            g.Projection = Matrix4.CreateTranslation(new Vector3(shaker.OutputShake)) * Matrix4.CreateOrthographicOffCenter(0, MainGame.WindowWidth, MainGame.WindowHeight, 0, -1, 1);
+            //g.DrawRectangleCentered(Input.MousePosition + shaker.OutputShake, new Vector2(256), Colors.Red);
+
             base.Render(g);
+        }
+
+        public override void OnKeyDown(Key key)
+        {
+            if(key == Key.S)
+            {
+                shaker.Shake();
+            }
+            base.OnKeyDown(key);
         }
 
         public override void OnMouseWheel(float delta)

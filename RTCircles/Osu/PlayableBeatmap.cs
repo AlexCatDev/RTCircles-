@@ -82,6 +82,12 @@ namespace RTCircles
             first = null;
         }
 
+        public void End()
+        {
+            frameIndex = frames.Count;
+            first = null;
+        }
+
         public void Update(double currentTime)
         {
             if (frameIndex >= frames.Count)

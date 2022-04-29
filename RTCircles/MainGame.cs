@@ -6,280 +6,25 @@ using Silk.NET.SDL;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
 namespace RTCircles
 {
-    public static class GlobalOptions
-    {
-        #region booleans
-        public readonly static Option<bool> Bloom
-            = Option<bool>.CreateProxy("Bloom", (value) => { GPUSched.Instance.Enqueue(() => { PostProcessing.Bloom = value; }); }, false, "Looks like shit lmao");
-
-        public readonly static Option<bool> MotionBlur
-            = Option<bool>.CreateProxy("MotionBlur", (value) => { GPUSched.Instance.Enqueue(() => { PostProcessing.MotionBlur = value; }); }, false, "This only looks good if you get over 800 fps");
-
-        public readonly static Option<bool> UseFancyCursorTrail = new Option<bool>("UseFancyCursorTrail", false);
-
-        public readonly static Option<bool> SliderSnakeIn = new Option<bool>("SliderSnakeIn", true) { Description = "Negligible performance hit" };
-
-        public readonly static Option<bool> SliderSnakeOut = new Option<bool>("SliderSnakeOut", true) { Description = "Significant performance hit" };
-
-        public readonly static Option<bool> SliderSnakeExplode = new Option<bool>("SliderSnakeExplode", true) { Description = "No performance hit" };
-
-        public readonly static Option<bool> AutoCursorDance = new Option<bool>("AutoCursorDance", false);
-
-        public readonly static Option<bool> ShowRenderGraphOverlay = new Option<bool>("ShowRenderGraphOverlay", false);
-
-        public readonly static Option<bool> ShowLogOverlay = new Option<bool>("ShowLogOverlay", false);
-
-        public readonly static Option<bool> ShowFPS = new Option<bool>("ShowFPS", true);
-
-        public readonly static Option<bool> KiaiCatJam = new Option<bool>("KiaiCatJam", false);
-
-        public readonly static Option<bool> UseGameplayAsBackgroundSrc = new Option<bool>("UseGameplayAsBackgroundSrc", true) { Description = "Use current gameplay as background in the main menu?"};
-
-        public readonly static Option<bool> AllowMapHitSounds = new Option<bool>("AllowMapHitSounds", true);
-
-        public readonly static Option<bool> RenderBackground = new Option<bool>("RenderBackground", false);
-
-        public readonly static Option<bool> RGBCircles = new Option<bool>("RGBCircles", false) { Description = "RGB ;) (Might not look good with all skins)" };
-
-        public readonly static Option<bool> UseFastSliders = new Option<bool>("UseFastSliders", false) { Description = "Low quality sliders (Requires map reload, Recommended to use slider snaking)"};
-
-        public readonly static Option<bool> EnableMouseButtons = new Option<bool>("MouseButtons", false) { Description = "Enable Mouse Buttons?" };
-        #endregion
-        #region doubles
-        public readonly static Option<double> GlobalVolume = Option<double>.CreateProxy("GlobalVolume", (volume) => Sound.GlobalVolume = volume, 0.3);
-
-        public readonly static Option<double> SkinVolume = Option<double>.CreateProxy("SkinVolume", (volume) => {
-            Skin.Hitsounds?.SetVolume(volume);
-
-            if(Skin.ComboBreak != null)
-                Skin.ComboBreak.Volume = volume;
-
-            if (Skin.SliderSlide != null)
-                Skin.SliderSlide.Volume = volume;
-
-            if (Skin.SliderSlide != null)
-                Skin.SpinnerBonus.Volume = volume;
-
-            OsuContainer.Beatmap?.Hitsounds?.SetVolume(volume);
-        }, 1);
-
-        public readonly static Option<double> SongVolume = Option<double>.CreateProxy("SongVolume", (volume) => {
-            if(OsuContainer.Beatmap != null)
-                OsuContainer.Beatmap.Song.Volume = volume;
-        }, 1);
-        #endregion
-
-        public static void Init() 
-        {
-            Utils.Log($"Loaded Settings", LogLevel.Info);
-            //We need to access a variable to instantiate every variable lol
-            var ok = Bloom.Value;
-        }
-    }
-
-    public static class NotificationManager
-    {
-        public static bool DoNotDisturb;
-
-        public static int MaxVisibleNotifications = 16;
-
-        class Notification
-        {
-            public string Text;
-            public Vector3 Color;
-            public float Duration;
-
-            internal bool DeleteMe;
-
-            private SmoothFloat popupAnimation = new SmoothFloat();
-
-            private SmoothFloat alphaAnimation = new SmoothFloat();
-
-            public float Progress => popupAnimation.Value;
-
-            public float Alpha => alphaAnimation.Value;
-
-            public bool IsFinished;
-
-            internal Action ClickAction;
-
-            public Notification(string text, Vector3 color, float duration, Action clickAction)
-            {
-                this.Text = text;
-                this.Color = color;
-                this.Duration = duration;
-                this.ClickAction = clickAction;
-
-                popupAnimation.TransformTo(1f, 0.70f, EasingTypes.OutElasticHalf);
-                alphaAnimation.Value = 1;
-                alphaAnimation.Wait(Duration, () =>
-                {
-                    if (alphaAnimation.PendingTransformCount == 0)
-                        Fadeout(1f);
-                });
-            }
-
-            public void Fadeout(float duration)
-            {
-                alphaAnimation.ClearTransforms();
-                alphaAnimation.TransformTo(0f, duration, EasingTypes.OutQuint, () => { IsFinished = true; });
-            }
-
-            public void Update(float delta)
-            {
-                popupAnimation.Update(delta);
-                alphaAnimation.Update(delta);
-            }
-        }
-
-        static List<Notification> notifications = new List<Notification>();
-
-        static Queue<Notification> queue = new Queue<Notification>();
-
-        public static void Render(Graphics g)
-        {
-            Vector2 box = new Vector2(25) * MainGame.Scale;
-
-            float scale = 0.5f * MainGame.Scale;
-
-            float spacingY = Font.DefaultFont.Size * scale + box.Y / 2;
-
-            Vector2 position = Vector2.Zero;
-            position.X = MainGame.WindowWidth;
-            position.Y = MainGame.WindowHeight - spacingY;
-
-            float spacingX = 25 * MainGame.Scale;
-
-            for (int i = 0; i < notifications.Count; i++)
-            {
-                var notif = notifications[i];
-
-                Vector2 textSize = Font.DefaultFont.MessureString(notif.Text, scale);
-
-                Vector2 textOffset = Vector2.Zero;
-
-                textOffset.X -= notif.Progress.Map(0f, 1f, 0, textSize.X + spacingX);
-
-                Rectangle clickBox = new Rectangle(position + textOffset - box / 2, textSize + box);
-
-                //Bg rectangle
-                //g.DrawRectangle(clickBox.Position, clickBox.Size, new Vector4(notf.Color, notf.Alpha));
-
-                float cornerRadius = 15f * MainGame.Scale;
-
-                g.DrawRoundedRect((Vector2i)clickBox.Center, clickBox.Size, new Vector4(notif.Color, notif.Alpha), cornerRadius);
-
-                float border = 0.88f;
-                clickBox = new Rectangle(position + textOffset - ((box * border) / 2), textSize + box * border);
-                Vector3 bgColor = (clickBox.IntersectsWith(Input.MousePosition) ? new Vector3(0.1f) : new Vector3(0));
-
-                g.DrawRoundedRect((Vector2i)clickBox.Center, clickBox.Size, new Vector4(bgColor, notif.Alpha), cornerRadius);
-
-                g.DrawString(notif.Text, Font.DefaultFont, position + textOffset, new Vector4(notif.Color, notif.Alpha), scale);
-                position.Y -= spacingY;
-            }
-        }
-
-        public static bool OnMouseDown(MouseButton mouseButton)
-        {
-            Vector2 box = new Vector2(25) * MainGame.Scale;
-
-            float scale = 0.5f * MainGame.Scale;
-
-            float spacingY = Font.DefaultFont.Size * scale + box.Y / 2;
-
-            Vector2 position = Vector2.Zero;
-            position.X = MainGame.WindowWidth;
-            position.Y = MainGame.WindowHeight - spacingY;
-
-            float spacingX = 25 * MainGame.Scale;
-
-            for (int i = 0; i < notifications.Count; i++)
-            {
-                var notf = notifications[i];
-
-                Vector2 textSize = Font.DefaultFont.MessureString(notf.Text, scale);
-
-                Vector2 textOffset = Vector2.Zero;
-
-                textOffset.X -= notf.Progress.Map(0f, 1f, 0, textSize.X + spacingX);
-
-                Rectangle clickBox = new Rectangle(position + textOffset - box / 2, textSize + box);
-
-                if (clickBox.IntersectsWith(Input.MousePosition) && notf.Alpha > 0.5f && !notf.IsFinished)
-                {
-                    notf.ClickAction?.Invoke();
-                    notf.Fadeout(0.25f);
-                    notf.IsFinished = true;
-                    return true;
-                }
-
-                position.Y -= spacingY;
-            }
-
-            return false;
-        }
-
-        public static void Update(float delta)
-        {
-            if (!DoNotDisturb && queue.Count > 0 && notifications.Count((o) => !o.IsFinished) <= MaxVisibleNotifications)
-                addWhereAvailable(queue.Dequeue());
-
-            bool cleanDead = false;
-            for (int i = notifications.Count - 1; i >= 0; i--)
-            {
-                notifications[i].Update(delta);
-
-                if(notifications[i].DeleteMe)
-                    cleanDead = true;
-            }
-
-            if(cleanDead)
-            notifications.RemoveAll((o) => o.DeleteMe);
-        }
-
-        private static void addWhereAvailable(Notification notif)
-        {
-            for (int i = 0; i < notifications.Count; i++)
-            {
-                if (notifications[i].IsFinished)
-                {
-                    notifications[i].DeleteMe = true;
-
-                    notifications.Insert(i, notif);
-
-                    return;
-                }
-            }
-
-            notifications.Add(notif);
-        }
-
-        public static void ShowMessage(string text, Vector3 color, float duration, Action clickAction = null) =>
-            queue.Enqueue(new Notification(text, color, duration, clickAction));
-    }
 
     public class MainGame : GameBase
     {
         public static MainGame Instance { get; private set; }
 
-        public MainGame()
-        {
-            Instance = this;
-        }
+        public MainGame() => Instance = this;
 
         private Graphics g;
         public static Matrix4 Projection { get; private set; }
 
         private SmoothFloat shakeKiai = new SmoothFloat();
-        private Matrix4 shakeMatrix => 
-            Matrix4.CreateTranslation(new Vector3(RNG.Next(-10, 10) * shakeKiai.Value, RNG.Next(-10, 10) * shakeKiai.Value, 0f)) * Projection;
+
+        private Shaker shaker = new Shaker() { Duration = 0.8f, Radius = 200, Speed = 50, ShakeFadeoutScale = 2, Easing = EasingTypes.Out };
+        private Matrix4 shakeMatrix => Matrix4.CreateTranslation(new Vector3(shaker.OutputShake * MainGame.Scale)) * Projection;
 
         private bool debugCameraActive = false;
 
@@ -296,25 +41,21 @@ namespace RTCircles
             //Make some sort of build versioning idk
             Version = $"{new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds()}";
 
-            Utils.WriteToConsole = true;
-
             Utils.IgnoredLogLevels.Add(LogLevel.Debug);
 #if RELEASE
             Utils.IgnoredLogLevels.Add(LogLevel.Info);
             Utils.IgnoredLogLevels.Add(LogLevel.Success);
 #endif
-            //IsMultiThreaded = true;
-
             VSync = false;
-
-            //Rens det her lort
-
             MaxAllowedDeltaTime = 0.1;
+            Utils.WriteToConsole = true;
+            registerEvents();
+
             Skin.Load("");
-            //GlobalOptions.Init();
             //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  idke 1.2 without sliderendcircle");
             //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  AlexSkin 1.0");
             //Skin.Load(@"C:\Users\user\Desktop\whitecat skin");
+
             g = new Graphics();
 
             GPUSched.Instance.EnqueueDelayed(() =>
@@ -322,166 +63,19 @@ namespace RTCircles
                 NotificationManager.ShowMessage($"Work in progress", ((Vector4)Color4.Yellow).Xyz, 10);
             }, 1000);
 
-            OsuContainer.OnKiai += () =>
-            {
-                //Det her ser bedere ud tbh
-                shakeKiai.Value = 2f;
-                shakeKiai.TransformTo(0f, 1f, EasingTypes.OutQuart);
-            };
-
-            OsuContainer.BeatmapChanged += () =>
-            {
-
-            };
-
-            Input.InputContext.Mice[0].MouseDown += (s, e) =>
-            {
-                if(!NotificationManager.OnMouseDown(e))
-                ScreenManager.OnMouseDown(e);
-            };
-
-            Input.InputContext.Mice[0].MouseUp += (s, e) =>
-            {
-                ScreenManager.OnMouseUp(e);
-            };
-
-            Input.InputContext.Mice[0].Scroll += (s, e) =>
-            {
-                if (Input.IsKeyDown(Key.AltLeft))
-                {
-                    volumeBarFade.Value = 1;
-                    volumeBarFade.Wait(1f);
-                    volumeBarFade.TransformTo(0, 0.5f, EasingTypes.Out);
-                    volumeSource.Value = (volumeSource.Value + e.Y * 0.01f).Clamp(0, 1);
-                    return;
-                }
-
-                if (debugCameraActive && !Input.IsKeyDown(Key.ControlLeft))
-                {
-                    debugCameraScale += e.Y*0.03f;
-                    return;
-                }
-
-                ScreenManager.OnMouseWheel(e.Y);
-            };
-
-            Input.InputContext.Keyboards[0].KeyDown += (s, e, x) =>
-            {
-                if(e == Key.A)
-                {
-                    if (Input.IsKeyDown(Key.ControlLeft) && Input.IsKeyDown(Key.AltLeft))
-                    {
-                        debugCameraActive = !debugCameraActive;
-                        return;
-                    }
-                }
-
-                if(e == Key.F10)
-                {
-                    GlobalOptions.EnableMouseButtons.Value = !GlobalOptions.EnableMouseButtons.Value;
-
-                    NotificationManager.ShowMessage($"Mousebuttons: {GlobalOptions.EnableMouseButtons.Value}", ((Vector4)Color4.Violet).Xyz, 2f);
-                }
-
-                if (debugCameraActive)
-                {
-                    if (e == Key.W || e == Key.A || e == Key.S || e == Key.D)
-                        return;
-                }
-
-                ScreenManager.OnKeyDown(e);
-            };
-
-            Input.InputContext.Keyboards[0].KeyUp += (s, e, x) =>
-            {
-                ScreenManager.OnKeyUp(e);
-            };
-
-            Input.InputContext.Keyboards[0].KeyChar += (s, e) =>
-            {
-                if (debugCameraActive)
-                {
-                    if (e == 'w' || e == 'a' || e == 's' || e == 'd')
-                        return;
-                }
-
-                ScreenManager.OnTextInput(e);
-            };
-
-            float outroTime = 0;
-            float outroDuration = 0.125f;
-            ScreenManager.OnOutroTransition += (delta) =>
-            {
-                outroTime += delta;
-                outroTime = outroTime.Clamp(0f, outroDuration);
-                float progress = Interpolation.ValueAt(outroTime, 1f, 0f, 0f, outroDuration, EasingTypes.None);
-                g.DrawRectangle(Vector2.Zero, WindowSize, new Vector4(0f, 0f, 0f, progress));
-                if (outroTime == outroDuration)
-                {
-                    outroTime = 0;
-                    return true;
-                }
-
-                return false;
-            };
-
-            float introDuration = 0.125f;
-            float introTime = 0;
-            ScreenManager.OnIntroTransition += (delta) =>
-            {
-                introTime += delta;
-                introTime = introTime.Clamp(0f, introDuration);
-                float progress = Interpolation.ValueAt(introTime, 0f, 1f, 0f, introDuration, EasingTypes.None);
-                g.DrawRectangle(Vector2.Zero, WindowSize, new Vector4(0f, 0f, 0f, progress));
-
-                if (introTime == introDuration)
-                {
-                    introTime = 0;
-                    return true;
-                }
-
-                return false;
-            };
-
             lastOpened = Settings.GetValue<DateTime>("LastOpened", out bool exists);
             Settings.SetValue(DateTime.Now, "LastOpened");
-
-            Input.OnBackPressed += () =>
-            {
-                ScreenManager.GoBack();
-            };
 
             ScreenManager.SetScreen<MenuScreen>(false);
         }
 
         private DateTime lastOpened;
 
-        private ulong prevVertices;
-        private ulong prevIndices;
-        private ulong prevTriangles;
-
-        private List<double> renderTimes = new List<double>();
-
         private Camera debugCamera = new Camera();
         private float debugCameraScale = 1f;
 
-        private double totalDeltaTimes = 0;
-        private int deltaTimesCount = 0;
-        private double averageDeltaTime = 1000;
-
         public override void OnRender()
         {
-            totalDeltaTimes += DeltaTime;
-            deltaTimesCount++;
-
-            if(totalDeltaTimes >= 1)
-            {
-                averageDeltaTime = totalDeltaTimes / deltaTimesCount;
-
-                totalDeltaTimes -= 1;
-                deltaTimesCount = 0;
-            }
-
             //if (DeltaTime > 0.033)
             //    NotificationManager.ShowMessage($"<30fps Lag spike ! {DeltaTime *1000:F2}ms", ((Vector4)Color4.Yellow).Xyz, 3f);
 
@@ -530,13 +124,17 @@ namespace RTCircles
 
             PostProcessing.PresentFinalResult();
         }
-
-        public void FakeWindowSize(Vector2 newSize, Action a)
+        public override void OnUpdate()
         {
-            var prev = WindowSize;
-            WindowSize = newSize;
-            a.Invoke();
-            WindowSize = prev;
+            if (ScreenManager.ActiveScreen is OsuScreen)
+                PostProcessing.BloomThreshold = shakeKiai.Value.Map(2, 0, 0.2f, 0.8f);
+            else
+                PostProcessing.BloomThreshold = 0.8f;
+
+            shakeKiai.Update((float)DeltaTime);
+            shaker.Update();
+            OsuContainer.Update((float)DeltaTime);
+            ScreenManager.Update((float)DeltaTime);
         }
 
         private void drawVolumeBar(Graphics g)
@@ -579,6 +177,11 @@ namespace RTCircles
             g.DrawStringCentered($"Skin Volume: {GlobalOptions.SkinVolume.Value * 100:F0}", Font.DefaultFont, pos + size / 2f, new Vector4(1f, 1f, 1f, volumeBarFade.Value), 0.5f);
         }
 
+        private ulong prevVertices;
+        private ulong prevIndices;
+        private ulong prevTriangles;
+
+        private List<double> renderTimes = new List<double>();
         private Vector2? trueHoverSize = null;
         private Vector2? trueHoverPos = null;
         private double ms = 0;
@@ -787,16 +390,12 @@ namespace RTCircles
             });
         }
 
-        public override void OnUpdate()
+        public void FakeWindowSize(Vector2 newSize, Action a)
         {
-            if (ScreenManager.ActiveScreen is OsuScreen)
-                PostProcessing.BloomThreshold = shakeKiai.Value.Map(2, 0, 0.2f, 0.8f);
-            else
-                PostProcessing.BloomThreshold = 0.8f;
-
-            shakeKiai.Update((float)DeltaTime);
-            OsuContainer.Update((float)DeltaTime);
-            ScreenManager.Update((float)DeltaTime);
+            var prev = WindowSize;
+            WindowSize = newSize;
+            a.Invoke();
+            WindowSize = prev;
         }
 
         public override void OnOpenFile(string path)
@@ -819,6 +418,131 @@ namespace RTCircles
                     //Handle replay import.
                 }
             }
+        }
+
+        private void registerEvents()
+        {
+            Input.OnBackPressed += () =>
+            {
+                ScreenManager.GoBack();
+            };
+
+            OsuContainer.OnKiai += () =>
+            {
+                //Det her ser bedere ud tbh
+                shakeKiai.Value = 2f;
+                shakeKiai.TransformTo(0f, 1f, EasingTypes.OutQuart);
+                shaker.Shake();
+            };
+
+            Input.InputContext.Mice[0].MouseDown += (s, e) =>
+            {
+                if (!NotificationManager.OnMouseDown(e))
+                    ScreenManager.OnMouseDown(e);
+            };
+
+            Input.InputContext.Mice[0].MouseUp += (s, e) =>
+            {
+                ScreenManager.OnMouseUp(e);
+            };
+
+            Input.InputContext.Mice[0].Scroll += (s, e) =>
+            {
+                if (Input.IsKeyDown(Key.AltLeft))
+                {
+                    volumeBarFade.Value = 1;
+                    volumeBarFade.Wait(1f);
+                    volumeBarFade.TransformTo(0, 0.5f, EasingTypes.Out);
+                    volumeSource.Value = (volumeSource.Value + e.Y * 0.01f).Clamp(0, 1);
+                    return;
+                }
+
+                if (debugCameraActive && !Input.IsKeyDown(Key.ControlLeft))
+                {
+                    debugCameraScale += e.Y * 0.03f;
+                    return;
+                }
+
+                ScreenManager.OnMouseWheel(e.Y);
+            };
+
+            Input.InputContext.Keyboards[0].KeyDown += (s, e, x) =>
+            {
+                if (e == Key.A)
+                {
+                    if (Input.IsKeyDown(Key.ControlLeft) && Input.IsKeyDown(Key.AltLeft))
+                    {
+                        debugCameraActive = !debugCameraActive;
+                        return;
+                    }
+                }
+
+                if (e == Key.F10)
+                {
+                    GlobalOptions.EnableMouseButtons.Value = !GlobalOptions.EnableMouseButtons.Value;
+
+                    NotificationManager.ShowMessage($"Mousebuttons: {GlobalOptions.EnableMouseButtons.Value}", ((Vector4)Color4.Violet).Xyz, 2f);
+                }
+
+                if (debugCameraActive)
+                {
+                    if (e == Key.W || e == Key.A || e == Key.S || e == Key.D)
+                        return;
+                }
+
+                ScreenManager.OnKeyDown(e);
+            };
+
+            Input.InputContext.Keyboards[0].KeyUp += (s, e, x) =>
+            {
+                ScreenManager.OnKeyUp(e);
+            };
+
+            Input.InputContext.Keyboards[0].KeyChar += (s, e) =>
+            {
+                if (debugCameraActive)
+                {
+                    if (e == 'w' || e == 'a' || e == 's' || e == 'd')
+                        return;
+                }
+
+                ScreenManager.OnTextInput(e);
+            };
+
+            float outroTime = 0;
+            float outroDuration = 0.125f;
+            ScreenManager.OnOutroTransition += (delta) =>
+            {
+                outroTime += delta;
+                outroTime = outroTime.Clamp(0f, outroDuration);
+                float progress = Interpolation.ValueAt(outroTime, 1f, 0f, 0f, outroDuration, EasingTypes.None);
+                g.DrawRectangle(Vector2.Zero, WindowSize, new Vector4(0f, 0f, 0f, progress));
+                if (outroTime == outroDuration)
+                {
+                    outroTime = 0;
+                    return true;
+                }
+
+                return false;
+            };
+
+            float introDuration = 0.125f;
+            float introTime = 0;
+            ScreenManager.OnIntroTransition += (delta) =>
+            {
+                introTime += delta;
+                introTime = introTime.Clamp(0f, introDuration);
+                float progress = Interpolation.ValueAt(introTime, 0f, 1f, 0f, introDuration, EasingTypes.None);
+                g.DrawRectangle(Vector2.Zero, WindowSize, new Vector4(0f, 0f, 0f, progress));
+
+                if (introTime == introDuration)
+                {
+                    introTime = 0;
+                    return true;
+                }
+
+                return false;
+            };
         }
     }
 }

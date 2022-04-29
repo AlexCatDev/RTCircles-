@@ -141,45 +141,37 @@ namespace RTCircles
                 {
                     var item = carouselItems[RNG.Next(0, carouselItems.Count - 1)];
 
-                    GPUSched.Instance.Enqueue(() =>
-                    {
-                        OsuContainer.SetMap(item);
-
-                        if (OsuContainer.Beatmap != null)
-                        {
-                            OsuContainer.Beatmap.Song.Volume = 0;
-                            OsuContainer.SongPosition = (OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai))?.Offset - 500 ?? 0;
-                            OsuContainer.Beatmap.Song.Play(false);
-                        }
-                    });
+                    OsuContainer.SetMap(item);
+                    
                 }
                 else
                 {
                     PlayableBeatmap playingBeatmap = new PlayableBeatmap(
                         BeatmapMirror.DecodeBeatmap(Utils.GetResource("Maps.BuildIn.map.osu")),
                         new Sound(Utils.GetResource("Maps.BuildIn.audio.mp3"), true),
-                        new Texture(Utils.GetResource("Maps.BuildIn.eleventea.jpg")));
-
-                    OsuContainer.SetMap(playingBeatmap);
+                        new Texture(Utils.GetResource("Maps.BuildIn.bg.jpg")));
 
                     playingBeatmap.GenerateHitObjects(Mods.NM);
 
-                    OsuContainer.SongPosition = (OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai))?.Offset - 500 ?? 0;
-                    OsuContainer.Beatmap.Song.Volume = 0;
-                    OsuContainer.Beatmap.Song.Play(false);
+                    OsuContainer.SetMap(playingBeatmap);
 
-                    GPUSched.Instance.EnqueueAsync(() =>
+                    NotificationManager.ShowMessage("You don't to have have any maps. Click here to get some", ((Vector4)Color4.Violet).Xyz, 10, () =>
                     {
-                        return (true, 0);
-                    }, (obj) =>
-                    {
-                        ScreenManager.SetScreen<OsuScreen>();
-                    }, delay: 20000);
+                        ScreenManager.SetScreen<DownloadScreen>();
+                    });
+                }
+
+
+                if (OsuContainer.Beatmap != null)
+                {
+                    OsuContainer.Beatmap.Song.Volume = 0;
+                    OsuContainer.SongPosition = (OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai))?.Offset - 500 ?? 0;
+                    OsuContainer.Beatmap.Song.Play(false);
                 }
 
                 logo.soundFade.TransformTo((float)GlobalOptions.SongVolume.Value, 0.5f);
 
-                logo.sizeTransform.TransformTo(Vector2.Zero, 0.565f, EasingTypes.InQuint, () =>
+                logo.sizeTransform.TransformTo(Vector2.Zero, 0.5f, EasingTypes.InQuint, () =>
                 {
                     logo.ToggleInput(true);
                     //Fade background in

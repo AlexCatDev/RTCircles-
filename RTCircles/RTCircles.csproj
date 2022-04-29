@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <None Remove="Maps\BuildIn\audio.mp3" />
-    <None Remove="Maps\BuildIn\eleventea.jpg" />
+    <None Remove="Maps\BuildIn\bg.jpg" />
     <None Remove="Maps\BuildIn\map.osu" />
     <None Remove="Maps\Finally\BARIELG.jpg" />
     <None Remove="Maps\Finally\FINALLY.mp3" />
@@ -124,8 +124,11 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Maps\BuildIn\audio.mp3" />
-    <EmbeddedResource Include="Maps\BuildIn\eleventea.jpg" />
+    <EmbeddedResource Include="Maps\BuildIn\bg.jpg" />
     <EmbeddedResource Include="Maps\BuildIn\map.osu" />
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="Maps\Finally\BARIELG.jpg" />
     <EmbeddedResource Include="Maps\Finally\FINALLY.mp3" />
     <EmbeddedResource Include="Maps\Finally\map.osu" />

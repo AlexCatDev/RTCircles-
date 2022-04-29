@@ -144,8 +144,9 @@ namespace RTCircles
                 return;
 
             //If the song position is behind the first object, the object index is always 0
-            if (OsuContainer.SongPosition < OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime)
+            if (OsuContainer.SongPosition < OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime - OsuContainer.Beatmap.Preempt)
             {
+                OsuContainer.Beatmap.AutoGenerator.Reset();
                 objectIndex = 0;
                 return;
             }
@@ -153,6 +154,7 @@ namespace RTCircles
             //If the song position is infront of the last object, the object index is always bigger than the last object
             if(OsuContainer.SongPosition > OsuContainer.Beatmap.HitObjects[^1].BaseObject.StartTime)
             {
+                OsuContainer.Beatmap.AutoGenerator.End();
                 objectIndex = OsuContainer.Beatmap.HitObjects.Count;
                 return;
             }
