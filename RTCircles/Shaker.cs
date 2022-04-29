@@ -47,28 +47,6 @@ namespace RTCircles
             shakeFinal.Y -= radius / 2;
 
             OutputShake = shakeFinal;
-
-            /*
-            if (!shakeAmountSpeed.HasCompleted)
-            {
-                double delta = MainGame.Instance.DeltaTime;
-
-                shakeAmountSpeed.Update((float)delta);
-                shakeTime += delta * Speed * shakeAmountSpeed.Value.Map(0, 1, 1, 2);
-
-                Vector2 shakeFinal = new Vector2();
-
-                float radius = Radius * shakeAmountSpeed.Value;
-
-                shakeFinal.X = (float)Perlin.Instance.Noise(shakeTime, 0, 0) * radius;
-                shakeFinal.X -= radius / 2;
-
-                shakeFinal.Y = (float)Perlin.Instance.Noise(0, shakeTime, 0) * radius;
-                shakeFinal.Y -= radius / 2;
-
-                OutputShake = shakeFinal;
-            }
-            */
         }
     }
 }

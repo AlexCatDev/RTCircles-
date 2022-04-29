@@ -217,13 +217,12 @@ namespace RTCircles
         
         public static HitsoundStore Hitsounds { get; private set; }
 
-        public static Texture Arrow { get; private set; }
+        public static Texture Arrow { get; private set; } = new Texture(Utils.GetResource("UI.Assets.arrowexpand.png"));
+
         public static Texture Checkmark { get; private set; }
 
         public static Sound Hover { get; private set; }
         public static Sound Click { get; private set; }
-
-        public static Texture VisualizerBar { get; private set; }
 
         public static OsuTexture Star { get; private set; }
 
@@ -282,7 +281,6 @@ namespace RTCircles
             WarningArrow = LoadTexture(path, "play-warningarrow");
 
             LoadingSpinner = LoadTexture(path, "loading");
-            VisualizerBar = LoadTexture(path, "visualizer-bar", false);
 
             SpinnerApproachCircle = LoadTexture(path, "spinner-approachcircle");
 
@@ -357,7 +355,6 @@ namespace RTCircles
             Hitsounds = new HitsoundStore(path, true);
             Hitsounds.SetVolume(GlobalOptions.SkinVolume.Value);
 
-            Arrow = LoadTexture(path, "arrowexpand");
             Checkmark = LoadTexture(path, "checkmark");
 
             Hover = LoadSound(path, "hover");

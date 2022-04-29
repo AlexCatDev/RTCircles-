@@ -152,6 +152,7 @@ namespace RTCircles
             }
 
             //If the song position is infront of the last object, the object index is always bigger than the last object
+            
             if(OsuContainer.SongPosition > OsuContainer.Beatmap.HitObjects[^1].BaseObject.StartTime)
             {
                 OsuContainer.Beatmap.AutoGenerator.End();
@@ -170,7 +171,7 @@ namespace RTCircles
             bool isIndexBehind = OsuContainer.SongPosition > now.StartTime;
 
             //If the song position is smaller than the previously spawned object's time, the index is too far ahead
-            bool isIndexInfront = OsuContainer.SongPosition < previous.StartTime - OsuContainer.Beatmap.Preempt;
+            bool isIndexInfront = (previous.StartTime - OsuContainer.Beatmap.Preempt) > OsuContainer.SongPosition;
 
             //If both of these are true, im doing something wrong
             System.Diagnostics.Debug.Assert(!(isIndexBehind && isIndexInfront));
@@ -200,12 +201,10 @@ namespace RTCircles
                     }
                     else
                     {
-                        objectIndex--;
-                        if (OsuContainer.SongPosition > OsuContainer.Beatmap.HitObjects[objectIndex].BaseObject.StartTime - OsuContainer.Beatmap.Preempt)
-                        {
-                            objectIndex++;
+                        if (OsuContainer.SongPosition > OsuContainer.Beatmap.HitObjects[objectIndex].BaseObject.StartTime)
+                            objectIndex--;
+                        else
                             break;
-                        }
                     }
                 }
 

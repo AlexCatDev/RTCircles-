@@ -253,6 +253,8 @@ namespace RTCircles
 
         public static void SetMap(PlayableBeatmap beatmap)
         {
+            Beatmap?.Song.Stop();
+
             Beatmap = beatmap;
             BeatmapChanged?.Invoke();
         }

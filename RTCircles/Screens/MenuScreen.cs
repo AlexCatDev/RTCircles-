@@ -137,23 +137,21 @@ namespace RTCircles
             {
                 ScreenManager.GetScreen<MapSelectScreen>().LoadCarouselItems();
                 var carouselItems = BeatmapCollection.Items;
+
+                PlayableBeatmap playableBeatmap;
+
                 if (BeatmapCollection.Items.Count > 0)
                 {
                     var item = carouselItems[RNG.Next(0, carouselItems.Count - 1)];
 
-                    OsuContainer.SetMap(item);
-                    
+                    playableBeatmap = PlayableBeatmap.FromCarouselItem(item);
                 }
                 else
                 {
-                    PlayableBeatmap playingBeatmap = new PlayableBeatmap(
+                    playableBeatmap = new PlayableBeatmap(
                         BeatmapMirror.DecodeBeatmap(Utils.GetResource("Maps.BuildIn.map.osu")),
                         new Sound(Utils.GetResource("Maps.BuildIn.audio.mp3"), true),
                         new Texture(Utils.GetResource("Maps.BuildIn.bg.jpg")));
-
-                    playingBeatmap.GenerateHitObjects(Mods.NM);
-
-                    OsuContainer.SetMap(playingBeatmap);
 
                     NotificationManager.ShowMessage("You don't to have have any maps. Click here to get some", ((Vector4)Color4.Violet).Xyz, 10, () =>
                     {
@@ -161,12 +159,20 @@ namespace RTCircles
                     });
                 }
 
-
-                if (OsuContainer.Beatmap != null)
+                if (playableBeatmap != null)
                 {
-                    OsuContainer.Beatmap.Song.Volume = 0;
-                    OsuContainer.SongPosition = (OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai))?.Offset - 500 ?? 0;
-                    OsuContainer.Beatmap.Song.Play(false);
+                    playableBeatmap.GenerateHitObjects();
+                    var firstKiaiTimePoint = playableBeatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai)?.Offset - 500 ?? 0;
+                    //We have to schedule to the main thread, so we dont just randomly set maps while the game is updating and checking the current map.
+                    GPUSched.Instance.Enqueue(() =>
+                    {
+                        OsuContainer.SetMap(playableBeatmap);
+                        OsuContainer.Beatmap.Song.Volume = 0;
+                        OsuContainer.SongPosition = firstKiaiTimePoint;
+
+                        OsuContainer.Beatmap.Song.Play(false);
+                    });
+
                 }
 
                 logo.soundFade.TransformTo((float)GlobalOptions.SongVolume.Value, 0.5f);
@@ -220,7 +226,7 @@ namespace RTCircles
         public float Opacity = 0.5f;
         public float KiaiFlash = 2.0f;
 
-        public static readonly Texture FlashTexture = new Texture(Utils.GetResource("Skin.menu-flash.png")) { GenerateMipmaps = false };
+        public static readonly Texture FlashTexture = new Texture(Utils.GetResource("UI.Assets.menu-flash.png")) { GenerateMipmaps = false };
 
         public bool ShowMenuFlash = true;
 
@@ -455,7 +461,6 @@ namespace RTCircles
             visualizer.Thickness = 25;
             visualizer.BarLength = 800f;
             visualizer.FreckleSpawnRate = float.MaxValue;
-            visualizer.BarTexture = Skin.VisualizerBar;
             visualizer.StartRotation = -(MathF.PI / 4);
             visualizer.Style = SoundVisualizer.VisualizerStyle.Bars;
 
