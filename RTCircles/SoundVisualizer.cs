@@ -324,6 +324,12 @@ namespace RTCircles
 
                     var highlight = BarHighlight * volume;
 
+                    //my proudest piece of code :tf:
+                    //all this to add a half circle at the end of the bar line :tf:
+                    g.DrawRectangleCentered(pos2 + new Vector2(MathF.Cos(theta), MathF.Sin(theta)) * Thickness / 4,
+                        new Vector2(Thickness / 2, Thickness), BarStartColor + new Vector4(highlight, 0), Texture.WhiteFlatCircle2,
+                        new Rectangle(0, 0, 0.5f, 1), true, 180 + (float)MathHelper.RadiansToDegrees(theta));
+                    
                     g.DrawLine(pos2, pos, BarEndColor + new Vector4(highlight, 0), BarStartColor + new Vector4(highlight, 0), Thickness, BarTexture);
                     theta += stepTheta;
                 }

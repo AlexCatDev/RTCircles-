@@ -126,6 +126,49 @@ namespace RTCircles
         }
     }
 
+    public class ExpandingCircle : Drawable
+    {
+        private Vector2 startPos;
+        private float startRadius;
+        private SmoothFloat progress = new SmoothFloat();
+
+        public ExpandingCircle(Vector2 startPos, float startRadius)
+        {
+            this.startPos = startPos;
+            this.startRadius = startRadius;
+
+            explodeFadeout();
+        }
+
+        private void explodeFadeout()
+        {
+            progress.Value = 1;
+            progress.TransformTo(3.5f, 0.8f, EasingTypes.OutQuad);
+        }
+
+        public override void Render(Graphics g)
+        {
+            var radius = startRadius * progress;
+            var innerRadius = radius * progress.Value.Map(1, 3.5f, 0.9f, 0.99f);
+
+            var alpha = progress.Value.Map(1, 3.5f, 0.5f, 0);
+
+            g.DrawEllipse(startPos, 0, 360, radius, innerRadius, 
+                new Vector4(1f, 1f, 1f, alpha), Texture.WhiteFlatCircle2, 100, false);
+        }
+
+        public override void Update(float delta)
+        {
+            progress.Update(delta);
+
+            if (progress.HasCompleted)
+            {
+                //explodeFadeout();
+                IsDead = true;
+            }
+        }
+    }
+
     public class MenuScreen : Screen
     {
         private MapBackground mapBG;
@@ -143,8 +186,9 @@ namespace RTCircles
                 if (BeatmapCollection.Items.Count > 0)
                 {
                     var item = carouselItems[RNG.Next(0, carouselItems.Count - 1)];
-
+                    item = carouselItems.Find((o) => o.Text.Contains("(pishifat) [insane"));
                     playableBeatmap = PlayableBeatmap.FromCarouselItem(item);
+
                 }
                 else
                 {
@@ -159,36 +203,36 @@ namespace RTCircles
                     });
                 }
 
+                int firstKiaiTimePoint = 0;
                 if (playableBeatmap != null)
                 {
                     playableBeatmap.GenerateHitObjects();
-                    var firstKiaiTimePoint = playableBeatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai)?.Offset - 500 ?? 0;
+                    firstKiaiTimePoint = playableBeatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai)?.Offset - 500 ?? 0;
                     //We have to schedule to the main thread, so we dont just randomly set maps while the game is updating and checking the current map.
                     GPUSched.Instance.Enqueue(() =>
                     {
                         OsuContainer.SetMap(playableBeatmap);
                         OsuContainer.Beatmap.Song.Volume = 0;
                         OsuContainer.SongPosition = firstKiaiTimePoint;
-
                         OsuContainer.Beatmap.Song.Play(false);
                     });
-
                 }
 
                 logo.soundFade.TransformTo((float)GlobalOptions.SongVolume.Value, 0.5f);
-
-                logo.sizeTransform.TransformTo(Vector2.Zero, 0.5f, EasingTypes.InQuint, () =>
+                logo.IntroSizeAnimation.TransformTo(new Vector2(-200), firstKiaiTimePoint, firstKiaiTimePoint + 500, EasingTypes.InQuint, () =>
                 {
                     logo.ToggleInput(true);
                     //Fade background in
                     mapBG.TriggerFadeIn();
+                    Add(new ExpandingCircle(logo.Bounds.Center, logo.Bounds.Size.X / 2) { Layer = -1337 });
                 });
+                logo.IntroSizeAnimation.TransformTo(Vector2.Zero, firstKiaiTimePoint + 500, firstKiaiTimePoint + 700, EasingTypes.InOutSine);
             });
 
             mapBG = new MapBackground() { BEAT_SIZE = 10 };
-            logo = new MenuLogo(mapBG);
 
-            logo.sizeTransform.Value = new Vector2(1000);
+            logo = new MenuLogo(mapBG);
+            logo.IntroSizeAnimation.Value = new Vector2(1800);
             logo.ToggleInput(false);
 
             Add(mapBG);
@@ -278,7 +322,7 @@ namespace RTCircles
             g.DrawInFrameBuffer(fb, () => {
                 MainGame.Instance.FakeWindowSize(fb.Texture.Size, () =>
                 {
-                    osuScreen.SyncObjectIndexToTime();
+                    osuScreen.EnsureObjectIndexSynchronization();
                     osuScreen.Update((float)MainGame.Instance.DeltaTime);
                     osuScreen.Render(g);
                 });
@@ -399,7 +443,7 @@ namespace RTCircles
 
         private SmoothVector2 positionTransform = new SmoothVector2();
         private SmoothFloat rotationTransform = new SmoothFloat();
-        public SmoothVector2 sizeTransform = new SmoothVector2();
+        private SmoothVector2 sizeTransform = new SmoothVector2();
 
         private SmoothVector4 colorTransform = new SmoothVector4();
 
@@ -409,9 +453,11 @@ namespace RTCircles
         private Vector2 parallaxPosition => mapBackground.ParallaxPosition * 2f;
         private Vector2 offset = Vector2.Zero;
 
-        public override Rectangle Bounds => new Rectangle((Vector2)positionTransform * MainGame.Scale + position + parallaxPosition - (Vector2)sizeTransform / 2f - size / 2f + offset, sizeTransform + size);
+        public override Rectangle Bounds => new Rectangle((Vector2)positionTransform * MainGame.Scale + position + parallaxPosition - (Vector2)sizeTransform / 2f - size / 2f + offset - IntroSizeAnimation.Value / 2f * MainGame.Scale, sizeTransform + size + IntroSizeAnimation.Value * MainGame.Scale);
 
         private SoundVisualizer visualizer = new SoundVisualizer();
+
+        public AnimVector2 IntroSizeAnimation = new AnimVector2(); 
 
         private Button playButton = new Button();
         private Button multiPlayButton = new Button();
@@ -663,6 +709,9 @@ namespace RTCircles
 
         public override void Update(float delta)
         {
+            IntroSizeAnimation.Time = OsuContainer.Beatmap == null ? 
+                MainGame.Instance.TotalTime * 1000 : OsuContainer.SongPosition;
+
             logoExplodeKiaiAnim.Update(delta);
 
             if (OsuContainer.IsKiaiTimeActive && PostProcessing.Bloom)
@@ -746,7 +795,9 @@ namespace RTCircles
             visualizer.Radius = Bounds.Size.X / 2f - 20f * MainGame.Scale;
             visualizer.FreckleOffset = parallaxPosition;
             visualizer.BarLength = 800 * MainGame.Scale;
-            visualizer.Thickness = 30f * MainGame.Scale;
+            visualizer.Thickness = 28f * MainGame.Scale;
+            visualizer.BarStartColor = new Vector4(Skin.Config.MenuGlow, 0.5f);
+            visualizer.BarEndColor = visualizer.BarStartColor;
 
             if (OsuContainer.IsKiaiTimeActive)
                 visualizer.FreckleSpawnRate = 0.006f;
@@ -755,20 +806,11 @@ namespace RTCircles
             
             if (OsuContainer.IsKiaiTimeActive && PostProcessing.Bloom)
             {
-                visualizer.BarHighlight = Vector3.Lerp(visualizer.BarHighlight, 
-                    new Vector3((float)Math.Cos(OsuContainer.CurrentBeat).Map(-1, 1, 0, 2) + 1, 
-                    (float)Math.Cos(OsuContainer.CurrentBeat + 2).Map(-1, 1, 0, 2) + 1,
-                    (float)Math.Cos(OsuContainer.CurrentBeat + 4).Map(-1, 1, 0, 2) + 1), 
-                    10f * delta);
-
-                visualizer.BarStartColor = Vector4.Lerp(visualizer.BarStartColor, new Vector4(0.95f, 0.95f, 0.95f, 1f), delta * 10f);
-                visualizer.BarEndColor = visualizer.BarStartColor;
+                visualizer.BarHighlight = new Vector3(5f);
             }
             else
             {
                 visualizer.BarHighlight = Vector3.Lerp(visualizer.BarHighlight, new Vector3(0), 10f * delta);
-                visualizer.BarStartColor = Vector4.Lerp(visualizer.BarStartColor, new Vector4(Skin.Config.MenuGlow, 0.5f), delta * 10f);
-                visualizer.BarEndColor = visualizer.BarStartColor;
             }
 
             //BASS KIAI LOGO VIBRATION 2.0, buggy sometimes the logo glitches suddenly to a side for some reason???

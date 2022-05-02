@@ -19,6 +19,9 @@ namespace RTCircles
         public Vector4 BackgroundColor;
         public Vector4 ForegroundColor;
 
+        public string Text;
+        public Vector4 TextColor = Colors.White;
+
         public bool IsLocked = false;
 
         public double MinimumValue = 0;
@@ -45,7 +48,10 @@ namespace RTCircles
 
         public override void Render(Graphics g)
         {
+            if(BackgroundColor.W > 0)
             drawBar(g, BackgroundColor, 1);
+
+            if(ForegroundColor.W > 0)
             drawBar(g, ForegroundColor, smoothInternalValue.Map(MinimumValue, MaximumValue, 0, 1));
         }
 
@@ -70,6 +76,9 @@ namespace RTCircles
 
             //Højre halv cirkel
             g.DrawRectangle(Position + new Vector2(Size.X - circleSize.X, 0), rightCircleSize, color, capTexture, new Rectangle(0.5f, 0, rightCircleUV, 1), true, 0);
+
+            if (!string.IsNullOrEmpty(Text))
+                g.DrawStringCentered(Text, Font.DefaultFont, Bounds.Center, TextColor, Size.Y / Font.DefaultFont.Size);
 
         }
 

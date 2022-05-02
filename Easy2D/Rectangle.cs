@@ -68,6 +68,11 @@ namespace Easy2D
             Size = size;
         }
 
+        public static Rectangle FromTBLR(float top, float bottom, float left, float right)
+        {
+            return new Rectangle(left, top, right - left, bottom - top);
+        }
+
         public Rectangle(float x, float y, float width, float height) : this(new Vector2(x, y), new Vector2(width, height)) { }
 
         public static Rectangle operator *(Rectangle a, Rectangle b) {

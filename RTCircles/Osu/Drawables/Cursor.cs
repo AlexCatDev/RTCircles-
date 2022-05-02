@@ -11,6 +11,7 @@ namespace RTCircles
     public class FancyCursorTrail : Drawable
     {
         public Vector2? PositionOverride;
+        public float Width = 8;
 
         class TrailPiece
         {
@@ -39,21 +40,10 @@ namespace RTCircles
                 //Width = Color.W.Map(1, 0, 8, 0);
                 //Width.ClampRef(0, 10000);
                 Color.W.ClampRef(0, 1);
+                
+                float colorScale = PostProcessing.Bloom ? 2.5f : 1;
 
-                float frequency1 = (float)MainGame.Instance.TotalTime;
-                float frequency2 = (float)MainGame.Instance.TotalTime;
-                float frequency3 = (float)MainGame.Instance.TotalTime;
-
-                float phase1 = 0;
-                float phase2 = 2;
-                float phase3 = 4;
-
-                float colorWidth = PostProcessing.Bloom ? 2.5f : 1;
-
-                Color.X = MathF.Abs(MathF.Sin(frequency1 + phase1)) * colorWidth;
-                Color.Y = MathF.Abs(MathF.Sin(frequency2 + phase2)) * colorWidth;
-                Color.Z = MathF.Abs(MathF.Sin(frequency3 + phase3)) * colorWidth;
-
+                Color.Xyz = MathUtils.RainbowColor(MainGame.Instance.TotalTime) * colorScale;
                 if (Color.W <= 0)
                     RemoveMe = true;
             }
@@ -131,7 +121,7 @@ namespace RTCircles
             if (length >= 5)
             {
                 lastMousePos = mousePos;
-                TrailPiece p = new TrailPiece(mousePos, 8);
+                TrailPiece p = new TrailPiece(mousePos, Width);
 
                 trailPieces.Add(p);
             }
@@ -205,6 +195,7 @@ namespace RTCircles
                 rotation = 0;
 
             fancyTrail.PositionOverride = position;
+            fancyTrail.Width = CursorSize.X/9;
 
             fancyTrail.Update(delta);
             fancyTrail.Render(g);

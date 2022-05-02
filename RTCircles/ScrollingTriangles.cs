@@ -85,7 +85,7 @@ namespace RTCircles
 
         static ScrollingTriangles()
         {
-            catJamSpritesheet = new Easy2D.Texture(Utils.GetResource("Skin.catjam-spritesheet.png"));
+            catJamSpritesheet = new Easy2D.Texture(Utils.GetResource("UI.Assets.catjam-spritesheet.png"));
         }
 
         public ScrollingTriangles(int TriangleCount)

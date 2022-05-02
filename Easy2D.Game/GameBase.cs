@@ -94,9 +94,9 @@ namespace Easy2D.Game
             options.API = new GraphicsAPI(ContextAPI.OpenGLES, ContextProfile.Core, ContextFlags.Default, new APIVersion(3, 0));
             options.PreferredBitDepth = new Silk.NET.Maths.Vector4D<int>(8, 8, 8, 0);
 
-            var window = Silk.NET.Windowing.Window.GetView(options);
+            var view = Silk.NET.Windowing.Window.GetView(options);
 
-            View = window;
+            View = view;
 
             View.IsContextControlDisabled = true;
             View.ShouldSwapAutomatically = false;

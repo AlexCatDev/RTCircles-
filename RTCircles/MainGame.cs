@@ -6,6 +6,7 @@ using Silk.NET.SDL;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -51,7 +52,7 @@ namespace RTCircles
             Utils.WriteToConsole = true;
             registerEvents();
 
-            Skin.Load("");
+            Skin.Load(@"");
             //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  idke 1.2 without sliderendcircle");
             //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  AlexSkin 1.0");
             //Skin.Load(@"C:\Users\user\Desktop\whitecat skin");
@@ -544,5 +545,9 @@ namespace RTCircles
                 return false;
             };
         }
+
+        public Func<HttpClient> GetHttpClientFunc;
+
+        public HttpClient GetPlatformHttpClient() => GetHttpClientFunc?.Invoke() ?? new HttpClient();
     }
 }

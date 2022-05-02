@@ -50,19 +50,22 @@ namespace RTCircles
             {
                 if (ScreenManager.ActiveScreen == this)
                 {
-                    OnKeyDown(OsuContainer.Key1);
-
-                    for (int i = 0; i < 5; i++)
+                    GPUSched.Instance.Enqueue(() =>
                     {
-                        Add(new HUD.Firework(new Vector2(MainGame.WindowWidth * finger.X, MainGame.WindowHeight * finger.Y)));
-                    }
+                        OnKeyDown(OsuContainer.Key1);
+
+                        for (int i = 0; i < 5; i++)
+                        {
+                            Add(new HUD.Firework(new Vector2(MainGame.WindowWidth * finger.X, MainGame.WindowHeight * finger.Y)));
+                        }
+                    });
                 }
             };
 
             Input.OnFingerUp += (finger) =>
             {
                 if (Input.TouchFingerEvents.Count == 0)
-                    OnKeyUp(OsuContainer.Key1);
+                    GPUSched.Instance.Enqueue(() => { OnKeyUp(OsuContainer.Key1); });
             };
 
             OsuContainer.OnKiai += () =>
@@ -137,32 +140,57 @@ namespace RTCircles
             breakOverlay.Reset();
         }
 
-        public void SyncObjectIndexToTime()
+        //en dårlig ide >.<
+        public void EnsureObjectIndexSynchronization()
         {
             //Dont do shit if the beatmap is null lol 
             if (OsuContainer.Beatmap is null || OsuContainer.Beatmap.HitObjects.Count == 0)
                 return;
 
+            var hitObjects = OsuContainer.Beatmap.HitObjects;
+            var songPos = OsuContainer.SongPosition;
+            var preempt = OsuContainer.Beatmap.Preempt;
+
+            var maxCount = OsuContainer.Beatmap.HitObjects.Count - 1;
+
             //If the song position is behind the first object, the object index is always 0
-            if (OsuContainer.SongPosition < OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime - OsuContainer.Beatmap.Preempt)
+            if (songPos < hitObjects[0].BaseObject.StartTime - preempt)
             {
+                if (objectIndex == 0)
+                    return;
+
+                Clear<DrawableHitCircle>();
+                Clear<DrawableSpinner>();
+                Clear<DrawableSlider>();
+                Clear<HitJudgement>();
+                Clear<WarningArrows>();
+                Clear<FollowPoints>();
+
                 OsuContainer.Beatmap.AutoGenerator.Reset();
                 objectIndex = 0;
+                Utils.Log($"Return to start!", LogLevel.Important);
                 return;
             }
 
             //If the song position is infront of the last object, the object index is always bigger than the last object
-            
             if(OsuContainer.SongPosition > OsuContainer.Beatmap.HitObjects[^1].BaseObject.StartTime)
             {
-                OsuContainer.Beatmap.AutoGenerator.End();
+                if (objectIndex >= OsuContainer.Beatmap.HitObjects.Count)
+                    return;
+
+                Clear<DrawableHitCircle>();
+                Clear<DrawableSpinner>();
+                Clear<DrawableSlider>();
+                Clear<HitJudgement>();
+                Clear<WarningArrows>();
+                Clear<FollowPoints>();
+
                 objectIndex = OsuContainer.Beatmap.HitObjects.Count;
+                OsuContainer.Beatmap.AutoGenerator.End();
                 return;
             }
 
             //Warning: None of this made sense in my head, and i'm just guessing, and it's likely to crash when i least expect it
-
-            var maxCount = OsuContainer.Beatmap.HitObjects.Count - 1;
 
             var previous = OsuContainer.Beatmap.HitObjects[(objectIndex - 1).Clamp(0, maxCount)].BaseObject;
             var now = OsuContainer.Beatmap.HitObjects[objectIndex.Clamp(0, maxCount)].BaseObject;
@@ -207,28 +235,31 @@ namespace RTCircles
                             break;
                     }
                 }
-
                 Utils.Log($"The new index: {objectIndex}", LogLevel.Important);
             }
         }
 
         public override void OnExiting()
         {
+            /*
             Clear<DrawableHitCircle>();
             Clear<DrawableSpinner>();
             Clear<DrawableSlider>();
             Clear<HitJudgement>();
             Clear<WarningArrows>();
             Clear<FollowPoints>();
+            */
         }
 
         public override void OnEnter()
         {
+            NotificationManager.DoNotDisturb = true;
             Input.InputContext.Mice[0].Cursor.CursorMode = CursorMode.Hidden;
         }
 
         public override void OnExit()
         {
+            NotificationManager.DoNotDisturb = false;
             Input.InputContext.Mice[0].Cursor.CursorMode = CursorMode.Normal;
         }
 

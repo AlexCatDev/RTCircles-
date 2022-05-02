@@ -12,17 +12,69 @@ namespace RTCircles
     {
         public OptionsScreen()
         {
-           
+            
         }
 
         public override void Update(float delta)
         {
-            
             base.Update(delta);
+        }
+
+        private int lastBeat;
+        private void drawOffsetAdjuster(Graphics g)
+        {
+            if (OsuContainer.Beatmap == null)
+                return;
+
+            Vector2 position = new Vector2(50, 100) * MainGame.Scale;
+            Vector2 buttonSize = new Vector2(235, 60) * MainGame.Scale;
+
+            g.DrawString($"Offset: {(GlobalOptions.SongOffsetMS.Value > 0 ? "+" : "")}{GlobalOptions.SongOffsetMS.Value}", Font.DefaultFont, position, Colors.White, MainGame.Scale);
+
+            Rectangle buttonMinusRect = new Rectangle(position - new Vector2(0, 80 * MainGame.Scale), buttonSize);
+
+            g.DrawRectangle(buttonMinusRect.Position, buttonMinusRect.Size, (Vector4)Color4.IndianRed);
+            g.DrawStringCentered("-", Font.DefaultFont, buttonMinusRect.Center, Colors.White, MainGame.Scale * 1.5f);
+
+            Rectangle buttonPlusRect = new Rectangle(position + new Vector2(0, 80 * MainGame.Scale), buttonSize);
+
+            g.DrawRectangle(buttonPlusRect.Position, buttonPlusRect.Size, (Vector4)Color4.PaleGreen);
+            g.DrawStringCentered("+", Font.DefaultFont, buttonPlusRect.Center, Colors.White, MainGame.Scale * 1.5f);
+
+            if (clickedSomewhere)
+            {
+                if (buttonMinusRect.IntersectsWith(Input.MousePosition))
+                    GlobalOptions.SongOffsetMS.Value--;
+                else if(buttonPlusRect.IntersectsWith(Input.MousePosition))
+                    GlobalOptions.SongOffsetMS.Value++;
+            }
+
+            Rectangle wholeArea = Rectangle.FromTBLR(buttonMinusRect.Top, buttonPlusRect.Bottom, buttonMinusRect.Left, buttonMinusRect.Right);
+
+            int beat = (int)Math.Floor(OsuContainer.CurrentBeat);
+
+            bool playTickSound = beat > lastBeat;
+            lastBeat = beat;
+
+            if (wholeArea.IntersectsWith(Input.MousePosition))
+            {
+                OsuContainer.Beatmap.Song.Volume = 0.25;
+
+                if (playTickSound)
+                    Skin.Click.Play(true);
+            }
+            else
+                OsuContainer.Beatmap.Song.Volume = GlobalOptions.SongVolume.Value;
+        }
+
+        public override void OnExit()
+        {
+            OsuContainer.Beatmap.Song.Volume = GlobalOptions.SongVolume.Value;
         }
 
         public override void Render(Graphics g)
         {
+            drawOffsetAdjuster(g);
             /*
             layoutDrawableStack(g, MainGame.WindowCenter, new Vector2(1200, 300) * MainGame.Scale, 10 * MainGame.Scale, origin,
                 mtThreadButton, showGraphButton, showLogButton, toggleBloomButton, toggleMotionBlurButton);

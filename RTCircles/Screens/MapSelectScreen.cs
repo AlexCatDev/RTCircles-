@@ -220,13 +220,15 @@ namespace RTCircles
                 AddBeatmapToCarousel(beatmap);
                 string hash = beatmap.Hash;
                 NotificationManager.ShowMessage($"Imported {beatmap.Filename}", ((Vector4)Color4.LightGreen).Xyz, 3, () => {
-                    
-                    var foundBeatmap = BeatmapCollection.SearchItems.Find((o)=>o.Hash == hash);
+                    if (ScreenManager.ActiveScreen is not OsuScreen)
+                    {
+                        var foundBeatmap = BeatmapCollection.SearchItems.Find((o) => o.Hash == hash);
 
-                    if (foundBeatmap != null)
-                        this.SongSelector.SelectBeatmap(foundBeatmap);
-                    else
-                        NotificationManager.ShowMessage("The beatmap was somehow not found even though you just imported it?", Colors.White.Xyz, 5f);
+                        if (foundBeatmap != null)
+                            this.SongSelector.SelectBeatmap(foundBeatmap);
+                        else
+                            NotificationManager.ShowMessage("The beatmap was somehow not found even though it was just imported it? o.o", Colors.White.Xyz, 5f);
+                    }
                 });
             };
 
@@ -345,7 +347,7 @@ namespace RTCircles
 
         public override void OnEntering()
         {
-            ScreenManager.GetScreen<OsuScreen>().SyncObjectIndexToTime();
+            ScreenManager.GetScreen<OsuScreen>().EnsureObjectIndexSynchronization();
         }
 
         private FrameBuffer strainFB = new FrameBuffer(1, 1);

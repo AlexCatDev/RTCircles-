@@ -520,7 +520,7 @@ namespace RTCircles
             }
 
             OsuContainer.SongPosition = previewTime;
-            ScreenManager.GetScreen<OsuScreen>().SyncObjectIndexToTime();
+            ScreenManager.GetScreen<OsuScreen>().EnsureObjectIndexSynchronization();
         }
     }
 }

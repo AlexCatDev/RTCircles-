@@ -64,7 +64,9 @@ namespace RTCircles
                 OsuContainer.Beatmap.Song.Volume = volume;
         }, 1);
         #endregion
-
+        #region ints
+        public readonly static Option<int> SongOffsetMS = new Option<int>("SongOffset", 0);
+        #endregion
         public static void Init() 
         {
             Utils.Log($"Loaded Settings", LogLevel.Info);

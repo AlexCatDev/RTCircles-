@@ -80,7 +80,6 @@ namespace RTCircles
         public static Realm Realm;
 
         public static event Action<DBBeatmapInfo> OnNewBeatmapAvailable;
-        //public static ConcurrentQueue<DBBeatmap> NewBeatmaps = new ConcurrentQueue<DBBeatmap>();
 
         public static MD5 MD5 { get; private set; }
 
@@ -120,86 +119,92 @@ namespace RTCircles
 
         public static void ImportBeatmap(Stream oszStream)
         {
-            ZipArchive archive = new ZipArchive(oszStream);
-
-            var beatmapFiles = archive.Entries.Where((o) => o.FullName.EndsWith(".osu"));
-            Utils.Log($"Importing Beatmap archive, found {beatmapFiles.Count()} beatmaps in archive...", LogLevel.Info);
-
-            DBBeatmapSetInfo setInfo = new DBBeatmapSetInfo();
-
-            string folderGUID = Guid.NewGuid().ToString();
-
-
-
-            foreach (var item in beatmapFiles)
-            {
-                Utils.Log($"Processing beatmap: {item.FullName}", LogLevel.Info);
-                var stream = item.Open();
-                using (MemoryStream beatmapStream = new MemoryStream())
-                {
-                    stream.CopyTo(beatmapStream);
-
-                    var hash = MD5.ComputeHash(beatmapStream.ToArray());
-                    var hashString = Convert.ToBase64String(hash);
-                    Utils.Log($"\tHash: {hashString}", LogLevel.Success);
-
-                    //optionally open the beatmap to write extra database entries
-                    beatmapStream.Position = 0;
-                    Beatmap beatmap = DecodeBeatmap(beatmapStream);
-                    Utils.Log($"\tBeatmap ID: {beatmap.MetadataSection.BeatmapID}", LogLevel.Success);
-
-                    if (beatmap.GeneralSection.Mode != OsuParsers.Enums.Ruleset.Standard)
-                    {
-                        Utils.Log($"\tSkipping ID: {beatmap.MetadataSection.BeatmapID} NOT A STANDARD MAP!!", LogLevel.Warning);
-                        continue;
-                    }
-                    else
-                    {
-                        DBBeatmapInfo beatmapInfo = new DBBeatmapInfo();
-                        //PrimaryKey
-                        beatmapInfo.Hash = hashString;
-
-                        beatmapInfo.SetInfo = setInfo;
-
-                        beatmapInfo.Filename = item.FullName;
-                        beatmapInfo.BackgroundFilename = beatmap.EventsSection.BackgroundImage;
-
-                        setInfo.Beatmaps.Add(beatmapInfo);
-                    }
-                }
-            }
-
-            //Handle when the beatmap already exists and is open, just ignore it?
-            Directory.CreateDirectory($"{SongsFolder}/{folderGUID}");
             try
             {
-                archive.ExtractToDirectory($"{SongsFolder}/{folderGUID}", true);
-            }
-            catch (Exception ex)
-            {
-                Utils.Log($"Extracting archive failed due to: {ex.Message} import process aborted :(", LogLevel.Error);
-                archive.Dispose();
-                return;
-            }
+                ZipArchive archive = new ZipArchive(oszStream);
 
-            Utils.Log("Writing to database...", LogLevel.Info);
+                var beatmapFiles = archive.Entries.Where((o) => o.FullName.EndsWith(".osu"));
+                Utils.Log($"Importing Beatmap archive, found {beatmapFiles.Count()} beatmaps in archive...", LogLevel.Info);
 
-            setInfo.Foldername = folderGUID;
+                DBBeatmapSetInfo setInfo = new DBBeatmapSetInfo();
 
-            Scheduler.Enqueue(() =>
-            {
-                Realm.Write(() =>
+                string folderGUID = Guid.NewGuid().ToString();
+
+
+
+                foreach (var item in beatmapFiles)
                 {
-                    Realm.Add(setInfo, true);
-                });
+                    Utils.Log($"Processing beatmap: {item.FullName}", LogLevel.Info);
+                    var stream = item.Open();
+                    using (MemoryStream beatmapStream = new MemoryStream())
+                    {
+                        stream.CopyTo(beatmapStream);
 
-                foreach (var item in setInfo.Beatmaps)
-                {
-                    OnNewBeatmapAvailable?.Invoke(item);
+                        var hash = MD5.ComputeHash(beatmapStream.ToArray());
+                        var hashString = Convert.ToBase64String(hash);
+                        Utils.Log($"\tHash: {hashString}", LogLevel.Success);
+
+                        //optionally open the beatmap to write extra database entries
+                        beatmapStream.Position = 0;
+                        Beatmap beatmap = DecodeBeatmap(beatmapStream);
+                        Utils.Log($"\tBeatmap ID: {beatmap.MetadataSection.BeatmapID}", LogLevel.Success);
+
+                        if (beatmap.GeneralSection.Mode != OsuParsers.Enums.Ruleset.Standard)
+                        {
+                            Utils.Log($"\tSkipping ID: {beatmap.MetadataSection.BeatmapID} NOT A STANDARD MAP!!", LogLevel.Warning);
+                            continue;
+                        }
+                        else
+                        {
+                            DBBeatmapInfo beatmapInfo = new DBBeatmapInfo();
+                            //PrimaryKey
+                            beatmapInfo.Hash = hashString;
+
+                            beatmapInfo.SetInfo = setInfo;
+
+                            beatmapInfo.Filename = item.FullName;
+                            beatmapInfo.BackgroundFilename = beatmap.EventsSection.BackgroundImage;
+
+                            setInfo.Beatmaps.Add(beatmapInfo);
+                        }
+                    }
                 }
 
-                Utils.Log("Done!", LogLevel.Success);
-            });
+                //Handle when the beatmap already exists and is open, just ignore it?
+                Directory.CreateDirectory($"{SongsFolder}/{folderGUID}");
+                try
+                {
+                    archive.ExtractToDirectory($"{SongsFolder}/{folderGUID}", true);
+                }
+                catch (Exception ex)
+                {
+                    Utils.Log($"Extracting archive failed due to: {ex.Message} import process aborted :(", LogLevel.Error);
+                    archive.Dispose();
+                    return;
+                }
+
+                Utils.Log("Writing to database...", LogLevel.Info);
+
+                setInfo.Foldername = folderGUID;
+
+                Scheduler.Enqueue(() =>
+                {
+                    Realm.Write(() =>
+                    {
+                        Realm.Add(setInfo, true);
+                    });
+
+                    foreach (var item in setInfo.Beatmaps)
+                    {
+                        OnNewBeatmapAvailable?.Invoke(item);
+                    }
+
+                    Utils.Log("Done!", LogLevel.Success);
+                });
+            }catch (Exception ex)
+            {
+                NotificationManager.ShowMessage($"Something went horrible wrong when importing beatmap\n{ex.Message}", Colors.Red.Xyz, 20);
+            }
         }
 
         /// <summary>
@@ -231,7 +236,7 @@ namespace RTCircles
             }
         }
 
-        private static HttpClient client = new HttpClient();
+        private static HttpClient client = MainGame.Instance.GetPlatformHttpClient();
 
         public static async Task GetIcon(int setID, Action<Stream> action)
         {

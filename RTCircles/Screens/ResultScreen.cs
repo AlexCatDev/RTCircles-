@@ -14,6 +14,8 @@ namespace RTCircles
         public override void Render(Graphics g)
         {
             g.DrawRectangle(Vector2.Zero, MainGame.WindowSize, new Vector4(MathUtils.RainbowColor(OsuContainer.SongPosition / 1000), 1));
+            var tex = OsuContainer.CurrentRankingToTexture();
+            g.DrawRectangleCentered(MainGame.WindowCenter, tex.Texture.Size, Colors.White, tex.Texture);
             g.DrawStringCentered("Result screen place holder", font, MainGame.WindowCenter, Colors.White);
 
             base.Render(g);

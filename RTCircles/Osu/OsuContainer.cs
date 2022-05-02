@@ -431,7 +431,7 @@ namespace RTCircles
             }
         }
 
-        public static int GlobalOffset => 0;
+        public static int GlobalOffset => GlobalOptions.SongOffsetMS.Value;
 
         private static int totalOffset => Sound.DeviceLatency + GlobalOffset;
 
@@ -543,6 +543,31 @@ namespace RTCircles
             B,
             C,
             D
+        }
+
+        public static OsuTexture CurrentRankingToTexture()
+        {
+            switch (GetCurrentRanking())
+            {
+                case OsuContainer.Ranking.X:
+                    return Skin.RankingX;
+                case OsuContainer.Ranking.XH:
+                    return Skin.RankingXH;
+                case OsuContainer.Ranking.S:
+                    return Skin.RankingS;
+                case OsuContainer.Ranking.SH:
+                    return Skin.RankingSH;
+                case OsuContainer.Ranking.A:
+                    return Skin.RankingA;
+                case OsuContainer.Ranking.B:
+                    return Skin.RankingB;
+                case OsuContainer.Ranking.C:
+                    return Skin.RankingC;
+                case OsuContainer.Ranking.D:
+                    return Skin.RankingD;
+                default:
+                    throw new Exception("Wtf");
+            }
         }
 
         public static Ranking GetCurrentRanking()
