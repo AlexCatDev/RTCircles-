@@ -186,7 +186,7 @@ namespace RTCircles
                 if (BeatmapCollection.Items.Count > 0)
                 {
                     var item = carouselItems[RNG.Next(0, carouselItems.Count - 1)];
-                    item = carouselItems.Find((o) => o.Text.Contains("(pishifat) [insane"));
+                    //item = carouselItems.Find((o) => o.Text.Contains("(pishifat) [insane"));
                     playableBeatmap = PlayableBeatmap.FromCarouselItem(item);
 
                 }
