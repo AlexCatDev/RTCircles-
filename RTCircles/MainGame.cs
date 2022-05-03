@@ -178,10 +178,6 @@ namespace RTCircles
             g.DrawStringCentered($"Skin Volume: {GlobalOptions.SkinVolume.Value * 100:F0}", Font.DefaultFont, pos + size / 2f, new Vector4(1f, 1f, 1f, volumeBarFade.Value), 0.5f);
         }
 
-        private ulong prevVertices;
-        private ulong prevIndices;
-        private ulong prevTriangles;
-
         private List<double> renderTimes = new List<double>();
         private Vector2? trueHoverSize = null;
         private Vector2? trueHoverPos = null;
@@ -214,21 +210,6 @@ namespace RTCircles
 
             if (GlobalOptions.ShowFPS.Value)
             {
-                ulong diffVertices = g.VerticesDrawn - prevVertices;
-                prevVertices = g.VerticesDrawn;
-
-                ulong diffIndices = g.IndicesDrawn - prevIndices;
-                prevIndices = g.IndicesDrawn;
-
-                ulong diffTriangles = g.TrianglesDrawn - prevTriangles;
-                prevTriangles = g.TrianglesDrawn;
-
-                double verticesPerSecond = (diffVertices) * (1.0 / DeltaTime);
-
-                double indicesPerSecond = (diffIndices) * (1.0 / DeltaTime);
-
-                double trianglesPerSecond = (diffTriangles) * (1.0 / DeltaTime);
-
                 const float scale = 0.35f;
 
                 ms = Interpolation.Damp(ms, DeltaTime * 1000, 0.25, DeltaTime);
@@ -251,13 +232,14 @@ namespace RTCircles
 
                 if (new Rectangle(trueHoverPos.Value, trueHoverSize.Value).IntersectsWith(Input.MousePosition))
                 {
-                    text+= $"\nGPU: {GL.GLRenderer}\n" +
-                        $"OpenGL: {GL.GLVersion}\n" +
-                        $"Vertices: {Utils.ToKMB(verticesPerSecond)}/s\n" +
-                        $"Indices: {Utils.ToKMB(indicesPerSecond)}/s\n" +
-                        $"Tris: {Utils.ToKMB(trianglesPerSecond)}/s\n" +
-                        $"Textures: {Easy2D.Texture.TextureCount}\n" +
+                    text+= $"\n{GL.GLVersion}\n" +
+                        $"GPU: {GL.GLRenderer}\n" +
+                        $"Vertices: {Utils.ToKMB(g.VerticesDrawn)}\n" +
+                        $"Indices: {Utils.ToKMB(g.IndicesDrawn)}\n" +
+                        $"Tris: {Utils.ToKMB(g.TrianglesDrawn)}\n" +
+                        $"Textures: {Easy2D.Texture.TextureCount} DrawCall_Max: {Graphics.MaxTextureSlots} \n" +
                         $"Framework: {RuntimeInformation.FrameworkDescription} {RuntimeInformation.ProcessArchitecture}\n" +
+                        $"Audio Latency: {Sound.DeviceLatency}ms\n" +
                         $"OS: {RuntimeInformation.OSDescription}\n" +
                         $"GC: [{GC.CollectionCount(0)}, {GC.CollectionCount(1)}, {GC.CollectionCount(2)}]\n" +
                         $"Last visit: {lastOpened}";
@@ -270,6 +252,7 @@ namespace RTCircles
                 }
 
                 GL.ResetStatistics();
+                g.ResetStatistics();
 
                 Vector2 textSize = Font.DefaultFont.MessureString(text, scale);
                 Vector2 drawTextPos = new Vector2(WindowWidth, WindowHeight) - textSize - new Vector2(25);

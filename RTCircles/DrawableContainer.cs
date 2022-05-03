@@ -200,6 +200,8 @@ namespace RTCircles
 
                     newChild.Container = this;
                     newChild.OnAdd();
+
+                    newChild.Update(delta);
                 }
 
                 childrenPendingAdd.Clear();

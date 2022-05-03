@@ -15,7 +15,8 @@ namespace RTCircles
         {
             g.DrawRectangle(Vector2.Zero, MainGame.WindowSize, new Vector4(MathUtils.RainbowColor(OsuContainer.SongPosition / 1000), 1));
             var tex = OsuContainer.CurrentRankingToTexture();
-            g.DrawRectangleCentered(MainGame.WindowCenter, tex.Texture.Size, Colors.White, tex.Texture);
+
+            g.DrawRectangleCentered(MainGame.WindowCenter + new Vector2(0, 200) * MainGame.AbsoluteScale, new Vector2(100,100/tex.Texture.Size.AspectRatio())*MainGame.AbsoluteScale.Y, Colors.White, tex.Texture);
             g.DrawStringCentered("Result screen place holder", font, MainGame.WindowCenter, Colors.White);
 
             base.Render(g);
@@ -24,7 +25,7 @@ namespace RTCircles
         public override void OnKeyDown(Key key)
         {
             if (key == Key.Escape)
-                ScreenManager.SetScreen<MapSelectScreen>(false);
+                ScreenManager.GoBack();
 
             base.OnKeyDown(key);
         }

@@ -143,7 +143,7 @@ namespace RTCircles
         private void explodeFadeout()
         {
             progress.Value = 1;
-            progress.TransformTo(3.5f, 0.8f, EasingTypes.OutQuad);
+            progress.TransformTo(3.5f, 1f, EasingTypes.OutQuad);
         }
 
         public override void Render(Graphics g)

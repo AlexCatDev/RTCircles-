@@ -113,6 +113,8 @@ namespace RTCircles
 
         private Vector4 color => new Vector4(Skin.Config.ColorFromIndex(colorIndex), 1f);
 
+        private Vector2 hitCirclePos;
+
         public readonly ISlider SliderPath;
 
         private int repeatsDone = 0;
@@ -136,7 +138,6 @@ namespace RTCircles
             else
                 SliderPath = new BetterSlider();
 
-            repeatsDone = 0;
             this.slider = slider;
             this.colorIndex = colorIndex;
             this.combo = combo;
@@ -154,25 +155,30 @@ namespace RTCircles
             {
                 if (buffer.Count > 0)
                 {
-                    switch (slider.CurveType)
+                    //2 point buffer is always linear
+                    if (buffer.Count == 2)
+                        fullPath.AddRange(buffer);
+                    else
                     {
-                        case CurveType.Catmull:
-                            fullPath.AddRange(PathApproximator.ApproximateCatmull(buffer));
-                            break;
-                        case CurveType.Bezier:
-                            fullPath.AddRange(PathApproximator.ApproximateBezier(buffer));
-                            break;
-                        case CurveType.Linear:
-                            fullPath.AddRange(PathApproximator.ApproximateLinear(buffer));
-                            break;
-                        case CurveType.PerfectCurve:
-                            if (buffer.Count != 3)
+                        switch (slider.CurveType)
+                        {
+                            case CurveType.Catmull:
+                                fullPath.AddRange(PathApproximator.ApproximateCatmull(buffer));
+                                break;
+                            case CurveType.Bezier:
                                 fullPath.AddRange(PathApproximator.ApproximateBezier(buffer));
-                            else
-                                fullPath.AddRange(PathApproximator.ApproximateCircularArc(buffer));
-                            break;
+                                break;
+                            case CurveType.Linear:
+                                fullPath.AddRange(buffer);
+                                break;
+                            case CurveType.PerfectCurve:
+                                if (buffer.Count != 3)
+                                    fullPath.AddRange(PathApproximator.ApproximateBezier(buffer));
+                                else
+                                    fullPath.AddRange(PathApproximator.ApproximateCircularArc(buffer));
+                                break;
+                        }
                     }
-
                     buffer.Clear();
                 }
             }
@@ -198,11 +204,38 @@ namespace RTCircles
             if (fullPath.Count == 0)
                 fullPath.Add(new Vector2(slider.Position.X, slider.Position.Y));
 
+            #region TRIM_TO_PIXEL_LENGTH
+            float length = 0;
+            for (int i = 0; i < fullPath.Count - 1; i++)
+            {
+                float dist = Vector2.Distance(fullPath[i], fullPath[i + 1]);
+                length += dist;
+
+                if (length > slider.PixelLength)
+                {
+                    float pixelLength = (float)slider.PixelLength;
+                    float diff = length - pixelLength;
+                    var next = fullPath[i + 1];
+
+                    //Remove every point after
+                    fullPath.RemoveRange(i + 1, fullPath.Count - i - 1);
+
+                    fullPath.Add(Vector2.Lerp(fullPath[i], next, pixelLength / length));
+
+                    //This is almost correct, but sometimes not.
+                    /*
+                    var finalLength = Path.CalculateLength(fullPath);
+                    System.Diagnostics.Debug.Assert(finalLength - 10 < slider.PixelLength);
+                    */
+                    break;
+                }
+            }
+            #endregion
             //Set the sliderpath to the points.
             SliderPath.SetPoints(fullPath);
         }
 
-        private float snakeIn = 1f;
+        private float snakeIn = 0;
 
         private bool fadeout;
 
@@ -331,7 +364,6 @@ namespace RTCircles
             }
         }
 
-        private Vector2 hitCirclePos;
         private void drawHitCircle(Graphics g)
         {
             void drawNumber()
@@ -340,7 +372,6 @@ namespace RTCircles
                     Skin.CircleNumbers.DrawCentered(g, hitCirclePos, Size.X / 2.7f, new Vector4(1f, 1f, 1f, circleAlpha), combo.ToString());
             }
 
-            hitCirclePos = OsuContainer.MapToPlayfield(slider.Position.X, slider.Position.Y);
             if (IsMissed == false)
             {
                 float hitCircleAlpha = circleAlpha;
@@ -453,7 +484,9 @@ namespace RTCircles
 
         private bool IsTracking => (OsuContainer.Key1Down || OsuContainer.Key2Down) && MathUtils.IsPointInsideRadius(OsuContainer.CursorPosition, sliderballPosition, OsuContainer.Beatmap.CircleRadius * SliderBallActiveScale) || OsuContainer.CookieziMode;
 
-        //Allow 36ms releasing the slider too early
+        /// <summary>
+        /// Allow releasing the slider 36ms too early
+        /// </summary>
         private const double TrackingErrorAcceptance = 36;
         private bool IsValidTrack => (OsuContainer.SongPosition - lastTrackingTime) <= TrackingErrorAcceptance || OsuContainer.CookieziMode;
 
@@ -492,6 +525,8 @@ namespace RTCircles
 
         public override void Update(float delta)
         {
+            hitCirclePos = OsuContainer.MapToPlayfield(slider.Position.X, slider.Position.Y);
+
             if (IsTracking != previousTracking && IsHit || IsMissed)
             {
                 previousTracking = IsTracking;
@@ -520,7 +555,10 @@ namespace RTCircles
             //Neeed a better way to handle this
             if (fadeout)
             {
-                circleAlpha = MathUtils.Map((float)OsuContainer.SongPosition, fadeOutStart, fadeOutStart + (float)OsuContainer.Fadeout, 1f, 0).Clamp(0, 1f);
+                //If both snakeout and not exploding, make the fadeout half as long.
+                var fadeoutDuration = GlobalOptions.SliderSnakeOut.Value && !GlobalOptions.SliderSnakeExplode.Value ? OsuContainer.Fadeout / 3 : OsuContainer.Fadeout;
+
+                circleAlpha = MathUtils.Map((float)OsuContainer.SongPosition, fadeOutStart, fadeOutStart + (float)fadeoutDuration, 1f, 0).Clamp(0, 1f);
             }
             else
             {
@@ -543,8 +581,8 @@ namespace RTCircles
             float snakeOut = 0f;
             if (repeatsDone >= slider.Repeats - 1 && GlobalOptions.SliderSnakeOut.Value)
             {
-                double duration = slider.EndTime - slider.StartTime;
-                double startSnake = slider.Repeats > 1 ? slider.EndTime - (duration / slider.Repeats) : slider.StartTime;
+                double snakeDuration = slider.EndTime - slider.StartTime;
+                double startSnake = slider.Repeats > 1 ? slider.EndTime - (snakeDuration / slider.Repeats) : slider.StartTime;
                 double endSnake = slider.EndTime;
 
                 if (slider.Repeats % 2 != 0)
@@ -697,6 +735,8 @@ namespace RTCircles
             {
                 drawSliderBall(g);
             }
+
+            //g.DrawString($"In: {snakeIn:F2} A: {SliderPath.Alpha:F2}", Font.DefaultFont, hitCirclePos, Colors.White, 0.5f);
         }
 
         public static Vector4 Shade(float amount, Vector4 c)

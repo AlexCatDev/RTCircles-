@@ -20,7 +20,14 @@ namespace RTCircles
             base.Update(delta);
         }
 
+        private string formatInt(int i)
+        {
+            return $"{(i > 0 ? "+" : "")}{i}";
+        }
+
         private int lastBeat;
+        private double repeatCountdownTimer = 0;
+        private double repeatTimer = 0;
         private void drawOffsetAdjuster(Graphics g)
         {
             if (OsuContainer.Beatmap == null)
@@ -29,7 +36,7 @@ namespace RTCircles
             Vector2 position = new Vector2(50, 100) * MainGame.Scale;
             Vector2 buttonSize = new Vector2(235, 60) * MainGame.Scale;
 
-            g.DrawString($"Offset: {(GlobalOptions.SongOffsetMS.Value > 0 ? "+" : "")}{GlobalOptions.SongOffsetMS.Value}", Font.DefaultFont, position, Colors.White, MainGame.Scale);
+            g.DrawString($"Offset: {formatInt(GlobalOptions.SongOffsetMS.Value)}", Font.DefaultFont, position, Colors.White, MainGame.Scale);
 
             Rectangle buttonMinusRect = new Rectangle(position - new Vector2(0, 80 * MainGame.Scale), buttonSize);
 
@@ -45,8 +52,33 @@ namespace RTCircles
             {
                 if (buttonMinusRect.IntersectsWith(Input.MousePosition))
                     GlobalOptions.SongOffsetMS.Value--;
-                else if(buttonPlusRect.IntersectsWith(Input.MousePosition))
+                else if (buttonPlusRect.IntersectsWith(Input.MousePosition))
                     GlobalOptions.SongOffsetMS.Value++;
+            }
+
+            if (Input.InputContext.Mice[0].IsButtonPressed(MouseButton.Left))
+            {
+                repeatCountdownTimer += MainGame.Instance.DeltaTime;
+
+                if (repeatCountdownTimer > 0.5)
+                {
+                    repeatTimer += MainGame.Instance.DeltaTime;
+                }
+
+                if (repeatTimer > 0.07)
+                {
+                    repeatTimer = 0;
+
+                    if (buttonMinusRect.IntersectsWith(Input.MousePosition))
+                        GlobalOptions.SongOffsetMS.Value--;
+                    else if (buttonPlusRect.IntersectsWith(Input.MousePosition))
+                        GlobalOptions.SongOffsetMS.Value++;
+                }
+            }
+            else
+            {
+                repeatCountdownTimer = 0;
+                repeatTimer = 0;
             }
 
             Rectangle wholeArea = Rectangle.FromTBLR(buttonMinusRect.Top, buttonPlusRect.Bottom, buttonMinusRect.Left, buttonMinusRect.Right);

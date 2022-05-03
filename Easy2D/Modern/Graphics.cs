@@ -14,7 +14,7 @@ namespace Easy2D
     ///</summary>
     public class Graphics
     {
-        private static int MaxTextureSlots;
+        public static readonly int MaxTextureSlots;
 
         private static readonly Dictionary<string, string> fragmentPreprocessor = new Dictionary<string, string>();
         private static readonly int[] textureSlots;

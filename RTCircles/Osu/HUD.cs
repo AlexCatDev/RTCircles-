@@ -186,6 +186,9 @@ namespace RTCircles
             hp += val;
 
             hp.ClampRef(0, 1);
+
+            if (hp == 0)
+                ScreenManager.GetScreen<OsuScreen>().reportDeath();
         }
 
         private void drawComboText(Graphics g)
@@ -316,12 +319,6 @@ namespace RTCircles
             if (!ScreenManager.GetScreen<OsuScreen>().IsCurrentlyBreakTime && OsuContainer.Beatmap != null)
             {
                 AddHP((-0.25f * (float)OsuContainer.DeltaSongPosition / 1000));
-            }
-
-            if(hp == 0)
-            {
-                ScreenManager.GetScreen<OsuScreen>().dieLol();
-                return;
             }
 
             Vector2 pos = new Vector2(20) * MainGame.Scale;

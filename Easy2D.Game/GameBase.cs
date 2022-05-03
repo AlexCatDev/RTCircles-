@@ -162,6 +162,8 @@ namespace Easy2D.Game
             PostProcessing.Update((float)DeltaTime);
             View.SwapBuffers();
             GL.Instance.Clear(ClearBufferMask);
+
+            //System.Threading.Thread.Sleep(16);
             /*
             if (freeToRender)
             {

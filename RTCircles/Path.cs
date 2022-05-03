@@ -25,8 +25,8 @@ namespace RTCircles
             this.points.Clear();
             this.points.AddRange(points);
 
-            Length = calculateLength();
-            Bounds = calculateBoundingBox();
+            Length = CalculateLength(points);
+            Bounds = CalculateBoundingBox(points);
         }
 
         public Vector2 CalculatePositionAtProgress(float progress) => CalculatePositionAtLength(Length * progress);
@@ -55,8 +55,7 @@ namespace RTCircles
             return points[^1];
         }
 
-        //Thanks rares
-        private float calculateLength()
+        public static float CalculateLength(List<Vector2> points)
         {
             float length = 0f;
             for (int i = 0; i < points.Count - 1; i++)
@@ -65,7 +64,7 @@ namespace RTCircles
             return length;
         }
 
-        private Rectangle calculateBoundingBox()
+        public static Rectangle CalculateBoundingBox(List<Vector2> points)
         {
             if (points.Count == 0)
                 return new Rectangle(0, 0, 0, 0);

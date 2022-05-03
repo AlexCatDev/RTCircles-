@@ -107,7 +107,9 @@ namespace RTCircles
             Clear<FollowPoints>();
 
             pauseStart = double.MaxValue;
-            dieFlag = false;
+            dyingAllowed = true;
+
+            OsuContainer.HUD.AddHP(1000);
 
             bgZoom = 100;
             bgAlpha.Value = 1f;
@@ -229,7 +231,7 @@ namespace RTCircles
                     }
                     else
                     {
-                        if (OsuContainer.SongPosition > OsuContainer.Beatmap.HitObjects[objectIndex].BaseObject.StartTime)
+                        if (OsuContainer.SongPosition < OsuContainer.Beatmap.HitObjects[objectIndex.Clamp(0, maxCount)].BaseObject.StartTime)
                             objectIndex--;
                         else
                             break;
@@ -446,18 +448,18 @@ namespace RTCircles
             //Check if our current mods is auto, to see if we need to render the auto cursor
             if (OsuContainer.CookieziMode)
             {
-                OsuContainer.Beatmap.AutoGenerator.Update(OsuContainer.SongPosition);
+                OsuContainer.Beatmap.AutoGenerator.Update();
                 Vector2 autoPos = OsuContainer.MapToPlayfield(OsuContainer.Beatmap.AutoGenerator.CurrentPosition);
 
                 OsuContainer.CustomCursorPosition = autoPos;
-                cursor.Render(g, delta, autoPos, Colors.White);
                 //Else if not playing with auto, just render the cursor normally.
             }
             else
-            {
                 OsuContainer.CustomCursorPosition = null;
-                cursor.Render(g, delta, Input.MousePosition, Colors.White);
-            }
+
+            bool isPaused = pauseOverlayFade.Value == 1;
+
+            cursor.Render(g, delta, OsuContainer.CustomCursorPosition ?? Input.MousePosition, isPaused ? Vector4.Zero : Colors.White);
         }
 
         private double pauseStart;
@@ -493,20 +495,23 @@ namespace RTCircles
 
         private SmoothFloat dieAnim = new SmoothFloat() { Value = 1f };
 
-        private bool dieFlag;
-        public void dieLol()
+        //buggy af, everything spaghetti code
+        private bool dyingAllowed = true;
+        public void reportDeath()
         {
             return;
 
-            if (!dieFlag && ScreenManager.ActiveScreen == this)
+            if (dyingAllowed && ScreenManager.ActiveScreen == this)
             {
-                dieFlag = true;
+                dyingAllowed = false;
                 var start = OsuContainer.Beatmap.Song.Frequency;
                 dieAnim.Value = (float)start;
                 dieAnim.TransformTo(0f, 3f, EasingTypes.OutQuad, () =>
                 {
-                    ScreenManager.GoBack();
                     OsuContainer.Beatmap.Song.Frequency = start;
+                    OsuContainer.Beatmap.Song.Pause();
+                    pauseOverlayFade.TransformTo(1f, 0.25f, EasingTypes.Out);
+                    OnExit();
                 });
             }
         }

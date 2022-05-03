@@ -20,8 +20,6 @@ namespace RTCircles
 
         private static readonly Easy2D.Shader sliderShader = new Easy2D.Shader();
 
-        public static bool PregenerateFramebuffer = false;
-
         static BetterSlider()
         {
             sliderShader.AttachShader(ShaderType.VertexShader, Utils.GetResource("Sliders.slider.vert"));
@@ -61,10 +59,10 @@ namespace RTCircles
             {
                 var quad = sliderBatch.GetQuad();
 
-                *quad++ = topRight;
-                *quad++ = bottomRight;
-                *quad++ = bottomLeft;
-                *quad++ = topLeft;
+                quad[0] = topRight;
+                quad[1] = bottomRight;
+                quad[2] = bottomLeft;
+                quad[3] = topLeft;
 
                 //Second line bottom
 
@@ -80,10 +78,10 @@ namespace RTCircles
 
                 quad = sliderBatch.GetQuad();
 
-                *quad++ = topRight;
-                *quad++ = bottomRight;
-                *quad++ = bottomLeft;
-                *quad++ = topLeft;
+                quad[0] = topRight;
+                quad[1] = bottomRight;
+                quad[2] = bottomLeft;
+                quad[3] = topLeft;
             }
         }
 
@@ -94,7 +92,7 @@ namespace RTCircles
             {
                 var verts = sliderBatch.GetTriangleFan(CIRCLE_RESOLUTION);
 
-                *verts++ = new Vector3(pos.X, pos.Y, 0f);
+                verts[0] = new Vector3(pos.X, pos.Y, 0f);
 
                 float theta = 0;
                 const float stepTheta = (MathF.PI * 2) / (CIRCLE_RESOLUTION - 2);
@@ -106,7 +104,7 @@ namespace RTCircles
                     vertPos.X = MathF.Cos(theta) * radius + pos.X;
                     vertPos.Y = MathF.Sin(theta) * radius + pos.Y;
 
-                    *verts++ = vertPos;
+                    verts[i] = vertPos;
 
                     theta += stepTheta;
                 }
@@ -192,21 +190,7 @@ namespace RTCircles
             }
         }
 
-        public void SetPoints(List<Vector2> points)
-        {
-            Path.SetPoints(points);
-
-            //Pregenerate will create the framebuffer AT ONCE!
-            if (PregenerateFramebuffer)
-            {
-                frameBuffer.Bind();
-                drawSlider();
-            }
-            else
-            {
-                hasBeenUpdated = true;
-            }
-        }
+        public void SetPoints(List<Vector2> points) => Path.SetPoints(points);
 
         private float startProgress = 0f;
         private float endProgress = 1f;
@@ -259,7 +243,7 @@ namespace RTCircles
 
             frameBuffer.Bind();
             GL.Instance.Enable(EnableCap.DepthTest);
-            Viewport.SetViewport(0, 0, (int)frameBuffer.Width, (int)frameBuffer.Height);
+            Viewport.SetViewport(0, 0, frameBuffer.Width, frameBuffer.Height);
             GL.Instance.Clear(ClearBufferMask.DepthBufferBit);
             sliderShader.Bind();
             sliderShader.SetMatrix("u_Projection", projectionMatrix);
