@@ -96,7 +96,7 @@ namespace RTCircles
 
             realmsThread = new Thread(() =>
             {
-                Realm = Realm.GetInstance(new RealmConfiguration("RTCircles.realm") { SchemaVersion = 2 });
+                Realm = Realm.GetInstance(new RealmConfiguration("RTCircles.realm") { SchemaVersion = 2, ShouldDeleteIfMigrationNeeded = true });
                 Utils.Log($"Started Realm Thread.", LogLevel.Important);
                 Utils.Log($"Realm Path: {Realm.Config.DatabasePath}", LogLevel.Important);
 

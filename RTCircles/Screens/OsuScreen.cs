@@ -50,10 +50,9 @@ namespace RTCircles
             {
                 if (ScreenManager.ActiveScreen == this)
                 {
+                    OnKeyDown(OsuContainer.Key1);
                     GPUSched.Instance.Enqueue(() =>
                     {
-                        OnKeyDown(OsuContainer.Key1);
-
                         for (int i = 0; i < 5; i++)
                         {
                             Add(new HUD.Firework(new Vector2(MainGame.WindowWidth * finger.X, MainGame.WindowHeight * finger.Y)));
@@ -65,7 +64,7 @@ namespace RTCircles
             Input.OnFingerUp += (finger) =>
             {
                 if (Input.TouchFingerEvents.Count == 0)
-                    GPUSched.Instance.Enqueue(() => { OnKeyUp(OsuContainer.Key1); });
+                    OnKeyUp(OsuContainer.Key1);
             };
 
             OsuContainer.OnKiai += () =>
@@ -231,10 +230,14 @@ namespace RTCircles
                     }
                     else
                     {
-                        if (OsuContainer.SongPosition < OsuContainer.Beatmap.HitObjects[objectIndex.Clamp(0, maxCount)].BaseObject.StartTime)
-                            objectIndex--;
-                        else
-                            break;
+                        var newIndex = OsuContainer.Beatmap.HitObjects.FindIndex((o) => o.BaseObject.StartTime < OsuContainer.SongPosition);
+
+                        if (newIndex == -1)
+                            newIndex = 0;
+
+                        objectIndex = newIndex;
+
+                        break;
                     }
                 }
                 Utils.Log($"The new index: {objectIndex}", LogLevel.Important);
@@ -243,14 +246,7 @@ namespace RTCircles
 
         public override void OnExiting()
         {
-            /*
-            Clear<DrawableHitCircle>();
-            Clear<DrawableSpinner>();
-            Clear<DrawableSlider>();
-            Clear<HitJudgement>();
-            Clear<WarningArrows>();
-            Clear<FollowPoints>();
-            */
+            
         }
 
         public override void OnEnter()

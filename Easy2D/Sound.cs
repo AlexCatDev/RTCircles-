@@ -65,8 +65,7 @@ namespace Easy2D
 
         public static void SetDevice(AudioDevice device)
         {
-            Bass.Init(device.Index, 44100, DeviceInitFlags.Latency | DeviceInitFlags.Stereo | DeviceInitFlags.Bits16, windowPtr);
-
+            Bass.Init(device.Index, 44100, DeviceInitFlags.Latency | DeviceInitFlags.Stereo, windowPtr);
             for (int i = 0; i < allHandles.Count; i++)
             {
                 Bass.ChannelSetDevice(allHandles[i], device.Index);
