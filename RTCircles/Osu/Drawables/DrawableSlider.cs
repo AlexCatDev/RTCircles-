@@ -330,7 +330,7 @@ namespace RTCircles
 
                 float followCircleAlpha = sliderFollowScaleAnim.Value.Map(1f, 2f, 0f, 1) * circleAlpha;
                 
-                float fadeoutScale = Interpolation.ValueAt(circleAlpha.Clamp(0f, 1f), 1f, 0.75f, 1f, 0f, EasingTypes.OutQuad).Clamp(0.75f, 1f);
+                float fadeoutScale = Interpolation.ValueAt(circleAlpha.Clamp(0f, 1f), 1f, 0.75f, 1f, 0f, EasingTypes.Out).Clamp(0.75f, 1f);
 
                 Vector2 followCircleSize = Size * sliderFollowScaleAnim * Skin.GetScale(Skin.SliderFollowCircle, 256, 512) * fadeoutScale;
 
@@ -381,12 +381,6 @@ namespace RTCircles
                     hitCircleAlpha = (float)OsuContainer.SongPosition.Map(hitTime.Value, hitTime.Value + OsuContainer.Fadeout, circleAlpha, 0).Clamp(0, 1f);
                     scaleExplode = (float)Interpolation.ValueAt(OsuContainer.SongPosition, 1, OsuContainer.CircleExplodeScale, hitTime.Value, hitTime.Value + OsuContainer.Fadeout, EasingTypes.Out);
                 }
-                else
-                {
-                    //Only move along the hitcircle when it hasnt been hit.
-                    //hitCirclePos = sliderballPosition;
-                    
-                }
 
                 g.DrawRectangleCentered(hitCirclePos, Size * Skin.GetScale(Skin.SliderStartCircle) * scaleExplode, new Vector4(color.X, color.Y, color.Z, hitCircleAlpha), Skin.SliderStartCircle);
 
@@ -426,6 +420,8 @@ namespace RTCircles
 
                     if (circleAlpha < 0.7f)
                         return true;
+
+                    OsuContainer.ScoreHit(slider);
 
                     if (hittableTime > OsuContainer.Beatmap.Window50)
                     {
@@ -534,7 +530,7 @@ namespace RTCircles
                 if (IsTracking)
                 {
                     sliderFollowScaleAnim.ClearTransforms();
-                    sliderFollowScaleAnim.TransformTo(SliderBallActiveScale, 180f, EasingTypes.OutCirc);
+                    sliderFollowScaleAnim.TransformTo(SliderBallActiveScale, 180f, EasingTypes.Out);
                 }
             }
 

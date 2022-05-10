@@ -57,7 +57,18 @@ namespace Easy2D.Game
 
         public bool IsClosing => View.IsClosing;
 
-        public Vector2D<int> Size => View.Size;
+        public Vector2D<int> Size
+        {
+            get
+            {
+                return View.Size;
+            }
+            set
+            {
+                if(View is IWindow window)
+                    window.Size = value;
+            }
+        }
 
         public double MaxAllowedDeltaTime = double.MaxValue;
 

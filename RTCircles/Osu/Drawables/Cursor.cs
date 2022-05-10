@@ -41,9 +41,9 @@ namespace RTCircles
                 //Width.ClampRef(0, 10000);
                 Color.W.ClampRef(0, 1);
                 
-                float colorScale = PostProcessing.Bloom ? 2.5f : 1;
+                float colorScale = PostProcessing.Bloom ? 2 : 1;
 
-                Color.Xyz = MathUtils.RainbowColor(MainGame.Instance.TotalTime) * colorScale;
+                Color.Xyz = MathUtils.RainbowColor(MainGame.Instance.TotalTime, 0.5f, colorScale);
                 if (Color.W <= 0)
                     RemoveMe = true;
             }

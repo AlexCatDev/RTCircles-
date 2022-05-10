@@ -28,7 +28,13 @@ namespace RTCircles
 
     //    public override void Render(Graphics g)
     //    {
-    //        alpha = (float)OsuContainer.SongPosition.Map(from.EndTime, from.EndTime + OsuContainer.Fadeout, 1, 0).Clamp(0, 1);
+    //        alpha = (float)OsuContainer.SongPosition.Map(from.EndTime, to.StartTime, 1, 0).Clamp(0, 1);
+
+    //        if(alpha == 0 || OsuContainer.SongPosition >= to.StartTime)
+    //        {
+    //            IsDead = true;
+    //            return;
+    //        }
 
     //        Vector2 fromPos;
 
@@ -51,13 +57,14 @@ namespace RTCircles
 
     //        Vector2 toPos = OsuContainer.MapToPlayfield(to.Position.X, to.Position.Y);
 
-    //        //If the from and to positions are smalelr than the diameter of the hitcircles, despawn the followpoint
-    //        if (MathF.Abs(toPos.X - fromPos.X) < OsuContainer.Beatmap.CircleRadius * 2 && MathF.Abs(toPos.Y - fromPos.Y) < OsuContainer.Beatmap.CircleRadius * 2)
+
+    //        if((toPos - fromPos).Length < OsuContainer.Beatmap.CircleRadius * 4)
     //        {
     //            IsDead = true;
     //            return;
     //        }
 
+    //        float fromProgress = (float)OsuContainer.SongPosition.Map(from.EndTime, to.StartTime, 0, 1).Clamp(0, 1);
     //        float toProgress = (float)OsuContainer.SongPosition.Map(to.StartTime - OsuContainer.Beatmap.Preempt, to.StartTime - OsuContainer.Beatmap.Fadein, 0, 1).Clamp(0, 1);
 
     //        //if no progress, don't draw anything
@@ -69,15 +76,22 @@ namespace RTCircles
     //        toPos.X = toProgress.Map(0, 1, fromPos.X, toPos.X);
     //        toPos.Y = toProgress.Map(0, 1, fromPos.Y, toPos.Y);
 
+    //        fromPos.X = fromProgress.Map(0, 1, fromPos.X, toPos.X);
+    //        fromPos.Y = fromProgress.Map(0, 1, fromPos.Y, toPos.Y);
+
+    //        float height = OsuContainer.Beatmap.CircleRadius * 2 * Skin.GetScale(Skin.FollowPoint);
+    //        float width = height * Skin.FollowPoint.Texture.Size.AspectRatio();
+
+    //        g.DrawDottedLine(fromPos, toPos, Skin.FollowPoint, new Vector4(1f, 1f, 1f, alpha), new Vector2(width, height), OsuContainer.Beatmap.CircleRadius, false, false, new Rectangle(0, 0, 1920, 1080));
+
     //        //Draw a line, with diameter spacing, and correct texture scaling
     //        //This needs a little optimization. and tweaking
-    //        g.DrawDottedLine(fromPos, toPos, Skin.FollowPoint, new Vector4(1f, 1f, 1f, alpha), new Vector2(OsuContainer.Beatmap.CircleRadius * 2 * Skin.GetScale(Skin.FollowPoint)), OsuContainer.Beatmap.CircleRadius, false, false, new Rectangle(0, 0, 1920, 1080));
+    //        //g.DrawDottedLine(fromPos, toPos, Skin.FollowPoint, new Vector4(1f, 1f, 1f, alpha), new Vector2(OsuContainer.Beatmap.CircleRadius * 2 * Skin.GetScale(Skin.FollowPoint)), OsuContainer.Beatmap.CircleRadius, false, false, new Rectangle(0, 0, 1920, 1080));
     //    }
 
     //    public override void Update(float delta)
     //    {
-    //        if (alpha == 0f || OsuContainer.SongPosition < from.StartTime - OsuContainer.Beatmap.Preempt - 500)
-    //            IsDead = true;
+
     //    }
     //}
 
@@ -106,7 +120,7 @@ namespace RTCircles
         {
             alpha = (float)OsuContainer.SongPosition.Map(from.EndTime, to.StartTime, 1, 0).Clamp(0, 1);
 
-            if(alpha == 0 || OsuContainer.SongPosition >= to.StartTime)
+            if (alpha == 0 || OsuContainer.SongPosition >= to.StartTime)
             {
                 IsDead = true;
                 return;
@@ -134,14 +148,13 @@ namespace RTCircles
             Vector2 toPos = OsuContainer.MapToPlayfield(to.Position.X, to.Position.Y);
 
 
-            if((toPos - fromPos).Length < OsuContainer.Beatmap.CircleRadius * 4)
+            if ((toPos - fromPos).Length < OsuContainer.Beatmap.CircleRadius * 4)
             {
                 IsDead = true;
                 return;
             }
 
-            float fromProgress = (float)OsuContainer.SongPosition.Map(from.EndTime, to.StartTime, 0, 1).Clamp(0, 1);
-            float toProgress = (float)OsuContainer.SongPosition.Map(to.StartTime - OsuContainer.Beatmap.Preempt, to.StartTime - OsuContainer.Beatmap.Fadein, 0, 1).Clamp(0, 1);
+            float toProgress = (float)OsuContainer.SongPosition.Map(from.StartTime - OsuContainer.Beatmap.Preempt, to.StartTime - OsuContainer.Beatmap.Preempt, 0, 1).Clamp(0, 1);
 
             //if no progress, don't draw anything
 
@@ -151,9 +164,6 @@ namespace RTCircles
             //gradually expand the endPosition, towards the circles, using the progress from above
             toPos.X = toProgress.Map(0, 1, fromPos.X, toPos.X);
             toPos.Y = toProgress.Map(0, 1, fromPos.Y, toPos.Y);
-
-            fromPos.X = fromProgress.Map(0, 1, fromPos.X, toPos.X);
-            fromPos.Y = fromProgress.Map(0, 1, fromPos.Y, toPos.Y);
 
             float height = OsuContainer.Beatmap.CircleRadius * 2 * Skin.GetScale(Skin.FollowPoint);
             float width = height * Skin.FollowPoint.Texture.Size.AspectRatio();
@@ -167,7 +177,7 @@ namespace RTCircles
 
         public override void Update(float delta)
         {
-            
+
         }
     }
 }

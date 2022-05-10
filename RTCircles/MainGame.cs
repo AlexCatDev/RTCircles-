@@ -34,6 +34,8 @@ namespace RTCircles
 
         public override void OnLoad()
         {
+            Size = new Silk.NET.Maths.Vector2D<int>(1600, 900);
+
             string build = "RELEASE";
 #if DEBUG
             build = "DEBUG";

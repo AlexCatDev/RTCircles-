@@ -115,6 +115,7 @@
     <None Remove="Sliders\sliderPass.vert" />
     <None Remove="UI\Assets\arrowexpand.png" />
     <None Remove="UI\Assets\catjam-spritesheet.png" />
+    <None Remove="UI\Assets\hitmarker.png" />
     <None Remove="UI\Assets\LogoText.png" />
     <None Remove="UI\LockClosed.png" />
     <None Remove="UI\LockOpen.png" />
@@ -190,6 +191,7 @@
     <EmbeddedResource Include="Skin\hover.wav" />
     <EmbeddedResource Include="Skin\loading.png" />
     <EmbeddedResource Include="Skin\logo.png" />
+    <EmbeddedResource Include="UI\Assets\hitmarker.png" />
     <EmbeddedResource Include="UI\Assets\menu-flash.png" />
     <EmbeddedResource Include="Skin\message-button.png" />
     <EmbeddedResource Include="Skin\normal-hitclap.wav" />

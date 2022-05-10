@@ -65,13 +65,13 @@ namespace RTCircles
                 switch (result)
                 {
                     case HitResult.Max:
-                        color = Colors.From255RGBA(54, 187, 230, 255) * 1.2f;
+                        color = Colors.From255RGBA(54, 187, 230, 255);
                         break;
                     case HitResult.Good:
-                        color = Colors.From255RGBA(92, 226, 22, 255) * 1.2f;
+                        color = Colors.From255RGBA(92, 226, 22, 255);
                         break;
                     case HitResult.Meh:
-                        color = Colors.From255RGBA(216, 175, 73, 255) * 1.2f;
+                        color = Colors.From255RGBA(216, 175, 73, 255);
                         break;
                     case HitResult.Miss:
                         color = new Vector4(1f, 0f, 0f, 1f);
@@ -79,6 +79,8 @@ namespace RTCircles
                     default:
                         break;
                 }
+
+                color.Xyz *= 1.2f;
             }
 
             public override Rectangle Bounds => throw new NotImplementedException();
@@ -96,6 +98,80 @@ namespace RTCircles
                 if (color.W == 0)
                     IsDead = true;
             }
+        }
+
+        public class HitPositionsContainer : DrawableContainer
+        {
+            public static Vector2 Position => new Vector2(MainGame.WindowWidth, MainGame.WindowHeight) - Size / 2 - new Vector2(10 * MainGame.Scale);
+
+            public static Vector2 Size => new Vector2(175) * MainGame.Scale;
+
+            public class HitPositionDrawable : Drawable
+            {
+                private static readonly Texture HitMarkerTexture = new Texture(Utils.GetResource("UI.Assets.hitmarker.png"));
+
+                private Vector2 position;
+                private Vector4 color;
+                private SmoothFloat hitAnimation = new SmoothFloat() { Value = 0 };
+                private SmoothFloat hitFadeout = new SmoothFloat() { Value = 1f };
+
+                public HitPositionDrawable(Vector2 position, HitResult hitResult)
+                {
+                    this.position  = position;
+
+                    switch (hitResult)
+                    {
+                        case HitResult.Max:
+                            color = Colors.From255RGBA(54, 187, 230, 255);
+                            break;
+                        case HitResult.Good:
+                            color = Colors.From255RGBA(92, 226, 22, 255);
+                            break;
+                        case HitResult.Meh:
+                            color = Colors.From255RGBA(216, 175, 73, 255);
+                            break;
+                        case HitResult.Miss:
+                            color = new Vector4(1f, 0f, 0f, 1f);
+                            break;
+                        default:
+                            break;
+                    }
+
+                    hitAnimation.TransformTo(1f, 0.24f, EasingTypes.OutBack, () =>
+                    {
+                        hitFadeout.TransformTo(0, 1f);
+                    });
+                }
+
+                public override void Render(Graphics g)
+                {
+                    color.W = hitFadeout.Value;
+                    g.DrawRectangleCentered(HitPositionsContainer.Position + position, Size / 4f * hitAnimation.Value, color, HitMarkerTexture);
+                }
+
+                public override void Update(float delta)
+                {
+                    hitAnimation.Update(delta);
+                    hitFadeout.Update(delta);
+
+                    if (hitFadeout.Value == 0f)
+                        IsDead = true;
+                }
+            }
+
+            public override void Render(Graphics g)
+            {
+                g.DrawRectangleCentered(Position, Size, new Vector4(1f, 1f, 1f, 0.2f), Texture.WhiteFlatCircle);
+                g.DrawEllipse(Position, 0, 360, Size.Y / 2, Size.Y / 2 * 0.9f, new Vector4(1f), Texture.WhiteFlatCircle, 50, false);
+                base.Render(g);
+            }
+        }
+
+        private HitPositionsContainer hitPositions = new HitPositionsContainer();
+        public HUD()
+        {
+            OsuContainer.OnHitObjectHit += (pos, result) => hitPositions.Add(
+                new HitPositionsContainer.HitPositionDrawable(pos, result));
         }
 
         private float scale = 1f;
@@ -258,37 +334,7 @@ namespace RTCircles
             g.DrawEllipse(piePos, -90, endAngle, radius, 0, col);
             g.DrawRectangleCentered(piePos, new Vector2(radius * 2.6f), Colors.White, Skin.CircularMetre);
 
-            var ranking = OsuContainer.GetCurrentRanking();
-            OsuTexture tex = null;
-            switch (ranking)
-            {
-                case OsuContainer.Ranking.X:
-                    tex = Skin.RankingX;
-                    break;
-                case OsuContainer.Ranking.XH:
-                    tex = Skin.RankingXH;
-                    break;
-                case OsuContainer.Ranking.S:
-                    tex = Skin.RankingS;
-                    break;
-                case OsuContainer.Ranking.SH:
-                    tex = Skin.RankingSH;
-                    break;
-                case OsuContainer.Ranking.A:
-                    tex = Skin.RankingA;
-                    break;
-                case OsuContainer.Ranking.B:
-                    tex = Skin.RankingB;
-                    break;
-                case OsuContainer.Ranking.C:
-                    tex = Skin.RankingC;
-                    break;
-                case OsuContainer.Ranking.D:
-                    tex = Skin.RankingD;
-                    break;
-                default:
-                    break;
-            }
+            var rankingLetterTex = OsuContainer.CurrentRankingToTexture();
 
             piePos.X -= radius*2.8f;
 
@@ -297,7 +343,7 @@ namespace RTCircles
             float brightness = 1f + 1f * beatProgress;
 
             float rankSize = radius * 3.8f;
-            g.DrawRectangleCentered(piePos, new Vector2(rankSize * tex.Texture.Size.AspectRatio(), rankSize), new Vector4(brightness, brightness, brightness, 1f), tex.Texture);
+            g.DrawRectangleCentered(piePos, new Vector2(rankSize * rankingLetterTex.Texture.Size.AspectRatio(), rankSize), new Vector4(brightness, brightness, brightness, 1f), rankingLetterTex.Texture);
 
             piePos.X -= rankSize * 0.8f;
             rankSize /= 1.4f - 0.25f * beatProgress;
@@ -308,6 +354,59 @@ namespace RTCircles
 
             if (OsuContainer.CookieziMode)
                 g.DrawString("Auto", Font.DefaultFont, new Vector2(10) * MainGame.Scale, new Vector4(1f, 1f, 0f, (float)Math.Cos(MainGame.Instance.TotalTime * 1.6).Map(-1, 1, 0.25f, 0.5f)), 1f * MainGame.Scale);
+
+            drawCountDown(g);
+
+            hitPositions.Render(g);
+        }
+
+        private void drawCountDown(Graphics g)
+        {
+            if (OsuContainer.Beatmap == null || OsuContainer.Beatmap.HitObjects.Count == 0 || OsuContainer.CurrentBeatTimingPoint == null)
+                return;
+
+            double beat = OsuContainer.GetBeatCountFrom(OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime, 0.5);
+
+            float functionLol(float from, float to, float pause)
+            {
+                if (beat >= from && beat <= to)
+                    return (float)beat.Map(from, to, 0, 1).Clamp(0, 1);
+
+                if (beat >= to && beat <= to + pause)
+                    return 1;
+
+                if (beat >= to + pause)
+                    return (float)beat.Map(to + pause, to + pause + (to - from), 1, 0).Clamp(0, 1);
+
+                return 0;
+            }
+
+            float textScale = MainGame.Scale * 2;
+
+            /*
+            float letterReadyAlpha = (float)beat.Map(-4, -3, 1, 0).Clamp(0, 1);
+
+            float letter3Alpha = functionLol(-5, -4.5f, 0.5f);
+            float letter3Scale = (float)Interpolation.ValueAt(beat.Clamp(-5, -4.75), 1.5, 1, -5, -4.75, EasingTypes.Out);
+
+            float letter2Alpha = functionLol(-4, -3.5f, 0.5f);
+            float letter2Scale = (float)Interpolation.ValueAt(beat.Clamp(-4, -3.75), 1.5, 1, -4, -3.75, EasingTypes.Out);
+
+            float letter1Alpha = functionLol(-3, -2.5f, 0.5f);
+            float letter1Scale = (float)Interpolation.ValueAt(beat.Clamp(-3, -2.75), 1.5, 1, -3, -2.75, EasingTypes.Out);
+            */
+
+            float letterGOAlpha = functionLol(-2, -1.5f, 0.5f);
+            float letterGOScale = (float)Interpolation.ValueAt(beat.Clamp(-2, -1.5), 1.5, 1, -2, -1.5, EasingTypes.Out);
+
+            if(letterGOAlpha > 0)
+            g.DrawStringCentered("GO!", Font.DefaultFont, MainGame.WindowCenter, new Vector4(1f, 1f, 1f, letterGOAlpha), letterGOScale * textScale);
+
+            //g.DrawStringCentered("Ready?", Font.DefaultFont, MainGame.WindowCenter, new Vector4(1f, 1f, 1f, letterReadyAlpha), textScale);
+
+            //g.DrawStringCentered("3", Font.DefaultFont, MainGame.WindowCenter, new Vector4(1f, 1f, 1f, letter3Alpha), letter3Scale * textScale);
+            //g.DrawStringCentered("2", Font.DefaultFont, MainGame.WindowCenter, new Vector4(1f, 1f, 1f, letter2Alpha), letter2Scale * textScale);
+            //g.DrawStringCentered("1", Font.DefaultFont, MainGame.WindowCenter, new Vector4(1f, 1f, 1f, letter1Alpha), letter1Scale * textScale);
         }
 
         private float interpolatedHP = 0;
@@ -396,6 +495,8 @@ namespace RTCircles
                 key2Size = Vector2.Lerp(key2Size, new Vector2(size), delta * lerpSpeed);
                 key2Color = Vector4.Lerp(key2Color, Colors.White, delta * lerpSpeed);
             }
+
+            hitPositions.Update(delta);
         }
     }
 }

@@ -75,7 +75,10 @@ namespace RTCircles
             OsuContainer.BeatmapChanged += () =>
             {
                 if (OsuContainer.Beatmap.Background != null)
+                {
                     shouldGenBlur = true;
+                    OsuContainer.Beatmap.Background.Bind(0);
+                }
 
                 int index = BeatmapCollection.SearchItems.FindIndex((o) => o.Hash == OsuContainer.Beatmap.Hash);
                 //int index = -1;
@@ -148,8 +151,6 @@ namespace RTCircles
                     bg.TextureOverride = blurBuffer.Texture;
                     shouldGenBlur = false;
                 }
-                else
-                    OsuContainer.Beatmap.Background.Bind(0);
             }
 
             Vector2 offset = new Vector2();
@@ -263,8 +264,8 @@ namespace RTCircles
 
             g.DrawStringNoAlign(searchForString, Font.DefaultFont, searchForStringPos, (Vector4)Color4.LawnGreen, searchForStringScale);
 
-            if (MapSelectScreen.SearchText != null)
-                g.DrawStringNoAlign(MapSelectScreen.SearchText, Font.DefaultFont, searchForStringPos + new Vector2(searchForStringSize.X, 0), Colors.White, searchForStringScale);
+            if (SongSelectScreen.SearchText != null)
+                g.DrawStringNoAlign(SongSelectScreen.SearchText, Font.DefaultFont, searchForStringPos + new Vector2(searchForStringSize.X, 0), Colors.White, searchForStringScale);
 
             searchForStringPos.Y += searchForStringSize.Y * 1.6f;
             g.DrawStringNoAlign($"Found {BeatmapCollection.SearchItems.Count} results", Font.DefaultFont, searchForStringPos, Colors.White, searchForStringScale / 2);
@@ -501,7 +502,9 @@ namespace RTCircles
                 return;
             }
 
-            ScreenManager.GetScreen<OsuScreen>().OnEntering();
+            var osuScreen = ScreenManager.GetScreen<OsuScreen>();
+
+            osuScreen.ResetState();
 
             int previewTime = OsuContainer.Beatmap.InternalBeatmap.GeneralSection.PreviewTime;
 
@@ -520,7 +523,10 @@ namespace RTCircles
             }
 
             OsuContainer.SongPosition = previewTime;
-            ScreenManager.GetScreen<OsuScreen>().EnsureObjectIndexSynchronization();
+            osuScreen.EnsureObjectIndexSynchronization();
+
+            if(previewTime > -1)
+            OsuContainer.Beatmap.Song.Play(false);
         }
     }
 }

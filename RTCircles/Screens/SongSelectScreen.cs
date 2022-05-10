@@ -207,13 +207,13 @@ namespace RTCircles
         }
     }
 
-    public class MapSelectScreen : Screen
+    public class SongSelectScreen : Screen
     {
         public SongSelector SongSelector { get; private set; } = new SongSelector();
 
         private bool shouldGenGraph;
 
-        public MapSelectScreen()
+        public SongSelectScreen()
         {
             BeatmapMirror.OnNewBeatmapAvailable += (beatmap) =>
             {

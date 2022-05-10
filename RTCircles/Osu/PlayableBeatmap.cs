@@ -103,8 +103,11 @@ namespace RTCircles
             {
                 using (FileStream fs = File.OpenRead(audioPath))
                 {
-                    playableBeatmap.Song = new Sound(fs, true);
-                    playableBeatmap.Song.Volume = GlobalOptions.SongVolume.Value;
+                    Sound song = new Sound(fs, useFX: true, noBuffer: false, bassFlags: ManagedBass.BassFlags.Prescan);
+                    song.Volume = 0;
+                    ManagedBass.Bass.ChannelSlideAttribute(song, ManagedBass.ChannelAttribute.Volume, (float)GlobalOptions.SongVolume.Value, 500);
+
+                    playableBeatmap.Song = song;
                 }
             }
             else

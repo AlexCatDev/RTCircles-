@@ -77,14 +77,14 @@ namespace Easy2D
             Utils.Log($"Audio device set to: {device.Info.Name} Latency: {DeviceLatency} Version: {Bass.Version}", LogLevel.Important);
         }
 #endregion
-        private int handle;
+        public int Handle { get; private set; }
 
-        public bool IsPlaying => Bass.ChannelIsActive(handle) == PlaybackState.Playing;
-        public bool IsPaused => Bass.ChannelIsActive(handle) == PlaybackState.Paused;
+        public bool IsPlaying => Bass.ChannelIsActive(Handle) == PlaybackState.Playing;
+        public bool IsPaused => Bass.ChannelIsActive(Handle) == PlaybackState.Paused;
 
-        public bool IsStopped => Bass.ChannelIsActive(handle) == PlaybackState.Stopped;
+        public bool IsStopped => Bass.ChannelIsActive(Handle) == PlaybackState.Stopped;
 
-        public bool IsStalled => Bass.ChannelIsActive(handle) == PlaybackState.Stalled;
+        public bool IsStalled => Bass.ChannelIsActive(Handle) == PlaybackState.Stalled;
 
         public bool SupportsFX { get; private set; }
 
@@ -96,7 +96,7 @@ namespace Easy2D
         /// <param name="data"></param>
         public void GetFFTData(float[] data, DataFlags flags)
         {
-            Bass.ChannelGetData(handle, data, (int)flags);
+            Bass.ChannelGetData(Handle, data, (int)flags);
         }
 
         /// <summary>
@@ -105,28 +105,28 @@ namespace Easy2D
         /// <param name="data"></param>
         public void GetRawData(float[] data)
         {
-            Bass.ChannelGetData(handle, data, (data.Length * 4) + (int)DataFlags.Float);
+            Bass.ChannelGetData(Handle, data, (data.Length * 4) + (int)DataFlags.Float);
         }
 
         public float[] GetLevels(float duration, LevelRetrievalFlags flags)
         {
-            return Bass.ChannelGetLevel(handle, duration.Clamp(0, 1), flags);
+            return Bass.ChannelGetLevel(Handle, duration.Clamp(0, 1), flags);
         }
 
         public int GetLevel()
         {
-            return Bass.ChannelGetLevel(handle);
+            return Bass.ChannelGetLevel(Handle);
         }
 
         public double Frequency
         {
             get
             {
-                return Bass.ChannelGetAttribute(handle, ChannelAttribute.Frequency);
+                return Bass.ChannelGetAttribute(Handle, ChannelAttribute.Frequency);
             }
             set
             {
-                Bass.ChannelSetAttribute(handle, ChannelAttribute.Frequency, value);
+                Bass.ChannelSetAttribute(Handle, ChannelAttribute.Frequency, value);
             }
         }
 
@@ -134,11 +134,11 @@ namespace Easy2D
         {
             get
             {
-                return Bass.ChannelGetAttribute(handle, ChannelAttribute.Volume);
+                return Bass.ChannelGetAttribute(Handle, ChannelAttribute.Volume);
             }
             set
             {
-                Bass.ChannelSetAttribute(handle, ChannelAttribute.Volume, value);
+                Bass.ChannelSetAttribute(Handle, ChannelAttribute.Volume, value);
             }
         }
 
@@ -149,11 +149,11 @@ namespace Easy2D
         {
             get 
             { 
-                return Bass.ChannelGetAttribute(handle, ChannelAttribute.Pan); 
+                return Bass.ChannelGetAttribute(Handle, ChannelAttribute.Pan); 
             }
             set
             {
-                Bass.ChannelSetAttribute(handle, ChannelAttribute.Pan, value.Clamp(-1, 1));
+                Bass.ChannelSetAttribute(Handle, ChannelAttribute.Pan, value.Clamp(-1, 1));
             }
         }
 
@@ -161,15 +161,15 @@ namespace Easy2D
         {
             get
             {
-                return Bass.ChannelBytes2Seconds(handle, Bass.ChannelGetPosition(handle, PositionFlags.Bytes)) * 1000d;
+                return Bass.ChannelBytes2Seconds(Handle, Bass.ChannelGetPosition(Handle, PositionFlags.Bytes)) * 1000d;
             }
             set
             {
                 double clampedTime = Math.Max(value / 1000d, 0);
-                var inBytes = Bass.ChannelSeconds2Bytes(handle, clampedTime);
+                var inBytes = Bass.ChannelSeconds2Bytes(Handle, clampedTime);
 
-                if (inBytes != Bass.ChannelGetPosition(handle))
-                    Bass.ChannelSetPosition(handle, inBytes);
+                if (inBytes != Bass.ChannelGetPosition(Handle))
+                    Bass.ChannelSetPosition(Handle, inBytes);
             }
         }
 
@@ -177,7 +177,7 @@ namespace Easy2D
         {
             get
             {
-                return Bass.ChannelBytes2Seconds(handle, Bass.ChannelGetLength(handle)) * 1000d;
+                return Bass.ChannelBytes2Seconds(Handle, Bass.ChannelGetLength(Handle)) * 1000d;
             }
         }
 
@@ -191,7 +191,7 @@ namespace Easy2D
                 if (!SupportsFX)
                     return Frequency / DefaultFrequency;
 
-                double speed = Bass.ChannelGetAttribute(handle, ChannelAttribute.Tempo);
+                double speed = Bass.ChannelGetAttribute(Handle, ChannelAttribute.Tempo);
                 speed /= 100;
                 speed += 1;
 
@@ -204,33 +204,35 @@ namespace Easy2D
                 else
                 {
                     double speed = value * 100 - 100;
-                    Bass.ChannelSetAttribute(handle, ChannelAttribute.Tempo, speed);
+                    Bass.ChannelSetAttribute(Handle, ChannelAttribute.Tempo, speed);
                 }
             }
         }
 
         public void Play(bool restart = false)
         {
-            Bass.ChannelPlay(handle, restart);
+            Bass.ChannelPlay(Handle, restart);
         }
 
         public void Pause()
         {
-            Bass.ChannelPause(handle);
+            Bass.ChannelPause(Handle);
         }
 
         public void Stop()
         {
-            Bass.ChannelStop(handle);
+            Bass.ChannelStop(Handle);
         }
 
-        public void SetFX<T>(Effect<T> effect) where T : class, IEffectParameter, new() => effect.ApplyOn(handle);
+        public void SetFX<T>(Effect<T> effect) where T : class, IEffectParameter, new() => effect.ApplyOn(Handle);
+
+        public static implicit operator int (Sound sound) => sound.Handle;
 
         ~Sound()
         {
-            Utils.Log($"Deleting Sound handle -> [{handle}]", LogLevel.Info);
-            allHandles.Remove(handle);
-            bool success = Bass.StreamFree(handle);
+            Utils.Log($"Deleting Sound handle -> [{Handle}]", LogLevel.Info);
+            allHandles.Remove(Handle);
+            bool success = Bass.StreamFree(Handle);
             if (success == false)
                 Utils.Log($"Bass Sound handle deletion failed! -> {Bass.LastError}", LogLevel.Error);
         }
@@ -241,7 +243,7 @@ namespace Easy2D
         /// <param name="stream">The input data to the file, which will be read to end and copied internally</param>
         /// <param name="useFX">Allow the usage of fx? this has some drawbacks, forexample, major delay on playing the sound and a lag spike</param>
         /// <param name="noBuffer">NoBuffer remedies this, but fft is broken among some other stuf probably</param>
-        public Sound(Stream stream, bool useFX = false, bool noBuffer = false)
+        public Sound(Stream stream, bool useFX = false, bool noBuffer = false, BassFlags bassFlags = BassFlags.Default)
         {
             if (stream is null)
             {
@@ -249,28 +251,24 @@ namespace Easy2D
                 GC.SuppressFinalize(this);
                 return;
             }
-            
-            byte[] data = new byte[stream.Length];
-            stream.Read(data, 0, data.Length);
+                byte[] data = new byte[stream.Length];
+                stream.Read(data, 0, data.Length);
+                
+                if (useFX)
+                    Handle = BassFx.TempoCreate(Bass.CreateStream(data, 0, data.Length, BassFlags.Decode | bassFlags), BassFlags.Default | BassFlags.FxFreeSource);
+                else
+                    Handle = Bass.CreateStream(data, 0, data.Length, bassFlags);
 
-            if (useFX)
-                handle = BassFx.TempoCreate(Bass.CreateStream(data, 0, data.Length, BassFlags.Decode | BassFlags.Prescan), BassFlags.Default | BassFlags.FxFreeSource);
-            else
-                handle = Bass.CreateStream(data, 0, data.Length, BassFlags.Prescan);
+                if (noBuffer)
+                    Bass.ChannelSetAttribute(Handle, ChannelAttribute.Buffer, 0);
 
-            if (noBuffer)
-                Bass.ChannelSetAttribute(handle, ChannelAttribute.Buffer, 0);
+                DefaultFrequency = Frequency;
+                SupportsFX = useFX;
 
-            if (noBuffer)
-                Bass.ChannelSetAttribute(handle, ChannelAttribute.Buffer, 0);
-
-            DefaultFrequency = Frequency;
-            SupportsFX = useFX;
-
-            if (Bass.LastError != Errors.OK)
-                Utils.Log($"BASS error when loading audio: {Bass.LastError}", LogLevel.Error);
-            else
-                allHandles.Add(handle);
+                if (Bass.LastError != Errors.OK)
+                    Utils.Log($"BASS error when loading audio: {Bass.LastError}", LogLevel.Error);
+                else
+                    allHandles.Add(Handle);
         }
     }
 

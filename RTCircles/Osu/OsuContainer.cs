@@ -151,7 +151,7 @@ namespace RTCircles
         {
             get
             {
-                return ScreenManager.ActiveScreen is MenuScreen ? true : _muteHitsounds;
+                return ScreenManager.ActiveScreen is MenuScreen or SongSelectScreen ? true : _muteHitsounds;
             }
             set
             {
@@ -214,6 +214,14 @@ namespace RTCircles
 
                 return GetBeatProgressAt(CurrentBeatTimingPoint.Offset);
             }
+        }
+
+        public static double GetBeatCountFrom(double time, double scale = 1f)
+        {
+            if (CurrentBeatTimingPoint is null)
+                return 0;
+
+            return (songPos - time) / (CurrentBeatTimingPoint.BeatLength / scale);
         }
 
         public static double GetBeatProgressAt(double time, double scale = 1f)
@@ -329,6 +337,7 @@ namespace RTCircles
             return HitResult.Miss;
         }
 
+        public static Action<Vector2, HitResult> OnHitObjectHit;
         public static void ScoreHit(HitObject obj)
         {
             Update(0f);
@@ -372,6 +381,8 @@ namespace RTCircles
             }
             else
                 timeJudgement = HitResult.Miss;
+
+            OnHitObjectHit?.Invoke(position - objPos, timeJudgement);
 
             //distanceCenter: 0 == outer edge of circle, 1 == Spot on.
             //distanceNextJudgement: The more towards an upgrade to the next hitjudgement, the closer to 1, if judgement is 300, 1 is perfectly on time

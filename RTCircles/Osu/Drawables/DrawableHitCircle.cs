@@ -91,13 +91,13 @@ namespace RTCircles
         {
             if (!playedSound && !IsHit && !IsMissed)
             {
-                OsuContainer.ScoreHit(circle);
-
                 hitTime = OsuContainer.SongPosition;
                 double t = Math.Abs(hittableTime);
 
                 if (alpha < 0.7f)
                     return true;
+
+                OsuContainer.ScoreHit(circle);
 
                 if (t < OsuContainer.Beatmap.Window300)
                     OsuContainer.HUD.AddHit(hittableTime, HitResult.Max, Position);

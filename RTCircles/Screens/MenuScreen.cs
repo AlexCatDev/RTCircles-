@@ -9,123 +9,6 @@ using System.Threading.Tasks;
 
 namespace RTCircles
 {
-    public class CumSprayer : Drawable
-    {
-        class Cum : Drawable
-        {
-            private Vector2 size;
-            private SmoothFloat alpha = new SmoothFloat() { Value = 1 };
-
-            private Vector2 position;
-            private Vector2 velocity;
-            private float angle = 0;
-
-            private float scale = 0;
-
-            private static long layer = long.MaxValue;
-
-            public Cum(Vector2 startPos, float angle)
-            {
-                Layer = layer--;
-
-                position = startPos;
-
-                alpha.Wait(0.1f);
-                alpha.TransformTo(0f, 0.8f, EasingTypes.Out, () =>
-                {
-                    IsDead = true;
-                });
-
-                size = new Vector2(RNG.Next(24, 64));
-
-                scale = size.X.Map(24, 64, 2000, 1500);
-
-                velocity = new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * scale;
-                velocity.X /= 1.5f;
-                angle = RNG.Next(0, 360);
-            }
-
-            public override void Render(Graphics g)
-            {
-                var rgb = Skin.Config.ColorFromIndex(0);
-                var color = new Vector4(rgb, alpha);
-
-                g.DrawRectangleCentered(position, size * MainGame.Scale * Skin.GetScale(Skin.HitCircle), color, Skin.HitCircle, rotDegrees: angle);
-
-                if (Skin.Config.HitCircleOverlayAboveNumber)
-                    Skin.CircleNumbers.DrawCentered(g, position, size.Y * MainGame.Scale / 2.7f, new Vector4(1f, 1f, 1f, alpha), "727");
-
-                g.DrawRectangleCentered(position, size * MainGame.Scale * Skin.GetScale(Skin.HitCircleOverlay), new Vector4(1f, 1f, 1f, alpha), Skin.HitCircleOverlay, rotDegrees: angle);
-
-                if (!Skin.Config.HitCircleOverlayAboveNumber)
-                    Skin.CircleNumbers.DrawCentered(g, position, size.Y * MainGame.Scale / 2.7f, new Vector4(1f, 1f, 1f, alpha), "727");
-            }
-
-            public override void Update(float delta)
-            {
-                position += velocity * delta * MainGame.Scale;
-                angle += scale * delta / 10;
-
-                velocity.Y += 2400f * delta;
-
-                alpha.Update(delta);
-            }
-        }
-
-        public CumSprayer()
-        {
-            OsuContainer.OnKiai += OsuContainer_OnKiai;
-            Layer = Int32.MaxValue;
-        }
-
-        public Vector2? Position;
-
-        private bool startSpawningCum;
-        private float cumTimer;
-        private float angle = 0;
-
-        private void OsuContainer_OnKiai()
-        {
-            startSpawningCum = true;
-            angle = 0;
-        }
-
-        public override void Render(Graphics g)
-        {
-            g.DrawString(angle.ToString(), Font.DefaultFont, Input.MousePosition, Colors.Blue, 1f);
-        }
-
-        public override void Update(float delta)
-        {
-            float spawnRate = 0.02f;
-            float startAngle = MathF.PI + MathF.PI / 8;
-            if (startSpawningCum)
-            {
-                cumTimer += delta;
-
-                angle += 2f * delta;
-
-                if (cumTimer >= spawnRate)
-                {
-                    cumTimer -= spawnRate;
-                    Container.Add(new Cum(Position ?? Input.MousePosition, startAngle + angle));
-                }
-
-                if(angle >= MathF.PI - MathF.PI / 3)
-                {
-                    startSpawningCum = false;
-                    angle = 0;
-                }
-            }
-        }
-
-        public override bool OnKeyDown(Key key)
-        {
-            OsuContainer.KeyDown(key);
-            return base.OnKeyDown(key);
-        }
-    }
-
     public class ExpandingCircle : Drawable
     {
         private Vector2 startPos;
@@ -178,7 +61,7 @@ namespace RTCircles
         {
             BeatmapMirror.Scheduler.Enqueue(() =>
             {
-                ScreenManager.GetScreen<MapSelectScreen>().LoadCarouselItems();
+                ScreenManager.GetScreen<SongSelectScreen>().LoadCarouselItems();
                 var carouselItems = BeatmapCollection.Items;
 
                 PlayableBeatmap playableBeatmap;
@@ -218,7 +101,6 @@ namespace RTCircles
                     });
                 }
 
-                logo.soundFade.TransformTo((float)GlobalOptions.SongVolume.Value, 0.5f);
                 logo.IntroSizeAnimation.TransformTo(new Vector2(-200), firstKiaiTimePoint, firstKiaiTimePoint + 500, EasingTypes.InQuint, () =>
                 {
                     logo.ToggleInput(true);
@@ -469,8 +351,6 @@ namespace RTCircles
 
         private MapBackground mapBackground;
 
-        public SmoothFloat soundFade = new SmoothFloat();
-
         private bool hover => MathUtils.IsPointInsideRadius(Input.MousePosition, Bounds.Center, Bounds.Size.X / 2);
         private bool lastHover;
 
@@ -542,7 +422,7 @@ namespace RTCircles
             playButton.OnClick += (s, e) =>
             {
                 slideBack();
-                ScreenManager.SetScreen<MapSelectScreen>();
+                ScreenManager.SetScreen<SongSelectScreen>();
             };
 
             multiPlayButton.Layer = -69;
@@ -774,13 +654,9 @@ namespace RTCircles
 
             bopButtons(delta);
 
-            soundFade.Update(delta);
             if (OsuContainer.Beatmap?.Song is not null)
             {
                 visualizer.Sound = OsuContainer.Beatmap.Song;
-
-                if (soundFade.HasCompleted == false)
-                    visualizer.Sound.Volume = soundFade.Value;
 
                 if (OsuContainer.Beatmap.Song.IsStopped)
                     OsuContainer.Beatmap.Song.Play(true);

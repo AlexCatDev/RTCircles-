@@ -50,9 +50,10 @@ namespace RTCircles
             {
                 if (ScreenManager.ActiveScreen == this)
                 {
-                    OnKeyDown(OsuContainer.Key1);
+                    //Touch inputs seems to come from another thread, so it has to be scheduled unfortunately :/
                     GPUSched.Instance.Enqueue(() =>
                     {
+                        OnKeyDown(OsuContainer.Key1);
                         for (int i = 0; i < 5; i++)
                         {
                             Add(new HUD.Firework(new Vector2(MainGame.WindowWidth * finger.X, MainGame.WindowHeight * finger.Y)));
@@ -64,7 +65,12 @@ namespace RTCircles
             Input.OnFingerUp += (finger) =>
             {
                 if (Input.TouchFingerEvents.Count == 0)
-                    OnKeyUp(OsuContainer.Key1);
+                {
+                    GPUSched.Instance.Enqueue(() =>
+                    {
+                        OnKeyUp(OsuContainer.Key1);
+                    });
+                }
             };
 
             OsuContainer.OnKiai += () =>
@@ -96,7 +102,7 @@ namespace RTCircles
             };
         }
 
-        public override void OnEntering()
+        public void ResetState()
         {
             Clear<DrawableHitCircle>();
             Clear<DrawableSpinner>();
@@ -124,21 +130,29 @@ namespace RTCircles
             OsuContainer.Score = 0;
             OsuContainer.MaxCombo = 0;
 
-            if (OsuContainer.Beatmap is null || OsuContainer.Beatmap.HitObjects.Count == 0)
-                return;
+            OsuContainer.Beatmap?.AutoGenerator.Reset();
 
-            OsuContainer.SongPosition = OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime - 3000;
+            breakOverlay.Reset();
+
+            Utils.Log($"Reset Osu State!!!", LogLevel.Important);
+        }
+
+        public override void OnEntering()
+        {
+            ResetState();
 
             OnKeyUp(OsuContainer.Key1);
             OnKeyUp(OsuContainer.Key2);
             OnMouseUp(MouseButton.Left);
 
+
+            if (OsuContainer.Beatmap is null || OsuContainer.Beatmap.HitObjects.Count == 0)
+                return;
+
+            OsuContainer.SongPosition = OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime - 3000;
+
             if(OsuContainer.Beatmap.Song.PlaybackPosition >= 0)
                 OsuContainer.Beatmap.Song.Play();
-
-            OsuContainer.Beatmap.AutoGenerator.Reset();
-
-            breakOverlay.Reset();
         }
 
         //en dårlig ide >.<
@@ -273,6 +287,8 @@ namespace RTCircles
 
             OsuContainer.HUD.Update(delta);
 
+            breakOverlay.Update(delta);
+
             dieAnim.Update(delta);
             if (!dieAnim.HasCompleted && OsuContainer.Beatmap != null)
                 OsuContainer.Beatmap.Song.Frequency = dieAnim.Value;
@@ -391,11 +407,11 @@ namespace RTCircles
 
             drawBackground(g);
 
-            drawSmoke(g);
+            //drawSmoke(g);
 
             base.Render(g);
 
-            if(ScreenManager.ActiveScreen==this)
+            if(ScreenManager.ActiveScreen is not MenuScreen)
             OsuContainer.HUD.Render(g);
 
             breakOverlay.Render(g);
