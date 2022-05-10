@@ -73,16 +73,11 @@ namespace RTCircles
                 }
             };
 
-            OsuContainer.OnKiai += () =>
-            {
-                bgAlpha.Value = 0.3f;
-                bgAlpha.TransformTo(0.1f, 1f, EasingTypes.Out);
-            };
-
-            bgAlpha.Value = 0.3f;
-
             retryButton.OnClick += (s, e) =>
             {
+                if (pauseOverlayFade.Value < 1)
+                    return;
+
                 OnEnter();
 
                 faderino.FadeTo(1f, 0.25f, EasingTypes.Out);
@@ -116,7 +111,6 @@ namespace RTCircles
 
             OsuContainer.HUD.AddHP(1000);
 
-            bgZoom = 100;
             bgAlpha.Value = 1f;
             bgAlpha.TransformTo(0.1f, 1f, EasingTypes.Out);
 
@@ -293,7 +287,7 @@ namespace RTCircles
             if (!dieAnim.HasCompleted && OsuContainer.Beatmap != null)
                 OsuContainer.Beatmap.Song.Frequency = dieAnim.Value;
 
-            if (OsuContainer.SongPosition > OsuContainer.Beatmap?.HitObjects[^1].BaseObject.EndTime + 1000 && ScreenManager.ActiveScreen == this)
+            if (OsuContainer.Beatmap.HitObjects.Count > 0 && OsuContainer.SongPosition > OsuContainer.Beatmap?.HitObjects[^1].BaseObject.EndTime + 1000 && ScreenManager.ActiveScreen == this)
                 ScreenManager.SetScreen<ResultScreen>(false);
 
             base.Update(delta);
@@ -321,10 +315,6 @@ namespace RTCircles
                     spawnWarningArrowsCheck(obj, nextObj);
                 }
             }
-
-            if (OsuContainer.Combo % 50 == 0 && ComboBurst.CanSpawn && OsuContainer.Combo > 0 && Skin.ComboBurst is not null)
-                Add(new ComboBurst());
-
         }
 
         private void spawnFollowPointsCheck(IDrawableHitObject current, IDrawableHitObject next)
@@ -378,11 +368,6 @@ namespace RTCircles
                 return;
 
             bgAlpha.Update(delta);
-
-            if (OsuContainer.IsKiaiTimeActive)
-                bgZoom = 100f;
-            else
-                bgZoom = MathHelper.Lerp(bgZoom, 0f, delta * 10f);
 
             float width = MainGame.WindowWidth + bgZoom;
             float height = MainGame.WindowHeight + bgZoom;
@@ -541,7 +526,7 @@ namespace RTCircles
                 }
 
                 //Hvis mappet er slut, og man trykker esc så bliver man sendt til result screen
-                if (OsuContainer.SongPosition > OsuContainer.Beatmap.HitObjects[^1].BaseObject.EndTime + 400)
+                if (OsuContainer.Beatmap.HitObjects.Count > 0 && OsuContainer.SongPosition > OsuContainer.Beatmap.HitObjects[^1].BaseObject.EndTime + 400)
                 {
                     ScreenManager.SetScreen<ResultScreen>(false);
                     return;

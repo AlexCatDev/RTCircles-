@@ -54,10 +54,11 @@ namespace RTCircles
             Utils.WriteToConsole = true;
             registerEvents();
 
-            Skin.Load(@"");
+            //Skin.Load(@"");
+            //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\- 『BlooXoo』 -");
             //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  idke 1.2 without sliderendcircle");
             //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  AlexSkin 1.0");
-            //Skin.Load(@"C:\Users\user\Desktop\whitecat skin");
+            Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\《CK》 Bacon boi 1.0 『blue』");
 
             g = new Graphics();
 

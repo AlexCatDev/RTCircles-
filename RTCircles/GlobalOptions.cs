@@ -39,6 +39,8 @@ namespace RTCircles
 
         public readonly static Option<bool> UseFastSliders = new Option<bool>("UseFastSliders", false) { Description = "Low quality sliders (Requires map reload, Recommended to use slider snaking)"};
 
+        public readonly static Option<bool> EnableComboBursts = new Option<bool>("EnableComboBursts", true) { Description = "Want a anime girl to clutter your screen every 50 combo?" };
+
         public readonly static Option<bool> EnableMouseButtons = new Option<bool>("MouseButtons", false) { Description = "Enable Mouse Buttons?" };
         #endregion
         #region doubles

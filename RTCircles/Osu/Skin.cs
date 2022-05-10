@@ -100,16 +100,19 @@ namespace RTCircles
             var col = ComboColors[index % ComboColors.Count];
 
             if (GlobalOptions.RGBCircles.Value && OsuContainer.IsKiaiTimeActive)
-                col = Colors.Tint(new Vector4(col, 1), 2f).Xyz + new Vector3(1);
+                col = MathUtils.RainbowColor(OsuContainer.SongPosition/1000, 0.5f, 1.1f);
+
+            if (OsuContainer.IsKiaiTimeActive)
+                col -= new Vector3(0.1f)*(float)(1 - OsuContainer.BeatProgress);
 
                 return col;
         }
 
         public Vector3 MenuGlow = new Vector3(1f,0.8f,0f);
 
-        public Vector3? SliderBorder = null;//new Vector3(0.8f,0.8f,0.8f);
+        public Vector3? SliderBorder = null;
 
-        public Vector3? SliderTrackOverride = null;// new Vector3(0,0,0);
+        public Vector3? SliderTrackOverride = null;
 
         public string HitCirclePrefix = "default";
         public float HitCircleOverlap = 3;
@@ -325,10 +328,15 @@ namespace RTCircles
         public static OsuTexture RankingC { get; private set; }
         public static OsuTexture RankingD { get; private set; }
 
+        public static OsuTexture HealthBar_BG { get; private set; }
+        public static OsuTexture HealthBar_Fill { get; private set; }
+
         public static string CurrentPath { get; private set; }
 
         public static void Load(string path)
         {
+            //LMAO recode this
+
             CurrentPath = path;
 
             Config = new SkinConfiguration(File.Exists($"{path}/skin.ini") ? File.OpenRead($"{path}/skin.ini") : Utils.GetResource("Skin.skin.ini"));
@@ -396,7 +404,9 @@ namespace RTCircles
             SliderBall = LoadTexture(path, "sliderb0");
             SliderReverse = LoadTexture(path, "reversearrow");
 
-            FollowPoint = LoadTexture(path, "followpoint-0");
+            FollowPoint = LoadTexture(path, "followpoint");
+            if (FollowPoint.Texture.Size.X == 1 || FollowPoint.Texture.Size.Y == 1)
+                FollowPoint = new OsuTexture(new Texture(Utils.GetResource($"Skin.followpoint.png")), true, 0);
 
             CircleNumbers = new SkinNumberStore(path, $"{Config.HitCirclePrefix}-");
             CircleNumbers.Overlap = Config.HitCircleOverlap;
@@ -417,11 +427,16 @@ namespace RTCircles
 
             Star = LoadTexture(path, "star");
 
-            //ComboBurst = LoadTexture(path, "comboburst");
+            ComboBurst = LoadTexture(path, "comboburst-0", true, true);
 
             HRModIcon = LoadTexture(path, "selection-mod-hardrock");
             DTModIcon = LoadTexture(path, "selection-mod-doubletime");
             EZModIcon = LoadTexture(path, "selection-mod-easy");
+
+            HealthBar_BG = LoadTexture(path, "scorebar-bg", false, true);
+            HealthBar_Fill = LoadTexture(path, "scorebar-colour", false, true);
+            if(HealthBar_Fill == null)
+                HealthBar_Fill = LoadTexture(path, "scorebar-colour-0", false, true);
 
             RankingXH = LoadTexture(path, "ranking-XH-small");
             RankingX = LoadTexture(path, "ranking-X-small");
@@ -519,7 +534,7 @@ namespace RTCircles
             }
 
             //First look for the x2 version
-            var tex = loadTexture(path, $"{name}x2");
+            var tex = loadTexture(path, $"{name}@2x");
 
             //if that fails look for the normal version
             if (tex is null)

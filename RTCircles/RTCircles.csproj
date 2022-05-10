@@ -52,7 +52,6 @@
     <None Remove="Skin\drum-hitfinish.wav" />
     <None Remove="Skin\drum-hitnormal.wav" />
     <None Remove="Skin\drum-hitwhistle.wav" />
-    <None Remove="Skin\followpoint-0.png" />
     <None Remove="Skin\followpoint.png" />
     <None Remove="Skin\hit0.png" />
     <None Remove="Skin\hit100.png" />
@@ -161,7 +160,6 @@
     <EmbeddedResource Include="Skin\combo-9.png" />
     <EmbeddedResource Include="Skin\combo-x.png" />
     <EmbeddedResource Include="Skin\combobreak.wav" />
-    <EmbeddedResource Include="Skin\comboburst.png" />
     <EmbeddedResource Include="Skin\cursor.png" />
     <EmbeddedResource Include="Skin\cursortrail.png" />
     <EmbeddedResource Include="Skin\default-0.png" />
@@ -181,7 +179,7 @@
     <EmbeddedResource Include="Skin\drum-hitfinish.wav" />
     <EmbeddedResource Include="Skin\drum-hitnormal.wav" />
     <EmbeddedResource Include="Skin\drum-hitwhistle.wav" />
-    <EmbeddedResource Include="Skin\followpoint-0.png" />
+    <EmbeddedResource Include="Skin\followpoint.png" />
     <EmbeddedResource Include="Skin\hit0.png" />
     <EmbeddedResource Include="Skin\hit100.png" />
     <EmbeddedResource Include="Skin\hit300.png" />

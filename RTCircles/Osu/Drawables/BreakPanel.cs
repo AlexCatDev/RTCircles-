@@ -56,11 +56,11 @@ namespace RTCircles
 
             int remainingBreakTime = (int)Math.Max((breakEnd - OsuContainer.SongPosition) / 1000, 0);
 
-            float textScale = size.Y / Font.DefaultFont.Size * 0.6f;
+            float textScale = size.Y / ResultScreen.Font.Size*0.6f;
 
             Rectangle rect = new Rectangle(position, size);
 
-            g.DrawStringCentered(remainingBreakTime.ToString(), Font.DefaultFont, rect.Center, new Vector4(1f, 1f, 1f, scrollProgress), textScale);
+            g.DrawStringCentered(remainingBreakTime.ToString(), ResultScreen.Font, rect.Center, new Vector4(1f, 1f, 1f, scrollProgress), textScale);
         }
 
         public override void Update(float delta)

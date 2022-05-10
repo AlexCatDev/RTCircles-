@@ -15,20 +15,16 @@ namespace RTCircles
         {
             get 
             {
-                float width = 500 * MainGame.Scale;
-                float height  = width / Skin.ComboBurst.Texture.Size.AspectRatio();
+                float height = MainGame.WindowHeight;
+                float width  = height * Skin.ComboBurst.Texture.Size.AspectRatio();
                 return new Vector2(width, height);
             }
         }
 
         private bool RightSide;
 
-        public static bool CanSpawn = true;
-
         public ComboBurst()
         {
-            CanSpawn = false;
-
             color.Value = new Vector4(1f, 1f, 1f, 0.8f);
             xOffset.Value = -1f;
 
@@ -36,7 +32,6 @@ namespace RTCircles
             {
                 color.TransformTo(new Vector4(1f, 1f, 1f, 0f), 0.7f, EasingTypes.None, () => {
                     IsDead = true;
-                    CanSpawn = true;
                 });
             });
 

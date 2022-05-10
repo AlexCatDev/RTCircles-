@@ -102,7 +102,7 @@ namespace RTCircles
 
         public class HitPositionsContainer : DrawableContainer
         {
-            public static Vector2 Position => new Vector2(MainGame.WindowWidth, MainGame.WindowHeight) - Size / 2 - new Vector2(10 * MainGame.Scale);
+            public static Vector2 Position => new Vector2(MainGame.WindowWidth - Size.X/2 - 5, 200*MainGame.Scale);
 
             public static Vector2 Size => new Vector2(175) * MainGame.Scale;
 
@@ -146,7 +146,7 @@ namespace RTCircles
                 public override void Render(Graphics g)
                 {
                     color.W = hitFadeout.Value;
-                    g.DrawRectangleCentered(HitPositionsContainer.Position + position, Size / 4f * hitAnimation.Value, color, HitMarkerTexture);
+                    g.DrawRectangleCentered(HitPositionsContainer.Position + position, Size / 6f * hitAnimation.Value, color, HitMarkerTexture);
                 }
 
                 public override void Update(float delta)
@@ -161,8 +161,8 @@ namespace RTCircles
 
             public override void Render(Graphics g)
             {
-                g.DrawRectangleCentered(Position, Size, new Vector4(1f, 1f, 1f, 0.2f), Texture.WhiteFlatCircle);
-                g.DrawEllipse(Position, 0, 360, Size.Y / 2, Size.Y / 2 * 0.9f, new Vector4(1f), Texture.WhiteFlatCircle, 50, false);
+                g.DrawRectangleCentered(Position, Size, new Vector4(0.7f, 0.7f, 0.7f, 0.2f), Texture.WhiteFlatCircle);
+                g.DrawEllipse(Position, 0, 360, Size.Y / 2, Size.Y / 2 * 0.9f, new Vector4(0.9f, 0.9f, 0.9f, 1f), Texture.WhiteFlatCircle, 50, false);
                 base.Render(g);
             }
         }
@@ -213,10 +213,13 @@ namespace RTCircles
 
                 scaleTime = 0f;
                 scaleTime2 = 0;
+
+                if (GlobalOptions.EnableComboBursts.Value && Skin.ComboBurst is not null && OsuContainer.Combo % 50 == 0 && OsuContainer.Combo > 0)
+                    ScreenManager.GetScreen<OsuScreen>().Add(new ComboBurst());
             }
 
-            
-            if(displayJudgement && result != HitResult.Max)
+
+            if (displayJudgement && result != HitResult.Max)
                 ScreenManager.GetScreen<OsuScreen>().Add(new HitJudgement(position, result));
 
             //Console.WriteLine(result);
@@ -270,7 +273,7 @@ namespace RTCircles
 
             float comboScale = 80 * MainGame.Scale;
 
-            Vector4 beatFlash = new Vector4(0.69f, 0.69f, 0.69f, 0f) * (float)OsuContainer.BeatProgressKiai;
+            Vector4 beatFlash = new Vector4(0.25f,0.25f,0.25f, 0f) * (float)OsuContainer.BeatProgressKiai;
 
             Vector2 comboSize = Skin.ComboNumbers.Meassure(comboScale * scale2, comboText);
             Skin.ComboNumbers.Draw(g, new Vector2(0, MainGame.WindowHeight - comboSize.Y), comboScale * scale2, new Vector4(1f, 1f, 1f, 0.7f) + beatFlash, comboText);
@@ -340,7 +343,7 @@ namespace RTCircles
 
             float beatProgress = (float)Interpolation.ValueAt(OsuContainer.BeatProgressKiai, 0f, 1f, 0f, 1f, EasingTypes.InOutSine);
 
-            float brightness = 1f + 1f * beatProgress;
+            float brightness = 1f + 0.25f * beatProgress;
 
             float rankSize = radius * 3.8f;
             g.DrawRectangleCentered(piePos, new Vector2(rankSize * rankingLetterTex.Texture.Size.AspectRatio(), rankSize), new Vector4(brightness, brightness, brightness, 1f), rankingLetterTex.Texture);
@@ -352,11 +355,12 @@ namespace RTCircles
 
             drawHPBar(g);
 
-            if (OsuContainer.CookieziMode)
-                g.DrawString("Auto", Font.DefaultFont, new Vector2(10) * MainGame.Scale, new Vector4(1f, 1f, 0f, (float)Math.Cos(MainGame.Instance.TotalTime * 1.6).Map(-1, 1, 0.25f, 0.5f)), 1f * MainGame.Scale);
+            if (OsuContainer.CookieziMode && ScreenManager.ActiveScreen is OsuScreen)
+                g.DrawStringCentered("Auto Mode", ResultScreen.Font, new Vector2(MainGame.WindowCenter.X, 80*MainGame.Scale), new Vector4(0.7f, 0.7f, 0.7f, (float)Math.Cos(MainGame.Instance.TotalTime * 2).Map(-1, 1, 0.7f, 1f)), 1f * MainGame.Scale);
 
             drawCountDown(g);
 
+            if(ScreenManager.ActiveScreen is OsuScreen)
             hitPositions.Render(g);
         }
 
@@ -414,43 +418,58 @@ namespace RTCircles
         {
             if (!ScreenManager.GetScreen<OsuScreen>().IsCurrentlyBreakTime && OsuContainer.Beatmap != null)
             {
-                AddHP((-0.25f * (float)OsuContainer.DeltaSongPosition / 1000));
-            }
+                float drainRate = OsuContainer.Beatmap.HP.Map(0, 10, -0.1f, -0.4f);
 
-            Vector2 pos = new Vector2(20) * MainGame.Scale;
+                AddHP(drainRate * (float)(OsuContainer.DeltaSongPosition / 1000));
+            }
 
             interpolatedHP = MathHelper.Lerp(interpolatedHP, hp, (float)MainGame.Instance.DeltaTime * 30f);
 
-            Vector2 size = new Vector2(650 * interpolatedHP, 32) * MainGame.Scale;
-            Rectangle uv = new Rectangle(0, 0, interpolatedHP, 0);
-            g.DrawRectangle(new Vector2(0, 12 * MainGame.Scale), size, new Vector4(new Vector3(0.9f), 1), Texture.WhiteSquare, uv, true);
-            //g.DrawRectangle(new Vector2(10) * MainGame.Scale, new Vector2(400, 32) * MainGame.Scale, Colors.Red);
+            if(Skin.HealthBar_BG != null)
+                g.DrawRectangle(Vector2.Zero, Skin.HealthBar_BG.Texture.Size * MainGame.Scale, Colors.White, Skin.HealthBar_BG);
+
+            if (Skin.HealthBar_Fill != null)
+            {
+                Rectangle healthUV = new Rectangle(0, 0, interpolatedHP, 1);
+                Vector2 healthSize = new Vector2(Skin.HealthBar_Fill.Texture.Size.X * interpolatedHP,
+                    Skin.HealthBar_Fill.Texture.Size.Y) * MainGame.Scale;
+
+
+                g.DrawRectangle(new Vector2(5, 16) * MainGame.Scale * (Skin.HealthBar_Fill.IsX2 ? 2 : 1), healthSize, Colors.White, Skin.HealthBar_Fill, healthUV, true);
+            }
+            else
+            {
+                g.DrawRectangle(new Vector2(5, 16) * MainGame.Scale, new Vector2(500 * interpolatedHP, 32) * MainGame.Scale, new Vector4(0.85f, 0.85f, 0.85f, 1));
+            }
         }
 
         private Vector2 key1Size = new Vector2(50);
-        private Vector4 key1Color = Colors.White;
+        private Vector4 key1Color = (Vector4)Colors.LightGray;
 
         private Vector2 key2Size = new Vector2(50);
-        private Vector4 key2Color = Colors.White;
+        private Vector4 key2Color = (Vector4)Colors.LightGray;
         public void drawKeyOverlay(Graphics g)
         {
-            Vector2 key1Position = new Vector2(MainGame.WindowWidth - key1Size.X, MainGame.WindowHeight / 2f);
-            float padding = 4f * MainGame.Scale;
-            Vector2 key2Postion = new Vector2(MainGame.WindowWidth - key2Size.X, MainGame.WindowHeight / 2f + key1Size.Y + padding);
-            float fontScale = 0.5f * MainGame.Scale;
+            if (OsuContainer.CookieziMode)
+                return;
+
+            Vector2 key1Position = new Vector2(MainGame.WindowWidth - key1Size.X, MainGame.WindowHeight / 2.2f);
+            float padding = 5f * MainGame.Scale;
+            Vector2 key2Postion = new Vector2(MainGame.WindowWidth - key2Size.X, MainGame.WindowHeight / 2.2f + key1Size.Y + padding);
+            float fontScale = 0.45f * MainGame.Scale;
 
             string key1Text = OsuContainer.Key1.ToString();
             string key2Text = OsuContainer.Key2.ToString();
 
-            g.DrawRectangle(key1Position, key1Size, key1Color);
+            g.DrawRectangle(key1Position, key1Size, key1Color, Texture.WhiteFlatCircle);
 
             Vector2 textSize = Font.DefaultFont.MessureString(key1Text, fontScale);
-            g.DrawString(key1Text, Font.DefaultFont, key1Position + key1Size / 2f - textSize / 2f, Colors.Black, fontScale);
+            g.DrawString(key1Text, Font.DefaultFont, key1Position + key1Size / 2f - textSize / 2f, Colors.White, fontScale);
 
-            g.DrawRectangle(key2Postion, key2Size, key2Color);
+            g.DrawRectangle(key2Postion, key2Size, key2Color, Texture.WhiteFlatCircle);
 
             textSize = Font.DefaultFont.MessureString(key2Text, fontScale);
-            g.DrawString(key2Text, Font.DefaultFont, key2Postion + key2Size / 2f - textSize / 2f, Colors.Black, fontScale);
+            g.DrawString(key2Text, Font.DefaultFont, key2Postion + key2Size / 2f - textSize / 2f, Colors.White, fontScale);
 
             //g.DrawString(OsuContainer.GetCurrentRankingLetter(), Font.DefaultFont, Easy2D.Game.Input.MousePosition, Colors.White);
         }
@@ -482,7 +501,7 @@ namespace RTCircles
             else
             {
                 key1Size = Vector2.Lerp(key1Size, new Vector2(size), delta * lerpSpeed);
-                key1Color = Vector4.Lerp(key1Color, Colors.White, delta * lerpSpeed);
+                key1Color = Vector4.Lerp(key1Color, Colors.Black, delta * lerpSpeed);
             }
 
             if (OsuContainer.Key2Down)
@@ -493,7 +512,7 @@ namespace RTCircles
             else
             {
                 key2Size = Vector2.Lerp(key2Size, new Vector2(size), delta * lerpSpeed);
-                key2Color = Vector4.Lerp(key2Color, Colors.White, delta * lerpSpeed);
+                key2Color = Vector4.Lerp(key2Color, Colors.Black, delta * lerpSpeed);
             }
 
             hitPositions.Update(delta);

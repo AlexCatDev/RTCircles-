@@ -113,8 +113,8 @@ namespace RTCircles
             */
 
             Vector2 offset = new Vector2(MainGame.WindowWidth/2, 0);
-            Vector2 panelSize = new Vector2(1200, 60) * MainGame.Scale;
-            float padding = 4f * MainGame.Scale;
+            Vector2 panelSize = new Vector2(1000, 50) * MainGame.Scale;
+            float padding = 5f * MainGame.Scale;
             float fontSize = 0.75f * MainGame.Scale;
 
             string drawDescription = null;

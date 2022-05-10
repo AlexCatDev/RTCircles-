@@ -37,10 +37,11 @@ namespace RTCircles
             if (!cursorDance)
                 return vec2;
 
-            float length = (from.Position - to.Position).Length / 2;
-
             if (to.Time - from.Time < 20)
                 return vec2;
+
+            float angle = MathUtils.AtanVec(from.Position, to.Position);
+            float length = (from.Position - to.Position).Length / 2;
 
             if (index % 2 == 0)
             {

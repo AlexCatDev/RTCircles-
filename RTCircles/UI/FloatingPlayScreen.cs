@@ -115,7 +115,11 @@ namespace RTCircles
                     "hp\n",
                     Font.DefaultFont, Position + new Vector2(Size.X * 0.018f, Size.X * 0.018f), Colors.White, 0.3f * MainGame.Scale, 15);
 
-                var timeSpan = TimeSpan.FromMilliseconds(OsuContainer.Beatmap.HitObjects[^1].BaseObject.EndTime - OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime);
+                var timeSpan = new TimeSpan(0);
+
+                if(OsuContainer.Beatmap.HitObjects.Count > 1)
+                    timeSpan = TimeSpan.FromMilliseconds(OsuContainer.Beatmap.HitObjects[^1].BaseObject.EndTime - OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime);
+
                 var bpm = 60000 / OsuContainer.CurrentBeatTimingPoint?.BeatLength;
 
                 string totalLength = (Math.Floor(timeSpan.TotalMinutes) + ":" + timeSpan.ToString("ss"));

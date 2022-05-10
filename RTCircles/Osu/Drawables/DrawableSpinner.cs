@@ -23,7 +23,7 @@ namespace RTCircles
             get {
                 float biggest = MathF.Max(OsuContainer.Playfield.Width, OsuContainer.Playfield.Height);
 
-                return new Vector2(biggest * 0.75f);
+                return new Vector2(biggest * 0.62f);
             } 
         }
 
@@ -81,18 +81,20 @@ namespace RTCircles
 
         public override void Render(Graphics g)
         {
-            float colorBoost = rotationCounter > 0 ? 1.5f : 1;
+            float colorBoost = rotationCounter > 0 ? 1.1f : 1;
 
             float approachScale = (float)MathUtils.Map(OsuContainer.SongPosition, spinner.StartTime, spinner.EndTime, 1, 0).Clamp(0, 1);
 
-            float scale = Skin.GetScale(Skin.SpinnerCircle, 256, 512) * 0.5f;
+            float spinnerTextureScale = Skin.GetScale(Skin.SpinnerCircle, 512, 1024); //?????!?!??!??
 
-            g.DrawRectangleCentered(position, size * scale * approachScale, color * colorBoost, Skin.SpinnerApproachCircle);
+            float approachTextureScale = Skin.GetScale(Skin.SpinnerApproachCircle, 256, 512);
 
-            g.DrawRectangleCentered(position, size * scale, color * colorBoost, Skin.SpinnerCircle, rotDegrees: rotation);
+            g.DrawRectangleCentered(position, size * spinnerTextureScale, color * colorBoost, Skin.SpinnerCircle, rotDegrees: rotation);
+
+            g.DrawRectangleCentered(position, size * approachTextureScale * approachScale, color * colorBoost, Skin.SpinnerApproachCircle);
 
             if (score > 0)
-                Skin.CircleNumbers.DrawCentered(g, OsuContainer.MapToPlayfield(512 / 2, 280, ignoreMods: true), (size.Y / 9) * scoreBonusScale, new Vector4(1f, 1f, 1f, scoreBonusAlpha * color.W), score.ToString());
+                Skin.ScoreNumbers.DrawCentered(g, OsuContainer.MapToPlayfield(512 / 2, 280, ignoreMods: true), (size.Y / 9) * scoreBonusScale, new Vector4(1f, 1f, 1f, scoreBonusAlpha * color.W), score.ToString());
 
             if (OsuContainer.SongPosition >= spinner.EndTime + OsuContainer.Fadeout)
                 IsDead = true;
@@ -112,7 +114,10 @@ namespace RTCircles
                 rotationCounter = 1;
 
 
-            float timeElapsed = (float)(OsuContainer.SongPosition - spinner.StartTime + OsuContainer.Beatmap.Preempt);
+            const float preempt = 600;
+            const float fadein = 450;
+
+            float timeElapsed = (float)(OsuContainer.SongPosition - spinner.StartTime + preempt);
 
             if (OsuContainer.SongPosition >= spinner.EndTime && !spinnerCompletedCheck)
             {
@@ -129,8 +134,8 @@ namespace RTCircles
                 spinnerCompletedCheck = true;
             }
 
-            if (timeElapsed < OsuContainer.Beatmap.Fadein)
-                color.W = (float)MathUtils.Map(timeElapsed, 0, OsuContainer.Beatmap.Fadein, 0, 1).Clamp(0, 1);
+            if (timeElapsed < fadein)
+                color.W = (float)MathUtils.Map(timeElapsed, 0, fadein, 0, 1).Clamp(0, 1);
             else
                 color.W = (float)MathUtils.Map(OsuContainer.SongPosition, spinner.EndTime, spinner.EndTime + OsuContainer.Fadeout, 1, 0).Clamp(0, 1);
 
@@ -161,7 +166,7 @@ namespace RTCircles
                 if (rotationCounter > 1)
                 {
                     if(!OsuContainer.MuteHitsounds)
-                    Skin.SpinnerBonus.Play(true);
+                        Skin.SpinnerBonus.Play(true);
 
                     scoreBonusAlpha.Value = 1f;
                     scoreBonusAlpha.TransformTo(0f, 1000f, EasingTypes.None);

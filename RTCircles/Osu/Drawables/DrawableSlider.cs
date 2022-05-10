@@ -322,7 +322,7 @@ namespace RTCircles
                 if (OsuContainer.SongPosition < slider.EndTime)
                 {
                     float sliderBallAngle = MathF.Atan2(pos.Y - previousBallPos.Y, pos.X - previousBallPos.X);
-                    g.DrawRectangleCentered(sliderballPosition, Size * Skin.GetScale(Skin.SliderBall), new Vector4(1f, 1f, 1f, 1f), Skin.SliderBall, rotDegrees: MathHelper.RadiansToDegrees(sliderBallAngle));
+                    g.DrawRectangleCentered(sliderballPosition, Size * Skin.GetScale(Skin.SliderBall), color, Skin.SliderBall, rotDegrees: MathHelper.RadiansToDegrees(sliderBallAngle));
 
                     if(Vector2.Distance(pos, previousBallPos) > 1)
                         previousBallPos = pos;
@@ -707,13 +707,11 @@ namespace RTCircles
         public override void Render(Graphics g)
         {
             Vector3 sliderBorder = new Vector3(Skin.Config.SliderBorder ?? new Vector3(1f, 1f, 1f));
-            Vector3 sliderTrack = new Vector3(Skin.Config.SliderTrackOverride ?? Skin.Config.ColorFromIndex(colorIndex));
+            Vector3 sliderTrack = new Vector3(Skin.Config.SliderTrackOverride ?? new Vector3(0));
 
             if (OsuContainer.IsKiaiTimeActive && GlobalOptions.RGBCircles.Value)
             {
-                sliderBorder.X = (float)Math.Cos(OsuContainer.CurrentBeat).Map(-1, 1, 0, 1) + 1;
-                sliderBorder.Y = (float)Math.Cos(OsuContainer.CurrentBeat + 2).Map(-1, 1, 0, 1) + 1;
-                sliderBorder.Z = (float)Math.Cos(OsuContainer.CurrentBeat + 4).Map(-1, 1, 0, 1) + 1;
+                sliderBorder = MathUtils.RainbowColor(OsuContainer.SongPosition / 1000, 0.5f, 1.1f);
             }
 
             g.BorderColorInner = sliderBorder;
