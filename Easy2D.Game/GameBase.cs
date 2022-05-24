@@ -132,7 +132,18 @@ namespace Easy2D.Game
 
         private void Wnd_FocusChanged(bool hasFocus)
         {
-            VSync = !hasFocus;
+            GPUSched.Instance.Enqueue(() =>
+            {
+                //If we lost focus, always enable vsync no matter what
+                if (!hasFocus)
+                    View.GLContext.SwapInterval(-1);
+                else
+                {
+                    //If aquire focus, only disable vsync if we have explicitely disabled it ourselves
+                    if (!VSync)
+                        View.GLContext.SwapInterval(0);
+                }
+            });
         }
 
         private void View_Resize(Vector2D<int> obj)

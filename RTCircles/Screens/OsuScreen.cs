@@ -15,7 +15,7 @@ namespace RTCircles
 {
     public class Faderino : Drawable
     {
-        private SmoothFloat fade = new SmoothFloat();
+        public readonly SmoothFloat fade = new SmoothFloat();
 
         public void FadeTo(float opacity, float duration, EasingTypes easing) => fade.TransformTo(opacity, duration, easing);
 
@@ -33,6 +33,8 @@ namespace RTCircles
 
     public class OsuScreen : Screen
     {
+        public bool RenderHUD { get; set; }
+
         private Faderino faderino = new Faderino();
 
         private BreakPanel breakOverlay = new BreakPanel();
@@ -75,7 +77,7 @@ namespace RTCircles
 
             retryButton.OnClick += (s, e) =>
             {
-                if (pauseOverlayFade.Value < 1)
+                if (!faderino.fade.HasCompleted)
                     return;
 
                 OnEnter();
@@ -359,7 +361,7 @@ namespace RTCircles
         }
 
         private float bgZoom = 0f;
-        private SmoothFloat bgAlpha = new SmoothFloat();
+        private SmoothFloat bgAlpha = new SmoothFloat() { Value = 0.1f };
         private void drawBackground(Graphics g)
         {
             var tex = OsuContainer.Beatmap.Background;
@@ -391,13 +393,14 @@ namespace RTCircles
                 return;
 
             drawBackground(g);
-
             //drawSmoke(g);
 
             base.Render(g);
 
-            if(ScreenManager.ActiveScreen is not MenuScreen)
-            OsuContainer.HUD.Render(g);
+            drawFlashlightOverlay(g);
+
+            if(ScreenManager.ActiveScreen is not MenuScreen && RenderHUD)
+                OsuContainer.HUD.Render(g);
 
             breakOverlay.Render(g);
 
@@ -408,7 +411,18 @@ namespace RTCircles
             drawCursor(g);
         }
 
-        private List<(Vector2, double)> smokePoints = new List<(Vector2, double)>();
+        private Vector2 flashlightPosition;
+
+        private void drawFlashlightOverlay(Graphics g)
+        {
+            flashlightPosition.X = (float)Interpolation.Damp(flashlightPosition.X, OsuContainer.CursorPosition.X, 0.96, OsuContainer.DeltaSongPosition);
+            flashlightPosition.Y = (float)Interpolation.Damp(flashlightPosition.Y, OsuContainer.CursorPosition.Y, 0.96, OsuContainer.DeltaSongPosition);
+
+            if (OsuContainer.Beatmap?.Mods.HasFlag(Mods.FL) ?? false)
+                g.DrawRectangleCentered(flashlightPosition, Skin.FlashlightOverlay.Size * MainGame.AbsoluteScale.Y * 3, Colors.White, Skin.FlashlightOverlay);
+        }
+
+    private List<(Vector2, double)> smokePoints = new List<(Vector2, double)>();
         private Vector2 lastPos;
 
         private void drawSmoke(Graphics g)

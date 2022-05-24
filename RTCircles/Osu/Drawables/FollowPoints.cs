@@ -154,7 +154,7 @@ namespace RTCircles
                 return;
             }
 
-            float toProgress = (float)OsuContainer.SongPosition.Map(from.StartTime - OsuContainer.Beatmap.Preempt, to.StartTime - OsuContainer.Beatmap.Preempt, 0, 1).Clamp(0, 1);
+            float toProgress = (float)OsuContainer.SongPosition.Map(from.StartTime - OsuContainer.Beatmap.Fadein, to.StartTime - OsuContainer.Beatmap.Fadein, 0, 1).Clamp(0, 1);
 
             //if no progress, don't draw anything
 

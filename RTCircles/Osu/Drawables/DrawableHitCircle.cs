@@ -94,9 +94,6 @@ namespace RTCircles
                 hitTime = OsuContainer.SongPosition;
                 double t = Math.Abs(hittableTime);
 
-                if (alpha < 0.7f)
-                    return true;
-
                 OsuContainer.ScoreHit(circle);
 
                 if (t < OsuContainer.Beatmap.Window300)
@@ -105,6 +102,8 @@ namespace RTCircles
                     OsuContainer.HUD.AddHit(hittableTime, HitResult.Good, Position);
                 else if (t < OsuContainer.Beatmap.Window50)
                     OsuContainer.HUD.AddHit(hittableTime, HitResult.Meh, Position);
+                else if (t < OsuContainer.Beatmap.Window50 * 1.1)
+                    return true;
                 else
                 {
                     OsuContainer.HUD.AddHit(hittableTime, HitResult.Miss, Position);
@@ -149,6 +148,9 @@ namespace RTCircles
 
         public override void AfterRender(Graphics g)
         {
+            if (OsuContainer.Beatmap.Mods.HasFlag(Mods.HD))
+                return;
+
             if (approachScale > 1f && !IsHit && !IsMissed)
             {
                 Vector2 approachCircleSize = (Vector2)Size * approachScale * Skin.GetScale(Skin.ApproachCircle);
@@ -166,7 +168,15 @@ namespace RTCircles
 
             if (!IsHit && !IsMissed)
             {
-                alpha = (float)MathUtils.Map(timeElapsed, 0, OsuContainer.Beatmap.Fadein, 0, 1).Clamp(0, 1);
+                if (OsuContainer.Beatmap.Mods.HasFlag(Mods.HD))
+                {
+                    alpha = (float)MathUtils.Map(timeElapsed, 0, OsuContainer.Beatmap.Preempt * 0.4, 0, 1).Clamp(0, 1);
+
+                    if(alpha == 1)
+                        alpha = (float)MathUtils.Map(timeElapsed, OsuContainer.Beatmap.Preempt * 0.4, OsuContainer.Beatmap.Preempt * 0.4 + OsuContainer.Beatmap.Preempt * 0.3, 1, 0).Clamp(0, 1);
+                }
+                else
+                    alpha = (float)MathUtils.Map(timeElapsed, 0, OsuContainer.Beatmap.Fadein, 0, 1).Clamp(0, 1);
 
                 approachScale = (float)MathUtils.Map(timeElapsed, 0, OsuContainer.Beatmap.Preempt, OsuContainer.ApproachCircleScale, 1)
                     .Clamp(1, OsuContainer.ApproachCircleScale);
@@ -184,6 +194,8 @@ namespace RTCircles
             }
             else
             {
+
+
                 var start = hitTime;
                 var to = hitTime + OsuContainer.Fadeout;
                 var time = OsuContainer.SongPosition.Clamp(start, to);

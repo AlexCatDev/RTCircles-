@@ -76,7 +76,7 @@ namespace Easy2D
 
         public static bool WriteToConsole = false;
 
-        public static List<LogLevel> IgnoredLogLevels = new List<LogLevel>();
+        public static HashSet<LogLevel> IgnoredLogLevels = new HashSet<LogLevel>();
 
         static Utils()
         {

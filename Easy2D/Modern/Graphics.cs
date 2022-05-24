@@ -14,14 +14,14 @@ namespace Easy2D
     ///</summary>
     public class Graphics
     {
-        public static readonly int MaxTextureSlots;
-
         private static readonly Dictionary<string, string> fragmentPreprocessor = new Dictionary<string, string>();
         private static readonly int[] textureSlots;
 
+        private static int MaxTextureSlots;
+
         static Graphics()
         {
-            GL.Instance.GetInteger(GetPName.MaxTextureImageUnits, out MaxTextureSlots);
+            MaxTextureSlots = GL.MaxTextureSlots;
             /*
             if (MaxTextureSlots == 0)
                 MaxTextureSlots = 8;

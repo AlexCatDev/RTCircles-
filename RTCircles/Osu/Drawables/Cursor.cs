@@ -199,14 +199,24 @@ namespace RTCircles
 
             fancyTrail.Update(delta);
             fancyTrail.Render(g);
-            g.DrawRectangleCentered(position, getScaledSize(CursorSize, Skin.Cursor), color, Skin.Cursor, rotDegrees: rotation);
+
+            renderCursor(g, position, color);
+        }
+
+        private void renderCursor(Graphics g, Vector2 position, Vector4 color)
+        {
+            if (Skin.CursorMiddle is not null)
+                g.DrawRectangleCentered(position, getScaledSize(CursorSize, Skin.CursorMiddle), color, Skin.CursorMiddle);
+
+            if (Skin.Cursor is not null)
+                g.DrawRectangleCentered(position, getScaledSize(CursorSize, Skin.Cursor), color, Skin.Cursor);
         }
 
         public void Render(Graphics g, float delta, Vector2 position, Vector4 color)
         {
             if (GlobalOptions.UseFancyCursorTrail.Value)
             {
-                renderFancy(g,delta, position, color);
+                renderFancy(g, delta, position, color);
                 return;
             }
 
@@ -273,8 +283,7 @@ namespace RTCircles
                 }
             }
 
-            if (Skin.Cursor is not null)
-                g.DrawRectangleCentered(position, getScaledSize(CursorSize, Skin.Cursor), color, Skin.Cursor);
+            renderCursor(g, position, color);
         }
     }
 }

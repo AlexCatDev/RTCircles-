@@ -188,10 +188,18 @@ namespace RTCircles
                     songPos = value;
                 else
                 {
-                    Beatmap.Song.PlaybackPosition = value;
-                    songPos = Beatmap.Song.PlaybackPosition;
+                    if (Beatmap != null && Beatmap.Song != null)
+                    {
+                        Beatmap.Song.PlaybackPosition = value;
+                        songPos = Beatmap.Song.PlaybackPosition;
+                    }
+                    else
+                    {
+                        songPos = value;
+                    }
+
+                    DeltaSongPosition = songPos-previousSongPos;
                     previousSongPos = songPos;
-                    DeltaSongPosition = 0;
                 }
             }
         }
@@ -261,7 +269,7 @@ namespace RTCircles
 
         public static void SetMap(PlayableBeatmap beatmap)
         {
-            Beatmap?.Song.Stop();
+            Beatmap?.Song?.Stop();
 
             Beatmap = beatmap;
             BeatmapChanged?.Invoke();
@@ -451,20 +459,27 @@ namespace RTCircles
             if (Beatmap is null)
                 return;
 
-            if (songPos < totalOffset)
+            if (Beatmap.Song != null)
             {
-                Beatmap.Song.Stop();
-                songPos = Math.Min(songPos + delta * 1000d * Beatmap.Song.PlaybackSpeed, totalOffset);
-                if (songPos == totalOffset)
-                    Beatmap.Song.Play(true);
-            }
-            else if (songPos >= Beatmap.Song.PlaybackLength && Beatmap.Song.IsStopped)
-            {
-                songPos += delta * 1000f * Beatmap.Song.PlaybackSpeed;
+                if (songPos < totalOffset)
+                {
+                    Beatmap.Song.Stop();
+                    songPos = Math.Min(songPos + delta * 1000d * Beatmap.Song.PlaybackSpeed, totalOffset);
+                    if (songPos == totalOffset)
+                        Beatmap.Song.Play(true);
+                }
+                else if (songPos >= Beatmap.Song.PlaybackLength && Beatmap.Song.IsStopped)
+                {
+                    songPos += delta * 1000f * Beatmap.Song.PlaybackSpeed;
+                }
+                else
+                {
+                    songPos = Beatmap?.Song.PlaybackPosition + totalOffset ?? 0;
+                }
             }
             else
             {
-                songPos = Beatmap?.Song.PlaybackPosition + totalOffset ?? 0;
+                songPos += delta;
             }
 
             if (CurrentTimingPoint?.Offset > songPos)

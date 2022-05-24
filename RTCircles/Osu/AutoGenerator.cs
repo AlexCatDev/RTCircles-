@@ -5,6 +5,7 @@ using System.Collections.Generic;
 
 namespace RTCircles
 {
+    //God im retarded
     public class AutoGenerator
     {
         public struct KeyFrame
@@ -64,9 +65,23 @@ namespace RTCircles
 
         public void SyncToTime(double time)
         {
-            frameIndex = frames.FindIndex((o) => o.Time > time);
+            first = null;
 
-            if (frameIndex == -1)
+            if (time < frames[0].Time)
+            {
+                frameIndex = 0;
+                return;
+            }
+
+            if (time > frames[frames.Count - 1].Time)
+            {
+                frameIndex = frames.Count - 1;
+                return;
+            }
+
+            frameIndex = frames.FindIndex((o) => o.Time > time) - 1;
+
+            if (frameIndex < 0)
                 frameIndex = frames.Count - 1;
         }
 

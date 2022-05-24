@@ -27,7 +27,6 @@ namespace RTCircles
         public static event ScreenChangeFunc OnScreenChange;
 
         public static bool CanChangeScreen => inIntroSequence == false && inOutroSequence == false;
-
         static ScreenManager()
         {
             foreach (var type in Assembly.GetExecutingAssembly().GetTypes())

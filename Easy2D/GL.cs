@@ -20,6 +20,8 @@ public static class GL
 
     public static ulong DrawCalls { get; private set; }
 
+    public static int MaxTextureSlots { get; private set; } = -1;
+
     public unsafe static void SetGL(Silk.NET.OpenGLES.GL gl)
     {
         Instance = gl;
@@ -34,6 +36,9 @@ public static class GL
         Utils.Log($"Renderer: {GLRenderer}", LogLevel.Important);
         Utils.Log($"Version: {GLVersion}", LogLevel.Important);
         Utils.Log($"GLSL Version: {GLShadingVersion}", LogLevel.Important);
+
+        Instance.GetInteger(GetPName.MaxTextureImageUnits, out int slotCount);
+        MaxTextureSlots = slotCount;
 
 #if DEBUG
         Instance.Enable(GLEnum.DebugOutput);

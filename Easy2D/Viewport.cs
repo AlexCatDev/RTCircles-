@@ -6,6 +6,9 @@ namespace Easy2D
     {
         public static Vector4i CurrentViewport { get; private set; }
 
+        public static Rectangle Area => 
+            new Rectangle(CurrentViewport.X, CurrentViewport.Y, CurrentViewport.Z, CurrentViewport.W);
+
         public static int X => CurrentViewport.X;
         public static int Y => CurrentViewport.Y;
 

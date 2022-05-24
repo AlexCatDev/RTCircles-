@@ -91,7 +91,8 @@ namespace RTCircles
 
             g.DrawRectangleCentered(position, size * spinnerTextureScale, color * colorBoost, Skin.SpinnerCircle, rotDegrees: rotation);
 
-            g.DrawRectangleCentered(position, size * approachTextureScale * approachScale, color * colorBoost, Skin.SpinnerApproachCircle);
+            if (!OsuContainer.Beatmap.Mods.HasFlag(Mods.HD))
+                g.DrawRectangleCentered(position, size * approachTextureScale * approachScale, color * colorBoost, Skin.SpinnerApproachCircle);
 
             if (score > 0)
                 Skin.ScoreNumbers.DrawCentered(g, OsuContainer.MapToPlayfield(512 / 2, 280, ignoreMods: true), (size.Y / 9) * scoreBonusScale, new Vector4(1f, 1f, 1f, scoreBonusAlpha * color.W), score.ToString());

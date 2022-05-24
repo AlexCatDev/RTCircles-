@@ -161,6 +161,8 @@ namespace RTCircles
 
             public override void Render(Graphics g)
             {
+                return;
+
                 g.DrawRectangleCentered(Position, Size, new Vector4(0.7f, 0.7f, 0.7f, 0.2f), Texture.WhiteFlatCircle);
                 g.DrawEllipse(Position, 0, 360, Size.Y / 2, Size.Y / 2 * 0.9f, new Vector4(0.9f, 0.9f, 0.9f, 1f), Texture.WhiteFlatCircle, 50, false);
                 base.Render(g);
@@ -170,8 +172,10 @@ namespace RTCircles
         private HitPositionsContainer hitPositions = new HitPositionsContainer();
         public HUD()
         {
+            /*
             OsuContainer.OnHitObjectHit += (pos, result) => hitPositions.Add(
                 new HitPositionsContainer.HitPositionDrawable(pos, result));
+            */
         }
 
         private float scale = 1f;
@@ -310,6 +314,8 @@ namespace RTCircles
         private double rollingAcc;
         public override void Render(Graphics g)
         {
+            drawHPBar(g);
+
             drawURBar(g);
 
             drawComboText(g);
@@ -353,8 +359,6 @@ namespace RTCircles
 
             drawKeyOverlay(g);
 
-            drawHPBar(g);
-
             if (OsuContainer.CookieziMode && ScreenManager.ActiveScreen is OsuScreen)
                 g.DrawStringCentered("Auto Mode", ResultScreen.Font, new Vector2(MainGame.WindowCenter.X, 80*MainGame.Scale), new Vector4(0.7f, 0.7f, 0.7f, (float)Math.Cos(MainGame.Instance.TotalTime * 2).Map(-1, 1, 0.7f, 1f)), 1f * MainGame.Scale);
 
@@ -369,48 +373,25 @@ namespace RTCircles
             if (OsuContainer.Beatmap == null || OsuContainer.Beatmap.HitObjects.Count == 0 || OsuContainer.CurrentBeatTimingPoint == null)
                 return;
 
-            double beat = OsuContainer.GetBeatCountFrom(OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime, 0.5);
+            double beatLength = OsuContainer.CurrentBeatTimingPoint.BeatLength;
 
-            float functionLol(float from, float to, float pause)
-            {
-                if (beat >= from && beat <= to)
-                    return (float)beat.Map(from, to, 0, 1).Clamp(0, 1);
+            //When this is 0 it will be 2 beats behind the first object
+            double offsetFromStart = OsuContainer.SongPosition - OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime + beatLength * 3;
 
-                if (beat >= to && beat <= to + pause)
-                    return 1;
+            //Console.WriteLine(offsetFromStart);
 
-                if (beat >= to + pause)
-                    return (float)beat.Map(to + pause, to + pause + (to - from), 1, 0).Clamp(0, 1);
+            double duration = 250;
+            double pause = 250;
 
-                return 0;
-            }
+            float textScale = MainGame.Scale;
 
-            float textScale = MainGame.Scale * 2;
+            float letterGOAlpha = (float)(offsetFromStart > duration ? 
+                offsetFromStart.Map(duration + pause, duration + pause + duration, 1, 0) : offsetFromStart.Map(0, duration, 0, 1)).Clamp(0, 1);
 
-            /*
-            float letterReadyAlpha = (float)beat.Map(-4, -3, 1, 0).Clamp(0, 1);
-
-            float letter3Alpha = functionLol(-5, -4.5f, 0.5f);
-            float letter3Scale = (float)Interpolation.ValueAt(beat.Clamp(-5, -4.75), 1.5, 1, -5, -4.75, EasingTypes.Out);
-
-            float letter2Alpha = functionLol(-4, -3.5f, 0.5f);
-            float letter2Scale = (float)Interpolation.ValueAt(beat.Clamp(-4, -3.75), 1.5, 1, -4, -3.75, EasingTypes.Out);
-
-            float letter1Alpha = functionLol(-3, -2.5f, 0.5f);
-            float letter1Scale = (float)Interpolation.ValueAt(beat.Clamp(-3, -2.75), 1.5, 1, -3, -2.75, EasingTypes.Out);
-            */
-
-            float letterGOAlpha = functionLol(-2, -1.5f, 0.5f);
-            float letterGOScale = (float)Interpolation.ValueAt(beat.Clamp(-2, -1.5), 1.5, 1, -2, -1.5, EasingTypes.Out);
+            float letterGOScale = (float)Interpolation.ValueAt(offsetFromStart.Clamp(0, duration), 1.5, 1, 0, duration, EasingTypes.Out);
 
             if(letterGOAlpha > 0)
             g.DrawStringCentered("GO!", Font.DefaultFont, MainGame.WindowCenter, new Vector4(1f, 1f, 1f, letterGOAlpha), letterGOScale * textScale);
-
-            //g.DrawStringCentered("Ready?", Font.DefaultFont, MainGame.WindowCenter, new Vector4(1f, 1f, 1f, letterReadyAlpha), textScale);
-
-            //g.DrawStringCentered("3", Font.DefaultFont, MainGame.WindowCenter, new Vector4(1f, 1f, 1f, letter3Alpha), letter3Scale * textScale);
-            //g.DrawStringCentered("2", Font.DefaultFont, MainGame.WindowCenter, new Vector4(1f, 1f, 1f, letter2Alpha), letter2Scale * textScale);
-            //g.DrawStringCentered("1", Font.DefaultFont, MainGame.WindowCenter, new Vector4(1f, 1f, 1f, letter1Alpha), letter1Scale * textScale);
         }
 
         private float interpolatedHP = 0;
@@ -425,17 +406,19 @@ namespace RTCircles
 
             interpolatedHP = MathHelper.Lerp(interpolatedHP, hp, (float)MainGame.Instance.DeltaTime * 30f);
 
+            float hpScale = 1.75f;
+
             if(Skin.HealthBar_BG != null)
-                g.DrawRectangle(Vector2.Zero, Skin.HealthBar_BG.Texture.Size * MainGame.Scale, Colors.White, Skin.HealthBar_BG);
+                g.DrawRectangle(Vector2.Zero, Skin.HealthBar_BG.Texture.Size * MainGame.Scale / hpScale, Colors.White, Skin.HealthBar_BG);
 
             if (Skin.HealthBar_Fill != null)
             {
                 Rectangle healthUV = new Rectangle(0, 0, interpolatedHP, 1);
                 Vector2 healthSize = new Vector2(Skin.HealthBar_Fill.Texture.Size.X * interpolatedHP,
-                    Skin.HealthBar_Fill.Texture.Size.Y) * MainGame.Scale;
+                    Skin.HealthBar_Fill.Texture.Size.Y) * MainGame.Scale / hpScale;
 
 
-                g.DrawRectangle(new Vector2(5, 16) * MainGame.Scale * (Skin.HealthBar_Fill.IsX2 ? 2 : 1), healthSize, Colors.White, Skin.HealthBar_Fill, healthUV, true);
+                g.DrawRectangle(new Vector2(5, 16) * MainGame.Scale * (Skin.HealthBar_Fill.IsX2 ? 2 : 1) / hpScale, healthSize, Colors.White, Skin.HealthBar_Fill, healthUV, true);
             }
             else
             {

@@ -115,13 +115,13 @@ namespace RTCircles
         public Vector3? SliderTrackOverride = null;
 
         public string HitCirclePrefix = "default";
-        public float HitCircleOverlap = 3;
+        public float HitCircleOverlap = 22;
 
         public string ScorePrefix = "score";
-        public float ScoreOverlap = 3;
+        public float ScoreOverlap = 22;
 
         public string ComboPrefix = "score";
-        public float ComboOverlap = 3;
+        public float ComboOverlap = 22;
 
         public bool HitCircleOverlayAboveNumber = true;
 
@@ -330,6 +330,8 @@ namespace RTCircles
 
         public static OsuTexture HealthBar_BG { get; private set; }
         public static OsuTexture HealthBar_Fill { get; private set; }
+
+        public static Texture FlashlightOverlay = new Texture(Utils.GetResource("Skin.FlashlightOverlay.png"));
 
         public static string CurrentPath { get; private set; }
 

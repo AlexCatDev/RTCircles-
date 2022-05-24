@@ -251,24 +251,25 @@ namespace Easy2D
                 GC.SuppressFinalize(this);
                 return;
             }
-                byte[] data = new byte[stream.Length];
-                stream.Read(data, 0, data.Length);
-                
-                if (useFX)
-                    Handle = BassFx.TempoCreate(Bass.CreateStream(data, 0, data.Length, BassFlags.Decode | bassFlags), BassFlags.Default | BassFlags.FxFreeSource);
-                else
-                    Handle = Bass.CreateStream(data, 0, data.Length, bassFlags);
 
-                if (noBuffer)
-                    Bass.ChannelSetAttribute(Handle, ChannelAttribute.Buffer, 0);
+            byte[] data = new byte[stream.Length];
+            stream.Read(data, 0, data.Length);
 
-                DefaultFrequency = Frequency;
-                SupportsFX = useFX;
+            if (useFX)
+                Handle = BassFx.TempoCreate(Bass.CreateStream(data, 0, data.Length, BassFlags.Decode | bassFlags), BassFlags.Default | BassFlags.FxFreeSource);
+            else
+                Handle = Bass.CreateStream(data, 0, data.Length, bassFlags);
 
-                if (Bass.LastError != Errors.OK)
-                    Utils.Log($"BASS error when loading audio: {Bass.LastError}", LogLevel.Error);
-                else
-                    allHandles.Add(Handle);
+            if (noBuffer)
+                Bass.ChannelSetAttribute(Handle, ChannelAttribute.Buffer, 0);
+
+            DefaultFrequency = Frequency;
+            SupportsFX = useFX;
+
+            if (Bass.LastError != Errors.OK)
+                Utils.Log($"BASS error when loading audio: {Bass.LastError}", LogLevel.Error);
+            else
+                allHandles.Add(Handle);
         }
     }
 

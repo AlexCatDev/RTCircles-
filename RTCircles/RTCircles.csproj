@@ -52,6 +52,7 @@
     <None Remove="Skin\drum-hitfinish.wav" />
     <None Remove="Skin\drum-hitnormal.wav" />
     <None Remove="Skin\drum-hitwhistle.wav" />
+    <None Remove="Skin\FlashlightOverlay.png" />
     <None Remove="Skin\followpoint.png" />
     <None Remove="Skin\hit0.png" />
     <None Remove="Skin\hit100.png" />
@@ -179,6 +180,7 @@
     <EmbeddedResource Include="Skin\drum-hitfinish.wav" />
     <EmbeddedResource Include="Skin\drum-hitnormal.wav" />
     <EmbeddedResource Include="Skin\drum-hitwhistle.wav" />
+    <EmbeddedResource Include="Skin\FlashlightOverlay.png" />
     <EmbeddedResource Include="Skin\followpoint.png" />
     <EmbeddedResource Include="Skin\hit0.png" />
     <EmbeddedResource Include="Skin\hit100.png" />

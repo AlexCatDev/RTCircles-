@@ -58,7 +58,7 @@ namespace RTCircles
             //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\- 『BlooXoo』 -");
             //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  idke 1.2 without sliderendcircle");
             //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  AlexSkin 1.0");
-            Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\《CK》 Bacon boi 1.0 『blue』");
+            Skin.Load(@"C:\Users\user\Desktop\TempOsuBot\Skin");
 
             g = new Graphics();
 
@@ -240,7 +240,7 @@ namespace RTCircles
                         $"Vertices: {Utils.ToKMB(g.VerticesDrawn)}\n" +
                         $"Indices: {Utils.ToKMB(g.IndicesDrawn)}\n" +
                         $"Tris: {Utils.ToKMB(g.TrianglesDrawn)}\n" +
-                        $"Textures: {Easy2D.Texture.TextureCount} DrawCall_Max: {Graphics.MaxTextureSlots} \n" +
+                        $"Textures: {Easy2D.Texture.TextureCount} DrawCall_Max: {GL.MaxTextureSlots} \n" +
                         $"Framework: {RuntimeInformation.FrameworkDescription} {RuntimeInformation.ProcessArchitecture}\n" +
                         $"Audio Latency: {Sound.DeviceLatency}ms\n" +
                         $"OS: {RuntimeInformation.OSDescription}\n" +
@@ -362,7 +362,7 @@ namespace RTCircles
 
         public static readonly Vector2 TargetResolution = new Vector2(1920, 1080);
 
-        public static float Scale { get; private set; }
+        public static float Scale { get; protected set; }
 
         public static Vector2 AbsoluteScale => new Vector2(WindowWidth / TargetResolution.X, WindowHeight / TargetResolution.Y);
 

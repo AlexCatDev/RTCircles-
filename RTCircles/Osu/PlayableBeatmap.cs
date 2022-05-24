@@ -151,10 +151,13 @@ namespace RTCircles
 
             //DT makes song 1.5x times faster
             //TODO: Fix nightcore pitch beat using bass_fx
-            if (mods.HasFlag(Mods.DT))
-                Song.PlaybackSpeed = 1.5;
-            else
-                Song.PlaybackSpeed = 1;
+            if (Song != null)
+            {
+                if (mods.HasFlag(Mods.DT))
+                    Song.PlaybackSpeed = 1.5;
+                else
+                    Song.PlaybackSpeed = 1;
+            }
 
             if (mods.HasFlag(Mods.EZ))
             {

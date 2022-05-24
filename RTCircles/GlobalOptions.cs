@@ -39,7 +39,7 @@ namespace RTCircles
 
         public readonly static Option<bool> UseFastSliders = new Option<bool>("UseFastSliders", false) { Description = "Low quality sliders (Requires map reload, Recommended to use slider snaking)"};
 
-        public readonly static Option<bool> EnableComboBursts = new Option<bool>("EnableComboBursts", true) { Description = "Want a anime girl to clutter your screen every 50 combo?" };
+        public readonly static Option<bool> EnableComboBursts = new Option<bool>("EnableComboBursts", true) { Description = "Want some anime girl to clutter your screen every 50 combo?" };
 
         public readonly static Option<bool> EnableMouseButtons = new Option<bool>("MouseButtons", false) { Description = "Enable Mouse Buttons?" };
         #endregion
@@ -55,7 +55,7 @@ namespace RTCircles
             if (Skin.SliderSlide != null)
                 Skin.SliderSlide.Volume = volume;
 
-            if (Skin.SliderSlide != null)
+            if (Skin.SpinnerBonus != null)
                 Skin.SpinnerBonus.Volume = volume;
 
             OsuContainer.Beatmap?.Hitsounds?.SetVolume(volume);
