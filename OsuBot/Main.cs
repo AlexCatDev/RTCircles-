@@ -102,8 +102,10 @@ namespace OsuBot
             Viewport.SetViewport(0, 0, OUTPUT_WIDTH, OUTPUT_HEIGHT);
             GL.Instance.ReadBuffer(Silk.NET.OpenGLES.ReadBufferMode.ColorAttachment0);
 
+            //Obviously you have to provide your own path here
             FFmpegLoader.FFmpegPath = @"C:\Users\user\Desktop\TempOsuBot\ffmpeg";
 
+            //Also here, but if it can't find a skin it will just use the default one
             RTCircles.Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\- YUGEN FINAL WS -");
             WindowSize = new Vector2(OUTPUT_WIDTH, OUTPUT_HEIGHT);
             Scale = 0.5f;
