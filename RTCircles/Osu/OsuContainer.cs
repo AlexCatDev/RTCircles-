@@ -78,35 +78,39 @@ namespace RTCircles
 
         private static Vector2 lastViewport;
 
+        //Cache of playfield
         private static Rectangle _playfield;
-        //Cache this?
         public static Rectangle Playfield
         {
             get
             {
                 var windowSize = MainGame.WindowSize;
-                if (lastViewport != windowSize)
+
+                //If the viewport hasnt changed, return the cached value.
+                if (lastViewport == windowSize)
+                    return _playfield;
+
+                
+                //Else update the playfield and recache.
+
+                lastViewport = windowSize;
+
+                float aspectRatio = 4f / 3f;
+
+                float PlayfieldHeight = MainGame.WindowHeight - (MainGame.WindowHeight * 0.2f);
+
+                float PlayfieldWidth = (int)(PlayfieldHeight * aspectRatio);
+
+                //Max pixel gap of 100 pixels or 50 on either side then haram and change viewport height instead to match
+                if (PlayfieldWidth > MainGame.WindowWidth - 100)
                 {
-                    //Console.WriteLine("Cached viewport.");
-                    lastViewport = windowSize;
-
-                    float aspectRatio = 4f / 3f;
-
-                    float PlayfieldHeight = MainGame.WindowHeight - (MainGame.WindowHeight * 0.2f);
-
-                    float PlayfieldWidth = (int)(PlayfieldHeight * aspectRatio);
-
-                    //Max pixel gap of 100 pixels or 50 on either side then haram and change viewport height instead to match
-                    if (PlayfieldWidth > MainGame.WindowWidth - 100)
-                    {
-                        PlayfieldWidth = MainGame.WindowWidth - 100;
-                        PlayfieldHeight = (PlayfieldWidth / aspectRatio);
-                    }
-
-                    Vector2 PlayfieldTopLeft = new Vector2(MainGame.WindowCenter.X - PlayfieldWidth / 2f, MainGame.WindowCenter.Y - PlayfieldHeight / 2f);
-
-                    _playfield = new Rectangle(PlayfieldTopLeft, new Vector2(PlayfieldWidth, PlayfieldHeight));
+                    PlayfieldWidth = MainGame.WindowWidth - 100;
+                    PlayfieldHeight = (PlayfieldWidth / aspectRatio);
                 }
+
+                Vector2 PlayfieldTopLeft = new Vector2(MainGame.WindowCenter.X - PlayfieldWidth / 2f, MainGame.WindowCenter.Y - PlayfieldHeight / 2f);
+
+                _playfield = new Rectangle(PlayfieldTopLeft, new Vector2(PlayfieldWidth, PlayfieldHeight));
 
                 return _playfield;
             }
@@ -303,8 +307,11 @@ namespace RTCircles
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public static Vector2 MapToPlayfield(float x, float y, bool ignoreMods = false)
         {
+            //If HR flip everything in the y direction
             if (ignoreMods == false && Beatmap.Mods.HasFlag(Mods.HR))
                 y = 384 - y;
+
+            //Osu hitobjects are in the coordinate system X: 0-512 and Y: 0-384, we need to map these to our playfield, which is based on the current screen size
 
             x = MathUtils.Map(x, 0, 512, Playfield.Left, Playfield.Right);
 

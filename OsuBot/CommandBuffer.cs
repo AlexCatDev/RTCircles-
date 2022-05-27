@@ -141,10 +141,13 @@ namespace OsuBot
 
         public bool HasParameter(string param)
         {
-            if (buffer.Contains(param))
+            for (int i = 0; i < buffer.Count; i++)
             {
-                buffer.Remove(param);
-                return true;
+                if (buffer[i].ToLower() == param)
+                {
+                    buffer.RemoveAt(i);
+                    return true;
+                }
             }
 
             return false;

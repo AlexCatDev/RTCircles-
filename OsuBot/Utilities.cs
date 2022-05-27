@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Discord.WebSocket;
 using Easy2D;
 using Newtonsoft.Json;
 using RTCircles;
@@ -104,6 +105,22 @@ namespace OsuBot
 
             for (var i = 0; i < s.Length; i += partLength)
                 yield return s.AsMemory().Slice(i, Math.Min(partLength, s.Length - i));
+        }
+
+        public static ulong? BeatmapUrlToMapID(SocketMessage sMsg, CommandBuffer buffer)
+        {
+            string url = buffer.GetParameter("https://osu.ppy.sh/");
+
+            if (url == "")
+                return null;
+
+            if (ulong.TryParse(url.Split('/').Last(), out ulong beatmapID))
+                return beatmapID;
+            else
+            {
+                sMsg.Channel.SendMessageAsync("Error parsing beatmap url.");
+                return null;
+            }
         }
 
         public static T Load<T>(string filename)

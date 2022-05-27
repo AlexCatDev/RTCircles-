@@ -355,7 +355,9 @@ namespace RTCircles
             if (next.BaseObject.StartTime - current.BaseObject.EndTime >= 3000)
             {
                 breakOverlay.Show(current, next);
-                //breakOverlay.Show(next.BaseObject.StartTime - 1000);
+
+                //Warning arrows are supported but i like the lazer style countdown more
+
                 //Add(new WarningArrows(next.BaseObject.StartTime - 3000));
             }
         }
@@ -395,6 +397,7 @@ namespace RTCircles
             drawBackground(g);
             //drawSmoke(g);
 
+            //Here we render the hitobjects, they are apart of the screen
             base.Render(g);
 
             drawFlashlightOverlay(g);
