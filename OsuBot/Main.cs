@@ -257,14 +257,15 @@ namespace OsuBot
                 //Now get or download the beatmap file (.osu) only, which contains all the beatmap text.
                 var beatmapText = BeatmapManager.GetBeatmap(beatmapID.Value);
 
-                //Now we have to split the beatmap text up into lines
+                //We split the beatmap text into lines which then get parsed to a osu beatmap
                 var rawBeatmap = OsuParsers.Decoders.BeatmapDecoder.Decode(beatmapText.Split("\r\n"));
 
-                //Here we convert the text based hitobjects into actual renderable representations
+                //Setup a 'playable' beatmap
                 RTCircles.PlayableBeatmap beatmap = new RTCircles.PlayableBeatmap(
                     rawBeatmap, null, null, null);
 
-                //Here we generate the hitobjects, and parse in the mods we want to use, (Mods doesn't actually do anything to the objects)
+                //Here we convert the hitobjects into actual renderable representations
+                //Here we parse in the mods we want to use, (Mods doesn't actually do anything to the objects)
                 //Í have a weird system for this, but the AR/OD/CS/HP does get adjusted based on the mods
                 beatmap.GenerateHitObjects(RTCircles.Mods.Auto | enabledMods);
 
@@ -351,7 +352,7 @@ namespace OsuBot
                     //Now finally actually draw everything we have batched
                     graphics.EndDraw();
 
-                    //OpenGL wants to be hot shit and do asynchronous stuff, be have to ensure all commands finish before we taking a capture of the off screen render image
+                    //OpenGL wants to be hot shit and do asynchronous stuff, we have to ensure all commands finish before capturing the off-screen rendered image
                     GL.Instance.Finish();
 
                     unsafe
