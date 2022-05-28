@@ -52,6 +52,8 @@ namespace RTCircles
 
         public List<double> DifficultyGraph = new List<double>();
 
+        public string AudioPath { get; private set; } = "";
+
         public readonly AutoGenerator AutoGenerator = new AutoGenerator();
 
         public PlayableBeatmap(Beatmap beatmap, Sound song, Texture background = null, HitsoundStore hitsounds = null)
@@ -98,20 +100,26 @@ namespace RTCircles
             }
 
             string audioPath = $"{folderPath}/{playableBeatmap.InternalBeatmap.GeneralSection.AudioFilename}";
+            playableBeatmap.AudioPath = audioPath;
 
-            if (File.Exists(audioPath))
+            //If the audio file is the same as the already set map, don't reinitialize it lol
+            if(OsuContainer.Beatmap?.AudioPath == audioPath)
+            {
+                playableBeatmap.Song = OsuContainer.Beatmap.Song;
+            }
+            else if (File.Exists(audioPath))
             {
                 using (FileStream fs = File.OpenRead(audioPath))
                 {
                     Sound song = new Sound(fs, useFX: true, noBuffer: false, bassFlags: ManagedBass.BassFlags.Prescan);
-                    song.Volume = 0;
-                    ManagedBass.Bass.ChannelSlideAttribute(song, ManagedBass.ChannelAttribute.Volume, (float)GlobalOptions.SongVolume.Value, 500);
-
                     playableBeatmap.Song = song;
                 }
             }
             else
                 playableBeatmap.Song = new Sound(null);
+
+            playableBeatmap.Song.Volume = 0;
+            ManagedBass.Bass.ChannelSlideAttribute(playableBeatmap.Song, ManagedBass.ChannelAttribute.Volume, (float)GlobalOptions.SongVolume.Value, 500, false);
 
             string bgPath = $"{folderPath}/{playableBeatmap.InternalBeatmap.EventsSection.BackgroundImage}";
 

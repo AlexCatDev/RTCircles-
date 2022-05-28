@@ -48,58 +48,6 @@ namespace RTCircles
             }
         }
 
-        class HitURJudgement : Drawable
-        {
-            Vector2 pos;
-            HitResult result;
-
-            Vector4 color;
-
-            Vector2 size = new Vector2(4, 60) * MainGame.Scale;
-
-            public HitURJudgement(Vector2 pos, HitResult result)
-            {
-                this.pos = pos;
-                this.result = result;
-
-                switch (result)
-                {
-                    case HitResult.Max:
-                        color = Colors.From255RGBA(54, 187, 230, 255);
-                        break;
-                    case HitResult.Good:
-                        color = Colors.From255RGBA(92, 226, 22, 255);
-                        break;
-                    case HitResult.Meh:
-                        color = Colors.From255RGBA(216, 175, 73, 255);
-                        break;
-                    case HitResult.Miss:
-                        color = new Vector4(1f, 0f, 0f, 1f);
-                        break;
-                    default:
-                        break;
-                }
-
-                color.Xyz *= 1.2f;
-            }
-
-            public override Rectangle Bounds => throw new NotImplementedException();
-
-            public override void Render(Graphics g)
-            {
-                g.DrawRectangleCentered(pos - size / 4f, size, color);
-            }
-
-            public override void Update(float delta)
-            {
-                color.W -= delta * 0.3f;
-                color.W = MathUtils.Clamp(color.W, 0, 1f);
-
-                if (color.W == 0)
-                    IsDead = true;
-            }
-        }
-
         public class HitPositionsContainer : DrawableContainer
         {
             public static Vector2 Position => new Vector2(MainGame.WindowWidth - Size.X/2 - 5, 200*MainGame.Scale);
@@ -178,24 +126,41 @@ namespace RTCircles
             */
         }
 
+        private Vector3 colorFromHitResult(HitResult result)
+        {
+            switch (result)
+            {
+                case HitResult.Max:
+                    return Colors.From255RGB(54, 187, 230);
+                case HitResult.Good:
+                    return Colors.From255RGB(92, 226, 22);
+                case HitResult.Meh:
+                    return Colors.From255RGB(216, 175, 73);
+                case HitResult.Miss:
+                    return new Vector3(1f, 0f, 0f);
+                default:
+                    return Vector3.One;
+            }
+        }
+
         private float scale = 1f;
         private float scaleTime = 0.2f;
 
         private float scale2 = 0;
         private float scaleTime2 = 0.4f;
 
-        private float unstableRateBarWidth => (float)OsuContainer.Beatmap.Window50 * 4f * MainGame.Scale;
-        private float unstableRateBarHeight => 15 * MainGame.Scale;
+        private float unstableRateBarWidth => (float)OsuContainer.Beatmap.Window50 * 3.9f * MainGame.Scale;
+        private float unstableRateBarHeight => 14 * MainGame.Scale;
 
-        private float hp = 1;
+        private float currentHealth = 1;
 
-        private Rectangle unstableRateBar => new Rectangle(new Vector2(MainGame.WindowCenter.X - unstableRateBarWidth / 2f, 30 * MainGame.Scale), new Vector2(unstableRateBarWidth, unstableRateBarHeight));
+        private Rectangle unstableRateBar => new Rectangle(new Vector2(MainGame.WindowCenter.X - unstableRateBarWidth / 2f, 1052 * MainGame.AbsoluteScale.Y), new Vector2(unstableRateBarWidth, unstableRateBarHeight));
 
         public override Rectangle Bounds => throw new NotImplementedException();
 
-        private List<HitURJudgement> hitURJudgements = new List<HitURJudgement>();
+        private List<(double hitTime, double songTime, Vector3 color)> URJudgements = new List<(double hitTime, double songTime, Vector3 color)>();
 
-        public void AddHit(float time, HitResult result, Vector2 position, bool displayJudgement = true)
+        public void AddHit(double time, HitResult result, Vector2 position, bool displayJudgement = true)
         {
             if (result != HitResult.Miss)
             {
@@ -226,11 +191,7 @@ namespace RTCircles
             if (displayJudgement && result != HitResult.Max)
                 ScreenManager.GetScreen<OsuScreen>().Add(new HitJudgement(position, result));
 
-            //Console.WriteLine(result);
-            //Map the whole width where 0 will be the center because its dead on time
-            float x = MathUtils.Map(time, (float)OsuContainer.Beatmap.Window50, -(float)OsuContainer.Beatmap.Window50, unstableRateBar.Left, unstableRateBar.Right);
-
-            hitURJudgements.Add(new HitURJudgement(new Vector2(x, unstableRateBar.Center.Y), result));
+            URJudgements.Add((hitTime: time, songTime: OsuContainer.SongPosition, colorFromHitResult(result)));
 
             switch (result)
             {
@@ -263,11 +224,11 @@ namespace RTCircles
 
         public void AddHP(float val)
         {
-            hp += val;
+            currentHealth += val;
 
-            hp.ClampRef(0, 1);
+            currentHealth.ClampRef(0, 1);
 
-            if (hp == 0)
+            if (currentHealth == 0)
                 ScreenManager.GetScreen<OsuScreen>().reportDeath();
         }
 
@@ -277,13 +238,11 @@ namespace RTCircles
 
             float comboScale = 80 * MainGame.Scale;
 
-            Vector4 beatFlash = new Vector4(0.25f,0.25f,0.25f, 0f) * (float)OsuContainer.BeatProgressKiai;
-
             Vector2 comboSize = Skin.ComboNumbers.Meassure(comboScale * scale2, comboText);
-            Skin.ComboNumbers.Draw(g, new Vector2(0, MainGame.WindowHeight - comboSize.Y), comboScale * scale2, new Vector4(1f, 1f, 1f, 0.7f) + beatFlash, comboText);
+            Skin.ComboNumbers.Draw(g, new Vector2(0, MainGame.WindowHeight - comboSize.Y), comboScale * scale2, new Vector4(1f, 1f, 1f, 0.7f), comboText);
 
             comboSize = Skin.ComboNumbers.Meassure(comboScale * scale, comboText);
-            Skin.ComboNumbers.Draw(g, new Vector2(0, MainGame.WindowHeight - comboSize.Y), comboScale * scale, Colors.White + beatFlash, comboText);
+            Skin.ComboNumbers.Draw(g, new Vector2(0, MainGame.WindowHeight - comboSize.Y), comboScale * scale, Colors.White, comboText);
         }
         
         private void drawURBar(Graphics g)
@@ -297,21 +256,25 @@ namespace RTCircles
             g.DrawRectangleCentered(unstableRateBar.Position + new Vector2(unstableRateBar.Width / 2f, 0), new Vector2(width100, unstableRateBar.Height), Colors.From255RGBA(88, 226, 16, 255));
             g.DrawRectangleCentered(unstableRateBar.Position + new Vector2(unstableRateBar.Width / 2f, 0), new Vector2(width300, unstableRateBar.Height), Colors.From255RGBA(51, 190, 223, 255));
 
-            for (int i = 0; i < hitURJudgements.Count; i++)
-            {
-                hitURJudgements[i].Update((float)MainGame.Instance.DeltaTime);
-                hitURJudgements[i].Render(g);
-            }
+            Vector2 urSize = new Vector2(4*MainGame.Scale, unstableRateBarHeight*4.5f);
+            const double FadeOutTime = 1000;
 
-            for (int i = hitURJudgements.Count - 1; i >= 0; i--)
+            URJudgements.RemoveAll((o) => (o.songTime > OsuContainer.SongPosition) || (OsuContainer.SongPosition > o.songTime + FadeOutTime));
+
+            for (int i = URJudgements.Count - 1; i >= 0; i--)
             {
-                if (hitURJudgements[i].IsDead)
-                    hitURJudgements.RemoveAt(i);
+                float x = (float)URJudgements[i].hitTime.Map(OsuContainer.Beatmap.Window50, -OsuContainer.Beatmap.Window50, unstableRateBar.Left, unstableRateBar.Right);
+                float alpha = (float)OsuContainer.SongPosition.Map(URJudgements[i].songTime, URJudgements[i].songTime + FadeOutTime, 1, 0);
+
+                g.DrawRectangleCentered(new Vector2(x, unstableRateBar.Center.Y), urSize, new Vector4(URJudgements[i].color * 2, alpha));
             }
         }
 
         private double rollingScore;
         private double rollingAcc;
+
+        private float rankScale = 1;
+        private float rankAlpha = 1;
         public override void Render(Graphics g)
         {
             drawHPBar(g);
@@ -349,10 +312,19 @@ namespace RTCircles
 
             float beatProgress = (float)Interpolation.ValueAt(OsuContainer.BeatProgressKiai, 0f, 1f, 0f, 1f, EasingTypes.InOutSine);
 
-            float brightness = 1f + 0.25f * beatProgress;
+            if (OsuContainer.IsKiaiTimeActive)
+            {
+                rankScale = (float)Interpolation.Damp(rankScale, 1, 0.001, MainGame.Instance.DeltaTime);
+                rankAlpha = (float)Interpolation.Damp(rankAlpha, 1, 0.001, MainGame.Instance.DeltaTime);
+            }
+            else
+            {
+                rankScale = (float)Interpolation.Damp(rankScale, 0.75, 0.02, MainGame.Instance.DeltaTime);
+                rankAlpha = (float)Interpolation.Damp(rankAlpha, 0.5, 0.02, MainGame.Instance.DeltaTime);
+            }
 
-            float rankSize = radius * 3.8f;
-            g.DrawRectangleCentered(piePos, new Vector2(rankSize * rankingLetterTex.Texture.Size.AspectRatio(), rankSize), new Vector4(brightness, brightness, brightness, 1f), rankingLetterTex.Texture);
+            float rankSize = radius * 3.8f * rankScale;
+            g.DrawRectangleCentered(piePos, new Vector2(rankSize * rankingLetterTex.Texture.Size.AspectRatio(), rankSize), new Vector4(1, 1, 1, rankAlpha), rankingLetterTex.Texture);
 
             piePos.X -= rankSize * 0.8f;
             rankSize /= 1.4f - 0.25f * beatProgress;
@@ -380,18 +352,18 @@ namespace RTCircles
 
             //Console.WriteLine(offsetFromStart);
 
-            double duration = 250;
-            double pause = 250;
+            double duration = 200;
+            double pause = beatLength * 2;
 
             float textScale = MainGame.Scale;
 
             float letterGOAlpha = (float)(offsetFromStart > duration ? 
                 offsetFromStart.Map(duration + pause, duration + pause + duration, 1, 0) : offsetFromStart.Map(0, duration, 0, 1)).Clamp(0, 1);
 
-            float letterGOScale = (float)Interpolation.ValueAt(offsetFromStart.Clamp(0, duration), 1.5, 1, 0, duration, EasingTypes.Out);
+            float letterGOScale = (float)Interpolation.ValueAt(offsetFromStart.Clamp(0, duration), 2, 1, 0, duration, EasingTypes.Out);
 
             if(letterGOAlpha > 0)
-            g.DrawStringCentered("GO!", Font.DefaultFont, MainGame.WindowCenter, new Vector4(1f, 1f, 1f, letterGOAlpha), letterGOScale * textScale);
+            g.DrawStringCentered("Lets GO!", Font.DefaultFont, MainGame.WindowCenter, new Vector4(1f, 1f, 1f, letterGOAlpha), letterGOScale * textScale);
         }
 
         private float interpolatedHP = 0;
@@ -404,7 +376,7 @@ namespace RTCircles
                 AddHP(drainRate * (float)(OsuContainer.DeltaSongPosition / 1000));
             }
 
-            interpolatedHP = MathHelper.Lerp(interpolatedHP, hp, (float)MainGame.Instance.DeltaTime * 30f);
+            interpolatedHP = MathHelper.Lerp(interpolatedHP, currentHealth, (float)MainGame.Instance.DeltaTime * 30f);
 
             float hpScale = 1.75f;
 

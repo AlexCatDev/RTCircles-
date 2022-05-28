@@ -225,6 +225,9 @@ namespace RTCircles
 
         public void Render(Graphics g)
         {
+            if (Precision.AlmostEquals(Alpha, 0))
+                return;
+
             if (radius < -1)
                 throw new Exception("Slider radius was less than 0????");
 

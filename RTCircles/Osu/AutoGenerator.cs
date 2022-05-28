@@ -26,8 +26,8 @@ namespace RTCircles
         {
             bool cursorDance = GlobalOptions.AutoCursorDance.Value;
 
-            if (!cursorDance && to.IsSliderSlide)
-                return DrawableSlider.SliderBallPositionForAuto;
+            if (!cursorDance && to.IsSliderSlide && DrawableSlider.SliderBallPositionForAuto.HasValue)
+                return DrawableSlider.SliderBallPositionForAuto.Value;
 
             float blend = Interpolation.ValueAt(time, 0, 1, from.Time, to.Time);
 

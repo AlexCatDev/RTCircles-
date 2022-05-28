@@ -192,8 +192,9 @@ namespace RTCircles
                     songPos = value;
                 else
                 {
-                    if (Beatmap != null && Beatmap.Song != null)
+                    if (Beatmap?.Song != null)
                     {
+
                         Beatmap.Song.PlaybackPosition = value;
                         songPos = Beatmap.Song.PlaybackPosition;
                     }
@@ -202,7 +203,7 @@ namespace RTCircles
                         songPos = value;
                     }
 
-                    DeltaSongPosition = songPos-previousSongPos;
+                    DeltaSongPosition = 0;
                     previousSongPos = songPos;
                 }
             }
@@ -461,7 +462,7 @@ namespace RTCircles
 
         private static int totalOffset => Sound.DeviceLatency + GlobalOffset;
 
-        public static void Update(float delta)
+        public static void Update(double delta)
         {
             if (Beatmap is null)
                 return;
@@ -477,7 +478,7 @@ namespace RTCircles
                 }
                 else if (songPos >= Beatmap.Song.PlaybackLength && Beatmap.Song.IsStopped)
                 {
-                    songPos += delta * 1000f * Beatmap.Song.PlaybackSpeed;
+                    songPos += delta * 1000 * Beatmap.Song.PlaybackSpeed;
                 }
                 else
                 {

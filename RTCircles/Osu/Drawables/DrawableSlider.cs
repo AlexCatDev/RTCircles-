@@ -105,7 +105,7 @@ namespace RTCircles
         //TODO: add
         public static float SliderResolution = 1f;
 
-        public static Vector2 SliderBallPositionForAuto { get; private set; }
+        public static Vector2? SliderBallPositionForAuto { get; private set; }
 
         private Slider slider;
 
@@ -251,7 +251,9 @@ namespace RTCircles
             //times an index
             float diff = (slider.EndTime - slider.StartTime) / slider.Repeats;
 
-            float beatProgress = Interpolation.ValueAt(OsuContainer.GetBeatProgressAt(slider.StartTime + (diff * index)), 1.5f, 1, 1, 0, EasingTypes.OutSine);
+            float beatProgress = (float)Interpolation.ValueAt(OsuContainer.GetBeatProgressAt(slider.StartTime + (diff * index)), OsuContainer.CircleExplodeScale, 1, 1, 0, EasingTypes.OutSine);
+
+            //float beatProgress = (float)Interpolation.ValueAt(OsuContainer.GetBeatCountFrom(slider.StartTime + (diff * index), 0.5).OscillateValue(0, 1), 1, OsuContainer.CircleExplodeScale, 1, 0, EasingTypes.Out);
 
             Vector2 size = new Vector2(Size.Y, Size.Y / Skin.SliderReverse.Texture.Size.AspectRatio()) * Skin.GetScale(Skin.SliderReverse);
 
@@ -338,8 +340,8 @@ namespace RTCircles
                 //When the sliderfollowcircle is in motion, make it slightly oval shaped, (osu stable does this)
                 if (OsuContainer.SongPosition >= slider.StartTime && OsuContainer.SongPosition < slider.EndTime)
                 {
-                    //When the sliderfollowcircle is in motion, make it slightly oval shaped, (osu stable does this)
-                    followCircleSize.X *= 1.025f;
+                    //When the sliderfollowcircle is in motion, make it slightly oval shaped
+                    followCircleSize.X *= 1.02f;
 
                     //Pulse the follow circle slightly to the beat of the song
                     followCircleSize *= 1 + (float)Interpolation.ValueAt(OsuContainer.BeatProgress, 0, 0.1, 0, 1, EasingTypes.InSine);
@@ -442,9 +444,10 @@ namespace RTCircles
         {
             if (IsHit == false && IsMissed == false)
             {
-                //Use the sliderball position, for the hitcircle position.
                 if (MathUtils.IsPointInsideRadius(OsuContainer.CursorPosition, hitCirclePos, OsuContainer.Beatmap.CircleRadius) || OsuContainer.CookieziMode)
                 {
+                    if (OsuContainer.SongPosition < slider.StartTime - OsuContainer.Beatmap.Fadein) { return true; }
+
                     double hittableTime = Math.Abs(OsuContainer.SongPosition - slider.StartTime);
 
                     OsuContainer.ScoreHit(slider);
@@ -518,6 +521,7 @@ namespace RTCircles
 
         public override void OnRemove()
         {
+            SliderBallPositionForAuto = null;
             SliderPath.Cleanup();
         }
 
@@ -558,7 +562,7 @@ namespace RTCircles
                     sliderFollowScaleAnim.ClearTransforms();
 
                     //150ms if slider duration is longer than 150, else use slider duration.
-                    float time = Math.Min(150, slider.EndTime - slider.StartTime);
+                    float time = Math.Min((int)OsuContainer.Fadeout, slider.EndTime - slider.StartTime);
                     sliderFollowScaleAnim.TransformTo(SliderBallActiveScale, time, EasingTypes.Out);
                 }
                 else
@@ -585,10 +589,7 @@ namespace RTCircles
             //Neeed a better way to handle this
             if (fadeout)
             {
-                //If both snakeout and not exploding, make the fadeout half as long.
-                var fadeoutDuration = GlobalOptions.SliderSnakeOut.Value && !GlobalOptions.SliderSnakeExplode.Value ? OsuContainer.Fadeout / 3 : OsuContainer.Fadeout;
-
-                circleAlpha = MathUtils.Map((float)OsuContainer.SongPosition, fadeOutStart, fadeOutStart + (float)fadeoutDuration, 1f, 0).Clamp(0, 1f);
+                 circleAlpha = (float)MathUtils.Map(OsuContainer.SongPosition, fadeOutStart, fadeOutStart + OsuContainer.Fadeout, 1, 0).Clamp(0, 1);
             }
             else
             {
@@ -603,22 +604,21 @@ namespace RTCircles
                 circleAlpha = (float)MathUtils.Map(timeElapsed, 0, OsuContainer.Beatmap.Fadein, 0, 1f).Clamp(0, 1f);
 
                 snakeIn = GlobalOptions.SliderSnakeIn.Value ? MathUtils.Map(timeElapsed, 0, (float)OsuContainer.Beatmap.Fadein / 2f, 0, 1f).Clamp(0, 1f) : 1;
+                //snakeIn = (float)MathUtils.Map(OsuContainer.SongPosition, slider.StartTime, slider.EndTime, 0, 1);
             }
 
-            //Slider snakeout module
-            //Im suprised i could fit this in my head, 1 month ago, i had no fucking clue
-            //How i would do this, and solved it in like 7 minutes now? easy
+            //Slider snakeout
             float snakeOut = 0f;
             if (repeatsDone >= slider.Repeats - 1 && GlobalOptions.SliderSnakeOut.Value)
             {
                 double snakeDuration = slider.EndTime - slider.StartTime;
-                double startSnake = slider.Repeats > 1 ? slider.EndTime - (snakeDuration / slider.Repeats) : slider.StartTime;
+                double startSnake = slider.EndTime - (snakeDuration / slider.Repeats);
                 double endSnake = slider.EndTime;
 
                 if (slider.Repeats % 2 != 0)
                     snakeOut = (float)MathUtils.Map(OsuContainer.SongPosition, startSnake, endSnake, 0, 1).Clamp(0, 1);
                 else
-                    snakeIn = (float)MathUtils.Map(OsuContainer.SongPosition, startSnake, endSnake, 1, 0f).Clamp(0, 1);
+                    snakeIn = (float)MathUtils.Map(OsuContainer.SongPosition, startSnake, endSnake, 1, 0).Clamp(0, 1);
             }
 
             repeatsDone = (int)MathUtils.Map(OsuContainer.SongPosition, slider.StartTime, slider.EndTime, 0, slider.Repeats).Clamp(0, slider.Repeats);
@@ -639,7 +639,7 @@ namespace RTCircles
                 if (IsHit == false && IsMissed == false)
                 {
                     IsMissed = true;
-                    OsuContainer.HUD.AddHit(0, HitResult.Miss, sliderballPosition, false);
+                    OsuContainer.HUD.AddHit(OsuContainer.Beatmap.Window50, HitResult.Miss, sliderballPosition, false);
                 }
 
                 //Last slider point check
@@ -683,7 +683,7 @@ namespace RTCircles
                             OsuContainer.PlayHitsound(hitsound, sample2.Value);
                     }
 
-                    OsuContainer.HUD.AddHit(0, result, sliderballPosition);
+                    OsuContainer.HUD.AddHit(result == HitResult.Miss ? OsuContainer.Beatmap.Window50 : 0, result, sliderballPosition);
                 }
                 else if (IsValidTrack)
                 {
@@ -697,7 +697,7 @@ namespace RTCircles
                 else
                 {
                     IsMissed = true;
-                    OsuContainer.HUD.AddHit(0, HitResult.Miss, sliderballPosition, false);
+                    OsuContainer.HUD.AddHit(OsuContainer.Beatmap.Window50, HitResult.Miss, sliderballPosition, false);
                 }
             }
 
@@ -718,10 +718,17 @@ namespace RTCircles
                 SliderPath.DrawScale = 1;
             }
 
-            if(OsuContainer.Beatmap.Mods.HasFlag(Mods.HD))
-                SliderPath.Alpha = circleAlpha*Interpolation.ValueAt(OsuContainer.SongPosition.Clamp(slider.StartTime, slider.EndTime), 1, 0, slider.StartTime, slider.EndTime, EasingTypes.Out);
+            //Fade out the slider based on its duration when hidden (bad mod)
+            if (OsuContainer.Beatmap.Mods.HasFlag(Mods.HD))
+                SliderPath.Alpha = circleAlpha * Interpolation.ValueAt(OsuContainer.SongPosition.Clamp(slider.StartTime, slider.EndTime), 1, 0, slider.StartTime, slider.EndTime, EasingTypes.Out);
             else
-                SliderPath.Alpha = circleAlpha;
+            {
+                //If we reached the end of the slider and snake out is enabled and exploding is disabled, just instantly make it disappear
+                if (GlobalOptions.SliderSnakeOut.Value && !GlobalOptions.SliderSnakeExplode.Value && OsuContainer.SongPosition > slider.EndTime)
+                    SliderPath.Alpha = 0f;
+                else
+                    SliderPath.Alpha = circleAlpha;
+            }
 
             SliderPath.SetProgress(snakeOut, snakeIn);
 

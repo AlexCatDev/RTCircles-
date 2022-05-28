@@ -33,7 +33,7 @@ namespace RTCircles
 
     public class OsuScreen : Screen
     {
-        public bool RenderHUD { get; set; }
+        public bool RenderHUD = true;
 
         private Faderino faderino = new Faderino();
 
@@ -184,7 +184,7 @@ namespace RTCircles
             }
 
             //If the song position is infront of the last object, the object index is always bigger than the last object
-            if(OsuContainer.SongPosition > OsuContainer.Beatmap.HitObjects[^1].BaseObject.StartTime)
+            if(songPos > OsuContainer.Beatmap.HitObjects[^1].BaseObject.StartTime)
             {
                 if (objectIndex >= OsuContainer.Beatmap.HitObjects.Count)
                     return;
@@ -207,10 +207,10 @@ namespace RTCircles
             var now = OsuContainer.Beatmap.HitObjects[objectIndex.Clamp(0, maxCount)].BaseObject;
 
             //If the song position is greater than the object's start time at the current object index, the index is behind.
-            bool isIndexBehind = OsuContainer.SongPosition > now.StartTime;
+            bool isIndexBehind = songPos > now.StartTime;
 
             //If the song position is smaller than the previously spawned object's time, the index is too far ahead
-            bool isIndexInfront = (previous.StartTime - OsuContainer.Beatmap.Preempt) > OsuContainer.SongPosition;
+            bool isIndexInfront = (previous.StartTime - preempt) > songPos;
 
             //If both of these are true, im doing something wrong
             System.Diagnostics.Debug.Assert(!(isIndexBehind && isIndexInfront));
@@ -222,7 +222,8 @@ namespace RTCircles
                 else
                     Utils.Log($"The index was infront! {objectIndex}", LogLevel.Important);
 
-                OsuContainer.Beatmap.AutoGenerator.SyncToTime(OsuContainer.SongPosition);
+                OsuContainer.Beatmap.AutoGenerator.SyncToTime(songPos);
+
                 Clear<DrawableHitCircle>();
                 Clear<DrawableSpinner>();
                 Clear<DrawableSlider>();
@@ -235,12 +236,12 @@ namespace RTCircles
                     if (isIndexBehind)
                     {
                         objectIndex++;
-                        if (OsuContainer.SongPosition < OsuContainer.Beatmap.HitObjects[objectIndex].BaseObject.StartTime)
+                        if (songPos < OsuContainer.Beatmap.HitObjects[objectIndex].BaseObject.StartTime)
                             break;
                     }
                     else
                     {
-                        var newIndex = OsuContainer.Beatmap.HitObjects.FindIndex((o) => o.BaseObject.StartTime < OsuContainer.SongPosition);
+                        var newIndex = OsuContainer.Beatmap.HitObjects.FindIndex((o) => o.BaseObject.StartTime < songPos);
 
                         if (newIndex == -1)
                             newIndex = 0;

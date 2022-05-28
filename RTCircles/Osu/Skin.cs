@@ -101,9 +101,9 @@ namespace RTCircles
 
             if (GlobalOptions.RGBCircles.Value && OsuContainer.IsKiaiTimeActive)
                 col = MathUtils.RainbowColor(OsuContainer.SongPosition/1000, 0.5f, 1.1f);
-
+            
             if (OsuContainer.IsKiaiTimeActive)
-                col -= new Vector3(0.1f)*(float)(1 - OsuContainer.BeatProgress);
+                col *= 1 + (float)(OsuContainer.BeatProgress * 0.25);
 
                 return col;
         }

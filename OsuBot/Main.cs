@@ -148,7 +148,7 @@ namespace OsuBot
                 rate = 0.75;
 
             //Update the song position, and the timing point
-            RTCircles.OsuContainer.Update((float)(frameDelta * 1000 * rate));
+            RTCircles.OsuContainer.Update(frameDelta * 1000 * rate);
 
             //Inside the osu screen the actual rendering of osu happens, very much code
 

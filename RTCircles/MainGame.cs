@@ -24,7 +24,7 @@ namespace RTCircles
 
         private SmoothFloat shakeKiai = new SmoothFloat();
 
-        private Shaker shaker = new Shaker() { Duration = 0.8f, Radius = 200, Speed = 50, ShakeFadeoutScale = 2, Easing = EasingTypes.Out };
+        private Shaker shaker = new Shaker() { Duration = 0.8f, Radius = 180, Speed = 60, ShakeFadeoutScale = 3, Easing = EasingTypes.Out };
         private Matrix4 shakeMatrix => Matrix4.CreateTranslation(new Vector3(shaker.OutputShake * MainGame.Scale)) * Projection;
 
         private bool debugCameraActive = false;
@@ -58,7 +58,7 @@ namespace RTCircles
             //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\- 『BlooXoo』 -");
             //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  idke 1.2 without sliderendcircle");
             //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  AlexSkin 1.0");
-            Skin.Load(@"C:\Users\user\Desktop\TempOsuBot\Skin");
+            Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  Hvorfor laver jeg hele tiden nye skins");
 
             g = new Graphics();
 
@@ -137,7 +137,7 @@ namespace RTCircles
 
             shakeKiai.Update((float)DeltaTime);
             shaker.Update();
-            OsuContainer.Update((float)DeltaTime);
+            OsuContainer.Update(DeltaTime);
             ScreenManager.Update((float)DeltaTime);
         }
 

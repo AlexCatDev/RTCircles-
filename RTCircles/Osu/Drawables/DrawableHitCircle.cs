@@ -64,7 +64,7 @@ namespace RTCircles
         private float hitAlpha = 0;
         private double hitTime = 0;
 
-        private float hittableTime;
+        private double hittableTime;
 
         private int colorIndex;
 
@@ -91,6 +91,8 @@ namespace RTCircles
         {
             if (!playedSound && !IsHit && !IsMissed)
             {
+                if(OsuContainer.SongPosition < circle.StartTime - OsuContainer.Beatmap.Fadein) { return true; }
+
                 hitTime = OsuContainer.SongPosition;
                 double t = Math.Abs(hittableTime);
 
@@ -102,8 +104,6 @@ namespace RTCircles
                     OsuContainer.HUD.AddHit(hittableTime, HitResult.Good, Position);
                 else if (t < OsuContainer.Beatmap.Window50)
                     OsuContainer.HUD.AddHit(hittableTime, HitResult.Meh, Position);
-                else if (t < OsuContainer.Beatmap.Window50 * 1.1)
-                    return true;
                 else
                 {
                     OsuContainer.HUD.AddHit(hittableTime, HitResult.Miss, Position);
@@ -164,7 +164,7 @@ namespace RTCircles
 
             double timeElapsed = (OsuContainer.SongPosition - circle.StartTime + OsuContainer.Beatmap.Preempt);
 
-            hittableTime = (float)(OsuContainer.SongPosition - circle.StartTime);
+            hittableTime = OsuContainer.SongPosition - circle.StartTime;
 
             if (!IsHit && !IsMissed)
             {
@@ -184,6 +184,7 @@ namespace RTCircles
                 if (OsuContainer.CookieziMode && approachScale == 1f)
                     Hit();
                 
+                //Auto miss when the hit window is outside 50
                 if (hittableTime > OsuContainer.Beatmap.Window50)
                 {
                     IsMissed = true;
@@ -194,8 +195,6 @@ namespace RTCircles
             }
             else
             {
-
-
                 var start = hitTime;
                 var to = hitTime + OsuContainer.Fadeout;
                 var time = OsuContainer.SongPosition.Clamp(start, to);
