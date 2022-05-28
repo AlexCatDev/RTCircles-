@@ -12,8 +12,11 @@ namespace RTCircles
         public override void Render(Graphics g)
         {
             base.Render(g);
+        }
 
-            g.DrawStringCentered("Nothing here yet", Font.DefaultFont, MainGame.WindowCenter, new Vector4(1f, 1f, 0f, 1f));
+        public override void OnEnter()
+        {
+           
         }
 
         public override void OnKeyDown(Key key)

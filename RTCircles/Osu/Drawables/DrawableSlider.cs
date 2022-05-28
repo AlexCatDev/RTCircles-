@@ -8,98 +8,6 @@ using System.Collections.Generic;
 
 namespace RTCircles
 {
-    public static class ObjectPool<T> where T : new()
-    {
-        private static Stack<T> pool = new Stack<T>();
-
-        public static int TotalCreated { get; private set; }
-
-        public static int UnusedObjectsCount => pool.Count;
-
-        public static T Take()
-        {
-            if(pool.TryPop(out T result))
-                return result;
-
-            T newObj = new T();
-            TotalCreated++;
-
-            return newObj;
-        }
-
-        public static void ClearUnusedObjects() => pool.Clear();
-
-        public static void Return(T t) => pool.Push(t);
-    }
-
-    //Remove this shit
-    public class ExplodingSliderRepeat : Drawable
-    {
-        private Vector2 Size => new Vector2(OsuContainer.Beatmap.CircleRadius * 2);
-        private Vector2 position;
-
-        private ISlider slider;
-
-        private double spawnTime;
-
-        private int index = 0;
-
-        public ExplodingSliderRepeat(ISlider slider, int index)
-        {
-            this.slider = slider;
-            this.index = index;
-            spawnTime = OsuContainer.SongPosition;
-        }
-
-        public override void Render(Graphics g)
-        {
-            if(OsuContainer.SongPosition < spawnTime)
-            {
-                IsDead = true;
-                return;
-            }
-
-            if(index % 2 == 0)
-                position = OsuContainer.MapToPlayfield(slider.Path.Points[0]);
-            else
-                position = OsuContainer.MapToPlayfield(slider.Path.Points[^1]);
-
-            float alpha = (float)OsuContainer.SongPosition.Map(spawnTime, spawnTime + OsuContainer.Fadeout, 1, 0).Clamp(0, 1);
-            float scale = (float)Interpolation.ValueAt(OsuContainer.SongPosition, 1, OsuContainer.CircleExplodeScale, spawnTime, spawnTime + OsuContainer.Fadeout, EasingTypes.Out);
-
-            Vector2 size = new Vector2(Size.Y, Size.Y / Skin.SliderReverse.Texture.Size.AspectRatio()) * Skin.GetScale(Skin.SliderReverse);
-
-            g.DrawRectangleCentered(position, size * scale, new Vector4(1f, 1f, 1f, alpha), Skin.SliderReverse, null, false, MathHelper.RadiansToDegrees(angle));
-
-            if(alpha<=0)
-                IsDead = true;
-        }
-
-        private float angle
-        {
-            get
-            {
-                //Console.WriteLine(index);
-                if (index % 2 == 0)
-                {
-                    var first = slider.Path.Points[0];
-                    var next = slider.Path.Points[1];
-
-                    return MathF.Atan2(next.Y - first.Y, next.X - first.X);
-                }
-                else
-                { 
-                    var last = slider.Path.Points[^1];
-                    var secondLast = slider.Path.Points[^2];
-
-                    return MathF.Atan2(secondLast.Y - last.Y, secondLast.X - last.X);
-                }
-            }
-        }
-
-        public override void Update(float delta) { }
-    }
-
     public class DrawableSlider : Drawable, IDrawableHitObject
     {
         //TODO: add
@@ -203,30 +111,28 @@ namespace RTCircles
             if (fullPath.Count == 0)
                 fullPath.Add(new Vector2(slider.Position.X, slider.Position.Y));
 
+
             #region TRIM_TO_PIXEL_LENGTH
-            float length = 0;
+            float length = (float)slider.PixelLength;
             for (int i = 0; i < fullPath.Count - 1; i++)
             {
                 float dist = Vector2.Distance(fullPath[i], fullPath[i + 1]);
-                length += dist;
 
-                if (length > slider.PixelLength)
+                if (length - dist <= 0)
                 {
-                    float pixelLength = (float)slider.PixelLength;
-                    var next = fullPath[i + 1];
+                    float blend = length / dist;
+                    var finalPointAdjusted = Vector2.Lerp(fullPath[i], fullPath[i + 1], blend);
 
-                    //Remove every point after
                     fullPath.RemoveRange(i + 1, fullPath.Count - i - 1);
-
-                    fullPath.Add(Vector2.Lerp(fullPath[i], next, pixelLength / length));
-
-                    //This is almost correct, but sometimes not.
+                    fullPath.Add(finalPointAdjusted);
                     /*
                     var finalLength = Path.CalculateLength(fullPath);
                     System.Diagnostics.Debug.Assert(finalLength - 10 < slider.PixelLength);
+                    Console.WriteLine($"Final: {finalLength} Actual: {slider.PixelLength}");
                     */
                     break;
                 }
+                length -= dist;
             }
             #endregion
 
@@ -331,9 +237,9 @@ namespace RTCircles
                         previousBallPos = pos;
                 }
 
-                float followCircleAlpha = Interpolation.ValueAt(sliderFollowScaleAnim.Value, 0, 1, 1, 2, EasingTypes.Out) * circleAlpha;//sliderFollowScaleAnim.Value.Map(1f, 2f, 0f, 1) * circleAlpha;
+                float followCircleAlpha = Interpolation.ValueAt(sliderFollowScaleAnim.Value, 0, 1, 1, 2, EasingTypes.None) * circleAlpha;
                 
-                float fadeoutScale = Interpolation.ValueAt(circleAlpha.Clamp(0f, 1f), 1f, 0.75f, 1f, 0f, EasingTypes.Out).Clamp(0.75f, 1f);
+                float fadeoutScale = Interpolation.ValueAt(circleAlpha, 1f, 0.75f, 1f, 0f, EasingTypes.Out).Clamp(0.75f, 1f);
 
                 Vector2 followCircleSize = Size * sliderFollowScaleAnim * Skin.GetScale(Skin.SliderFollowCircle, 256, 512) * fadeoutScale;
 
@@ -341,10 +247,10 @@ namespace RTCircles
                 if (OsuContainer.SongPosition >= slider.StartTime && OsuContainer.SongPosition < slider.EndTime)
                 {
                     //When the sliderfollowcircle is in motion, make it slightly oval shaped
-                    followCircleSize.X *= 1.02f;
+                    //followCircleSize.X *= 1.02f;
 
                     //Pulse the follow circle slightly to the beat of the song
-                    followCircleSize *= 1 + (float)Interpolation.ValueAt(OsuContainer.BeatProgress, 0, 0.1, 0, 1, EasingTypes.InSine);
+                    //followCircleSize *= 1 + (float)Interpolation.ValueAt(OsuContainer.GetBeatProgressAt(slider.StartTime), 0, 0.15, 0, 1, EasingTypes.InSine);
                 }
 
                 g.DrawRectangleCentered(sliderballPosition, followCircleSize, new Vector4(1f, 1f, 1f, followCircleAlpha), Skin.SliderFollowCircle, null, false, sliderBallAngle);
@@ -563,7 +469,7 @@ namespace RTCircles
 
                     //150ms if slider duration is longer than 150, else use slider duration.
                     float time = Math.Min((int)OsuContainer.Fadeout, slider.EndTime - slider.StartTime);
-                    sliderFollowScaleAnim.TransformTo(SliderBallActiveScale, time, EasingTypes.Out);
+                    sliderFollowScaleAnim.TransformTo(SliderBallActiveScale, time, EasingTypes.OutQuart);
                 }
                 else
                 {
@@ -626,8 +532,13 @@ namespace RTCircles
             if (repeatsDone != lastRepeatsDone)
             {
                 lastRepeatsDone = repeatsDone;
-                if(repeatsDone < slider.Repeats && IsValidTrack)
-                    Container.Add(new ExplodingSliderRepeat(SliderPath, repeatsDone));
+                if (repeatsDone < slider.Repeats && IsValidTrack)
+                {
+                    var sliderRepeatExplode = ObjectPool<ExplodingSliderRepeat>.Take();
+                    sliderRepeatExplode.SetTarget(SliderPath, repeatsDone);
+
+                    Container.Add(sliderRepeatExplode);
+                }
                 //var hitsound = slider.EdgeHitSounds?[1] ?? slider.HitSound;
                 //var sample = slider.EdgeAdditions?[1].Item1 ?? slider.Extras.SampleSet;
 

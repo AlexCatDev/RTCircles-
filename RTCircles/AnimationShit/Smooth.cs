@@ -180,8 +180,9 @@ namespace RTCircles
         /// <summary>
         /// Get the current value, setting this value will clear all pending transforms, and instantaneously set the new value
         /// </summary>
-        public T Value { 
-            get 
+        public T Value
+        {
+            get
             {
                 return currentValue;
             }
@@ -210,7 +211,8 @@ namespace RTCircles
             bool initStart = false;
             T start = currentValue;
 
-            pendingTransforms.Enqueue((delta) => {
+            pendingTransforms.Enqueue((delta) =>
+            {
                 if (!initStart)
                 {
                     start = currentValue;

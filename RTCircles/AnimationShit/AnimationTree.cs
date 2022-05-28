@@ -29,7 +29,7 @@ namespace RTCircles
     }
 
 
-    public abstract class AnimationT<T>
+    public abstract class AnimationT<T> where T : struct
     {
         protected abstract T GetValueAt(double time, T start, T end, double startTime, double endTime, EasingTypes easing);
 

@@ -57,16 +57,11 @@ namespace RTCircles
         private MapBackground mapBG;
         private MenuLogo logo;
 
-        public static bool IsRTCircles = true;
-
         public MenuScreen()
         {
-            if (!IsRTCircles)
-                return;
-
-            BeatmapMirror.Scheduler.Enqueue(() =>
+            BeatmapMirror.DatabaseAction((realm) =>
             {
-                ScreenManager.GetScreen<SongSelectScreen>().LoadCarouselItems();
+                ScreenManager.GetScreen<SongSelectScreen>().LoadCarouselItems(realm);
                 var carouselItems = BeatmapCollection.Items;
 
                 PlayableBeatmap playableBeatmap;

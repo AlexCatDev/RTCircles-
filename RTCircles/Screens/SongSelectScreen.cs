@@ -168,12 +168,14 @@ namespace RTCircles
                 System.IO.File.Delete(item.FullPath);
             }
 
-            BeatmapMirror.Scheduler.Enqueue(() => {
-                var bm = BeatmapMirror.Realm.Find<DBBeatmapInfo>(item.Hash);
-                BeatmapMirror.Realm.Write(() =>
+            BeatmapMirror.DatabaseAction((realm) =>
+            {
+                var bm = realm.Find<DBBeatmapInfo>(item.Hash);
+
+                realm.Write(() =>
                 {
                     bm.SetInfo.Beatmaps.Remove(bm);
-                    BeatmapMirror.Realm.Remove(bm);
+                    realm.Remove(bm);
                 });
             });
 
@@ -265,9 +267,9 @@ namespace RTCircles
             BeatmapCollection.AddItem(newItem);
         }
 
-        public void LoadCarouselItems()
+        public void LoadCarouselItems(Realm realm)
         {
-            foreach (var item in BeatmapMirror.Realm.All<DBBeatmapInfo>())
+            foreach (var item in realm.All<DBBeatmapInfo>())
             {
                 AddBeatmapToCarousel(item);
                 Utils.Log($"Loaded DBBeatmap: {item.Filename}", LogLevel.Debug);

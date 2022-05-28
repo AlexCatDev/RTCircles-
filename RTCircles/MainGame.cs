@@ -12,7 +12,6 @@ using System.Text;
 
 namespace RTCircles
 {
-
     public class MainGame : GameBase
     {
         public static MainGame Instance { get; private set; }
@@ -22,7 +21,7 @@ namespace RTCircles
         private Graphics g;
         public static Matrix4 Projection { get; private set; }
 
-        private SmoothFloat shakeKiai = new SmoothFloat();
+        private SmoothFloat kiaiAnimation = new SmoothFloat();
 
         public Shaker Shaker = new Shaker() { Duration = 0.8f, Radius = 180, Speed = 60, ShakeFadeoutScale = 3, Easing = EasingTypes.Out };
         private Matrix4 shakeMatrix => Matrix4.CreateTranslation(new Vector3(Shaker.OutputShake * MainGame.Scale)) * Projection;
@@ -128,11 +127,11 @@ namespace RTCircles
         public override void OnUpdate()
         {
             if (ScreenManager.ActiveScreen is OsuScreen)
-                PostProcessing.BloomThreshold = shakeKiai.Value.Map(2, 0, 0.2f, 0.8f);
+                PostProcessing.BloomThreshold = kiaiAnimation.Value.Map(2, 0, 0.2f, 0.8f);
             else
                 PostProcessing.BloomThreshold = 0.8f;
 
-            shakeKiai.Update((float)DeltaTime);
+            kiaiAnimation.Update((float)DeltaTime);
             Shaker.Update();
             OsuContainer.Update(DeltaTime);
             ScreenManager.Update((float)DeltaTime);
@@ -219,8 +218,12 @@ namespace RTCircles
 
                 double mem = GC.GetTotalMemory(false) / 1048576d;
 
-                string text = $"Mem: {mem:F0}mb DrawCalls: {GL.DrawCalls} FPS: {FPS}/{ms:F2}ms";
+                StringBuilder sb = new StringBuilder();
 
+                sb.Append($"Mem: {mem:F0}mb DrawCalls: {GL.DrawCalls} FPS: {FPS}/{ms:F2}ms");
+
+                string text = $"Mem: {mem:F0}mb DrawCalls: {GL.DrawCalls} FPS: {FPS}/{ms:F2}ms";
+                
                 Vector2 hoverSize = Font.DefaultFont.MessureString(text, scale);
                 Vector2 hoverPos = new Vector2(WindowWidth, WindowHeight) - hoverSize;
 
@@ -406,6 +409,13 @@ namespace RTCircles
 
         private void registerEvents()
         {
+            OsuContainer.OnKiai += () =>
+            {
+                //Det her ser bedere ud tbh
+                kiaiAnimation.Value = 2f;
+                kiaiAnimation.TransformTo(0f, 1f, EasingTypes.OutQuart);
+            };
+
             Input.OnBackPressed += () =>
             {
                 ScreenManager.GoBack();

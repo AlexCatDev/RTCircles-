@@ -323,7 +323,13 @@ namespace RTCircles
         private void spawnFollowPointsCheck(IDrawableHitObject current, IDrawableHitObject next)
         {
             if (next.BaseObject.IsNewCombo == false)
-                Add(new FollowPoints(current.BaseObject, next.BaseObject));
+            {
+                var followPoint = ObjectPool<FollowPoints>.Take();
+
+                followPoint.SetTarget(current.BaseObject, next.BaseObject);
+
+                Add(followPoint);
+            }
         }
 
         public bool IsCurrentlyBreakTime

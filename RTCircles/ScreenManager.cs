@@ -162,9 +162,9 @@ namespace RTCircles
 
                 bool? hasCompleted = OnOutroTransition?.Invoke(DeltaTime);
                 if ((hasCompleted.HasValue && hasCompleted.Value == true) || !hasCompleted.HasValue) {
-                    currentScreen.OnEnter();
                     inOutroSequence = false;
                     inIntroSequence = false;
+                    currentScreen.OnEnter();
                 }
             }
         }

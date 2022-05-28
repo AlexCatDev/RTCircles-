@@ -113,6 +113,8 @@ namespace OsuBot
             //Obviously you have to provide your own path here
             FFmpegLoader.FFmpegPath = @"C:\Users\user\Desktop\TempOsuBot\ffmpeg";
 
+            RTCircles.BeatmapMirror.RealmThreadActive = false;
+
             //Also here, but if it can't find a skin it will just use the default one
             RTCircles.Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\- YUGEN FINAL WS -");
             WindowSize = new Vector2(OUTPUT_WIDTH, OUTPUT_HEIGHT);
@@ -123,7 +125,6 @@ namespace OsuBot
             RTCircles.GlobalOptions.UseFancyCursorTrail.Value = false;
 
             //This is to not load all the beatmaps from it's database and set a map and all that jazz
-            RTCircles.MenuScreen.IsRTCircles = false;
             RTCircles.OsuContainer.MuteHitsounds = true;
             osuScreen = RTCircles.ScreenManager.GetScreen<RTCircles.OsuScreen>();
             osuScreen.RenderHUD = false;

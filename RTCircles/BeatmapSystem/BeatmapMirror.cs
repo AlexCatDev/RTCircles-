@@ -77,7 +77,7 @@ namespace RTCircles
             public int language { get; set; }
         }
 
-        public static Realm Realm;
+        private static Realm realm;
 
         public static event Action<DBBeatmapInfo> OnNewBeatmapAvailable;
 
@@ -90,15 +90,20 @@ namespace RTCircles
         private static Thread realmsThread;
         public static Scheduler Scheduler { get; private set; } = new Scheduler();
 
+        public static bool RealmThreadActive = true;
+
         static BeatmapMirror()
         {
             SongsFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "/Songs";
 
             realmsThread = new Thread(() =>
             {
-                Realm = Realm.GetInstance(new RealmConfiguration("RTCircles.realm") { SchemaVersion = 2 });
+                if (!RealmThreadActive)
+                    return;
+
+                realm = Realm.GetInstance(new RealmConfiguration("RTCircles.realm") { SchemaVersion = 2 });
                 Utils.Log($"Started Realm Thread.", LogLevel.Important);
-                Utils.Log($"Realm Path: {Realm.Config.DatabasePath}", LogLevel.Important);
+                Utils.Log($"Realm Path: {realm.Config.DatabasePath}", LogLevel.Important);
 
                 while (MainGame.Instance.View.IsClosing == false)
                 {
@@ -115,6 +120,14 @@ namespace RTCircles
 
             MD5 = MD5.Create();
             MD5.Initialize();
+        }
+
+        public static void DatabaseAction(Action<Realm> action)
+        {
+            Scheduler.Enqueue(() =>
+            {
+                action(realm);
+            });
         }
 
         public static void ImportBeatmap(Stream oszStream)
@@ -189,9 +202,9 @@ namespace RTCircles
 
                 Scheduler.Enqueue(() =>
                 {
-                    Realm.Write(() =>
+                    realm.Write(() =>
                     {
-                        Realm.Add(setInfo, true);
+                        realm.Add(setInfo, true);
                     });
 
                     foreach (var item in setInfo.Beatmaps)
