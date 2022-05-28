@@ -15,10 +15,11 @@ namespace RTCircles
         public static Vector4 SongInfoTextColor = Colors.White;
 
         public static Vector4 ItemColor = Colors.From255RGBA(21, 21, 21, 175);//Colors.From255RGBA(67, 64, 65, 255);
-        public static Vector4 ItemTextColor = Colors.From255RGBA(249, 0, 147, 255);
+        public static Vector4 ItemTextColor = Colors.From255RGBA(150, 150, 150, 255);
+        public static Vector4 ItemSelectedTextColor = Colors.From255RGBA(255, 255, 255, 255);
         public static Vector4 ItemSelectedColor = Colors.From255RGBA(100, 100, 100, 175);//Colors.From255RGBA(255, 80, 175, 255);
 
-        public static Vector4 HeaderColor = Colors.From255RGBA(0, 0, 0, 255);//Colors.From255RGBA(52, 49, 50, 255);
+        public static Vector4 HeaderColor = Colors.From255RGBA(12, 12, 12, 255);//Colors.From255RGBA(52, 49, 50, 255);
         public static Vector4 HeaderTextColor1 = Colors.White;
         public static Vector4 HeaderTextColor2 = Colors.White;
 
@@ -227,18 +228,18 @@ namespace RTCircles
 
                 float bgPadding = (ElementSize.Y - bgSize.Y) / 2;
 
-                //g.DrawRoundedRect(bounds.Center, bounds.Size, color, 25f * MainGame.Scale);
                 g.DrawRectangle(bounds.Position, bounds.Size, color);
-                g.DrawRectangle(bounds.Position + new Vector2(bgPadding), bgSize, new Vector4(1f, 1f, 1f, textureAlpha), texture, textureRect, true);
+                g.DrawRectangle(bounds.Position + new Vector2(bgPadding), bgSize, new Vector4(1f, 1f, 1f, selectedItem == currentItem ? textureAlpha : 0.75f*textureAlpha), texture, textureRect, true);
 
                 float textScale = 0.5f * MainGame.Scale;
                 Vector2 textSize = Font.DefaultFont.MessureString(currentItem.Text, textScale);
                 Vector2 textPos = bounds.Position + new Vector2(bgSize.X + bgPadding * 2, bgPadding * 2);
-                g.DrawString(currentItem.Text, Font.DefaultFont, textPos, ItemTextColor, textScale);
+                g.DrawString(currentItem.Text, Font.DefaultFont, textPos, selectedItem == currentItem ? ItemSelectedTextColor : ItemTextColor, textScale);
+
                 if (selectedItem == currentItem)
                 {
                     string songInfoText = $"Objects: {OsuContainer.Beatmap?.HitObjects.Count} AR {OsuContainer.Beatmap?.AR} CS {OsuContainer.Beatmap?.CS} OD {OsuContainer.Beatmap?.OD} HP {OsuContainer.Beatmap?.HP}";
-                    g.DrawString(songInfoText, Font.DefaultFont, textPos + new Vector2(0, textSize.Y), ItemTextColor, textScale * 0.8f);
+                    g.DrawString(songInfoText, Font.DefaultFont, textPos + new Vector2(0, textSize.Y), ItemSelectedTextColor, textScale * 0.8f);
                 }
 
             incrementYOffset:
@@ -271,22 +272,10 @@ namespace RTCircles
             g.DrawStringNoAlign($"Found {BeatmapCollection.SearchItems.Count} results", Font.DefaultFont, searchForStringPos, Colors.White, searchForStringScale / 2);
 
             g.DrawRectangle(Vector2.Zero, HeaderSize, HeaderColor);
-            g.DrawString("Songs", Font.DefaultFont, new Vector2(20, 20) * MainGame.Scale, HeaderTextColor1, 0.75f * MainGame.Scale);
-            string sText = string.IsNullOrEmpty(BeatmapCollection.SearchQuery) == false ? $"{BeatmapCollection.SearchItems.Count} searched" : "";
-            g.DrawString($"{BeatmapCollection.Items.Count} available {sText}", Font.DefaultFont, new Vector2(160, 42) * MainGame.Scale, HeaderTextColor2, 0.25f * MainGame.Scale);
 
             if (selectedItem is not null)
             {
-                float songInfoScale = 0.5f * MainGame.Scale;
-
-                string songInfoTextTitle = $"{selectedItem.Text.Replace(".osu", "")}";
-                Vector2 songInfoTitleSize = Font.DefaultFont.MessureString(songInfoTextTitle, songInfoScale);
-
-                string songInfoText = $"Objects: {OsuContainer.Beatmap?.HitObjects.Count} AR {OsuContainer.Beatmap?.AR} CS {OsuContainer.Beatmap?.CS} OD {OsuContainer.Beatmap?.OD} HP {OsuContainer.Beatmap?.HP}";
-                Vector2 songInfoTextSize = Font.DefaultFont.MessureString(songInfoText, songInfoScale);
-
-
-                g.DrawString(songInfoTextTitle, Font.DefaultFont, HeaderSize.Center() - songInfoTitleSize / 2f, Colors.White, songInfoScale);
+                g.DrawStringCentered(selectedItem.Text, ResultScreen.Font, HeaderSize.Center(), HeaderTextColor1, 0.75f*MainGame.Scale);
             }
 
             clickedSomewhere = false;
@@ -357,6 +346,7 @@ namespace RTCircles
             modsBtn.Position = settingsBtn.Position - new Vector2(modsBtn.Size.X + 5, 0);
         }
 
+        private Vector2i prevWindowSize;
         public override void Update(float delta)
         {
             updateUI(delta);
@@ -391,18 +381,9 @@ namespace RTCircles
                     scrollOffset = MathHelper.Lerp(scrollOffset, ScrollMin, delta * 10f);
                 }
 
-                scrollMomentum = MathHelper.Lerp(scrollMomentum, 0, delta * 10f);
+                scrollMomentum = MathHelper.Lerp(scrollMomentum, 0, delta * 7f);
             }
             ConfirmPlayAnimation.Update(delta);
-
-            bsTimer -= delta;
-
-            if (bsTimer <= 0)
-            {
-                bsTimer = 0.01f;
-                //var randomBeatmap = BeatmapCarousel.SearchItems[RNG.Next(0, BeatmapCarousel.SearchItems.Count - 1)];
-                //selectMap(randomBeatmap);
-            }
         }
 
         private float bsTimer = 0.05f;
@@ -428,7 +409,11 @@ namespace RTCircles
             Vector2 dragEnd = Input.MousePosition;
 
             if (MathUtils.IsPointInsideRadius(dragEnd, dragStart, 100) && button == MouseButton.Left)
+            {
                 clickedSomewhere = true;
+                dragEnd = dragStart;
+                return true;
+            }
 
             if (MathF.Abs(scrollMomentum) < 600)
                 scrollMomentum = 0;
@@ -438,7 +423,7 @@ namespace RTCircles
 
         public override bool OnMouseWheel(float delta)
         {
-            scrollMomentum += 1200 * delta;
+            scrollMomentum += 800 * delta;
             scrollTo = null;
             return true;
         }

@@ -82,7 +82,7 @@ namespace RTCircles
                 lastBeat = OsuContainer.CurrentBeat;
                 totalBeats++;
 
-                if (IsMouseHovering)
+                if (IsMouseHovering && OsuContainer.Beatmap?.Song.IsPlaying == true)
                 {
                     //Skin.Click.Play(true);
 
@@ -104,9 +104,9 @@ namespace RTCircles
                     //Button lands
                     animPos.TransformTo(Vector2.Zero, beatDuration / 2, EasingTypes.InSine, () => {
                         //Squish
-                        animSize.TransformTo(new Vector2(Size.X, Size.Y * 0.9f), 50f, EasingTypes.OutSine);
+                        animSize.TransformTo(new Vector2(Size.X * 1.1f, Size.Y * 0.9f), 50f, EasingTypes.OutQuad);
                         //Popup
-                        animSize.TransformTo(Size, 50f, EasingTypes.InSine);
+                        animSize.TransformTo(Size, 50f, EasingTypes.InQuad);
                     });
                 }
             }
@@ -128,7 +128,7 @@ namespace RTCircles
             else
             {
                 colorAnim.ClearTransforms();
-                colorAnim.TransformTo(new Vector4(2f, 2f, 2f,  Alpha), 0.1f, EasingTypes.Out);
+                colorAnim.TransformTo(new Vector4(2f, 2f, 2f, Alpha), 0.1f, EasingTypes.Out);
             }
         }
     }

@@ -24,8 +24,8 @@ namespace RTCircles
 
         private SmoothFloat shakeKiai = new SmoothFloat();
 
-        private Shaker shaker = new Shaker() { Duration = 0.8f, Radius = 180, Speed = 60, ShakeFadeoutScale = 3, Easing = EasingTypes.Out };
-        private Matrix4 shakeMatrix => Matrix4.CreateTranslation(new Vector3(shaker.OutputShake * MainGame.Scale)) * Projection;
+        public Shaker Shaker = new Shaker() { Duration = 0.8f, Radius = 180, Speed = 60, ShakeFadeoutScale = 3, Easing = EasingTypes.Out };
+        private Matrix4 shakeMatrix => Matrix4.CreateTranslation(new Vector3(Shaker.OutputShake * MainGame.Scale)) * Projection;
 
         private bool debugCameraActive = false;
 
@@ -80,10 +80,7 @@ namespace RTCircles
 
         public override void OnRender()
         {
-            //if (DeltaTime > 0.033)
-            //    NotificationManager.ShowMessage($"<30fps Lag spike ! {DeltaTime *1000:F2}ms", ((Vector4)Color4.Yellow).Xyz, 3f);
-
-            g.Projection = PostProcessing.MotionBlur && (ScreenManager.ActiveScreen is OsuScreen) || ScreenManager.ActiveScreen is MenuScreen ? shakeMatrix : Projection;
+            g.Projection = shakeMatrix;
 
             if (debugCameraActive)
             {
@@ -136,7 +133,7 @@ namespace RTCircles
                 PostProcessing.BloomThreshold = 0.8f;
 
             shakeKiai.Update((float)DeltaTime);
-            shaker.Update();
+            Shaker.Update();
             OsuContainer.Update(DeltaTime);
             ScreenManager.Update((float)DeltaTime);
         }
@@ -412,14 +409,6 @@ namespace RTCircles
             Input.OnBackPressed += () =>
             {
                 ScreenManager.GoBack();
-            };
-
-            OsuContainer.OnKiai += () =>
-            {
-                //Det her ser bedere ud tbh
-                shakeKiai.Value = 2f;
-                shakeKiai.TransformTo(0f, 1f, EasingTypes.OutQuart);
-                shaker.Shake();
             };
 
             Input.InputContext.Mice[0].MouseDown += (s, e) =>

@@ -108,6 +108,7 @@ namespace RTCircles
 
                 logo.IntroSizeAnimation.TransformTo(new Vector2(-200), firstKiaiTimePoint, firstKiaiTimePoint + 500, EasingTypes.InQuint, () =>
                 {
+                    MainGame.Instance.Shaker.Shake();
                     logo.ToggleInput(true);
                     //Fade background in
                     mapBG.TriggerFadeIn();

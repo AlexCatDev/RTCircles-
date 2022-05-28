@@ -237,12 +237,12 @@ namespace RTCircles
             return (songPos - time) / (CurrentBeatTimingPoint.BeatLength / scale);
         }
 
-        public static double GetBeatProgressAt(double time, double scale = 1f)
+        public static double GetBeatProgressAt(double time, double scale = 1f, double? beatLength = null)
         {
             if (CurrentBeatTimingPoint is null)
                 return 0;
 
-            var beat = (songPos - time) / (CurrentBeatTimingPoint.BeatLength * scale);
+            var beat = (songPos - time) / (beatLength ?? CurrentBeatTimingPoint.BeatLength * scale);
             var beatCeil = Math.Ceiling(beat);
 
             return beatCeil - beat;

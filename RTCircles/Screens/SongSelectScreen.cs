@@ -87,9 +87,13 @@ namespace RTCircles
 
         public bool IsVisible;
 
+        public double Difficulty;
+
+        public DBBeatmapInfo DBBeatmapInfo { get; private set; }
+
         public void SetDBBeatmap(DBBeatmapInfo dbBeatmap)
         {
-            Text = dbBeatmap.Filename;
+            Text = dbBeatmap.Filename.Replace(".osu", "");
             Hash = dbBeatmap.Hash;
             Folder = dbBeatmap.SetInfo.Foldername;
             FullPath = $"{BeatmapMirror.SongsFolder}/{dbBeatmap.SetInfo.Foldername}/{dbBeatmap.Filename}";
@@ -435,8 +439,8 @@ namespace RTCircles
 
             float songX = (float)OsuContainer.SongPosition.Map(OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime, OsuContainer.Beatmap.HitObjects[^1].BaseObject.StartTime, 0, 1).Clamp(0, 1);
 
-            Vector4 progressColor = new Vector4(1f, 0f, 0f, 0.25f);
-            Vector4 progressNotColor = new Vector4(1f, 1f, 1f, 0.25f);
+            Vector4 progressColor = new Vector4(1f, 1f, 1f, 0.25f);
+            Vector4 progressNotColor = new Vector4(0.5f, 0.5f, 0.5f, 0.25f);
 
             Rectangle texRectProgress = new Rectangle(0, 0, songX, 1);
 
@@ -445,8 +449,11 @@ namespace RTCircles
             //Progress
             g.DrawRectangle(position, sizeProgress, progressColor, strainFB.Texture, texRectProgress, true);
 
+            Rectangle texRectNotProgress = new Rectangle(songX, 0, 1 - songX, 1);
+            Vector2 sizeNotProgress = new Vector2(strainFB.Texture.Width - (strainFB.Texture.Width * songX), strainFB.Texture.Height);
+
             //Not progress
-            g.DrawRectangle(position, strainFB.Texture.Size, progressNotColor, strainFB.Texture);
+            g.DrawRectangle(new Vector2(MainGame.WindowWidth - sizeNotProgress.X, MainGame.WindowHeight - sizeNotProgress.Y), sizeNotProgress, progressNotColor, strainFB.Texture, texRectNotProgress, true);
         }
 
         public override void Render(Graphics g)
