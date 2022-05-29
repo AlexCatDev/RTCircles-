@@ -37,7 +37,7 @@ namespace RTCircles
 
         public readonly static Option<bool> RGBCircles = new Option<bool>("RGBCircles", false) { Description = "RGB ;) (Might not look good with all skins)" };
 
-        public readonly static Option<bool> UseFastSliders = new Option<bool>("UseFastSliders", false) { Description = "Low quality sliders (Requires map reload, Recommended to use slider snaking)"};
+        public readonly static Option<bool> UseFastSliders = new Option<bool>("UseFastSliders", false) { Description = "Ugly sliders (Requires the current map to be reloaded, Please use slider snaking with this option)"};
 
         public readonly static Option<bool> EnableComboBursts = new Option<bool>("EnableComboBursts", true) { Description = "Want some anime girl to clutter your screen every 50 combo?" };
 
@@ -68,6 +68,11 @@ namespace RTCircles
         #endregion
         #region ints
         public readonly static Option<int> SongOffsetMS = new Option<int>("SongOffset", 0);
+        #endregion
+
+        #region strings
+        public readonly static Option<string> OsuFolder = new Option<string>("OsuFolder", "");
+        public readonly static Option<string> SkinFolder = new Option<string>("SkinFolder", "");
         #endregion
         public static void Init() 
         {

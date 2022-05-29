@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace RTCircles
 {
-    public class MusicFreckle : Drawable
+    public class MusicParticle : Drawable
     {
         private Vector2 pos;
         private Vector2 size;
@@ -24,40 +24,51 @@ namespace RTCircles
         public override Rectangle Bounds => new Rectangle(pos - size / 2f + visualizer.FreckleOffset, size);
 
         private float scale = 1;
+        private float angle = 0;
+        private float angleDir = 1;
 
-        public MusicFreckle(Vector2 spawnPos, SoundVisualizer visualizer)
+        public override void OnRemove()
+        {
+            ObjectPool<MusicParticle>.Return(this);
+        }
+
+        public void SetTarget(SoundVisualizer visualizer)
         {
             this.visualizer = visualizer;
 
             float theta = RNG.Next(0, MathF.PI * 2);
-            pos = spawnPos + new Vector2(MathF.Cos(theta), MathF.Sin(theta)) * visualizer.Radius;
+            pos = visualizer.Position + new Vector2(MathF.Cos(theta), MathF.Sin(theta)) * visualizer.Radius;
 
             Layer = visualizer.Layer - 1;
             color = Colors.White;
             color.W = 0;
-            size.X = RNG.Next(2, 16);
+            size.X = RNG.Next(16, 32);
             size.Y = size.X;
 
-            scale = size.X.Map(2, 16, 0.2f, 1.0f);
+            scale = size.X.Map(16, 32, 0.2f, 1.0f);
 
             velocity.X = MathF.Cos(theta) * 3500f * scale;
             velocity.Y = MathF.Sin(theta) * 3500f * scale;
 
             alpha.Value = 0f;
             alpha.TransformTo(1f, 0.25f, EasingTypes.In);
+
+            angle = RNG.Next(0, 360);
+            angleDir = RNG.TryChance() ? -1 : 1;
         }
 
         public override void Render(Graphics g)
         {
-            g.DrawRectangleCentered(pos + visualizer.FreckleOffset, size, color, Texture.WhiteCircle);
+            g.DrawRectangleCentered(pos + visualizer.FreckleOffset, size, color, Skin.Star, rotDegrees: angle);
         }
 
         public override void Update(float delta)
         {
             pos += velocity * delta * (visualizer.BeatValue + 0.05f);
 
+            angle += 2500 * scale * delta * (visualizer.BeatValue + 0.05f) * angleDir;
             alpha.Update(delta * visualizer.BeatValue * scale);
-            color.W = alpha.Value;
+            color.W = Interpolation.ValueAt((pos - MainGame.WindowCenter).Length, 0, 1, 0, 1000, EasingTypes.InExpo);
 
             if (new Rectangle(new Vector2(-100), new Vector2(MainGame.WindowWidth + 100, MainGame.WindowHeight + 100)).IntersectsWith(Bounds) == false)
                 IsDead = true;
@@ -446,7 +457,11 @@ namespace RTCircles
 
             if (freckleSpawnTimer >= FreckleSpawnRate && Sound.IsPlaying && BeatValue > FreckleBeatThreshold)
             {
-                Container.Add(new MusicFreckle(Position, this));
+                var particle = ObjectPool<MusicParticle>.Take();
+
+                particle.SetTarget(this);
+
+                Container.Add(particle);
                 freckleSpawnTimer = 0;
             }
         }

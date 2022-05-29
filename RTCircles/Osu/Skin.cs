@@ -335,9 +335,11 @@ namespace RTCircles
 
         public static string CurrentPath { get; private set; }
 
+        public static void Reload() => Load(CurrentPath);
+
         public static void Load(string path)
         {
-            //LMAO recode this
+            Utils.BeginProfiling("SkinLoad");
 
             CurrentPath = path;
 
@@ -448,6 +450,10 @@ namespace RTCircles
             RankingB = LoadTexture(path, "ranking-B-small");
             RankingC = LoadTexture(path, "ranking-C-small");
             RankingD = LoadTexture(path, "ranking-D-small");
+
+            double loadTime = Utils.EndProfiling("SkinLoad");
+
+            NotificationManager.ShowMessage($"Skin '{path}' took {loadTime:F0} ms", new Vector3(0.4f, 0.4f, 1f), 4f);
         }
         
         //Better version
@@ -526,6 +532,7 @@ namespace RTCircles
                         Texture tex = new Texture(File.OpenRead(file));
                         tex.GenerateMipmaps = genMipMaps;
                         tex.UseAsyncLoading = false;
+
                         //Bind to preload it.
                         tex.Bind();
                         return tex;

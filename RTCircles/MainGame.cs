@@ -57,7 +57,7 @@ namespace RTCircles
             //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\- 『BlooXoo』 -");
             //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  idke 1.2 without sliderendcircle");
             //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  AlexSkin 1.0");
-            Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  Hvorfor laver jeg hele tiden nye skins");
+            Skin.Load(GlobalOptions.SkinFolder.Value);
 
             g = new Graphics();
 
@@ -454,6 +454,36 @@ namespace RTCircles
 
             Input.InputContext.Keyboards[0].KeyDown += (s, e, x) =>
             {
+                if (e == Key.F3)
+                {
+                    new System.Threading.Thread(() => {
+                        NotificationManager.ShowMessage("Started import process!", new Vector3(0.5f, 0.5f, 0.5f), 2f);
+                        int startCount = BeatmapCollection.Items.Count;
+                        if (!string.IsNullOrEmpty(GlobalOptions.OsuFolder.Value))
+                        {
+                            foreach (var item in System.IO.Directory.EnumerateDirectories(GlobalOptions.OsuFolder.Value + "/Songs"))
+                            {
+                                if(!IsClosing)
+                                BeatmapMirror.ImportBeatmapFolder(item);
+                            }
+                        }
+                        int endCount = BeatmapCollection.Items.Count;
+
+                        NotificationManager.ShowMessage($"Wow it actually finished {endCount - startCount} maps were imported", new Vector3(0.5f, 1, 0.5f), 10f);
+                    }).Start();
+
+                    return;
+                }
+
+
+                if (Input.IsKeyDown(Key.F5) && Input.IsKeyDown(Key.ControlLeft) && Input.IsKeyDown(Key.ShiftLeft) && Input.IsKeyDown(Key.AltLeft))
+                {
+                    Skin.Reload();
+                    NotificationManager.ShowMessage($"Reloaded skin!", new Vector3(0.4f, 0.4f, 1f), 2f);
+
+                    return;
+                }
+
                 if (e == Key.A)
                 {
                     if (Input.IsKeyDown(Key.ControlLeft) && Input.IsKeyDown(Key.AltLeft))

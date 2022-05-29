@@ -319,6 +319,9 @@ namespace RTCircles
             y = MathUtils.Map(y, 0, 384, Playfield.Top, Playfield.Bottom);
 
             Vector2 pos = new Vector2(x, y);
+
+            //pos = MathUtils.RotateAroundOrigin(pos, Playfield.Center, (float)MainGame.Instance.TotalTime);
+
             return pos;
         }
 

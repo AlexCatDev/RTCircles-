@@ -161,8 +161,13 @@ namespace RTCircles
 
                     int extension = name.IndexOf('.');
 
-                    if (extension != -1)
-                        name = name.Remove(extension);
+                    if (extension == -1)
+                        continue;
+
+                    name = name.Remove(extension);
+
+                    if (hitsounds.ContainsKey(name))
+                        continue;
 
                     using (FileStream fs = File.OpenRead(file))
                     {

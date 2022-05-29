@@ -425,11 +425,13 @@ namespace RTCircles
 
         private void drawFlashlightOverlay(Graphics g)
         {
-            flashlightPosition.X = (float)Interpolation.Damp(flashlightPosition.X, OsuContainer.CursorPosition.X, 0.96, OsuContainer.DeltaSongPosition);
-            flashlightPosition.Y = (float)Interpolation.Damp(flashlightPosition.Y, OsuContainer.CursorPosition.Y, 0.96, OsuContainer.DeltaSongPosition);
+            double flDelta = MainGame.Instance.DeltaTime * 1000;
+
+            flashlightPosition.X = (float)Interpolation.Damp(flashlightPosition.X, OsuContainer.CursorPosition.X, 0.95, flDelta);
+            flashlightPosition.Y = (float)Interpolation.Damp(flashlightPosition.Y, OsuContainer.CursorPosition.Y, 0.95, flDelta);
 
             if (OsuContainer.Beatmap?.Mods.HasFlag(Mods.FL) ?? false)
-                g.DrawRectangleCentered(flashlightPosition, Skin.FlashlightOverlay.Size * MainGame.AbsoluteScale.Y * 3, Colors.White, Skin.FlashlightOverlay);
+                g.DrawRectangleCentered(flashlightPosition, Skin.FlashlightOverlay.Size * MainGame.Scale * 2.5f, Colors.White, Skin.FlashlightOverlay);
         }
 
     private List<(Vector2, double)> smokePoints = new List<(Vector2, double)>();

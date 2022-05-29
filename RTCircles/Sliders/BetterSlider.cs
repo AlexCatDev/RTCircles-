@@ -280,7 +280,7 @@ namespace RTCircles
             }
 
             //Convert the size of the slider from osu pixels to playfield pixels, since the points and the radius are in osu pixels
-            Vector2 renderSize = (new Vector2(frameBuffer.Width, frameBuffer.Height)) * (OsuContainer.Playfield.Width / 512);
+            Vector2 renderSize = new Vector2(frameBuffer.Width, frameBuffer.Height) * (OsuContainer.Playfield.Width / 512);
 
             if (ScalingOrigin.HasValue)
             {
@@ -299,6 +299,8 @@ namespace RTCircles
             {
                 //^ and we draw this, within the main batcher
                 g.DrawRectangle(renderPosition, renderSize, new Vector4(10000, 0, 0, Alpha), frameBuffer.Texture, texCoords, true);
+
+                //g.DrawRectangle(renderPosition, renderSize, new Vector4(10000, 0, 0, Alpha), frameBuffer.Texture, texCoords, renderPosition, (float)MainGame.Instance.TotalTime);
             }
         }
 

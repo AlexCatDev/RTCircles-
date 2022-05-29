@@ -10,13 +10,87 @@ namespace RTCircles
 {
     public class OptionsScreen : Screen
     {
+        private Textbox osuFolderTextbox = new Textbox();
+        private Dropdown skinDropdown = new Dropdown();
+
         public OptionsScreen()
         {
-            
+            osuFolderTextbox.Text = GlobalOptions.OsuFolder.Value;
+            osuFolderTextbox.TextHint = "If you have osu! installed, put it's folder path here to access your skins etc";
+            osuFolderTextbox.HasFocus = false;
+
+            osuFolderTextbox.OnEnter += (s, e) =>
+            {
+                if (string.IsNullOrEmpty(osuFolderTextbox.Text))
+                    return;
+
+                string folderPath = osuFolderTextbox.Text;
+
+                folderPath = folderPath.Replace("\"", "");
+
+                if (System.IO.File.Exists(folderPath + "/osu!.exe"))
+                {
+                    osuFolderTextbox.Text = folderPath;
+                    GlobalOptions.OsuFolder.Value = folderPath;
+                    populateSkinList();
+                }
+                else
+                {
+                    osuFolderTextbox.Text = GlobalOptions.OsuFolder.Value;
+                    NotificationManager.ShowMessage("That is not a valid osu! folder", new Vector3(1f, 0f, 0f), 5f);
+                    MainGame.Instance.Shaker.Shake();
+                    osuFolderTextbox.HasFocus = true;
+                }
+            };
+
+            skinDropdown.Text = "Skins";
+            skinDropdown.HeaderTextColor = new Vector4(0.5f,0.5f,1f,1f);
+
+            Add(osuFolderTextbox);
+            Add(skinDropdown);
+
+            populateSkinList();
+        }
+
+        private void populateSkinList()
+        {
+            skinDropdown.ClearItems();
+            foreach (var directory in System.IO.Directory.EnumerateDirectories(GlobalOptions.OsuFolder.Value + "/Skins"))
+            {
+                var dir = directory.Replace('\\', '/');
+
+                var lastSlash = dir.LastIndexOf('/');
+
+                var foldername = dir.Substring(lastSlash + 1);
+
+                var item = new DropdownItem()
+                {
+                    Text = foldername,
+                    Color = Colors.Black,
+                    TextColor = Colors.White,
+                    HighlightColor = new Vector4(1f, 0.4f, 0.4f, 1f)
+                };
+
+                item.OnClick += () =>
+                {
+                    Skin.Load(directory);
+                    GlobalOptions.SkinFolder.Value = directory;
+                };
+
+                skinDropdown.AddItem(item);
+            }
+
+            NotificationManager.ShowMessage($"Added {skinDropdown.Items.Count} skins", new Vector3(0.5f, 1f, 0.5f), 5f);
         }
 
         public override void Update(float delta)
         {
+            osuFolderTextbox.Size = new Vector2(1000, 40) * MainGame.Scale;
+            osuFolderTextbox.Position = new Vector2(MainGame.WindowCenter.X - osuFolderTextbox.Size.X / 2, MainGame.WindowHeight - osuFolderTextbox.Size.Y - 5 * MainGame.Scale);
+
+            skinDropdown.Size = new Vector2(400, 50) * MainGame.Scale;
+            skinDropdown.Position = new Vector2(1490, 10) * MainGame.AbsoluteScale;
+
             base.Update(delta);
         }
 

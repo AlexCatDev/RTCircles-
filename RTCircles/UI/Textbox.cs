@@ -150,15 +150,15 @@ namespace RTCircles
                     Input.InputContext.Keyboards[0].EndInput();
                 }
 
-                /*
+                
                 if (key == Key.V && controlDown)
                 {
-                    string clipboard = Game.Instance.GetClipboard();
+                    string clipboard = Input.InputContext.Keyboards[0].ClipboardText;
                     clipboard = clipboard.Replace('\n', '\0');
                     Text = Text.Insert(insertIndex, clipboard);
                     insertIndex += clipboard.Length;
                 }
-                */
+                
 
                 if (startText != Text)
                 {
@@ -211,6 +211,8 @@ namespace RTCircles
                 Input.InputContext.Keyboards[0].BeginInput();
                 caretAnimation.Reset();
 
+                insertIndex = text.Length;
+
                 return true;
             }
             else
@@ -237,7 +239,7 @@ namespace RTCircles
         public override void Render(Graphics g)
         {
             g.DrawRectangle(Position, Size, Color);
-
+            
             if (!string.IsNullOrEmpty(TextHint) && string.IsNullOrEmpty(Text))
                 g.DrawStringNoAlign(TextHint, Font.DefaultFont, textPos, TextHintColor, textScale);
 
@@ -246,8 +248,13 @@ namespace RTCircles
 
             fallingTextContainer.Render(g);
 
+            float caretAlpha = caretAnimation.Output;
+
+            if(OsuContainer.CurrentBeatTimingPoint != null)
+                caretAlpha = (float)OsuContainer.CurrentBeat.OscillateValue(0, 1);
+
             if (HasFocus)
-                g.DrawRectangle(caretPos, new Vector2(CaretThickness, Size.Y - CaretThickness / 2f), new Vector4(CaretColor.X, CaretColor.Y, CaretColor.Z, caretAnimation.Output));
+                g.DrawRectangle(caretPos, new Vector2(CaretThickness, Size.Y - CaretThickness / 2f), new Vector4(CaretColor.X, CaretColor.Y, CaretColor.Z, caretAlpha));
         }
 
         public override void Update(float delta)

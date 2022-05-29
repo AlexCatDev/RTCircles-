@@ -91,7 +91,8 @@ namespace Easy2D
 
             OnLog += (s) =>
             {
-                if (WriteToConsole) {
+                if (WriteToConsole)
+                {
                     foreach (var item in s.Log)
                     {
                         writeColor(item.Text, item.ConsoleColor);
@@ -127,7 +128,7 @@ namespace Easy2D
         public static void Log(string message, LogLevel level)
         {
             if (IgnoredLogLevels.Contains(level))
-                    return;
+                return;
 
             var callingMethod = new StackTrace().GetFrame(1).GetMethod();
 
@@ -157,7 +158,7 @@ namespace Easy2D
             {
                 Console.ForegroundColor = color;
             }
-            catch{ }
+            catch { }
 
             Console.Write(text);
         }
@@ -260,6 +261,39 @@ namespace Easy2D
         {
             var time = Benchmark(a);
             Utils.Log($"{name} took {time} milliseconds", LogLevel.Performance);
+        }
+
+        public static void CopyDirectory(string sourceDir, string destinationDir, bool recursive)
+        {
+            // Get information about the source directory
+            var dir = new DirectoryInfo(sourceDir);
+
+            // Check if the source directory exists
+            if (!dir.Exists)
+                throw new DirectoryNotFoundException($"Source directory not found: {dir.FullName}");
+
+            // Cache directories before we start copying
+            DirectoryInfo[] dirs = dir.GetDirectories();
+
+            // Create the destination directory
+            Directory.CreateDirectory(destinationDir);
+
+            // Get the files in the source directory and copy to the destination directory
+            foreach (FileInfo file in dir.GetFiles())
+            {
+                string targetFilePath = Path.Combine(destinationDir, file.Name);
+                file.CopyTo(targetFilePath);
+            }
+
+            // If recursive and copying subdirectories, recursively call this method
+            if (recursive)
+            {
+                foreach (DirectoryInfo subDir in dirs)
+                {
+                    string newDestinationDir = Path.Combine(destinationDir, subDir.Name);
+                    CopyDirectory(subDir.FullName, newDestinationDir, true);
+                }
+            }
         }
     }
 }

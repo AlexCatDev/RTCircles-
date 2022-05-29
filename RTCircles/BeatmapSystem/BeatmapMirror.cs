@@ -79,7 +79,7 @@ namespace RTCircles
 
         private static Realm realm;
 
-        public static event Action<DBBeatmapInfo> OnNewBeatmapAvailable;
+        public static event Action<DBBeatmapInfo, bool> OnNewBeatmapAvailable;
 
         public static MD5 MD5 { get; private set; }
 
@@ -130,6 +130,101 @@ namespace RTCircles
             });
         }
 
+        public static void ImportBeatmapFolder(string directory)
+        {
+            Utils.Log($"Importing Beatmap folder {directory}", LogLevel.Info);
+
+            DBBeatmapSetInfo setInfo = new DBBeatmapSetInfo();
+
+            string newFolderName = Guid.NewGuid().ToString();
+
+            byte[] buffer = new byte[0];
+
+            foreach (var file in Directory.GetFiles(directory))
+            {
+                if (!file.EndsWith(".osu"))
+                    continue;
+
+                Utils.Log($"Processing beatmap: {file}", LogLevel.Info);
+                using (var beatmapStream = File.OpenRead(file))
+                {
+                    int streamLength = (int)beatmapStream.Length;
+
+                    if (streamLength > buffer.Length)
+                        Array.Resize(ref buffer, streamLength);
+
+                    beatmapStream.Read(buffer, 0, streamLength);
+
+                    beatmapStream.Position = 0;
+                    Beatmap beatmap = null;
+
+                    try
+                    {
+                        beatmap = DecodeBeatmap(beatmapStream);
+                        //If decoding fails just continue
+                    }
+                    catch { continue; }
+
+                    Utils.Log($"\tBeatmap ID: {beatmap.MetadataSection.BeatmapID}", LogLevel.Success);
+
+                    if (beatmap.GeneralSection.Mode != OsuParsers.Enums.Ruleset.Standard)
+                    {
+                        Utils.Log($"\tSkipping ID: {beatmap.MetadataSection.BeatmapID} NOT A STANDARD MAP!!", LogLevel.Warning);
+                        continue;
+                    }
+                    else
+                    {
+                        var hash = MD5.ComputeHash(buffer, 0, streamLength);
+                        var hashString = Convert.ToBase64String(hash);
+                        Utils.Log($"\tHash: {hashString}", LogLevel.Success);
+
+                        //If we already have this beatmap, then skip, ideally then we have to grab the beatmapset it is using?
+                        if (BeatmapCollection.HashedItems.ContainsKey(hashString))
+                        {
+                            continue;
+                        }
+
+                        DBBeatmapInfo beatmapInfo = new DBBeatmapInfo();
+                        //PrimaryKey
+                        beatmapInfo.Hash = hashString;
+
+                        beatmapInfo.SetInfo = setInfo;
+
+                        beatmapInfo.Filename = new FileInfo(file).Name;
+                        beatmapInfo.BackgroundFilename = beatmap.EventsSection.BackgroundImage;
+
+                        setInfo.Beatmaps.Add(beatmapInfo);
+                    }
+                }
+            }
+
+            //Ignore if no beatmaps found
+            if (setInfo.Beatmaps.Count == 0)
+                return;
+
+            Utils.Log("Copying...", LogLevel.Info);
+            Utils.CopyDirectory(directory, $"{SongsFolder}/{newFolderName}", recursive: true);
+
+            Utils.Log("Writing to database...", LogLevel.Info);
+
+            setInfo.Foldername = newFolderName;
+
+            Scheduler.Enqueue(() =>
+            {
+                realm.Write(() =>
+                {
+                    realm.Add(setInfo, true);
+                });
+
+                foreach (var item in setInfo.Beatmaps)
+                {
+                    OnNewBeatmapAvailable?.Invoke(item, false);
+                }
+
+                Utils.Log("Done!", LogLevel.Success);
+            });
+        }
+
         public static void ImportBeatmap(Stream oszStream)
         {
             try
@@ -142,8 +237,6 @@ namespace RTCircles
                 DBBeatmapSetInfo setInfo = new DBBeatmapSetInfo();
 
                 string folderGUID = Guid.NewGuid().ToString();
-
-
 
                 foreach (var item in beatmapFiles)
                 {
@@ -209,7 +302,7 @@ namespace RTCircles
 
                     foreach (var item in setInfo.Beatmaps)
                     {
-                        OnNewBeatmapAvailable?.Invoke(item);
+                        OnNewBeatmapAvailable?.Invoke(item, true);
                     }
 
                     Utils.Log("Done!", LogLevel.Success);

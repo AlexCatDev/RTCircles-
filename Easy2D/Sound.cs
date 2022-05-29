@@ -157,6 +157,21 @@ namespace Easy2D
             }
         }
 
+        /// <summary>
+        /// The pitch in semitones -60 - 60
+        /// </summary>
+        public double Pitch
+        {
+            get
+            {
+                return Bass.ChannelGetAttribute(Handle, ChannelAttribute.Pitch);
+            }
+            set
+            {
+                Bass.ChannelSetAttribute(Handle, ChannelAttribute.Pitch, value.Clamp(-60, 60));
+            }
+        }
+
         public double PlaybackPosition
         {
             get

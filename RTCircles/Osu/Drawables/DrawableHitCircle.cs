@@ -91,7 +91,7 @@ namespace RTCircles
         {
             if (!playedSound && !IsHit && !IsMissed)
             {
-                if(OsuContainer.SongPosition < circle.StartTime - OsuContainer.Beatmap.Fadein) { return true; }
+                 if(OsuContainer.SongPosition < circle.StartTime - OsuContainer.Beatmap.Fadein) { return true; }
 
                 hitTime = OsuContainer.SongPosition;
                 double t = Math.Abs(hittableTime);
@@ -129,6 +129,9 @@ namespace RTCircles
 
         public override void Render(Graphics g)
         {
+            if (alpha == 0f)
+                return;
+
             void drawNumber()
             {
                 if (!IsHit && !IsMissed)
@@ -195,6 +198,13 @@ namespace RTCircles
             }
             else
             {
+                //Just instantly disappear when missed or hit when using hidden
+                if (OsuContainer.Beatmap.Mods.HasFlag(Mods.HD))
+                {
+                    IsDead = true;
+                    return;
+                }
+
                 var start = hitTime;
                 var to = hitTime + OsuContainer.Fadeout;
                 var time = OsuContainer.SongPosition.Clamp(start, to);

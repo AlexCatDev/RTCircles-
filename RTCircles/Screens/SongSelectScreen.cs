@@ -91,6 +91,8 @@ namespace RTCircles
 
         public DBBeatmapInfo DBBeatmapInfo { get; private set; }
 
+        private double showTimer = 0;
+
         public void SetDBBeatmap(DBBeatmapInfo dbBeatmap)
         {
             Text = dbBeatmap.Filename.Replace(".osu", "");
@@ -102,6 +104,11 @@ namespace RTCircles
 
         public bool OnShow()
         {
+            showTimer += MainGame.Instance.DeltaTime;
+
+            if (showTimer < 0.075)
+                return true;
+
             if (Texture?.ImageDoneUploading == true)
                 sFloat.Update((float)MainGame.Instance.DeltaTime);
 
@@ -122,6 +129,8 @@ namespace RTCircles
 
         public void OnHide()
         {
+            showTimer = 0;
+
             if (IsVisible == true)
             {
                 IsVisible = false;
@@ -142,6 +151,8 @@ namespace RTCircles
 
         public static List<CarouselItem> SearchItems = new List<CarouselItem>();
 
+        public static Dictionary<string, CarouselItem> HashedItems = new Dictionary<string, CarouselItem>();
+
         public static event Action SearchResultsChanged;
         public static string SearchQuery;
 
@@ -152,6 +163,7 @@ namespace RTCircles
 
         public static void AddItem(CarouselItem item)
         {
+            HashedItems.Add(item.Hash, item);
             Items.Add(item);
             FindText(SearchQuery);
         }
@@ -221,9 +233,13 @@ namespace RTCircles
 
         public SongSelectScreen()
         {
-            BeatmapMirror.OnNewBeatmapAvailable += (beatmap) =>
+            BeatmapMirror.OnNewBeatmapAvailable += (beatmap, showNotification) =>
             {
                 AddBeatmapToCarousel(beatmap);
+
+                if (!showNotification)
+                    return;
+
                 string hash = beatmap.Hash;
                 NotificationManager.ShowMessage($"Imported {beatmap.Filename}", ((Vector4)Color4.LightGreen).Xyz, 3, () => {
                     if (ScreenManager.ActiveScreen is not OsuScreen)
@@ -251,15 +267,8 @@ namespace RTCircles
             //Dont add to carousel if we already have this item
             Utils.Log($"Adding DBBeatmap: {dBBeatmap.Filename} Current carousel item count: {BeatmapCollection.Items.Count}", LogLevel.Debug);
 
-            for (int i = 0; i < BeatmapCollection.Items.Count; i++)
-            {
-                if (BeatmapCollection.Items[i].Hash == dBBeatmap.Hash)
-                {
-                    Utils.Log($"A duplicate map was added to the carousel, the old map was changed to the new one", LogLevel.Warning);
-                    BeatmapCollection.Items[i].SetDBBeatmap(dBBeatmap);
-                    return;
-                }
-            }
+            if (BeatmapCollection.HashedItems.ContainsKey(dBBeatmap.Hash))
+                return;
 
             CarouselItem newItem = new CarouselItem();
             newItem.SetDBBeatmap(dBBeatmap);
@@ -441,8 +450,8 @@ namespace RTCircles
 
             float songX = (float)OsuContainer.SongPosition.Map(OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime, OsuContainer.Beatmap.HitObjects[^1].BaseObject.StartTime, 0, 1).Clamp(0, 1);
 
-            Vector4 progressColor = new Vector4(1f, 1f, 1f, 0.25f);
-            Vector4 progressNotColor = new Vector4(0.5f, 0.5f, 0.5f, 0.25f);
+            Vector4 progressColor = new Vector4(0.6f, 1f, 0.6f, 0.35f);
+            Vector4 progressNotColor = new Vector4(0.5f, 0.5f, 0.5f, 0.35f);
 
             Rectangle texRectProgress = new Rectangle(0, 0, songX, 1);
 

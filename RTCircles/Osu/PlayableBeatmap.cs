@@ -79,7 +79,10 @@ namespace RTCircles
 
             if (File.Exists(item.FullPath))
             {
-                beatmap = BeatmapMirror.DecodeBeatmap(File.OpenRead(item.FullPath));
+                using (FileStream fs = File.OpenRead(item.FullPath))
+                {
+                    beatmap = BeatmapMirror.DecodeBeatmap(fs);
+                }
             }
             else
             {
@@ -144,27 +147,27 @@ namespace RTCircles
             {
                 //HR increases CS by 30%
                 CS += InternalBeatmap.DifficultySection.CircleSize * 0.3f;
-                CS = CS.Clamp(0, 10);
 
                 //And all other difficulty attributes by 40%
                 AR += InternalBeatmap.DifficultySection.ApproachRate * 0.4f;
-                AR = AR.Clamp(0, 10);
 
                 OD += InternalBeatmap.DifficultySection.OverallDifficulty * 0.4f;
-                OD = OD.Clamp(0, 10);
 
                 HP += InternalBeatmap.DifficultySection.HPDrainRate * 0.4f;
-                HP = HP.Clamp(0, 10);
             }
 
             //DT makes song 1.5x times faster
-            //TODO: Fix nightcore pitch beat using bass_fx
             if (Song != null)
             {
-                if (mods.HasFlag(Mods.DT))
+                if (mods.HasFlag(Mods.DT) || mods.HasFlag(Mods.NC))
                     Song.PlaybackSpeed = 1.5;
                 else
                     Song.PlaybackSpeed = 1;
+
+                if (mods.HasFlag(Mods.NC))
+                    Song.Pitch = 5;
+                else
+                    Song.Pitch = 0;
             }
 
             if (mods.HasFlag(Mods.EZ))
@@ -175,6 +178,11 @@ namespace RTCircles
                 OD = InternalBeatmap.DifficultySection.OverallDifficulty / 2f;
                 HP = InternalBeatmap.DifficultySection.HPDrainRate / 2f;
             }
+
+            CS = CS.Clamp(0, 10);
+            AR = AR.Clamp(0, 10);
+            OD = OD.Clamp(0, 10);
+            HP = HP.Clamp(0, 10);
         }
 
         public void SetOD(float od)
@@ -275,6 +283,8 @@ namespace RTCircles
 
         public void GenerateHitObjects(Mods mods = Mods.NM)
         {
+            System.Diagnostics.Debug.Assert(!(HitObjects.Count > 0));
+
             if (InternalBeatmap.HitObjects.Count == 0 || HitObjects.Count > 0)
                 return;
 

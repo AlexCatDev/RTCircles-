@@ -370,7 +370,7 @@ namespace RTCircles
             OsuContainer.OnKiai += () =>
             {
                 logoExplodeKiaiAnim.Value = 1f;
-                logoExplodeKiaiAnim.TransformTo(0f, 0.5f, EasingTypes.None);
+                logoExplodeKiaiAnim.TransformTo(0f, 0.5f, EasingTypes.Out);
             };
 
             buttonAlpha.Value = 0f;
@@ -677,7 +677,7 @@ namespace RTCircles
             visualizer.BarEndColor = visualizer.BarStartColor;
 
             if (OsuContainer.IsKiaiTimeActive)
-                visualizer.FreckleSpawnRate = 0.006f;
+                visualizer.FreckleSpawnRate = 0.01f;
             else
                 visualizer.FreckleSpawnRate = float.MaxValue;
             

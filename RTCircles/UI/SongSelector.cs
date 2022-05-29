@@ -26,15 +26,15 @@ namespace RTCircles
         private MapBackground bg = new MapBackground();
         private FrameBuffer blurBuffer = new FrameBuffer(1, 1, Silk.NET.OpenGLES.FramebufferAttachment.ColorAttachment0, Silk.NET.OpenGLES.InternalFormat.Rgb, Silk.NET.OpenGLES.PixelFormat.Rgb);
 
-        private float scrollOffset = 0;
-        private float scrollMomentum;
+        private double scrollOffset = 0;
+        private double scrollMomentum;
         private CarouselItem selectedItem;
 
         public Vector2 HeaderSize => new Vector2(MainGame.WindowWidth, 70 * MainGame.Scale);
 
-        public float ElementSpacing => 8f * MainGame.Scale;
+        public int ElementSpacing => (int)(8f * MainGame.Scale);
 
-        public Vector2 ElementSize => new Vector2(950, 140f) * MainGame.Scale;
+        public Vector2i ElementSize => (Vector2i)(new Vector2(950, 140) * MainGame.Scale);
         public Rectangle SongInfoBounds => new Rectangle(new Vector2(0, HeaderSize.Y), new Vector2(600 * MainGame.Scale, MainGame.WindowHeight - HeaderSize.Y));
 
         public Rectangle SongsBounds => new Rectangle(MainGame.WindowWidth - ElementSize.X, HeaderSize.Y, ElementSize.X, MainGame.WindowHeight);
@@ -46,22 +46,22 @@ namespace RTCircles
 
         private Mods mods = Mods.NM;
 
-        public float ScrollMin
+        public int ScrollMin
         {
             get
             {
-                var itemSize = ElementSize.Y + ElementSpacing;
+                int itemSize = ElementSize.Y + ElementSpacing;
 
-                float min = -((BeatmapCollection.SearchItems.Count * itemSize) + (itemSize * 2));
-                min += MainGame.WindowHeight - HeaderSize.Y;
-                min = MathF.Min(0, min);
+                int min = -((BeatmapCollection.SearchItems.Count * itemSize) + (itemSize * 2));
+                min += (int)(MainGame.WindowHeight - HeaderSize.Y);
+                min = Math.Min(0, min);
                 return min;
             }
         }
 
-        public float ScrollMax => (ElementSize.Y + ElementSpacing) * 2;
+        public int ScrollMax => (ElementSize.Y + ElementSpacing) * 2;
 
-        private float? scrollTo;
+        private double? scrollTo;
 
         private bool shouldGenBlur;
 
@@ -90,9 +90,10 @@ namespace RTCircles
                     return;
                 }
 
-                scrollTo = index * -(ElementSize.Y + ElementSpacing) + ((MainGame.WindowHeight - ElementSize.Y + ElementSpacing) / 2) - HeaderSize.Y;
+                scrollTo = -(ElementSize.Y + ElementSpacing) * index;
 
-                scrollTo = scrollTo.Value.Clamp(ScrollMin, ScrollMax);
+                scrollTo += ((MainGame.WindowHeight - ElementSize.Y + ElementSpacing) / 2) - HeaderSize.Y;
+
                 scrollMomentum = 0;
 
                 if (selectedItem is null)
@@ -157,8 +158,8 @@ namespace RTCircles
             Vector2 offset = new Vector2();
             offset.Y += HeaderSize.Y;
             offset.X += MainGame.WindowWidth - ElementSize.X;
-            offset.Y += scrollOffset;
-
+            offset.Y += (float)scrollOffset;
+            //Console.WriteLine(scrollOffset.ToString() + " min: " + ScrollMin + " actual: " + offset.Y + $" diff: {scrollOffset-offset.Y}");
             for (int i = 0; i < BeatmapCollection.SearchItems.Count; i++)
             {
                 Rectangle bounds = new Rectangle(offset, ElementSize);
@@ -415,7 +416,7 @@ namespace RTCircles
                 return true;
             }
 
-            if (MathF.Abs(scrollMomentum) < 600)
+            if (Math.Abs(scrollMomentum) < 600)
                 scrollMomentum = 0;
 
             return false;

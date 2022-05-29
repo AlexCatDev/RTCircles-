@@ -469,7 +469,7 @@ namespace RTCircles
 
                     //150ms if slider duration is longer than 150, else use slider duration.
                     float time = Math.Min((int)OsuContainer.Fadeout, slider.EndTime - slider.StartTime);
-                    sliderFollowScaleAnim.TransformTo(SliderBallActiveScale, time, EasingTypes.OutQuart);
+                    sliderFollowScaleAnim.TransformTo(SliderBallActiveScale, time, EasingTypes.Out);
                 }
                 else
                 {
@@ -510,7 +510,7 @@ namespace RTCircles
                 circleAlpha = (float)MathUtils.Map(timeElapsed, 0, OsuContainer.Beatmap.Fadein, 0, 1f).Clamp(0, 1f);
 
                 snakeIn = GlobalOptions.SliderSnakeIn.Value ? MathUtils.Map(timeElapsed, 0, (float)OsuContainer.Beatmap.Fadein / 2f, 0, 1f).Clamp(0, 1f) : 1;
-                //snakeIn = (float)MathUtils.Map(OsuContainer.SongPosition, slider.StartTime, slider.EndTime, 0, 1);
+                //snakeIn = (float)MathUtils.Map(OsuContainer.SongPosition, slider.StartTime - 400, slider.EndTime, 0, 1);
             }
 
             //Slider snakeout

@@ -362,8 +362,8 @@ namespace RTCircles
 
             float letterGOScale = (float)Interpolation.ValueAt(offsetFromStart.Clamp(0, duration), 2, 1, 0, duration, EasingTypes.Out);
 
-            if(letterGOAlpha > 0)
-            g.DrawStringCentered("Lets GO!", Font.DefaultFont, MainGame.WindowCenter, new Vector4(1f, 1f, 1f, letterGOAlpha), letterGOScale * textScale);
+            if (letterGOAlpha > 0)
+                g.DrawStringCentered("GO!", Font.DefaultFont, MainGame.WindowCenter, new Vector4(1f, 1f, 1f, letterGOAlpha), letterGOScale * textScale);
         }
 
         private float interpolatedHP = 0;
@@ -378,19 +378,28 @@ namespace RTCircles
 
             interpolatedHP = MathHelper.Lerp(interpolatedHP, currentHealth, (float)MainGame.Instance.DeltaTime * 30f);
 
-            float hpScale = 1.75f;
+            float hpScale = MainGame.Scale * 1.3755f;
 
-            if(Skin.HealthBar_BG != null)
-                g.DrawRectangle(Vector2.Zero, Skin.HealthBar_BG.Texture.Size * MainGame.Scale / hpScale, Colors.White, Skin.HealthBar_BG);
+            if (Skin.HealthBar_BG != null)
+            {
+                //g.DrawRectangle(Vector2.Zero, Skin.HealthBar_BG.Texture.Size * MainGame.Scale / hpScale, Colors.White, Skin.HealthBar_BG);
+                var size = Skin.HealthBar_BG.Texture.Size;
+
+                if (Skin.HealthBar_BG.IsX2)
+                    size /= 2;
+
+                g.DrawRectangle(Vector2.Zero, size * hpScale, Colors.White, Skin.HealthBar_BG);
+
+                //g.DrawRectangle(Vector2.Zero, new Vector2(MainGame.WindowHeight * Skin.HealthBar_BG.Texture.Size.AspectRatio(), MainGame.WindowHeight), Colors.White, Skin.HealthBar_BG);
+            }
 
             if (Skin.HealthBar_Fill != null)
             {
                 Rectangle healthUV = new Rectangle(0, 0, interpolatedHP, 1);
                 Vector2 healthSize = new Vector2(Skin.HealthBar_Fill.Texture.Size.X * interpolatedHP,
-                    Skin.HealthBar_Fill.Texture.Size.Y) * MainGame.Scale / hpScale;
+                    Skin.HealthBar_Fill.Texture.Size.Y) * hpScale;
 
-
-                g.DrawRectangle(new Vector2(5, 16) * MainGame.Scale * (Skin.HealthBar_Fill.IsX2 ? 2 : 1) / hpScale, healthSize, Colors.White, Skin.HealthBar_Fill, healthUV, true);
+                g.DrawRectangle(new Vector2(5, 16) * hpScale, healthSize, Colors.White, Skin.HealthBar_Fill, healthUV, true);
             }
             else
             {

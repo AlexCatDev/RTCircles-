@@ -1,10 +1,6 @@
 ﻿using OpenTK.Mathematics;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Easy2D
 {
@@ -17,15 +13,11 @@ namespace Easy2D
 
             var color = (Vector4)Color4.FromHsv(new Vector4(hue, saturation, brightness, 1));
             return color.Xyz;
-            /*
-            var color = new Vector3();
+        }
 
-            color.X = (float)Math.Cos(time).Map(-1, 1, 0, 1);
-            color.Y = (float)Math.Cos(time + 2).Map(-1, 1, 0, 1);
-            color.Z = (float)Math.Cos(time + 4).Map(-1, 1, 0, 1);
-
-            return color;
-            */
+        public static double ToDegrees(double radians)
+        {
+            return radians / 0.017453292519943295769236907684886;
         }
 
         public static double ToRadians(double degrees)
@@ -122,6 +114,7 @@ namespace Easy2D
 
             return value;
         }
+
 
         public static void ClampRef(this ref float value, float min, float max)
         {
