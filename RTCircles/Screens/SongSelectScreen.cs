@@ -170,6 +170,7 @@ namespace RTCircles
 
         public static void DeleteMap(CarouselItem item)
         {
+            HashedItems.Remove(item.Hash);
             Items.Remove(item);
             SearchItems.Remove(item);
 

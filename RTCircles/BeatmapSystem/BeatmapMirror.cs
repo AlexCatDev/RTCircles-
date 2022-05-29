@@ -81,7 +81,7 @@ namespace RTCircles
 
         public static event Action<DBBeatmapInfo, bool> OnNewBeatmapAvailable;
 
-        public static MD5 MD5 { get; private set; }
+        public static SHA256 SHA256 { get; private set; }
 
         public static string SongsFolder { get; private set; }
 
@@ -118,8 +118,8 @@ namespace RTCircles
 
             Utils.Log($"SongsFolder: {SongsFolder}", LogLevel.Important);
 
-            MD5 = MD5.Create();
-            MD5.Initialize();
+            SHA256 = SHA256.Create();
+            SHA256.Initialize();
         }
 
         public static void DatabaseAction(Action<Realm> action)
@@ -174,7 +174,7 @@ namespace RTCircles
                     }
                     else
                     {
-                        var hash = MD5.ComputeHash(buffer, 0, streamLength);
+                        var hash = SHA256.ComputeHash(buffer, 0, streamLength);
                         var hashString = Convert.ToBase64String(hash);
                         Utils.Log($"\tHash: {hashString}", LogLevel.Success);
 
@@ -246,7 +246,7 @@ namespace RTCircles
                     {
                         stream.CopyTo(beatmapStream);
 
-                        var hash = MD5.ComputeHash(beatmapStream.ToArray());
+                        var hash = SHA256.ComputeHash(beatmapStream.ToArray());
                         var hashString = Convert.ToBase64String(hash);
                         Utils.Log($"\tHash: {hashString}", LogLevel.Success);
 
