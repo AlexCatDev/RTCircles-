@@ -63,6 +63,12 @@ namespace RTCircles
 
             Background = background ?? Skin.DefaultBackground;
             Hitsounds = hitsounds;
+
+            if (Song != null)
+            {
+                Song.Volume = 0;
+                ManagedBass.Bass.ChannelSlideAttribute(Song, ManagedBass.ChannelAttribute.Volume, (float)GlobalOptions.SongVolume.Value, 500, false);
+            }
         }
 
         private PlayableBeatmap() { }

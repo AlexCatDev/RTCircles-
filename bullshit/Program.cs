@@ -9,6 +9,9 @@ using System.Runtime;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using RTCircles;
+using System.Security.Cryptography;
+using System.Text;
+
 class Program
 {
 
@@ -28,7 +31,7 @@ class Program
             set.Beatmaps.Add(new DBBeatmapInfo() { Filename = "test123", Hash = "Weed420727" });
         });
         */
-        //BenchmarkRunner.Run<Benchmarks>();
+        BenchmarkRunner.Run<Benchmarks>();
         Console.WriteLine("- FIN -");
         Console.ReadLine();
     }
@@ -36,7 +39,12 @@ class Program
 
 public class IsBenchmarkAttribute : Attribute
 {
+    public int RunCount { get; private set; } = 1;
 
+    public IsBenchmarkAttribute(int runCount)
+    {
+        RunCount = runCount;
+    }
 }
 
 public static class Benchmarker
@@ -93,6 +101,27 @@ public static class Benchmarker
 [RankColumn]
 public unsafe class Benchmarks
 {
+
+    private MD5 md5;
+    private SHA256 sha256;
+
+    private byte[] testBeatmap;
+
+    public Benchmarks()
+    {
+        md5 = MD5.Create();
+        md5.Initialize();
+
+        sha256 = SHA256.Create();
+        sha256.Initialize();
+
+        using(var fs = File.OpenRead(@"C:\Users\user\Desktop\osu!\Songs\1074598 Slax - 90's Girly Tekno Beat EP\Slax - 90's Girly Tekno Beat EP (Seamob) [Hardtaro].osu"))
+        {
+            testBeatmap = new byte[fs.Length];
+            fs.Read(testBeatmap, 0, testBeatmap.Length);
+        }
+    }
+
     public const int QuadCount = 1_000_000;
 
     public const int Test = 100_000;

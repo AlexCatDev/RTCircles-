@@ -1,4 +1,5 @@
 ﻿using Easy2D;
+using Easy2D.Game;
 using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
@@ -10,11 +11,10 @@ namespace RTCircles
 {
     public class FancyCursorTrail : Drawable
     {
-        public Vector2? PositionOverride;
-        public float Width = 8;
-
-        class TrailPiece
+        private class TrailPiece
         {
+            public float FadeOutSpeed = 6;
+
             public Vector2 Position;
             public Vector4 Color;
             public float Width;
@@ -28,28 +28,28 @@ namespace RTCircles
                 this.Position = Position;
                 this.startWidth = startWidth;
 
-                this.Color = Vector4.One;
+                this.Color = Vector4.One * 1.5f;
+                this.Color.W = 1;
             }
 
             public void Update(float delta)
             {
                 //Width -= delta * 60;
-                Color.W -= delta * 6;
+                Color.W -= delta * FadeOutSpeed;
+
+                Color.W.ClampRef(0, 1);
 
                 Width = Interpolation.ValueAt(Color.W, startWidth, 0, 1, 0, EasingTypes.None);
-                //Width = Color.W.Map(1, 0, 8, 0);
-                //Width.ClampRef(0, 10000);
-                Color.W.ClampRef(0, 1);
-                
-                float colorScale = PostProcessing.Bloom ? 2 : 1;
 
-                Color.Xyz = MathUtils.RainbowColor(MainGame.Instance.TotalTime, 0.5f, colorScale);
                 if (Color.W <= 0)
                     RemoveMe = true;
             }
         }
 
-        List<TrailPiece> trailPieces = new List<TrailPiece>();
+        public Vector2? PositionOverride;
+        public float Width = 8;
+
+        private List<TrailPiece> trailPieces = new List<TrailPiece>();
 
         public override void Render(Graphics g)
         {
@@ -94,24 +94,18 @@ namespace RTCircles
             //g.DrawRectangleCentered(Easy2D.Game.Input.MousePosition, new Vector2(25), Vector4.One, Texture.WhiteCircle);
         }
 
-        Vector2 lastMousePos;
+        private Vector2 lastMousePos;
 
         public override void Update(float delta)
         {
             for (int i = trailPieces.Count - 1; i >= 0; i--)
             {
                 trailPieces[i].Update(delta);
-
-                if (trailPieces[i].RemoveMe)
-                    trailPieces.RemoveAt(i);
             }
 
-            Vector2 mousePos;
+            trailPieces.RemoveAll((o) => o.RemoveMe);
 
-            if (!PositionOverride.HasValue)
-                mousePos = Easy2D.Game.Input.MousePosition;
-            else
-                mousePos = PositionOverride.Value;
+            Vector2 mousePos = PositionOverride ?? Input.MousePosition;
 
             if (lastMousePos == Vector2.Zero)
                 lastMousePos = mousePos;

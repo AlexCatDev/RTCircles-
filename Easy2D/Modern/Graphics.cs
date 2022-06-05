@@ -45,7 +45,7 @@ namespace Easy2D
             fragmentPreprocessor = new()
             {
                 { "//#SWITCH", sb.ToString() },
-                { "//uniform sampler2D u_Textures[];", $"uniform sampler2D u_Textures[{MaxTextureSlots}];" }
+                { "//#uniform sampler2D u_Textures[];", $"uniform sampler2D u_Textures[{MaxTextureSlots}];" }
             };
         }
 
@@ -890,6 +890,8 @@ namespace Easy2D
 
         public Vector4 ShadowColor;
 
+        public Vector4 FinalColorMix = Vector4.One;
+
         public float BorderWidth = 1.0f;
 
         /// <summary>
@@ -909,6 +911,8 @@ namespace Easy2D
 
             Shader.Bind();
             Shader.SetIntArray("u_Textures", textureSlots);
+
+            Shader.SetVector("u_FinalColorMix", FinalColorMix);
 
             #region SliderUniforms
             Shader.SetFloat("u_BorderWidth", BorderWidth);

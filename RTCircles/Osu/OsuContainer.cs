@@ -90,12 +90,12 @@ namespace RTCircles
                 if (lastViewport == windowSize)
                     return _playfield;
 
-                
+
                 //Else update the playfield and recache.
 
                 lastViewport = windowSize;
 
-                float aspectRatio = 4f / 3f;
+                const float aspectRatio = 4f / 3f;
 
                 float PlayfieldHeight = MainGame.WindowHeight - (MainGame.WindowHeight * 0.2f);
 
@@ -110,15 +110,26 @@ namespace RTCircles
 
                 Vector2 PlayfieldTopLeft = new Vector2(MainGame.WindowCenter.X - PlayfieldWidth / 2f, MainGame.WindowCenter.Y - PlayfieldHeight / 2f);
 
+                //This will offset the playfield down so it matches stable
+                PlayfieldTopLeft.Y += PlayfieldHeight * 0.020f;
+
                 _playfield = new Rectangle(PlayfieldTopLeft, new Vector2(PlayfieldWidth, PlayfieldHeight));
 
                 return _playfield;
             }
         }
 
-        public static Rectangle FullPlayfield => new Rectangle(
-            Playfield.Position - new Vector2(Beatmap?.CircleRadius ?? 0) / 2,
-            Playfield.Size + new Vector2(Beatmap?.CircleRadius ?? 0));
+        public static Rectangle FullPlayfield
+        {
+            get
+            {
+                var magicOsuRadius = 70f * (Playfield.Height / 384);
+
+                return new Rectangle(
+                Playfield.Position - new Vector2(magicOsuRadius) / 2,
+                Playfield.Size + new Vector2(magicOsuRadius));
+            }
+        }
 
         public static HUD HUD { get; private set; } = new HUD();
 
@@ -444,12 +455,12 @@ namespace RTCircles
                 if (beatmapHitsound is not null)
                 {
                     //Positional hitsounds
-                    beatmapHitsound.Pan = position.X.Map(0, MainGame.WindowWidth, -0.5f, 0.5f);
+                    beatmapHitsound.Pan = position.X.Map(0, MainGame.WindowWidth, -0.5f, 0.5f).Clamp(-0.5f, 0.5f);
                     beatmapHitsound.Play(true);
                 }
                 else if (skinHitsound is not null)
                 {
-                    skinHitsound.Pan = position.X.Map(0, MainGame.WindowWidth, -0.5f, 0.5f);
+                    skinHitsound.Pan = position.X.Map(0, MainGame.WindowWidth, -0.5f, 0.5f).Clamp(-0.5f, 0.5f);
                     skinHitsound.Play(true);
                 }
                 else
@@ -467,51 +478,49 @@ namespace RTCircles
 
         public static void Update(double delta)
         {
-            if (Beatmap is null)
-                return;
-
-            if (Beatmap.Song != null)
+            if (Beatmap == null || Beatmap.Song == null || !Beatmap.Song.IsFunctional)
+                songPos += delta;
+            else
             {
                 if (songPos < totalOffset)
                 {
                     Beatmap.Song.Stop();
-                    songPos = Math.Min(songPos + delta * 1000d * Beatmap.Song.PlaybackSpeed, totalOffset);
+                    songPos = Math.Min(songPos + delta * Beatmap.Song.PlaybackSpeed, totalOffset);
                     if (songPos == totalOffset)
                         Beatmap.Song.Play(true);
                 }
                 else if (songPos >= Beatmap.Song.PlaybackLength && Beatmap.Song.IsStopped)
                 {
-                    songPos += delta * 1000 * Beatmap.Song.PlaybackSpeed;
+                    songPos += delta * Beatmap.Song.PlaybackSpeed;
                 }
                 else
                 {
                     songPos = Beatmap?.Song.PlaybackPosition + totalOffset ?? 0;
                 }
             }
-            else
-            {
-                songPos += delta;
-            }
 
             if (CurrentTimingPoint?.Offset > songPos)
                 CurrentTimingPoint = null;
 
-            for (int i = 0; i < Beatmap.InternalBeatmap.TimingPoints.Count - 1; i++)
+            if (Beatmap != null)
             {
-                var nowTiming = Beatmap.InternalBeatmap.TimingPoints[i];
-                var nextTiming = Beatmap.InternalBeatmap.TimingPoints[i + 1];
-
-                if (nowTiming.BeatLength > 0)
-                    CurrentBeatTimingPoint = nowTiming;
-
-                if (songPos >= nowTiming.Offset && songPos < nextTiming.Offset)
+                for (int i = 0; i < Beatmap.InternalBeatmap.TimingPoints.Count - 1; i++)
                 {
-                    if (nowTiming.Effects == Effects.Kiai && CurrentTimingPoint?.Effects != Effects.Kiai)
-                        OnKiai?.Invoke();
+                    var nowTiming = Beatmap.InternalBeatmap.TimingPoints[i];
+                    var nextTiming = Beatmap.InternalBeatmap.TimingPoints[i + 1];
 
-                    CurrentTimingPoint = nowTiming;
+                    if (nowTiming.BeatLength > 0)
+                        CurrentBeatTimingPoint = nowTiming;
 
-                    break;
+                    if (songPos >= nowTiming.Offset && songPos < nextTiming.Offset)
+                    {
+                        if (nowTiming.Effects == Effects.Kiai && CurrentTimingPoint?.Effects != Effects.Kiai)
+                            OnKiai?.Invoke();
+
+                        CurrentTimingPoint = nowTiming;
+
+                        break;
+                    }
                 }
             }
 

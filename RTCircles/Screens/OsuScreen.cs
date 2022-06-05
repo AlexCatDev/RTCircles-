@@ -210,7 +210,7 @@ namespace RTCircles
             bool isIndexBehind = songPos > now.StartTime;
 
             //If the song position is smaller than the previously spawned object's time, the index is too far ahead
-            bool isIndexInfront = (previous.StartTime - preempt) > songPos;
+            bool isIndexInfront = songPos < (previous.StartTime - preempt);
 
             //If both of these are true, im doing something wrong
             System.Diagnostics.Debug.Assert(!(isIndexBehind && isIndexInfront));

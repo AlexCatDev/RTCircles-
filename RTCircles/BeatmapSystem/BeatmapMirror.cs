@@ -81,8 +81,6 @@ namespace RTCircles
 
         public static event Action<DBBeatmapInfo, bool> OnNewBeatmapAvailable;
 
-        public static SHA256 SHA256 { get; private set; }
-
         public static string SongsFolder { get; private set; }
 
         private static object beatmapDecoderLock = new object();
@@ -100,11 +98,78 @@ namespace RTCircles
             {
                 if (!RealmThreadActive)
                     return;
-
+                
                 realm = Realm.GetInstance(new RealmConfiguration("RTCircles.realm") { SchemaVersion = 2 });
                 Utils.Log($"Started Realm Thread.", LogLevel.Important);
                 Utils.Log($"Realm Path: {realm.Config.DatabasePath}", LogLevel.Important);
 
+                /*
+                {
+                    byte[] buffer = new byte[1024];
+                    Utils.Log($"Checking database integrity...", LogLevel.Info);
+                    foreach (var item in realm.All<DBBeatmapInfo>())
+                    {
+                        if (item.SetInfo == null)
+                        {
+                            Utils.Log($"The Set info was null", LogLevel.Error);
+                            continue;
+                        }
+
+                        string originalHash = item.Hash;
+
+                        string file = $"{BeatmapMirror.SongsFolder}/{item.SetInfo.Foldername}/{item.Filename}";
+
+                        if (item.SetInfo.Beatmaps.Count == 0)
+                            Utils.Log($"The Set info has 0 beatmaps", LogLevel.Error);
+
+                        if (!File.Exists(file))
+                        {
+                            Utils.Log($"{file} doesn't exist!", LogLevel.Error);
+                            continue;
+                        }
+
+                        using (var fs = File.OpenRead(file))
+                        {
+                            int length = (int)fs.Length;
+
+                            if (length > buffer.Length)
+                                Array.Resize(ref buffer, length);
+
+                            fs.Read(buffer, 0, length);
+                            var newHash = Utils.ComputeSHA256Hash(buffer, 0, length);
+
+                            //Console.WriteLine($"{originalHash} -> {newHash}");
+                        }
+                    }
+
+                    Utils.Log($"Checking beatmap sets integrity...", LogLevel.Info);
+                    foreach (var item in realm.All<DBBeatmapSetInfo>())
+                    {
+                        if (item.Beatmaps.Count == 0)
+                        {
+                            Utils.Log($"{item.Foldername} has no beatmaps in it!", LogLevel.Error);
+
+                            Utils.Log($"Deleting", LogLevel.Info);
+                            try
+                            {
+                                System.IO.Directory.Delete($"{BeatmapMirror.SongsFolder}/{item.Foldername}", true);
+                                Utils.Log($"Done!", LogLevel.Success);
+                            }
+                            catch (Exception ex)
+                            {
+                                Utils.Log($"Fail!", LogLevel.Error);
+                            }
+                        }
+
+                        realm.Write(() =>
+                        {
+                            realm.Remove(item);
+                        });
+                    }
+
+                    Utils.Log($"Done!", LogLevel.Success);
+                }
+                */
                 while (MainGame.Instance.View.IsClosing == false)
                 {
                     Scheduler.RunPendingTasks();
@@ -117,9 +182,6 @@ namespace RTCircles
             realmsThread.Start();
 
             Utils.Log($"SongsFolder: {SongsFolder}", LogLevel.Important);
-
-            SHA256 = SHA256.Create();
-            SHA256.Initialize();
         }
 
         public static void DatabaseAction(Action<Realm> action)
@@ -130,15 +192,13 @@ namespace RTCircles
             });
         }
 
-        public static void ImportBeatmapFolder(string directory)
+        public static void ImportBeatmapFolder(string directory, ref byte[] buffer)
         {
             Utils.Log($"Importing Beatmap folder {directory}", LogLevel.Info);
 
             DBBeatmapSetInfo setInfo = new DBBeatmapSetInfo();
 
             string newFolderName = Guid.NewGuid().ToString();
-
-            byte[] buffer = new byte[0];
 
             foreach (var file in Directory.GetFiles(directory))
             {
@@ -163,7 +223,10 @@ namespace RTCircles
                         beatmap = DecodeBeatmap(beatmapStream);
                         //If decoding fails just continue
                     }
-                    catch { continue; }
+                    catch {
+                        Utils.Log($"Skipping {file} because the decoder failed", LogLevel.Warning);
+                        continue; 
+                    }
 
                     Utils.Log($"\tBeatmap ID: {beatmap.MetadataSection.BeatmapID}", LogLevel.Success);
 
@@ -174,13 +237,13 @@ namespace RTCircles
                     }
                     else
                     {
-                        var hash = SHA256.ComputeHash(buffer, 0, streamLength);
-                        var hashString = Convert.ToBase64String(hash);
+                        var hashString = Utils.ComputeSHA256Hash(buffer, 0, streamLength);
                         Utils.Log($"\tHash: {hashString}", LogLevel.Success);
 
                         //If we already have this beatmap, then skip, ideally then we have to grab the beatmapset it is using?
                         if (BeatmapCollection.HashedItems.ContainsKey(hashString))
                         {
+                            Utils.Log($"\tWe already have this map.", LogLevel.Info);
                             continue;
                         }
 
@@ -200,7 +263,10 @@ namespace RTCircles
 
             //Ignore if no beatmaps found
             if (setInfo.Beatmaps.Count == 0)
+            {
+                Utils.Log($"A whole folder was skipped because it contained no osu! standard maps.", LogLevel.Warning);
                 return;
+            }
 
             Utils.Log("Copying...", LogLevel.Info);
             Utils.CopyDirectory(directory, $"{SongsFolder}/{newFolderName}", recursive: true);
@@ -246,8 +312,8 @@ namespace RTCircles
                     {
                         stream.CopyTo(beatmapStream);
 
-                        var hash = SHA256.ComputeHash(beatmapStream.ToArray());
-                        var hashString = Convert.ToBase64String(hash);
+                        var bytes = beatmapStream.ToArray();
+                        var hashString = Utils.ComputeSHA256Hash(bytes, 0, bytes.Length); 
                         Utils.Log($"\tHash: {hashString}", LogLevel.Success);
 
                         //optionally open the beatmap to write extra database entries

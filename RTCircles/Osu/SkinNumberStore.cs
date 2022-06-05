@@ -98,8 +98,6 @@ namespace RTCircles
 
         public void Draw(Graphics g, Vector2 position, float ySize, Vector4 color, string number)
         {
-            Vector2 offset = Vector2.Zero;
-
             for (int i = 0; i < number.Length; i++)
             {
                 Texture texture;
@@ -133,16 +131,14 @@ namespace RTCircles
                     texture = numbers[num];
                 }
 
-                float aspectRatio = (float)texture.Width / texture.Height;
+                Vector2 digitSize = new Vector2(ySize * texture.Size.AspectRatio(), ySize);
+                
+                float overlap = (Overlap / texture.Width) * digitSize.X;
 
-                Vector2 digitSize = new Vector2(ySize * aspectRatio, ySize);
-
-                float overlap = (digitSize.X / texture.Width) * Overlap;
-
-                g.DrawRectangle(position + offset, digitSize, color, texture);
+                g.DrawRectangle(position, digitSize, color, texture);
                 //g.DrawRectangle(position + offset, digitSize, new Vector4(0f, 0f, 0f, 0.5f));
 
-                offset.X += digitSize.X - overlap;
+                position.X += digitSize.X - overlap;
             }
         }
     }

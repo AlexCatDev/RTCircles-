@@ -77,7 +77,7 @@ namespace RTCircles
                 {
                     playableBeatmap = new PlayableBeatmap(
                         BeatmapMirror.DecodeBeatmap(Utils.GetResource("Maps.BuildIn.map.osu")),
-                        new Sound(Utils.GetResource("Maps.BuildIn.audio.mp3"), true),
+                        new Sound(Utils.GetResource("Maps.BuildIn.audio.mp3"), true, false, ManagedBass.BassFlags.Prescan),
                         new Texture(Utils.GetResource("Maps.BuildIn.bg.jpg")));
 
                     NotificationManager.ShowMessage("You don't to have have any maps. Click here to get some", ((Vector4)Color4.Violet).Xyz, 10, () =>
@@ -95,21 +95,20 @@ namespace RTCircles
                     GPUSched.Instance.Enqueue(() =>
                     {
                         OsuContainer.SetMap(playableBeatmap);
-                        OsuContainer.Beatmap.Song.Volume = 0;
                         OsuContainer.SongPosition = firstKiaiTimePoint;
                         OsuContainer.Beatmap.Song.Play(false);
+
+                        logo.IntroSizeAnimation.TransformTo(new Vector2(-200), 500f, EasingTypes.InQuint, () =>
+                        {
+                            MainGame.Instance.Shaker.Shake();
+                            logo.ToggleInput(true);
+                            //Fade background in
+                            mapBG.TriggerFadeIn();
+                            Add(new ExpandingCircle(logo.Bounds.Center, logo.Bounds.Size.X / 2) { Layer = -1337 });
+                        });
+                        logo.IntroSizeAnimation.TransformTo(Vector2.Zero, 200f, EasingTypes.InOutSine);
                     });
                 }
-
-                logo.IntroSizeAnimation.TransformTo(new Vector2(-200), firstKiaiTimePoint, firstKiaiTimePoint + 500, EasingTypes.InQuint, () =>
-                {
-                    MainGame.Instance.Shaker.Shake();
-                    logo.ToggleInput(true);
-                    //Fade background in
-                    mapBG.TriggerFadeIn();
-                    Add(new ExpandingCircle(logo.Bounds.Center, logo.Bounds.Size.X / 2) { Layer = -1337 });
-                });
-                logo.IntroSizeAnimation.TransformTo(Vector2.Zero, firstKiaiTimePoint + 500, firstKiaiTimePoint + 700, EasingTypes.InOutSine);
             });
 
             mapBG = new MapBackground() { BEAT_SIZE = 10 };
@@ -340,7 +339,7 @@ namespace RTCircles
 
         private SoundVisualizer visualizer = new SoundVisualizer();
 
-        public AnimVector2 IntroSizeAnimation = new AnimVector2(); 
+        public SmoothVector2 IntroSizeAnimation = new SmoothVector2();
 
         private Button playButton = new Button();
         private Button multiPlayButton = new Button();
@@ -590,8 +589,12 @@ namespace RTCircles
 
         public override void Update(float delta)
         {
+            /*
             IntroSizeAnimation.Time = OsuContainer.Beatmap == null ? 
                 MainGame.Instance.TotalTime * 1000 : OsuContainer.SongPosition;
+            */
+
+            IntroSizeAnimation.Update((float)OsuContainer.DeltaSongPosition);
 
             logoExplodeKiaiAnim.Update(delta);
 

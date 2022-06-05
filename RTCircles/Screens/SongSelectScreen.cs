@@ -266,10 +266,16 @@ namespace RTCircles
         public void AddBeatmapToCarousel(DBBeatmapInfo dBBeatmap)
         {
             //Dont add to carousel if we already have this item
-            Utils.Log($"Adding DBBeatmap: {dBBeatmap.Filename} Current carousel item count: {BeatmapCollection.Items.Count}", LogLevel.Debug);
+            //Utils.Log($"Adding DBBeatmap: {dBBeatmap.Filename} Current carousel item count: {BeatmapCollection.Items.Count}", LogLevel.Debug);
 
             if (BeatmapCollection.HashedItems.ContainsKey(dBBeatmap.Hash))
                 return;
+
+            if(dBBeatmap.SetInfo == null)
+            {
+                //Utils.Log($"Beatmap set info was null", LogLevel.Error);
+                return;
+            }
 
             CarouselItem newItem = new CarouselItem();
             newItem.SetDBBeatmap(dBBeatmap);

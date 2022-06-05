@@ -25,20 +25,20 @@ namespace RTCircles
         private Vector2 onFrame(double time, KeyFrame from, KeyFrame to, int index)
         {
             bool cursorDance = GlobalOptions.AutoCursorDance.Value;
-
+            
             if (!cursorDance && to.IsSliderSlide && DrawableSlider.SliderBallPositionForAuto.HasValue)
                 return DrawableSlider.SliderBallPositionForAuto.Value;
 
             float blend = Interpolation.ValueAt(time, 0, 1, from.Time, to.Time);
 
-            var easing = (from.Position - to.Position).Length < OsuContainer.Beatmap.CircleRadiusInOsuPixels * 2 ? EasingTypes.None : EasingTypes.InOutQuad; 
+            var easing = ((from.Position - to.Position).Length < OsuContainer.Beatmap.CircleRadiusInOsuPixels * 2 || cursorDance) ? EasingTypes.None : EasingTypes.InOutQuad; 
 
             var vec2 = Vector2.Lerp(from.Position, to.Position, Interpolation.ValueAt(blend, 0, 1, 0, 1, easing));
 
             if (!cursorDance)
                 return vec2;
 
-            float angle = MathUtils.AtanVec(from.Position, to.Position);
+            //float angle = MathUtils.AtanVec(from.Position, to.Position);
             float length = (from.Position - to.Position).Length / 2;
 
             if (length < OsuContainer.Beatmap.CircleRadiusInOsuPixels)

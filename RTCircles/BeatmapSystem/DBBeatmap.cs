@@ -22,9 +22,6 @@ namespace RTCircles
     public class DBBeatmapSetInfo : Realms.RealmObject
     {
         [Realms.PrimaryKey]
-        public Guid ID { get; set; } = Guid.NewGuid();
-
-        [Realms.Required]
         public string Foldername { get; set; }
 
         public IList<DBBeatmapInfo> Beatmaps { get; }

@@ -148,7 +148,7 @@ namespace RTCircles
 
         private float approachRing;
 
-        private void drawSliderRepeat(Graphics g, Vector2 position, float angle, int index)
+        private void drawSliderRepeat(Graphics g, Vector2 position, float angle, int index, float alpha)
         {
             angle = MathHelper.RadiansToDegrees(angle);
 
@@ -163,13 +163,11 @@ namespace RTCircles
 
             Vector2 size = new Vector2(Size.Y, Size.Y / Skin.SliderReverse.Texture.Size.AspectRatio()) * Skin.GetScale(Skin.SliderReverse);
 
-            g.DrawRectangleCentered(position, size * beatProgress, new Vector4(1f, 1f, 1f, circleAlpha), Skin.SliderReverse, null, false, angle);
+            g.DrawRectangleCentered(position, size * beatProgress, new Vector4(1f, 1f, 1f, alpha), Skin.SliderReverse, null, false, angle);
         }
 
         private void drawSliderRepeatHead(Graphics g)
         {
-            if (!IsHit && !IsMissed)
-                return;
             //Get the angle of the first and second point. so we can rotate the sliderRepeat towards that for the head
             var first = SliderPath.Path.Points[0];
             var next = SliderPath.Path.Points[1];
@@ -179,7 +177,18 @@ namespace RTCircles
 
             var angle = MathF.Atan2(next.Y - first.Y, next.X - first.X);
 
-            drawSliderRepeat(g, first, angle, 2);
+            float repeatTime = (slider.EndTime - slider.StartTime) / slider.Repeats;
+
+            var startTime = slider.StartTime;
+            //Either 400 ms fadein or fully faded in when it's just returning
+            var endTime = startTime + Math.Min(repeatTime * 1, 400);
+            
+            float alpha = Interpolation.ValueAt(OsuContainer.SongPosition.Clamp(startTime, endTime), 0, 1, startTime, endTime, EasingTypes.None);
+
+            if (alpha == 0)
+                return;
+
+            drawSliderRepeat(g, first, angle, 2, alpha);
         }
 
         private void drawSliderRepeatTail(Graphics g)
@@ -193,7 +202,7 @@ namespace RTCircles
 
             var angle = MathF.Atan2(secondLast.Y - last.Y, secondLast.X - last.X);
 
-            drawSliderRepeat(g, last, angle, 1);
+            drawSliderRepeat(g, last, angle, 1, circleAlpha);
         }
 
         private Vector2 sliderballPosition;
@@ -241,18 +250,11 @@ namespace RTCircles
                 
                 float fadeoutScale = Interpolation.ValueAt(circleAlpha, 1f, 0.75f, 1f, 0f, EasingTypes.Out).Clamp(0.75f, 1f);
 
+                const float Size_Correction_Scale = 1.15f;
+
                 Vector2 followCircleSize = Size * sliderFollowScaleAnim * Skin.GetScale(Skin.SliderFollowCircle, 256, 512) * fadeoutScale;
 
-                //When the sliderfollowcircle is in motion, make it slightly oval shaped, (osu stable does this)
-                if (OsuContainer.SongPosition >= slider.StartTime && OsuContainer.SongPosition < slider.EndTime)
-                {
-                    //When the sliderfollowcircle is in motion, make it slightly oval shaped
-                    //followCircleSize.X *= 1.02f;
-
-                    //Pulse the follow circle slightly to the beat of the song
-                    //followCircleSize *= 1 + (float)Interpolation.ValueAt(OsuContainer.GetBeatProgressAt(slider.StartTime), 0, 0.15, 0, 1, EasingTypes.InSine);
-                }
-
+                //g.DrawEllipse(sliderballPosition, 360, 0, SliderBallActiveScale * OsuContainer.Beatmap.CircleRadius, 0, new Vector4(1f, 1f, 1f, 0.5f));
                 g.DrawRectangleCentered(sliderballPosition, followCircleSize, new Vector4(1f, 1f, 1f, followCircleAlpha), Skin.SliderFollowCircle, null, false, sliderBallAngle);
             }
 
@@ -315,6 +317,9 @@ namespace RTCircles
                     hitCircleAlpha = (float)OsuContainer.SongPosition.Map(hitTime.Value, hitTime.Value + OsuContainer.Fadeout, circleAlpha, 0).Clamp(0, 1f);
                     scaleExplode = (float)Interpolation.ValueAt(OsuContainer.SongPosition, 1, OsuContainer.CircleExplodeScale, hitTime.Value, hitTime.Value + OsuContainer.Fadeout, EasingTypes.Out);
                 }
+
+                if (hitCircleAlpha == 0)
+                    return;
 
                 g.DrawRectangleCentered(hitCirclePos, Size * Skin.GetScale(Skin.SliderStartCircle) * scaleExplode, new Vector4(color.X, color.Y, color.Z, hitCircleAlpha), Skin.SliderStartCircle);
 
@@ -468,7 +473,7 @@ namespace RTCircles
                     sliderFollowScaleAnim.ClearTransforms();
 
                     //150ms if slider duration is longer than 150, else use slider duration.
-                    float time = Math.Min((int)OsuContainer.Fadeout, slider.EndTime - slider.StartTime);
+                    float time = Math.Min(150, slider.EndTime - slider.StartTime);
                     sliderFollowScaleAnim.TransformTo(SliderBallActiveScale, time, EasingTypes.Out);
                 }
                 else
@@ -631,7 +636,7 @@ namespace RTCircles
 
             //Fade out the slider based on its duration when hidden (bad mod)
             if (OsuContainer.Beatmap.Mods.HasFlag(Mods.HD))
-                SliderPath.Alpha = circleAlpha * Interpolation.ValueAt(OsuContainer.SongPosition.Clamp(slider.StartTime, slider.EndTime), 1, 0, slider.StartTime, slider.EndTime, EasingTypes.Out);
+                SliderPath.Alpha = circleAlpha * Interpolation.ValueAt(OsuContainer.SongPosition.Clamp(slider.StartTime, slider.EndTime), 1, 0, slider.StartTime, slider.EndTime, EasingTypes.None);
             else
             {
                 //If we reached the end of the slider and snake out is enabled and exploding is disabled, just instantly make it disappear

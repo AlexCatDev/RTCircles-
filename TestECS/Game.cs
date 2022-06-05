@@ -1,9 +1,92 @@
 ﻿using Easy2D;
 using Easy2D.Game;
 using OpenTK.Mathematics;
+using Silk.NET.Windowing;
+using System.Collections.Concurrent;
 
 namespace TestECS
 {
+    class Test
+    {
+        protected virtual void Render(ConcurrentQueue<Action> queue) { }
+
+        protected virtual void Update() { }
+
+        private ConcurrentQueue<Action> renderQueue = new ConcurrentQueue<Action>();
+
+        private volatile bool swapBuffers;
+
+        public readonly Graphics Graphics;
+
+        public readonly IView View;
+
+        void UpdateThread()
+        {
+            Update();
+
+            if (renderQueue.Count == 0)
+            {
+                Render(renderQueue);
+                swapBuffers = true;
+            }
+        }
+
+        void RenderThread()
+        {
+            while (renderQueue.Count == 0)
+                Thread.Sleep(1);
+
+            while (renderQueue.Count > 0)
+            {
+                if (renderQueue.TryDequeue(out Action action)) { action(); }
+            }
+
+            if(swapBuffers) {
+                View.SwapBuffers();
+                swapBuffers = false;
+            }
+        }
+    }
+
+    class DrawableTest
+    {
+        public Vector2 Position;
+
+        public void Render(Graphics g)
+        {
+            //We somehow need to record information about what we need to render here
+            //And we need to copy the data to the render thread
+            //But this still get executed right after update
+            //But we can't pass the data directly because then it could be changed mid frame which is not good
+        }
+
+        public void Update()
+        {
+            Position.X += 10;
+        }
+    }
+
+    class Tester : Test
+    {
+        protected override void Render(ConcurrentQueue<Action> queue)
+        {
+            foreach (var drawable in Drawables)
+            {
+                drawable.Render(queue);
+            }
+
+            queue.Enqueue(() =>
+            {
+
+            });
+        }
+
+        protected override void Update()
+        {
+            
+        }
+    }
+
     public class Game : GameBase
     {
         public static Game Instance { get; private set; }

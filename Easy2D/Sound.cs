@@ -76,8 +76,10 @@ namespace Easy2D
             DeviceLatency = Bass.Info.Latency;
             Utils.Log($"Audio device set to: {device.Info.Name} Latency: {DeviceLatency} Version: {Bass.Version}", LogLevel.Important);
         }
-#endregion
-        public int Handle { get; private set; }
+        #endregion
+        public int Handle { get; private set; } = 0;
+
+        public bool IsFunctional => Handle != 0;
 
         public bool IsPlaying => Bass.ChannelIsActive(Handle) == PlaybackState.Playing;
         public bool IsPaused => Bass.ChannelIsActive(Handle) == PlaybackState.Paused;
@@ -245,7 +247,7 @@ namespace Easy2D
 
         ~Sound()
         {
-            Utils.Log($"Deleting Sound handle -> [{Handle}]", LogLevel.Info);
+            Utils.Log($"Deleting Sound handle -> [{Handle}]", LogLevel.Debug);
             allHandles.Remove(Handle);
             bool success = Bass.StreamFree(Handle);
             if (success == false)

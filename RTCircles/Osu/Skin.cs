@@ -115,13 +115,13 @@ namespace RTCircles
         public Vector3? SliderTrackOverride = null;
 
         public string HitCirclePrefix = "default";
-        public float HitCircleOverlap = 22;
+        public float HitCircleOverlap = 0;
 
         public string ScorePrefix = "score";
-        public float ScoreOverlap = 22;
+        public float ScoreOverlap = 0;
 
         public string ComboPrefix = "score";
-        public float ComboOverlap = 22;
+        public float ComboOverlap = 0;
 
         public bool HitCircleOverlayAboveNumber = true;
 

@@ -159,6 +159,7 @@ namespace RTCircles
             offset.Y += HeaderSize.Y;
             offset.X += MainGame.WindowWidth - ElementSize.X;
             offset.Y += (float)scrollOffset;
+
             //Console.WriteLine(scrollOffset.ToString() + " min: " + ScrollMin + " actual: " + offset.Y + $" diff: {scrollOffset-offset.Y}");
             for (int i = 0; i < BeatmapCollection.SearchItems.Count; i++)
             {

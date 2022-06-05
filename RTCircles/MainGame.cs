@@ -48,6 +48,7 @@ namespace RTCircles
             Utils.IgnoredLogLevels.Add(LogLevel.Info);
             Utils.IgnoredLogLevels.Add(LogLevel.Success);
 #endif
+
             VSync = false;
             MaxAllowedDeltaTime = 0.1;
             Utils.WriteToConsole = true;
@@ -133,7 +134,7 @@ namespace RTCircles
 
             kiaiAnimation.Update((float)DeltaTime);
             Shaker.Update();
-            OsuContainer.Update(DeltaTime);
+            OsuContainer.Update(DeltaTime * 1000);
             ScreenManager.Update((float)DeltaTime);
         }
 
@@ -454,17 +455,21 @@ namespace RTCircles
 
             Input.InputContext.Keyboards[0].KeyDown += (s, e, x) =>
             {
+                
                 if (e == Key.F3)
                 {
                     new System.Threading.Thread(() => {
-                        NotificationManager.ShowMessage("Started import process!", new Vector3(0.5f, 0.5f, 0.5f), 2f);
+                        NotificationManager.ShowMessage("Started import process! close client to abort", new Vector3(0.5f, 0.5f, 0.5f), 2f);
+
+                        byte[] buffer = new byte[1024];
+
                         int startCount = BeatmapCollection.Items.Count;
                         if (!string.IsNullOrEmpty(GlobalOptions.OsuFolder.Value))
                         {
                             foreach (var item in System.IO.Directory.EnumerateDirectories(GlobalOptions.OsuFolder.Value + "/Songs"))
                             {
                                 if(!IsClosing)
-                                BeatmapMirror.ImportBeatmapFolder(item);
+                                BeatmapMirror.ImportBeatmapFolder(item, ref buffer);
                             }
                         }
                         int endCount = BeatmapCollection.Items.Count;
@@ -474,7 +479,7 @@ namespace RTCircles
 
                     return;
                 }
-
+                
 
                 if (Input.IsKeyDown(Key.F5) && Input.IsKeyDown(Key.ControlLeft) && Input.IsKeyDown(Key.ShiftLeft) && Input.IsKeyDown(Key.AltLeft))
                 {
@@ -529,6 +534,8 @@ namespace RTCircles
             float outroDuration = 0.125f;
             ScreenManager.OnOutroTransition += (delta) =>
             {
+                return true;
+
                 outroTime += delta;
                 outroTime = outroTime.Clamp(0f, outroDuration);
                 float progress = Interpolation.ValueAt(outroTime, 1f, 0f, 0f, outroDuration, EasingTypes.None);
@@ -546,6 +553,8 @@ namespace RTCircles
             float introTime = 0;
             ScreenManager.OnIntroTransition += (delta) =>
             {
+                return true;
+
                 introTime += delta;
                 introTime = introTime.Clamp(0f, introDuration);
                 float progress = Interpolation.ValueAt(introTime, 0f, 1f, 0f, introDuration, EasingTypes.None);

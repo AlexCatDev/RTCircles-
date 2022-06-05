@@ -20,7 +20,7 @@ namespace RTCircles
             TotalCreated++;
 
 #if DEBUG
-            Utils.Log($"{typeof(T).Name} : {TotalCreated}", LogLevel.Info);
+            //Utils.Log($"{typeof(T).Name} : {TotalCreated}", LogLevel.Info);
 #endif
 
             return newObj;

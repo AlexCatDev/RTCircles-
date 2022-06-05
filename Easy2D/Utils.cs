@@ -263,6 +263,16 @@ namespace Easy2D
             Utils.Log($"{name} took {time} milliseconds", LogLevel.Performance);
         }
 
+        public static string ComputeSHA256Hash(byte[] buffer, int offset, int length)
+        {
+            using (var sha256 = System.Security.Cryptography.SHA256.Create())
+            {
+                var hash = sha256.ComputeHash(buffer, offset, length);
+
+                return Convert.ToBase64String(hash);
+            }
+        }
+
         public static void CopyDirectory(string sourceDir, string destinationDir, bool recursive)
         {
             // Get information about the source directory
