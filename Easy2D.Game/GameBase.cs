@@ -65,7 +65,7 @@ namespace Easy2D.Game
             }
             set
             {
-                if(View is IWindow window)
+                if (View is IWindow window)
                     window.Size = value;
             }
         }

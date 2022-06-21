@@ -14,6 +14,7 @@ namespace RTCircles
         public static float SliderResolution = 1f;
 
         public static Vector2? SliderBallPositionForAuto { get; private set; }
+        public static bool SliderOnScreen { get; private set; } 
 
         private Slider slider;
 
@@ -44,7 +45,7 @@ namespace RTCircles
             if (GlobalOptions.UseFastSliders.Value)
                 SliderPath = new FastSlider();
             else
-                SliderPath = new BetterSlider();
+                SliderPath = new PooledSlider();
 
             this.slider = slider;
             this.colorIndex = colorIndex;
@@ -432,6 +433,8 @@ namespace RTCircles
 
         public override void OnRemove()
         {
+            SliderOnScreen = false;
+
             SliderBallPositionForAuto = null;
             SliderPath.Cleanup();
         }
@@ -647,6 +650,7 @@ namespace RTCircles
             }
 
             SliderPath.SetProgress(snakeOut, snakeIn);
+            SliderPath.SetRadius(OsuContainer.Beatmap.CircleRadiusInOsuPixels);
 
             if (OsuContainer.SongPosition > slider.StartTime + OsuContainer.Beatmap.Window50 && !IsHit && !IsMissed)
             {
@@ -662,6 +666,8 @@ namespace RTCircles
             //And they can start it very early or very late
             if (OsuContainer.SongPosition >= slider.EndTime)
                 fadeout = true;
+
+            SliderOnScreen = true;
         }
 
         public override void Render(Graphics g)
@@ -682,7 +688,6 @@ namespace RTCircles
             g.TrackColorOuter = Shade(-0.1f, new Vector4(sliderTrack, 1.0f)).Xyz;
             g.TrackColorInner = Shade(0.5f, new Vector4(sliderTrack, 1.0f)).Xyz;
 
-            SliderPath.SetRadius(OsuContainer.Beatmap.CircleRadiusInOsuPixels);
             SliderPath.Render(g);
 
             if (circleAlpha > 0)

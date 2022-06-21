@@ -103,5 +103,10 @@ namespace Easy2D
             (rect.Y < this.Y + this.Height) &&
             (this.Y < rect.Y + rect.Height);
         }
+
+        public override string ToString()
+        {
+            return $"Position: {Position} Size: {Size}";
+        }
     }
 }

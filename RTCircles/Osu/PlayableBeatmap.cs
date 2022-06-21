@@ -52,6 +52,8 @@ namespace RTCircles
 
         public List<double> DifficultyGraph = new List<double>();
 
+        public string BackgroundPath { get; private set; } = "";
+
         public string AudioPath { get; private set; } = "";
 
         public readonly AutoGenerator AutoGenerator = new AutoGenerator();
@@ -132,7 +134,11 @@ namespace RTCircles
 
             string bgPath = $"{folderPath}/{playableBeatmap.InternalBeatmap.EventsSection.BackgroundImage}";
 
-            if (File.Exists(bgPath))
+            playableBeatmap.BackgroundPath = bgPath;
+
+            if (playableBeatmap.BackgroundPath == OsuContainer.Beatmap?.BackgroundPath)
+                playableBeatmap.Background = OsuContainer.Beatmap.Background;
+            else if (File.Exists(bgPath)) 
                 playableBeatmap.Background = new Texture(File.OpenRead(bgPath));
             else
                 playableBeatmap.Background = Skin.DefaultBackground;
@@ -412,7 +418,7 @@ namespace RTCircles
                             if (spinTime >= spinner.EndTime)
                                 spinTime = spinner.EndTime;
 
-                            Vector2 spinPos = new Vector2(spinner.Position.X, spinner.Position.Y);
+                            Vector2 spinPos = new Vector2(512/2, 384/2);
 
                             spinPos.X += MathF.Cos(spinTime / 20f) * 50;
                             spinPos.Y += MathF.Sin(spinTime / 20f) * 50;

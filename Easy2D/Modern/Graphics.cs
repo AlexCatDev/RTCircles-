@@ -890,7 +890,8 @@ namespace Easy2D
 
         public Vector4 ShadowColor;
 
-        public Vector4 FinalColorMix = Vector4.One;
+        public Vector4 FinalColorMult = Vector4.One;
+        public Vector3 FinalColorAdd = Vector3.Zero;
 
         public float BorderWidth = 1.0f;
 
@@ -912,7 +913,8 @@ namespace Easy2D
             Shader.Bind();
             Shader.SetIntArray("u_Textures", textureSlots);
 
-            Shader.SetVector("u_FinalColorMix", FinalColorMix);
+            Shader.SetVector("u_FinalColorMult", FinalColorMult);
+            Shader.SetVector("u_FinalColorAdd", FinalColorAdd);
 
             #region SliderUniforms
             Shader.SetFloat("u_BorderWidth", BorderWidth);

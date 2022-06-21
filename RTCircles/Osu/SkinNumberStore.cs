@@ -9,7 +9,7 @@ namespace RTCircles
     {
         private Dictionary<int, Texture> numbers = new Dictionary<int, Texture>();
 
-        public IReadOnlyDictionary<int, Texture> Numbers => numbers;
+        public Dictionary<int, Texture> Numbers => numbers;
 
         private Texture commaTexture;
         private Texture percentTexture;
@@ -72,9 +72,7 @@ namespace RTCircles
                     texture = numbers[num];
                 }
 
-                float aspectRatio = (float)texture.Width / texture.Height;
-
-                Vector2 digitSize = new Vector2(ySize * aspectRatio, ySize);
+                Vector2 digitSize = new Vector2(ySize * texture.Size.AspectRatio(), ySize);
 
                 offset.Y = digitSize.Y;
 

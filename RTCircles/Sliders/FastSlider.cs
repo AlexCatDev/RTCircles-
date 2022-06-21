@@ -142,5 +142,10 @@ namespace RTCircles
         {
 
         }
+
+        public void OffscreenRender()
+        {
+            
+        }
     }
 }

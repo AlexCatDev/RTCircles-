@@ -8,26 +8,47 @@ using System.Text;
 namespace Easy2D
 {
     /// <summary>
-    /// Slightly faster versio of Graphics
+    /// Slightly faster version of Graphics
     ///</summary>
     public class FastGraphics
     {
+        private static readonly Dictionary<string, string> fragmentPreprocessor = new Dictionary<string, string>();
+        private static readonly int[] textureSlots;
+
         private static int MaxTextureSlots;
 
         static FastGraphics()
         {
-            GL.Instance.GetInteger(GetPName.MaxVertexTextureImageUnits, out MaxTextureSlots);
-            if (MaxTextureSlots == 0 || MaxTextureSlots == 8)
+            MaxTextureSlots = GL.MaxTextureSlots;
+            /*
+            if (MaxTextureSlots == 0)
                 MaxTextureSlots = 8;
-            else
-                MaxTextureSlots = 16;
 
-            Utils.Log($"MaxTextureSlots: {MaxTextureSlots}", LogLevel.Info);
+            MaxTextureSlots = 16;
+            */
+            Utils.Log($"Max Available Texture Slots: {MaxTextureSlots}", LogLevel.Important);
+
+            textureSlots = new int[MaxTextureSlots];
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("switch(v_TextureSlot) {");
+            for (int i = 0; i < MaxTextureSlots; i++)
+            {
+                textureSlots[i] = i;
+
+                sb.AppendLine($"case {i}: texColor = texture(u_Textures[{i}], v_TexCoordinate); break;");
+            }
+            sb.AppendLine("}");
+
+            fragmentPreprocessor = new()
+            {
+                { "//#SWITCH", sb.ToString() },
+                { "//#uniform sampler2D u_Textures[];", $"uniform sampler2D u_Textures[{MaxTextureSlots}];" }
+            };
         }
 
         private int bindTextureIndex = 0;
         private Dictionary<Texture, int> texturesToBind = new Dictionary<Texture, int>();
-        private static readonly int[] slots = new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31 };
 
         public Matrix4 Projection;
 
@@ -58,6 +79,8 @@ namespace Easy2D
 
             Shader.AttachShader(ShaderType.VertexShader, Utils.GetInternalResource("Shaders.Default.vert"));
             Shader.AttachShader(ShaderType.FragmentShader, Utils.GetInternalResource("Shaders.Default.frag"));
+
+            Shader.AttachPreprocessor(ShaderType.FragmentShader, fragmentPreprocessor);
         }
 
         public void Recompile()
@@ -771,6 +794,9 @@ namespace Easy2D
 
         public Vector4 ShadowColor;
 
+        public Vector4 FinalColorMult = Vector4.One;
+        public Vector3 FinalColorAdd = Vector3.Zero;
+
         public float BorderWidth = 1.0f;
 
         private bool slotArrayFlag = true;
@@ -793,9 +819,12 @@ namespace Easy2D
             Shader.Bind();
             if (slotArrayFlag)
             {
-                Shader.SetIntArray("u_Textures", slots);
+                Shader.SetIntArray("u_Textures", textureSlots);
                 slotArrayFlag = false;
             }
+
+            Shader.SetVector("u_FinalColorMult", FinalColorMult);
+            Shader.SetVector("u_FinalColorAdd", FinalColorAdd);
 
             #region SliderUniforms
             Shader.SetFloat("u_BorderWidth", BorderWidth);

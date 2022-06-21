@@ -1,4 +1,5 @@
 ﻿using Easy2D;
+using OpenTK.Mathematics;
 using Silk.NET.Input;
 using System;
 using System.Collections.Generic;
@@ -60,6 +61,8 @@ namespace RTCircles
         private static Stack<Type> screenHistory = new Stack<Type>();
 
         private static double transitionStartTime = 0;
+        private static bool captureScreenFlag = false;
+        private static FrameBuffer previousScreenFramebuffer = new FrameBuffer(1, 1);
 
         public static void GoBack()
         {
@@ -82,6 +85,7 @@ namespace RTCircles
             Utils.Log($"{screen.GetType().Name} <- {currentScreen.GetType().Name}", LogLevel.Info);
 
             transitionStartTime = MainGame.Instance.TotalTime;
+            captureScreenFlag = true;
             inIntroSequence = true;
             inOutroSequence = false;
             currentScreen.OnExiting();
@@ -116,6 +120,7 @@ namespace RTCircles
                     screenHistory.Push(currentScreen.GetType());
 
                 transitionStartTime = MainGame.Instance.TotalTime;
+                captureScreenFlag = true;
                 inIntroSequence = true;
                 inOutroSequence = false;
                 currentScreen.OnExiting();
@@ -137,33 +142,49 @@ namespace RTCircles
 
             if (inIntroSequence)
             {
+                if (captureScreenFlag)
+                {
+                    previousScreenFramebuffer.EnsureSize(MainGame.WindowSize.X, MainGame.WindowSize.Y);
+
+                    g.DrawInFrameBuffer(previousScreenFramebuffer, () =>
+                    {
+                        currentScreen.Render(g);
+                    });
+
+                    captureScreenFlag = false;
+
+                    currentScreen.OnExit();
+
+                    currentScreen = screenToTransitionTo;
+
+                    currentScreen.OnEntering();
+                }
+
                 double startTime = transitionStartTime;
                 double endTime = transitionStartTime + DURATION;
                 var easing = EasingTypes.Out;
 
                 float alpha = (float)Interpolation.ValueAt(MainGame.Instance.TotalTime.Clamp(startTime, endTime),
-                    1, 0, startTime, endTime, easing);
+                    0, 1, startTime, endTime, easing);
 
-                //lol
-
-                g.FinalColorMix.W = 1 - alpha;
-                screenToTransitionTo.Render(g);
-                g.EndDraw();
-
-                g.FinalColorMix.W = alpha;
                 currentScreen.Render(g);
-                g.EndDraw();
 
-                g.FinalColorMix.W = 1;
-                if(alpha == 0)
+                if (alpha == 1)
                 {
-                    currentScreen.OnExit();
-                    currentScreen = screenToTransitionTo;
-
-                    currentScreen.OnEntering();
                     currentScreen.OnEnter();
 
                     inIntroSequence = false;
+                }
+                else
+                {
+                    //g.FinalColorMult.W = alpha;
+                    //currentScreen.Render(g);
+                    //g.EndDraw();
+
+                    //g.FinalColorMult.W = 1;
+                    g.DrawFrameBuffer(Vector2.Zero, new Vector4(new Vector3(1), 1 - alpha), previousScreenFramebuffer);
+                    //g.EndDraw();
+
                 }
             }
             else
@@ -175,11 +196,6 @@ namespace RTCircles
         public static void Update(float delta)
         {
             currentScreen.Update(delta);
-
-            if (inIntroSequence)
-            {
-                screenToTransitionTo.Update(delta);
-            }
         }
 
         public static void OnTextInput(char c)

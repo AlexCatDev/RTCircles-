@@ -282,8 +282,6 @@ namespace RTCircles
         {
             drawPlayfieldBorder(g);
 
-            drawURBar(g);
-
             drawComboText(g);
 
             drawScoreAccTime(g);
@@ -291,6 +289,8 @@ namespace RTCircles
             drawHPBar(g);
 
             drawKeyOverlay(g);
+
+            drawURBar(g);
 
             if (OsuContainer.CookieziMode && ScreenManager.ActiveScreen is OsuScreen)
                 g.DrawStringCentered("Auto Play", ResultScreen.Font, new Vector2(MainGame.WindowCenter.X, 40*MainGame.Scale), new Vector4(0.6f, 0.6f, 0.6f, (float)Math.Cos(MainGame.Instance.TotalTime * 2).Map(-1, 1, 0.7f, 1f)), 1f * MainGame.Scale);

@@ -453,12 +453,10 @@ namespace RTCircles
 
             Vector2 position = new Vector2(0, MainGame.WindowHeight - size.Y);
 
-            //Vector2 songPosPos = new Vector2((float)OsuContainer.SongPosition.Map(OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime, OsuContainer.Beatmap.HitObjects[^1].BaseObject.StartTime, position.X, position.X + size.X), position.Y + poo.Y / 4);
-
             float songX = (float)OsuContainer.SongPosition.Map(OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime, OsuContainer.Beatmap.HitObjects[^1].BaseObject.StartTime, 0, 1).Clamp(0, 1);
 
             Vector4 progressColor = new Vector4(0.6f, 1f, 0.6f, 0.35f);
-            Vector4 progressNotColor = new Vector4(0.5f, 0.5f, 0.5f, 0.35f);
+            Vector4 progressNotColor = new Vector4(0f, 0f, 0f, 0.5f);
 
             Rectangle texRectProgress = new Rectangle(0, 0, songX, 1);
 

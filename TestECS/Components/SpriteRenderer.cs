@@ -22,6 +22,8 @@
 
         public override void Update()
         {
+
+
             Game.Renderer.DrawRectangle(transform.Position, transform.Size, sprite.Color, sprite.Texture, null, false, transform.Rotation);
 
             //Console.WriteLine("SpriteRenderer Transform: "+transform);

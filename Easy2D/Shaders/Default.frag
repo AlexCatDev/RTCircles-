@@ -5,7 +5,8 @@ precision mediump float;
 //Programmatically insert the correct amount of textures supported on this system
 //#uniform sampler2D u_Textures[];
 
-uniform vec4 u_FinalColorMix;
+uniform vec4 u_FinalColorMult;
+uniform vec3 u_FinalColorAdd;
 
 in vec2 v_TexCoordinate;
 in vec4 v_Color;
@@ -34,7 +35,7 @@ vec3 light(vec2 lightPos, float lightRadius, vec2 normal, vec3 color)
 
     vec2 toLight = (lightPos - pixelPos);
 
-    vec3 lightcolor = vec3(1.0);
+    vec3 lightcolor = color;
 
     // This computes how much is the pixel lit based on where it faces
     float brightness = clamp(dot(normalize(toLight), normal), 0.0, 1.0);
@@ -127,8 +128,7 @@ void main() {
     else
 	    FragColor = slider(texColor);
 
-
-    FragColor *= u_FinalColorMix;
+    FragColor = (FragColor * u_FinalColorMult) + vec4(u_FinalColorAdd, 0);
 
     /*
     vec2 Size = vec2(113, 10);

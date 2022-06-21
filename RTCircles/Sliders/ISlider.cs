@@ -22,5 +22,7 @@ namespace RTCircles
         public void SetPoints(List<Vector2> points);
         public void SetProgress(float startProgress, float endProgress);
         public void Render(Graphics g);
+
+        public void OffscreenRender();
     }
 }

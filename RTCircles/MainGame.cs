@@ -132,6 +132,18 @@ namespace RTCircles
             else
                 PostProcessing.BloomThreshold = 0.8f;
 
+            PostProcessing.BloomThreshold = 1;
+
+            if (PostProcessing.Bloom)
+            {
+                var mult = kiaiAnimation.Value * (ScreenManager.ActiveScreen is OsuScreen ? 0.5f : 0.1f);  
+                g.FinalColorMult.Xyz = new Vector3(1 + mult);
+            }
+            else
+            {
+                g.FinalColorMult.Xyz = new Vector3(1);
+            }
+
             kiaiAnimation.Update((float)DeltaTime);
             Shaker.Update();
             OsuContainer.Update(DeltaTime * 1000);
@@ -221,10 +233,10 @@ namespace RTCircles
 
                 StringBuilder sb = new StringBuilder();
 
-                sb.Append($"Mem: {mem:F0}mb DrawCalls: {GL.DrawCalls} FPS: {FPS}/{ms:F2}ms");
+                string text = $"Mem: {mem:F0}mb DrawCalls: {GL.DrawCalls} FPS: {FPS}/{ms:F2}ms UPS: {UPS}";
 
-                string text = $"Mem: {mem:F0}mb DrawCalls: {GL.DrawCalls} FPS: {FPS}/{ms:F2}ms";
-                
+                sb.Append(text);
+
                 Vector2 hoverSize = Font.DefaultFont.MessureString(text, scale);
                 Vector2 hoverPos = new Vector2(WindowWidth, WindowHeight) - hoverSize;
 

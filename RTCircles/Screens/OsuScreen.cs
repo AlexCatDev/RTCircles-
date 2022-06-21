@@ -404,6 +404,21 @@ namespace RTCircles
             drawBackground(g);
             //drawSmoke(g);
 
+            //Check if a slider is on screen?
+            if (DrawableSlider.SliderOnScreen)
+            {
+                var prevViewport = Viewport.CurrentViewport;
+                GL.Instance.Enable(Silk.NET.OpenGLES.EnableCap.DepthTest);
+                for (int i = 0; i < children.Count; i++)
+                {
+                    if (children[i] is DrawableSlider slider)
+                        slider.SliderPath.OffscreenRender();
+                }
+                GL.Instance.Disable(Silk.NET.OpenGLES.EnableCap.DepthTest);
+                FrameBuffer.BindDefault();
+                Viewport.SetViewport(prevViewport);
+            }
+
             //Here we render the hitobjects, they are apart of the screen
             base.Render(g);
 

@@ -3,24 +3,29 @@ using OpenTK.Mathematics;
 using Silk.NET.OpenGLES;
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace RTCircles
 {
-    //Batching the sliders solved alot of issues
+    internal class SliderFrameBuffer
+    {
+        public FrameBuffer FrameBuffer { get; private set; }
 
-    //TODO: Optimizations
-    //fuck the interpolating cancer, i will fix later 
-    //+ optimize to use polylines for less vertices
+        public static Vector2i BufferSpace = new Vector2i(512, 384);
 
-    //Disable snaking on mobile?
-    public class BetterSlider : ISlider
+        public SliderFrameBuffer()
+        {
+            FrameBuffer = new FrameBuffer(512 + BufferSpace.X, 384 + BufferSpace.Y,
+            FramebufferAttachment.DepthAttachment, InternalFormat.DepthComponent, PixelFormat.DepthComponent, PixelType.UnsignedShort);
+        }
+    }
+
+    public class PooledSlider : ISlider
     {
         private const int CIRCLE_RESOLUTION = 40;
 
         private static readonly Easy2D.Shader sliderShader = new Easy2D.Shader();
 
-        static BetterSlider()
+        static PooledSlider()
         {
             sliderShader.AttachShader(ShaderType.VertexShader, Utils.GetResource("Sliders.slider.vert"));
             sliderShader.AttachShader(ShaderType.FragmentShader, Utils.GetResource("Sliders.slider.frag"));
@@ -30,8 +35,9 @@ namespace RTCircles
 
         private float radius = -1;
 
-        private FrameBuffer frameBuffer = new FrameBuffer(1, 1, FramebufferAttachment.DepthAttachment,
-            InternalFormat.DepthComponent, PixelFormat.DepthComponent, PixelType.UnsignedShort);
+        private SliderFrameBuffer sliderFrameBuffer;
+
+        private FrameBuffer frameBuffer => sliderFrameBuffer.FrameBuffer;
 
         //1mb for stupid aspire abuse sliders
         //Also optimize circle betweens points, so i can cut this down and in turn the amount of vertices to render
@@ -114,7 +120,7 @@ namespace RTCircles
         private void drawSlider()
         {
             //The path coordinates are in osu pixel space, and we need to convert them to framebuffer space
-            Vector2 posOffset = Path.Bounds.Position - new Vector2(radius);
+            Vector2 posOffset = -SliderFrameBuffer.BufferSpace / 2;
 
             float startLength = Path.Length * startProgress;
             float endLength = Path.Length * endProgress;
@@ -174,19 +180,7 @@ namespace RTCircles
             if (this.radius != radius)
             {
                 this.radius = radius;
-
-                int beforeWidth = frameBuffer.Width;
-                int beforeHeight = frameBuffer.Height;
-
-                //Make framebuffer the size of the slider bounding box, + the circle radius (circle radius and size is in osu pixels)
-                frameBuffer.EnsureSize(Path.Bounds.Width + radius * 2, Path.Bounds.Height + radius * 2);
-
-                //Cant really rely on a float comparison
-                if (beforeWidth != frameBuffer.Width || beforeHeight != frameBuffer.Height)
-                {
-                    projectionMatrix = Matrix4.CreateOrthographicOffCenter(0, frameBuffer.Width, frameBuffer.Height, 0, 1f, -1f);
-                    hasBeenUpdated = true;
-                }
+                hasBeenUpdated = true;
             }
         }
 
@@ -209,8 +203,6 @@ namespace RTCircles
 
         private bool hasBeenUpdated = true;
 
-        private Matrix4 projectionMatrix;
-
         public Path Path => path;
 
         /// <summary>
@@ -223,6 +215,27 @@ namespace RTCircles
         public Vector2? ScalingOrigin { get; set; }
         public float Alpha { get; set; }
 
+        public void OffscreenRender()
+        {
+            if (sliderFrameBuffer == null)
+                sliderFrameBuffer = ObjectPool<SliderFrameBuffer>.Take();
+
+            if (!hasBeenUpdated)
+                return;
+
+            hasBeenUpdated = false;
+
+            //Avoid 'context' switches by rendering all the sliders in the background first
+
+            frameBuffer.Bind();
+
+            Viewport.SetViewport(0, 0, frameBuffer.Width, frameBuffer.Height);
+            GL.Instance.Clear(ClearBufferMask.DepthBufferBit);
+            sliderShader.Bind();
+            sliderShader.SetMatrix("u_Projection", Matrix4.CreateOrthographicOffCenter(0, frameBuffer.Width, 0, frameBuffer.Height, 1, -1));
+            drawSlider();
+        }
+
         public void Render(Graphics g)
         {
             if (Precision.AlmostEquals(Alpha, 0))
@@ -231,56 +244,63 @@ namespace RTCircles
             if (radius < -1)
                 throw new Exception("Slider radius was less than 0????");
 
-            if (Path.Points.Count == 0 || (frameBuffer.Status != GLEnum.FramebufferComplete && frameBuffer.IsInitialized))
+            //Console.WriteLine(ObjectPool<SliderFrameBuffer>.TotalCreated);
+
+            if (Path.Points.Count == 0)
             {
-                g.DrawString($"Aspire slider brr\nPoints: {Path.Points.Count} {frameBuffer.Width}x{frameBuffer.Height}", Font.DefaultFont, Path.CalculatePositionAtProgress(0), Colors.Red);
+                g.DrawString($"No slider points?", Font.DefaultFont, Path.CalculatePositionAtProgress(0), Colors.Red);
                 return;
             }
 
-            if (hasBeenUpdated)
-                hasBeenUpdated = false;
-            else
-                goto skipSliderCreation;
-
-            var prevViewport = Viewport.CurrentViewport;
-
-            frameBuffer.Bind();
-            GL.Instance.Enable(EnableCap.DepthTest);
-            Viewport.SetViewport(0, 0, frameBuffer.Width, frameBuffer.Height);
-            GL.Instance.Clear(ClearBufferMask.DepthBufferBit);
-            sliderShader.Bind();
-            sliderShader.SetMatrix("u_Projection", projectionMatrix);
-            drawSlider();
-
-            frameBuffer.Unbind();
-
-            GL.Instance.Disable(EnableCap.DepthTest);
-            Viewport.SetViewport(prevViewport);
-
+        /*
+        OsuContainer.SongPosition = OsuContainer.Beatmap.HitObjects[^1].BaseObject.StartTime - 100;
+        ScreenManager.GetScreen<OsuScreen>().EnsureObjectIndexSynchronization();
+        */
 
         //Batched slider quads!
-        skipSliderCreation:
-            Rectangle bounds = Path.Bounds;
-
-            bounds.X -= radius;
-            bounds.Y -= radius;
-
-            Rectangle texCoords;
+            Rectangle texCoords = new Rectangle();
             Vector2 renderPosition;
+
+            var tx = path.Bounds.X - radius + SliderFrameBuffer.BufferSpace.X / 2;
+            var ty = path.Bounds.Y - radius + SliderFrameBuffer.BufferSpace.Y / 2;
+            var tsize = Path.Bounds.Size + new Vector2(radius * 2);
+
+            texCoords.X = tx;
+            texCoords.Y = ty;
+            texCoords.Width = tsize.X;
+            texCoords.Height = tsize.Y;
+
             //If hr is on change the way the slider is rendered so it matches
             if (OsuContainer.Beatmap.Mods.HasFlag(Mods.HR))
             {
-                texCoords = new Rectangle(0, 0, 1, 1);
-                renderPosition = OsuContainer.MapToPlayfield(bounds.Position.X, bounds.Position.Y + frameBuffer.Height);
+                //texCoords = new Rectangle(0, 1, 1, -1);
+                texCoords.Y += tsize.Y;
+                texCoords.Height = -tsize.Y;
+                renderPosition = OsuContainer.MapToPlayfield(Path.Bounds.X - radius, Path.Bounds.Y + Path.Bounds.Height + radius);
             }
             else
             {
-                texCoords = new Rectangle(0, 1, 1, -1);
-                renderPosition = OsuContainer.MapToPlayfield(bounds.Position.X, bounds.Position.Y);
+
+                renderPosition = OsuContainer.MapToPlayfield(Path.Bounds.Position - new Vector2(radius));
             }
 
             //Convert the size of the slider from osu pixels to playfield pixels, since the points and the radius are in osu pixels
-            Vector2 renderSize = new Vector2(frameBuffer.Width, frameBuffer.Height) * (OsuContainer.Playfield.Width / 512);
+            Vector2 renderSize = (Path.Bounds.Size + new Vector2(radius * 2));
+
+            renderSize *= OsuContainer.Playfield.Width / 512;
+
+            /*
+            g.DrawRectangle(OsuContainer.Playfield.TopLeft, OsuContainer.Playfield.Size, new Vector4(0f, 1f, 0, 0.2f));
+
+            g.DrawRectangle(Vector2.Zero, frameBuffer.Texture.Size, new Vector4(1f, 1f, 0, 0.2f), frameBuffer.Texture);
+
+            g.DrawRectangleCentered(new Vector2(tx, ty), new Vector2(4), Colors.Red);
+
+            g.DrawRectangle(new Vector2(tx, ty), tsize, new Vector4(1f, 0f, 0f, 0.2f));
+            */
+
+            //Console.WriteLine(renderSize);
+            //g.DrawRectangle(renderPosition, renderSize, new Vector4(1, 1, 1, Alpha * 0.5f));
 
             if (ScalingOrigin.HasValue)
             {
@@ -293,12 +313,12 @@ namespace RTCircles
                 //The color is 10000 red, to make the shader know that this is a slider, see Default.Frag
                 //i had to hack this in since otherwise i would have to end the graphics batch, render this, and begin the graphics batch again
                 //causing huge performance dips on mobile
-                g.DrawRectangle(fp, size, new Vector4(10000, 0, 0, Alpha), frameBuffer.Texture, texCoords, true);
+                g.DrawRectangle(fp, size, new Vector4(10000, 0, 0, Alpha), frameBuffer.Texture, texCoords, false);
             }
             else
             {
                 //^ and we draw this, within the main batcher
-                g.DrawRectangle(renderPosition, renderSize, new Vector4(10000, 0, 0, Alpha), frameBuffer.Texture, texCoords, true);
+                g.DrawRectangle(renderPosition, renderSize, new Vector4(10000, 0, 0, Alpha), frameBuffer.Texture, texCoords, false);
 
                 //g.DrawRectangle(renderPosition, renderSize, new Vector4(10000, 0, 0, Alpha), frameBuffer.Texture, texCoords, renderPosition, (float)MainGame.Instance.TotalTime);
             }
@@ -311,17 +331,10 @@ namespace RTCircles
 
         public void Cleanup()
         {
-            GPUSched.Instance.Enqueue(() =>
-            {
-                //Todo: Check if delete is still pending when this is called.         
-                frameBuffer.Delete();
-                hasBeenUpdated = true;
-            });
-        }
+            ObjectPool<SliderFrameBuffer>.Return(sliderFrameBuffer);
+            sliderFrameBuffer = null;
 
-        public void OffscreenRender()
-        {
-            throw new NotImplementedException();
+            hasBeenUpdated = true;
         }
     }
 }

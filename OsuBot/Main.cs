@@ -183,203 +183,216 @@ namespace OsuBot
 
             if (playQueue.TryDequeue(out SocketMessage message))
             {
-                var args = message.Content.Split(' ').ToList();
+                try {
+                    var args = message.Content.Split(' ').ToList();
 
-                //Remove >video from the list of strings
-                args.RemoveAt(0);
+                    //Remove >video from the list of strings
+                    args.RemoveAt(0);
 
-                //Parse all the shit
-                CommandBuffer commandBuffer = new CommandBuffer(args, "");
+                    //Parse all the shit
+                    CommandBuffer commandBuffer = new CommandBuffer(args, "");
 
-                if (commandBuffer.Count == 0)
-                {
-                    message.Channel.SendMessageAsync($"`How to use:`\n>video <**username** OR **map link**> <*optional* time eg **1:30** mm:ss> <*optional* **-dance** to cursor dance>");
-                    return;
-                }
-
-                TimeSpan? customStartTime = null;
-                commandBuffer.Take((str) =>
-                {
-                    if (TimeSpan.TryParseExact(str, "m\\:s", System.Globalization.CultureInfo.InvariantCulture, out var time))
+                    if (commandBuffer.Count == 0)
                     {
-                        customStartTime = time;
-                        return true;
-                    }
-
-                    return false;
-                });
-
-                RTCircles.GlobalOptions.AutoCursorDance.Value = commandBuffer.HasParameter("-dance");
-
-                var enabledMods = RTCircles.Mods.NM;
-
-                ulong? beatmapID = Utilities.BeatmapUrlToMapID(message, commandBuffer);
-
-                //check if the commands contains a beatmap url
-                if (!beatmapID.HasValue)
-                {
-                    //If it doesn't then try to parse the remaining as a username
-
-                    string username = commandBuffer.GetRemaining(" ");
-
-                    var recentPlay = banchoAPI.GetRecentPlays(username);
-
-                    if (recentPlay.Count == 0)
-                    {
-                        message.Channel.SendMessageAsync($"`{username}` has no recent plays. :face_with_raised_eyebrow:");
+                        message.Channel.SendMessageAsync($"`How to use:`\n>video <**username** OR **map link**> <*optional* time eg **1:30** mm:ss> <*optional* **-dance** to cursor dance>");
                         return;
                     }
 
-                    enabledMods = recentPlay[0].EnabledMods;
-
-                    beatmapID = recentPlay[0].BeatmapID;
-                }
-                else
-                {
-                    //Else if we did infact receive a beatmap url, try to parse the mods if any
-                    enabledMods = Utilities.StringToMod(commandBuffer.GetRemaining());
-                }
-
-                Utils.Log($"Dequeued a play: {message.Content}", Easy2D.LogLevel.Important);
-
-                //Setup video encoding
-
-                string outputFilename = $@"C:\Users\user\Desktop\TempOsuBot/{Guid.NewGuid().ToString()}.mp4";
-
-                var videoSettings = new VideoEncoderSettings(width: OUTPUT_WIDTH, height: OUTPUT_HEIGHT, framerate: OUTPUT_FPS, codec: VideoCodec.H264);
-                videoSettings.EncoderPreset = EncoderPreset.Fast;
-                videoSettings.CRF = 24;
-
-                var audioSettings = new AudioEncoderSettings(44100, 2, AudioCodec.Default);
-
-                var videoFile = MediaBuilder.CreateContainer(outputFilename, ContainerFormat.MP4)
-                    .WithVideo(videoSettings).Create();
-
-                //Now get or download the beatmap file (.osu) only, which contains all the beatmap text.
-                var beatmapText = BeatmapManager.GetBeatmap(beatmapID.Value);
-
-                //We split the beatmap text into lines which then get parsed to a osu beatmap
-                var rawBeatmap = OsuParsers.Decoders.BeatmapDecoder.Decode(beatmapText.Split("\r\n"));
-
-                //Setup a 'playable' beatmap
-                RTCircles.PlayableBeatmap beatmap = new RTCircles.PlayableBeatmap(
-                    rawBeatmap, null, null, null);
-
-                //Here we convert the hitobjects into actual renderable representations
-                //Here we parse in the mods we want to use, (Mods doesn't actually do anything to the objects)
-                //Í have a weird system for this, but the AR/OD/CS/HP does get adjusted based on the mods
-                beatmap.GenerateHitObjects(RTCircles.Mods.Auto | enabledMods);
-
-                //Now we notify the 'master container' to set map
-                //I knows about the playfield size, and ensures timing points and shit
-                RTCircles.OsuContainer.SetMap(beatmap);
-
-
-                //Reset state, resets the score,accuracy, sets the object spawn index to 0, and other things
-                osuScreen.ResetState();
-
-                //Now check if a custom start time was included in our command
-                if (!customStartTime.HasValue)
-                {
-                    //If it wasn't then we have to figure out a senseable start point ourselves
-
-                    //Make start time the first kiai
-                    var startTime = rawBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai)?.Offset ?? 0;
-
-                    //If theres no kiai, use the preview time
-                    if (startTime <= 0)
-                        startTime = rawBeatmap.GeneralSection.PreviewTime;
-
-                    var firstObject = beatmap.HitObjects[0];
-                    
-                    //if the preview time is less than the first object, then we just start at the first object
-                    if (startTime < firstObject.BaseObject.StartTime)
-                        startTime = firstObject.BaseObject.StartTime - (int)RTCircles.OsuContainer.Beatmap.Preempt;
-
-                    RTCircles.OsuContainer.SongPosition = startTime;
-                }
-                else
-                {
-                    //If we had a custom time, use that
-                    RTCircles.OsuContainer.SongPosition = customStartTime.Value.TotalMilliseconds;
-                }
-
-                //Ensure we are synchronized up to that point, so we dont start spawning all objects from 0
-                osuScreen.EnsureObjectIndexSynchronization();
-
-                string displayMods = "\n";
-
-                foreach (RTCircles.Mods value in Enum.GetValues<RTCircles.Mods>())
-                {
-                    if (value == RTCircles.Mods.NM)
-                        continue;
-
-                    if (enabledMods.HasFlag(value))
-                        displayMods += $"+{value.ToString()} ";
-                }
-
-                if (displayMods == "\n")
-                    displayMods = string.Empty;
-
-                var mapText = $"{rawBeatmap.MetadataSection.Artist} - {rawBeatmap.MetadataSection.Title} [{rawBeatmap.MetadataSection.Version}]{displayMods}";
-
-                var endTimeSpan = TimeSpan.FromMilliseconds(beatmap.HitObjects[^1].BaseObject.EndTime - beatmap.HitObjects[0].BaseObject.StartTime);
-                var endTimeSpanString = (Math.Floor(endTimeSpan.TotalMinutes) + ":" + endTimeSpan.ToString("ss"));
-                var timeSpanScale = 0.5f;
-
-                for (int i = 0; i < FRAMES_TO_RENDER; i++)
-                {
-                    //Clear the image
-                    GL.Instance.Clear(Silk.NET.OpenGLES.ClearBufferMask.ColorBufferBit);
-
-                    //Render the osu gameplay
-                    renderTick(i, message);
-
-                    //Render the overlay with time and other info
-                    var currentTimeSpan = TimeSpan.FromMilliseconds(RTCircles.OsuContainer.SongPosition - beatmap.HitObjects[0].BaseObject.StartTime);
-                    string currentTimeSpanString = (Math.Floor(currentTimeSpan.TotalMinutes) + ":" + currentTimeSpan.ToString("ss"));
-
-                    //graphics.DrawStringNoAlign($"{i+1}/{FRAMES_TO_RENDER}", Font.DefaultFont, new Vector2(3, 3), Colors.White, 0.25f);
-
-                    graphics.DrawString(mapText, Font.DefaultFont, new Vector2(3), new Vector4(0.9f), 0.35f);
-
-                    string timeSpanString = $"{currentTimeSpanString}/{endTimeSpanString}";
-
-                    var timeSpanTextSize = Font.DefaultFont.MessureString(timeSpanString, timeSpanScale);
-                    graphics.DrawString(timeSpanString, Font.DefaultFont, Viewport.Area.TopRight - new Vector2(timeSpanTextSize.X, 0), Colors.White, timeSpanScale);
-
-                    //Update the projection (this never changes can be cached todo)
-                    graphics.Projection = Matrix4.CreateOrthographicOffCenter(0, frameBuffer.Width, 0, frameBuffer.Height, -1, 1);
-                    //Now finally actually draw everything we have batched
-                    graphics.EndDraw();
-
-                    //OpenGL wants to be hot shit and do asynchronous stuff, we have to ensure all commands finish before capturing the off-screen rendered image
-                    GL.Instance.Finish();
-
-                    unsafe
+                    TimeSpan? customStartTime = null;
+                    commandBuffer.Take((str) =>
                     {
-                        //Pin the pixelBuffer
-                        fixed (void* framePtr = pixelBuffer)
+                        if (TimeSpan.TryParseExact(str, "m\\:s", System.Globalization.CultureInfo.InvariantCulture, out var time))
                         {
-                            //Read the pixels into the pixelBuffer
-                            GL.Instance.ReadPixels(0, 0, (uint)OUTPUT_WIDTH, (uint)OUTPUT_HEIGHT,
-                                Silk.NET.OpenGLES.PixelFormat.Rgb, Silk.NET.OpenGLES.PixelType.UnsignedByte, framePtr);
+                            customStartTime = time;
+                            return true;
                         }
 
-                        //Add the video frame
-                        videoFile.Video.AddFrame(new FFMediaToolkit.Graphics.ImageData(
-                                new Span<byte>(pixelBuffer),
-                                FFMediaToolkit.Graphics.ImagePixelFormat.Rgb24,
-                                new System.Drawing.Size(OUTPUT_WIDTH, OUTPUT_HEIGHT)));
+                        return false;
+                    });
+
+                    RTCircles.GlobalOptions.AutoCursorDance.Value = commandBuffer.HasParameter("-dance");
+
+                    RTCircles.GlobalOptions.UseFancyCursorTrail.Value = RTCircles.GlobalOptions.AutoCursorDance.Value;
+
+                    var enabledMods = RTCircles.Mods.NM;
+
+                    ulong? beatmapID = Utilities.BeatmapUrlToMapID(message, commandBuffer);
+
+                    //check if the commands contains a beatmap url
+                    if (!beatmapID.HasValue)
+                    {
+                        //If it doesn't then try to parse the remaining as a username
+
+                        string username = commandBuffer.GetRemaining(" ");
+
+                        var recentPlay = banchoAPI.GetRecentPlays(username);
+
+                        if (recentPlay.Count == 0)
+                        {
+                            message.Channel.SendMessageAsync($"`{username}` has no recent plays. :face_with_raised_eyebrow:");
+                            return;
+                        }
+
+                        enabledMods = recentPlay[0].EnabledMods;
+
+                        beatmapID = recentPlay[0].BeatmapID;
                     }
+                    else
+                    {
+                        //Else if we did infact receive a beatmap url, try to parse the mods if any
+                        enabledMods = Utilities.StringToMod(commandBuffer.GetRemaining());
+
+                        if (enabledMods == RTCircles.Mods.Null)
+                            enabledMods = RTCircles.Mods.NM;
+                    }
+
+                    Utils.Log($"Dequeued a play: {message.Content}", Easy2D.LogLevel.Important);
+
+                    //Setup video encoding
+
+                    string outputFilename = $@"C:\Users\user\Desktop\TempOsuBot/{Guid.NewGuid().ToString()}.mp4";
+
+                    var videoSettings = new VideoEncoderSettings(width: OUTPUT_WIDTH, height: OUTPUT_HEIGHT, framerate: OUTPUT_FPS, codec: VideoCodec.H264);
+                    videoSettings.EncoderPreset = EncoderPreset.Fast;
+                    videoSettings.CRF = 24;
+
+                    var audioSettings = new AudioEncoderSettings(44100, 2, AudioCodec.Default);
+
+                    var videoFile = MediaBuilder.CreateContainer(outputFilename, ContainerFormat.MP4)
+                        .WithVideo(videoSettings).Create();
+
+                    //Now get or download the beatmap file (.osu) only, which contains all the beatmap text.
+                    var beatmapText = BeatmapManager.GetBeatmap(beatmapID.Value);
+
+                    if (string.IsNullOrEmpty(beatmapText))
+                    {
+                        message.Channel.SendMessageAsync($"Beatmap with id: **{beatmapID.Value}** does not exist!");
+                        return;
+                    }
+
+                    //We split the beatmap text into lines which then get parsed to a osu beatmap
+                    var rawBeatmap = OsuParsers.Decoders.BeatmapDecoder.Decode(beatmapText.Split("\r\n"));
+
+                    //Setup a 'playable' beatmap
+                    RTCircles.PlayableBeatmap beatmap = new RTCircles.PlayableBeatmap(
+                        rawBeatmap, null, null, null);
+
+                    //Here we convert the hitobjects into actual renderable representations
+                    //Here we parse in the mods we want to use, (Mods doesn't actually do anything to the objects)
+                    //Í have a weird system for this, but the AR/OD/CS/HP does get adjusted based on the mods
+                    beatmap.GenerateHitObjects(RTCircles.Mods.Auto | enabledMods);
+
+                    //Now we notify the 'master container' to set map
+                    //I knows about the playfield size, and ensures timing points and shit
+                    RTCircles.OsuContainer.SetMap(beatmap);
+
+
+                    //Reset state, resets the score,accuracy, sets the object spawn index to 0, and other things
+                    osuScreen.ResetState();
+
+                    //Now check if a custom start time was included in our command
+                    if (!customStartTime.HasValue)
+                    {
+                        //If it wasn't then we have to figure out a senseable start point ourselves
+
+                        //Make start time the first kiai
+                        var startTime = rawBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai)?.Offset ?? 0;
+
+                        //If theres no kiai, use the preview time
+                        if (startTime <= 0)
+                            startTime = rawBeatmap.GeneralSection.PreviewTime;
+
+                        var firstObject = beatmap.HitObjects[0];
+
+                        //if the preview time is less than the first object, then we just start at the first object
+                        if (startTime < firstObject.BaseObject.StartTime)
+                            startTime = firstObject.BaseObject.StartTime - (int)RTCircles.OsuContainer.Beatmap.Preempt;
+
+                        RTCircles.OsuContainer.SongPosition = startTime;
+                    }
+                    else
+                    {
+                        //If we had a custom time, use that
+                        RTCircles.OsuContainer.SongPosition = customStartTime.Value.TotalMilliseconds;
+                    }
+
+                    //Ensure we are synchronized up to that point, so we dont start spawning all objects from 0
+                    osuScreen.EnsureObjectIndexSynchronization();
+
+                    string displayMods = "\n";
+
+                    foreach (RTCircles.Mods value in Enum.GetValues<RTCircles.Mods>())
+                    {
+                        if (value == RTCircles.Mods.NM)
+                            continue;
+
+                        if (enabledMods.HasFlag(value))
+                            displayMods += $"+{value.ToString()} ";
+                    }
+
+                    if (displayMods == "\n")
+                        displayMods = string.Empty;
+
+                    var mapText = $"{rawBeatmap.MetadataSection.Artist} - {rawBeatmap.MetadataSection.Title} [{rawBeatmap.MetadataSection.Version}]{displayMods}";
+
+                    var endTimeSpan = TimeSpan.FromMilliseconds(beatmap.HitObjects[^1].BaseObject.EndTime - beatmap.HitObjects[0].BaseObject.StartTime);
+                    var endTimeSpanString = (Math.Floor(endTimeSpan.TotalMinutes) + ":" + endTimeSpan.ToString("ss"));
+                    var timeSpanScale = 0.5f;
+
+                    for (int i = 0; i < FRAMES_TO_RENDER; i++)
+                    {
+                        //Clear the image
+                        GL.Instance.Clear(Silk.NET.OpenGLES.ClearBufferMask.ColorBufferBit);
+
+                        //Render the osu gameplay
+                        renderTick(i, message);
+
+                        //Render the overlay with time and other info
+                        var currentTimeSpan = TimeSpan.FromMilliseconds(RTCircles.OsuContainer.SongPosition - beatmap.HitObjects[0].BaseObject.StartTime);
+                        string currentTimeSpanString = (Math.Floor(currentTimeSpan.TotalMinutes) + ":" + currentTimeSpan.ToString("ss"));
+
+                        //graphics.DrawStringNoAlign($"{i+1}/{FRAMES_TO_RENDER}", Font.DefaultFont, new Vector2(3, 3), Colors.White, 0.25f);
+
+                        graphics.DrawString(mapText, Font.DefaultFont, new Vector2(3), new Vector4(0.9f), 0.35f);
+
+                        string timeSpanString = $"{currentTimeSpanString}/{endTimeSpanString}";
+
+                        var timeSpanTextSize = Font.DefaultFont.MessureString(timeSpanString, timeSpanScale);
+                        graphics.DrawString(timeSpanString, Font.DefaultFont, Viewport.Area.TopRight - new Vector2(timeSpanTextSize.X, 0), Colors.White, timeSpanScale);
+
+                        //Update the projection (this never changes can be cached todo)
+                        graphics.Projection = Matrix4.CreateOrthographicOffCenter(0, frameBuffer.Width, 0, frameBuffer.Height, -1, 1);
+                        //Now finally actually draw everything we have batched
+                        graphics.EndDraw();
+
+                        unsafe
+                        {
+                            //Pin the pixelBuffer
+                            fixed (void* framePtr = pixelBuffer)
+                            {
+                                //Read the pixels into the pixelBuffer
+                                GL.Instance.ReadPixels(0, 0, (uint)OUTPUT_WIDTH, (uint)OUTPUT_HEIGHT,
+                                    Silk.NET.OpenGLES.PixelFormat.Rgb, Silk.NET.OpenGLES.PixelType.UnsignedByte, framePtr);
+                            }
+
+                            //Add the video frame
+                            videoFile.Video.AddFrame(new FFMediaToolkit.Graphics.ImageData(
+                                    new Span<byte>(pixelBuffer),
+                                    FFMediaToolkit.Graphics.ImagePixelFormat.Rgb24,
+                                    new System.Drawing.Size(OUTPUT_WIDTH, OUTPUT_HEIGHT)));
+                        }
+                    }
+
+                    //When we are done, dispose the video file, which then finializes it.
+                    videoFile.Dispose();
+
+                    //Send file asynchronously
+                    sendFileThenDelete(message, outputFilename);
+                } catch(Exception ex)
+                {
+                    message.Channel.SendMessageAsync($"*Something went wrong.*\n\n**STACKTRACE:**\n```{ex.StackTrace}```\n**INFO**\n```{ex.Message}```");
                 }
-
-                //When we are done, dispose the video file, which then finializes it.
-                videoFile.Dispose();
-
-                //Send file asynchronously
-                sendFileThenDelete(message, outputFilename);
-            }
+                }
         }
 
         private async void sendFileThenDelete(SocketMessage message, string path)

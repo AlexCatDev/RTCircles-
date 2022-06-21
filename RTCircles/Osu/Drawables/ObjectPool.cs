@@ -28,6 +28,12 @@ namespace RTCircles
 
         public static void ClearUnusedObjects() => pool.Clear();
 
-        public static void Return(T t) => pool.Push(t);
+        public static void Return(T t) 
+        {
+            if (t == null)
+                return;
+
+            pool.Push(t);
+        }
     }
 }
