@@ -401,11 +401,8 @@ namespace RTCircles
             if (OsuContainer.Beatmap is null)
                 return;
 
-            drawBackground(g);
-            //drawSmoke(g);
-
-            //Check if a slider is on screen?
-            if (DrawableSlider.SliderOnScreen)
+            //Check if a slider is on screen, This is to avoid state changes per slider, and just render them all with minimal state changes
+            if (DrawableSlider.SliderOnScreen && !GlobalOptions.UseFastSliders.Value)
             {
                 var prevViewport = Viewport.CurrentViewport;
                 GL.Instance.Enable(Silk.NET.OpenGLES.EnableCap.DepthTest);
@@ -418,6 +415,9 @@ namespace RTCircles
                 FrameBuffer.BindDefault();
                 Viewport.SetViewport(prevViewport);
             }
+
+            drawBackground(g);
+            //drawSmoke(g);
 
             //Here we render the hitobjects, they are apart of the screen
             base.Render(g);

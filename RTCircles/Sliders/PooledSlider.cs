@@ -220,6 +220,11 @@ namespace RTCircles
             if (sliderFrameBuffer == null)
                 sliderFrameBuffer = ObjectPool<SliderFrameBuffer>.Take();
 
+            if (radius < -1)
+                throw new Exception("Slider radius was less than 0????");
+
+            //Console.WriteLine(ObjectPool<SliderFrameBuffer>.TotalCreated);
+
             if (!hasBeenUpdated)
                 return;
 
@@ -241,23 +246,12 @@ namespace RTCircles
             if (Precision.AlmostEquals(Alpha, 0))
                 return;
 
-            if (radius < -1)
-                throw new Exception("Slider radius was less than 0????");
-
-            //Console.WriteLine(ObjectPool<SliderFrameBuffer>.TotalCreated);
-
             if (Path.Points.Count == 0)
             {
                 g.DrawString($"No slider points?", Font.DefaultFont, Path.CalculatePositionAtProgress(0), Colors.Red);
                 return;
             }
 
-        /*
-        OsuContainer.SongPosition = OsuContainer.Beatmap.HitObjects[^1].BaseObject.StartTime - 100;
-        ScreenManager.GetScreen<OsuScreen>().EnsureObjectIndexSynchronization();
-        */
-
-        //Batched slider quads!
             Rectangle texCoords = new Rectangle();
             Vector2 renderPosition;
 

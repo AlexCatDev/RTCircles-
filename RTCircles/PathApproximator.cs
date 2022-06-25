@@ -155,6 +155,25 @@ namespace RTCircles
             return result;
         }
 
+        public static void ApproximateCatmullNoAlloc(List<Vector2> controlPoints, List<Vector2> output, int catmull_detail = 50)
+        {
+            output.Clear();
+
+            for (int i = 0; i < controlPoints.Count - 1; i++)
+            {
+                var v1 = i > 0 ? controlPoints[i - 1] : controlPoints[i];
+                var v2 = controlPoints[i];
+                var v3 = i < controlPoints.Count - 1 ? controlPoints[i + 1] : v2 + v2 - v1;
+                var v4 = i < controlPoints.Count - 2 ? controlPoints[i + 2] : v3 + v3 - v2;
+
+                for (int c = 0; c < catmull_detail; c++)
+                {
+                    output.Add(catmullFindPoint(ref v1, ref v2, ref v3, ref v4, (float)c / catmull_detail));
+                    output.Add(catmullFindPoint(ref v1, ref v2, ref v3, ref v4, (float)(c + 1) / catmull_detail));
+                }
+            }
+        }
+
         /// <summary>
         /// Creates a piecewise-linear approximation of a circular arc curve.
         /// </summary>

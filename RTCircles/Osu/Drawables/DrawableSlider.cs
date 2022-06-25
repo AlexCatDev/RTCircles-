@@ -10,11 +10,12 @@ namespace RTCircles
 {
     public class DrawableSlider : Drawable, IDrawableHitObject
     {
+        public static bool SliderOnScreen;
+
         //TODO: add
         public static float SliderResolution = 1f;
 
         public static Vector2? SliderBallPositionForAuto { get; private set; }
-        public static bool SliderOnScreen { get; private set; } 
 
         private Slider slider;
 
@@ -45,7 +46,7 @@ namespace RTCircles
             if (GlobalOptions.UseFastSliders.Value)
                 SliderPath = new FastSlider();
             else
-                SliderPath = new PooledSlider();
+                SliderPath = new BetterSlider();
 
             this.slider = slider;
             this.colorIndex = colorIndex;
@@ -651,6 +652,7 @@ namespace RTCircles
 
             SliderPath.SetProgress(snakeOut, snakeIn);
             SliderPath.SetRadius(OsuContainer.Beatmap.CircleRadiusInOsuPixels);
+            SliderOnScreen = true;
 
             if (OsuContainer.SongPosition > slider.StartTime + OsuContainer.Beatmap.Window50 && !IsHit && !IsMissed)
             {
@@ -666,8 +668,6 @@ namespace RTCircles
             //And they can start it very early or very late
             if (OsuContainer.SongPosition >= slider.EndTime)
                 fadeout = true;
-
-            SliderOnScreen = true;
         }
 
         public override void Render(Graphics g)

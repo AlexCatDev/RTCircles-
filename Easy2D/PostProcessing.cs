@@ -109,30 +109,56 @@ namespace Easy2D
                 bloomShader.SetBoolean("u_Subtract", false);
 
                 bloomShader.SetBoolean("u_Blur", true);
+
                 blurBuffer2.EnsureSize(blurBuffer1.Width / 2, blurBuffer1.Height / 2);
 
                 blitFramebuffer(blurBuffer1, blurBuffer2);
-                blitFramebuffer(blurBuffer2, blurBuffer2);
 
                 blurBuffer3.EnsureSize(blurBuffer2.Width / 2, blurBuffer2.Height / 2);
 
                 blitFramebuffer(blurBuffer2, blurBuffer3);
-                blitFramebuffer(blurBuffer3, blurBuffer3);
 
                 blurBuffer4.EnsureSize(blurBuffer3.Width / 2, blurBuffer3.Height / 2);
 
                 blitFramebuffer(blurBuffer3, blurBuffer4);
-                blitFramebuffer(blurBuffer4, blurBuffer4);
 
                 blurBuffer5.EnsureSize(blurBuffer4.Width / 2, blurBuffer4.Height / 2);
 
                 blitFramebuffer(blurBuffer4, blurBuffer5);
-                blitFramebuffer(blurBuffer5, blurBuffer5);
 
                 blurBuffer6.EnsureSize(blurBuffer5.Width / 2, blurBuffer5.Height / 2);
 
                 blitFramebuffer(blurBuffer5, blurBuffer6);
-                blitFramebuffer(blurBuffer6, blurBuffer6);
+
+                //bloomShader.SetBoolean("u_Subtract", true);
+                //blitFramebuffer(MainFrameBuffer, blurBuffer1);
+                //bloomShader.SetBoolean("u_Subtract", false);
+
+                //bloomShader.SetBoolean("u_Blur", true);
+                //blurBuffer2.EnsureSize(blurBuffer1.Width / 2, blurBuffer1.Height / 2);
+
+                //blitFramebuffer(blurBuffer1, blurBuffer2);
+                //blitFramebuffer(blurBuffer2, blurBuffer2);
+
+                //blurBuffer3.EnsureSize(blurBuffer2.Width / 2, blurBuffer2.Height / 2);
+
+                //blitFramebuffer(blurBuffer2, blurBuffer3);
+                //blitFramebuffer(blurBuffer3, blurBuffer3);
+
+                //blurBuffer4.EnsureSize(blurBuffer3.Width / 2, blurBuffer3.Height / 2);
+
+                //blitFramebuffer(blurBuffer3, blurBuffer4);
+                //blitFramebuffer(blurBuffer4, blurBuffer4);
+
+                //blurBuffer5.EnsureSize(blurBuffer4.Width / 2, blurBuffer4.Height / 2);
+
+                //blitFramebuffer(blurBuffer4, blurBuffer5);
+                //blitFramebuffer(blurBuffer5, blurBuffer5);
+
+                //blurBuffer6.EnsureSize(blurBuffer5.Width / 2, blurBuffer5.Height / 2);
+
+                //blitFramebuffer(blurBuffer5, blurBuffer6);
+                //blitFramebuffer(blurBuffer6, blurBuffer6);
 
                 bloomShader.SetBoolean("u_Blur", false);
                 bloomShader.SetBoolean("u_Combine", true);
@@ -155,6 +181,7 @@ namespace Easy2D
                 bloomShader.SetBoolean("u_Final", true);
                 bloomShader.SetBoolean("u_Combine", false);
                 blitFramebuffer(MainFrameBuffer, MotionBlur ? MainFrameBuffer : null);
+                //blitFramebuffer(blurBuffer1, null);
 
                 bloomShader.SetBoolean("u_Final", false);
             }

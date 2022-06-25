@@ -223,43 +223,35 @@ namespace RTCircles
         public Vector2? ScalingOrigin { get; set; }
         public float Alpha { get; set; }
 
-        public void Render(Graphics g)
+        public void OffscreenRender()
         {
-            if (Precision.AlmostEquals(Alpha, 0))
-                return;
-
             if (radius < -1)
                 throw new Exception("Slider radius was less than 0????");
 
+            if (!hasBeenUpdated)
+                return;
+
+            hasBeenUpdated = false;
+
+            frameBuffer.Bind();
+            Viewport.SetViewport(0, 0, frameBuffer.Width, frameBuffer.Height);
+            GL.Instance.Clear(ClearBufferMask.DepthBufferBit);
+            sliderShader.Bind();
+            sliderShader.SetMatrix("u_Projection", projectionMatrix);
+            drawSlider();
+        }
+
+        public void Render(Graphics g)
+        {
             if (Path.Points.Count == 0 || (frameBuffer.Status != GLEnum.FramebufferComplete && frameBuffer.IsInitialized))
             {
                 g.DrawString($"Aspire slider brr\nPoints: {Path.Points.Count} {frameBuffer.Width}x{frameBuffer.Height}", Font.DefaultFont, Path.CalculatePositionAtProgress(0), Colors.Red);
                 return;
             }
 
-            if (hasBeenUpdated)
-                hasBeenUpdated = false;
-            else
-                goto skipSliderCreation;
-
-            var prevViewport = Viewport.CurrentViewport;
-
-            frameBuffer.Bind();
-            GL.Instance.Enable(EnableCap.DepthTest);
-            Viewport.SetViewport(0, 0, frameBuffer.Width, frameBuffer.Height);
-            GL.Instance.Clear(ClearBufferMask.DepthBufferBit);
-            sliderShader.Bind();
-            sliderShader.SetMatrix("u_Projection", projectionMatrix);
-            drawSlider();
-
-            frameBuffer.Unbind();
-
-            GL.Instance.Disable(EnableCap.DepthTest);
-            Viewport.SetViewport(prevViewport);
-
-
-        //Batched slider quads!
-        skipSliderCreation:
+            if (Precision.AlmostEquals(Alpha, 0))
+                return;
+           
             Rectangle bounds = Path.Bounds;
 
             bounds.X -= radius;
@@ -317,11 +309,6 @@ namespace RTCircles
                 frameBuffer.Delete();
                 hasBeenUpdated = true;
             });
-        }
-
-        public void OffscreenRender()
-        {
-            throw new NotImplementedException();
         }
     }
 }

@@ -161,7 +161,7 @@ namespace Easy2D
 
         public void SetIntArray(string uniformName, int[] values)
         {
-            GL.Instance.Uniform1(GetUniformLocation(uniformName), new ReadOnlySpan<int>(values));
+            GL.Instance.Uniform1(GetUniformLocation(uniformName), values);
         }
 
         private string readShaderFromFile(Stream fileName, ShaderType shaderType)

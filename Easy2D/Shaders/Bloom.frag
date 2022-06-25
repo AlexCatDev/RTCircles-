@@ -102,6 +102,31 @@ vec3 ACESFitted(vec3 color)
     return color;
 }
 
+float Max3(float a, float b, float c)
+{
+    return max(max(a, b), c);
+}
+
+float Min3(float a, float b, float c)
+{
+    return min(min(a, b), c);
+}
+
+vec3 QuadraticThreshold(vec3 color, float threshold, vec3 curve)
+{
+    // Pixel brightness
+    float br = Max3(color.r, color.g, color.b);
+
+    // Under-threshold part
+    float rq = clamp(br - curve.x, 0.0, curve.y);
+    rq = curve.z * rq * rq;
+
+    // Combine and apply the brightness response curve
+    color *= max(rq, br - threshold) / max(br, 1e-4);
+
+    return color;
+}
+
 void main() {
 	vec4 color;
 
@@ -110,20 +135,21 @@ void main() {
     } else if(u_Subtract) {
         color = texture(u_Texture, v_TexCoordinate);
         
+        /*
 		color.r = max(color.r - u_BloomThreshold, 0.0);
 		color.g = max(color.g - u_BloomThreshold, 0.0);
 		color.b = max(color.b - u_BloomThreshold, 0.0);
-        
+        */
 
         //eew
         // check whether fragment output is higher than threshold, if so output as brightness color
-        /*
-        float brightness = dot(color.rgb, vec3(0.2126, 0.7152, 0.0722));
-        if(brightness > u_BloomThreshold)
-            color = vec4(color.rgb, 1.0);
-        else
-            color = vec4(0.0, 0.0, 0.0, 1.0);
-          */
+        
+        float autoExposure = 1.0;
+        vec4 _Params = vec4(1.0);
+        vec4 _Threshold = vec4(1.0);
+        color *= autoExposure;
+
+        color.rgb = QuadraticThreshold(color.rgb, _Threshold.x, _Threshold.yzw);
 	} else if(u_Combine) {
 		vec4 color2 = texture(u_CombineTexture, v_TexCoordinate);
 
@@ -136,21 +162,16 @@ void main() {
         
 		vec3 inputBloom = texture(u_CombineTexture, v_TexCoordinate).rgb;
 
-        /*
-        const float gamma = 1.6;
+        
+        const float gamma = 0.8;
         vec3 hdrColor = inputBloom.rgb;
   
         // reinhard tone mapping
         vec3 tempColor = hdrColor / (hdrColor + vec3(1.0));
         // gamma correction 
-        tempColor = pow(tempColor, vec3(1.0 / gamma)) + color.rgb;
-        */
+        tempColor = pow(tempColor, vec3(1.0 / gamma));
 
-        vec3 result = inputScene + ACESFitted(inputBloom);
-
-        //vec3 tempColor =
-
-		color = vec4(result, 1.0);
+		color = vec4(tempColor + inputScene, 1.0);
         //Else we're writing to another buffer
 	} else {
         color = texture(u_Texture, v_TexCoordinate);

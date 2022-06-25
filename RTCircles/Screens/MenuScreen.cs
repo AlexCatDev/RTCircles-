@@ -199,7 +199,7 @@ namespace RTCircles
         {
             var osuScreen = ScreenManager.GetScreen<OsuScreen>();
 
-            fb.EnsureSize(MainGame.WindowWidth/6, MainGame.WindowHeight/6);
+            fb.EnsureSize(MainGame.WindowWidth/10, MainGame.WindowHeight/10);
 
             g.DrawInFrameBuffer(fb, () => {
                 MainGame.Instance.FakeWindowSize(fb.Texture.Size, () =>
@@ -209,10 +209,9 @@ namespace RTCircles
                     osuScreen.Render(g);
                 });
             });
-
             bluredFB.EnsureSize(fb.Width, fb.Height);
 
-            Blur.BlurTexture(fb.Texture, bluredFB, 1, 2);
+            Blur.BlurTexture(fb.Texture, bluredFB, 1, 4);
         }
 
         public override void Render(Graphics g)
@@ -229,9 +228,9 @@ namespace RTCircles
             {
                 drawBluredGameplay(g);
                 textureRectangle = new Rectangle(0, 1, 1, -1);
-                color.X += 1f;
-                color.Y += 1f;
-                color.Z += 1f;
+                color.X += 1;
+                color.Y += 1;
+                color.Z += 1;
 
                 tex = bluredFB.Texture;
             }
@@ -739,6 +738,9 @@ namespace RTCircles
                 mapBackground.Zoom = MathHelper.Lerp(mapBackground.Zoom, 0f, delta * 10f);
                 mapBackground.Rotation = MathHelper.Lerp(mapBackground.Rotation, 0f, delta * 10f);
             }
+
+            if (GlobalOptions.UseGameplayAsBackgroundSrc.Value)
+                mapBackground.Zoom = 600 * MainGame.Scale;
         }
     }
 }
