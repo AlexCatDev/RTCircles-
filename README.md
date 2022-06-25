@@ -5,9 +5,9 @@ A 2D OpenGL Framework/Game Framework i am making. (Nothing fancy)
 
 A very WIP osu! clone with various features
 
+https://user-images.githubusercontent.com/15963076/175793045-3ebb212d-4978-45eb-8caf-80d5a41cad49.mp4
 
-
-
-https://user-images.githubusercontent.com/15963076/165539723-e1968ef5-73b6-4888-b915-54f6dc03fcbb.mp4
 
 For: Windows/Android/Linux/MacOS/(Can't test IOS but should be easily ported there)
+
+
