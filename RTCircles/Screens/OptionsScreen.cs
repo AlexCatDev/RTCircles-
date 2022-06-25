@@ -55,32 +55,38 @@ namespace RTCircles
         private void populateSkinList()
         {
             skinDropdown.ClearItems();
-            foreach (var directory in System.IO.Directory.EnumerateDirectories(GlobalOptions.OsuFolder.Value + "/Skins"))
+
+            var skinFolder = GlobalOptions.OsuFolder.Value + "/Skins";
+
+            if (System.IO.Directory.Exists(skinFolder))
             {
-                var dir = directory.Replace('\\', '/');
-
-                var lastSlash = dir.LastIndexOf('/');
-
-                var foldername = dir.Substring(lastSlash + 1);
-
-                var item = new DropdownItem()
+                foreach (var directory in System.IO.Directory.EnumerateDirectories(skinFolder))
                 {
-                    Text = foldername,
-                    Color = Colors.Black,
-                    TextColor = Colors.White,
-                    HighlightColor = new Vector4(1f, 0.4f, 0.4f, 1f)
-                };
+                    var dir = directory.Replace('\\', '/');
 
-                item.OnClick += () =>
-                {
-                    Skin.Load(directory);
-                    GlobalOptions.SkinFolder.Value = directory;
-                };
+                    var lastSlash = dir.LastIndexOf('/');
 
-                skinDropdown.AddItem(item);
+                    var foldername = dir.Substring(lastSlash + 1);
+
+                    var item = new DropdownItem()
+                    {
+                        Text = foldername,
+                        Color = Colors.Black,
+                        TextColor = Colors.White,
+                        HighlightColor = new Vector4(1f, 0.4f, 0.4f, 1f)
+                    };
+
+                    item.OnClick += () =>
+                    {
+                        Skin.Load(directory);
+                        GlobalOptions.SkinFolder.Value = directory;
+                    };
+
+                    skinDropdown.AddItem(item);
+                }
+
+                NotificationManager.ShowMessage($"Added {skinDropdown.Items.Count} skins", new Vector3(0.5f, 1f, 0.5f), 5f);
             }
-
-            NotificationManager.ShowMessage($"Added {skinDropdown.Items.Count} skins", new Vector3(0.5f, 1f, 0.5f), 5f);
         }
 
         public override void Update(float delta)
