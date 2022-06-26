@@ -12,8 +12,7 @@ using Silk.NET.Windowing.Sdl.Android;
 using System.Net.Http;
 
 
-//Still using the old xamarin because .net 6 is missing some crucial functionality.
-//I would like to use .net 6 though, since it performs alot better
+//Still using the old mono xamarin because .net 6 is missing the tls certificate bypass
 namespace RTCircles.Android
 {
 
@@ -25,12 +24,9 @@ namespace RTCircles.Android
             get => (SystemUiFlags)Window.DecorView.SystemUiVisibility;
             set
             {
-                systemUiFlags = value;
                 Window.DecorView.SystemUiVisibility = (StatusBarVisibility)value;
             }
         }
-
-        private SystemUiFlags systemUiFlags;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -44,6 +40,7 @@ namespace RTCircles.Android
         protected override void OnRun()
         {
             HttpClientHandler handler = new HttpClientHandler();
+            //Allow access to beatmap mirror with bad certificate for the time being
             handler.ServerCertificateCustomValidationCallback += (request, certificate, chain, error) => true;
 
             MainGame game = new MainGame();

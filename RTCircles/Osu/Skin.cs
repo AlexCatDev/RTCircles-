@@ -453,7 +453,7 @@ namespace RTCircles
 
             double loadTime = Utils.EndProfiling("SkinLoad");
 
-            NotificationManager.ShowMessage($"Skin '{path}' took {loadTime:F0} ms", new Vector3(0.4f, 0.4f, 1f), 4f);
+            NotificationManager.ShowMessage($"\"{path}\" loaded in {loadTime:F0} ms", new Vector3(0.8f, 0.8f, 1f), 4f);
         }
         
         //Better version

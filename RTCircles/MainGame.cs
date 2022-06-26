@@ -33,6 +33,16 @@ namespace RTCircles
 
         public override void OnLoad()
         {
+            /*
+            View.GLContext.SwapBuffers();
+            GPUSched.Instance.Enqueue(() =>
+            {
+                Size = new Silk.NET.Maths.Vector2D<int>(1920, 1080);
+                (View as Silk.NET.Windowing.IWindow).WindowState = Silk.NET.Windowing.WindowState.Maximized;
+                View.DoEvents();
+            });
+            */
+
             Size = new Silk.NET.Maths.Vector2D<int>(1600, 900);
 
             string build = "RELEASE";
@@ -64,8 +74,8 @@ namespace RTCircles
 
             GPUSched.Instance.EnqueueDelayed(() =>
             {
-                NotificationManager.ShowMessage($"Work in progress", ((Vector4)Color4.Yellow).Xyz, 10);
-            }, 1000);
+                NotificationManager.ShowMessage($"App is work in progress!", ((Vector4)Color4.Orange).Xyz, 5);
+            }, 500);
 
             lastOpened = Settings.GetValue<DateTime>("LastOpened", out bool exists);
             Settings.SetValue(DateTime.Now, "LastOpened");
@@ -222,7 +232,7 @@ namespace RTCircles
 
             if (GlobalOptions.ShowFPS.Value)
             {
-                const float scale = 0.35f;
+                const float scale = 0.5f;
 
                 ms = Interpolation.Damp(ms, DeltaTime * 1000, 0.25, DeltaTime);
 
@@ -237,7 +247,7 @@ namespace RTCircles
 
                 sb.Append(text);
 
-                Vector2 hoverSize = Font.DefaultFont.MessureString(text, scale);
+                Vector2 hoverSize = ResultScreen.Font.MessureString(text, scale);
                 Vector2 hoverPos = new Vector2(WindowWidth, WindowHeight) - hoverSize;
 
                 if(trueHoverSize is null)
@@ -270,7 +280,7 @@ namespace RTCircles
                 GL.ResetStatistics();
                 g.ResetStatistics();
 
-                Vector2 textSize = Font.DefaultFont.MessureString(text, scale);
+                Vector2 textSize = ResultScreen.Font.MessureString(text, scale);
                 Vector2 drawTextPos = new Vector2(WindowWidth, WindowHeight) - textSize - new Vector2(25);
 
                 trueHoverPos = drawTextPos;
@@ -288,7 +298,7 @@ namespace RTCircles
                 var boxSize = textSize + new Vector2(25f);
                 g.DrawRoundedRect(drawTextPos + textSize/2f, boxSize, new Vector4(0f, 0f, 0f, 0.5f), 15f);
 
-                g.DrawString(text, Font.DefaultFont, drawTextPos, color, scale);
+                g.DrawString(text, ResultScreen.Font, drawTextPos, color, scale);
             }
         }
 
@@ -467,7 +477,6 @@ namespace RTCircles
 
             Input.InputContext.Keyboards[0].KeyDown += (s, e, x) =>
             {
-                
                 if (e == Key.F3)
                 {
                     new System.Threading.Thread(() => {

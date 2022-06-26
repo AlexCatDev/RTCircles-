@@ -94,7 +94,7 @@ namespace RTCircles
             }
             else
             {
-                NotificationManager.ShowMessage($"'{item.FullPath}' not found", new Vector3(1f, 0.1f, 0.1f), 5f);
+                NotificationManager.ShowMessage($"beatmap: '{item.FullPath}' not found", new Vector3(1f, 0.1f, 0.1f), 5f);
                 return null;
             }
 

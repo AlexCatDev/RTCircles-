@@ -69,6 +69,7 @@ namespace RTCircles
                 if (BeatmapCollection.Items.Count > 0)
                 {
                     var item = carouselItems[RNG.Next(0, carouselItems.Count - 1)];
+                    //var item = carouselItems.Find((o) => o.Text.ToLower().Contains("corona (net0) [oto"));
                     //item = carouselItems.Find((o) => o.Text.Contains("(pishifat) [insane"));
                     playableBeatmap = PlayableBeatmap.FromCarouselItem(item);
 
@@ -90,7 +91,7 @@ namespace RTCircles
                 if (playableBeatmap != null)
                 {
                     playableBeatmap.GenerateHitObjects();
-                    firstKiaiTimePoint = playableBeatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai)?.Offset - 500 ?? 0;
+                    firstKiaiTimePoint = playableBeatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai)?.Offset - 600 ?? 0;
                     //We have to schedule to the main thread, so we dont just randomly set maps while the game is updating and checking the current map.
                     GPUSched.Instance.Enqueue(() =>
                     {
@@ -98,7 +99,7 @@ namespace RTCircles
                         OsuContainer.SongPosition = firstKiaiTimePoint;
                         OsuContainer.Beatmap.Song.Play(false);
 
-                        logo.IntroSizeAnimation.TransformTo(new Vector2(-200), 500f, EasingTypes.InQuint, () =>
+                        logo.IntroSizeAnimation.TransformTo(new Vector2(-200), 600, EasingTypes.InQuint, () =>
                         {
                             MainGame.Instance.Shaker.Shake();
                             logo.ToggleInput(true);

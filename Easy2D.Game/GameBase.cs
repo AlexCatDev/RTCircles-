@@ -91,7 +91,7 @@ namespace Easy2D.Game
                 {
                     wnd.WindowState = WindowState.Fullscreen;
                     ToggleFullScreen();
-                    wnd.DoUpdate();
+                    wnd.DoEvents();
                 }
             };
 
@@ -179,39 +179,19 @@ namespace Easy2D.Game
 
             OnUpdate();
 
+            PostProcessing.Update((float)DeltaTime);
             OnRender();
             GPUSched.Instance.RunPendingTasks();
-            PostProcessing.Update((float)DeltaTime);
             View.SwapBuffers();
+            //Max delete 2 GL handles per frame, i don't know if this is a good idea
+            GLObject.DeletionScheduler.RunPendingTasks(2);
             GL.Instance.Clear(ClearBufferMask);
-
-            //System.Threading.Thread.Sleep(16);
-            /*
-            if (freeToRender)
-            {
-                if (System.Threading.Monitor.TryEnter(renderLock))
-                {
-                    OnRender();
-
-                    freeToRender = false;
-
-                    System.Threading.Monitor.Exit(renderLock);
-                }
-            }
-            else
-            {
-                System.Threading.Thread.Sleep(1);
-            }
-            */
         }
 
         private double elapsedFPS;
         private int fps;
 
         private Sdl sdl;
-
-        private readonly object renderLock = new object();
-        private bool freeToRender = false;
 
         private void View_Load()
         {
@@ -248,61 +228,6 @@ namespace Easy2D.Game
 
             OnLoad();
             OnResize(View.Size.X, View.Size.Y);
-
-            /*
-            View.ClearContext();
-            new System.Threading.Thread(() => {
-                Utils.Log($"Started render thread!", LogLevel.Info);
-
-                View.GLContext.MakeCurrent();
-
-                Stopwatch sw = new Stopwatch();
-
-                while (!View.IsClosing)
-                {
-                    double delta = ((double)sw.ElapsedTicks / Stopwatch.Frequency) * TimeScale;
-                    sw.Restart();
-
-                    elapsedFPS += delta;
-
-                    if (!freeToRender)
-                    {
-                        if (System.Threading.Monitor.TryEnter(renderLock))
-                        {
-                            fps++;
-
-                            GL.Instance.Clear(ClearBufferMask);
-
-                            GPUSched.Instance.RunPendingTasks();
-
-                            freeToRender = true;
-
-                            System.Threading.Monitor.Exit(renderLock);
-
-                            if (View.IsClosing)
-                                break;
-
-                            View.SwapBuffers();
-                        }
-                    }
-                    else
-                    {
-                        System.Threading.Thread.Sleep(1);
-                    }
-
-                    if (elapsedFPS >= 1)
-                    {
-                        FPS = fps;
-                        elapsedFPS -= 1;
-                        fps = 0;
-                    }
-
-                    //Add alternative mode, thats not vsync!
-                    //if (!VSync)
-                    //renderThrottler.Update();
-                }
-            }).Start();
-            */
         }
 
         private unsafe void setupSDL()

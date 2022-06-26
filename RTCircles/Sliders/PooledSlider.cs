@@ -6,21 +6,22 @@ using System.Collections.Generic;
 
 namespace RTCircles
 {
-    internal class SliderFrameBuffer
-    {
-        public FrameBuffer FrameBuffer { get; private set; }
-
-        public static Vector2i BufferSpace = new Vector2i(512, 384);
-
-        public SliderFrameBuffer()
-        {
-            FrameBuffer = new FrameBuffer(512 + BufferSpace.X, 384 + BufferSpace.Y,
-            FramebufferAttachment.DepthAttachment, InternalFormat.DepthComponent, PixelFormat.DepthComponent, PixelType.UnsignedShort);
-        }
-    }
-
     public class PooledSlider : ISlider
     {
+        internal class SliderFrameBuffer
+        {
+            public FrameBuffer FrameBuffer { get; private set; }
+
+            public static readonly Vector2i BufferSpace = new Vector2i(512, 384);
+            //public static readonly Vector2i BufferSpace = new Vector2i(0, 0);
+
+            public SliderFrameBuffer()
+            {
+                FrameBuffer = new FrameBuffer(512 + BufferSpace.X, 384 + BufferSpace.Y,
+                FramebufferAttachment.DepthAttachment, InternalFormat.DepthComponent, PixelFormat.DepthComponent, PixelType.UnsignedShort);
+            }
+        }
+
         private const int CIRCLE_RESOLUTION = 40;
 
         private static readonly Easy2D.Shader sliderShader = new Easy2D.Shader();

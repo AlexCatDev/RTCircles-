@@ -167,8 +167,8 @@ namespace RTCircles
                 float alpha = (float)Interpolation.ValueAt(MainGame.Instance.TotalTime.Clamp(startTime, endTime),
                     0, 1, startTime, endTime, easing);
 
+                g.FinalColorMult.W = alpha;
                 currentScreen.Render(g);
-
                 if (alpha == 1)
                 {
                     currentScreen.OnEnter();
