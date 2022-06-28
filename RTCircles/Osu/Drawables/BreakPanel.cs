@@ -67,7 +67,7 @@ namespace RTCircles
 
             g.DrawStringCentered(remainingBreakTime.ToString(), Font.DefaultFont, rect.Center, textColor, textScale);
 
-            const string subText = "Enjoy this little break, although i bet it won't be lasting long";
+            const string subText = "^ that is how much time you have left to live";
 
             var subTextScale = textScale / 6;
             var subTextSize = Font.DefaultFont.MessureString(subText, subTextScale);

@@ -81,7 +81,7 @@ namespace RTCircles
         {
             PlayableBeatmap playableBeatmap = new PlayableBeatmap();
 
-            string folderPath = $"{BeatmapMirror.SongsFolder}/{item.Folder}";
+            string folderPath = $"{BeatmapMirror.SongsDirectory}/{item.Folder}";
 
             OsuParsers.Beatmaps.Beatmap beatmap;
 
@@ -293,6 +293,67 @@ namespace RTCircles
             Utils.EndProfiling("StrainCalculation");
         }
 
+        private void applyStacking()
+        {
+            System.Numerics.Vector2 currentStack = System.Numerics.Vector2.Zero;
+            double stackTimeThreshold = Preempt * InternalBeatmap.GeneralSection.StackLeniency;
+
+            void resetStacking()
+            {
+                currentStack = System.Numerics.Vector2.Zero;
+            }
+
+            for (int i = 0; i < InternalBeatmap.HitObjects.Count; i++)
+            {
+                var current = InternalBeatmap.HitObjects[i];
+
+                if (current is Slider slider)
+                {
+                    //Since the slider gets rendered at its stacked position, the points needs to be unstacked
+
+                    //Add no stacked position to slider points
+                    slider.SliderPoints.Insert(0, slider.Position);
+                }
+
+                //If theres no next object just continue
+                if (i + 1 >= InternalBeatmap.HitObjects.Count)
+                    continue;
+
+                var next = InternalBeatmap.HitObjects[i + 1];
+
+                //Spinners reset stacking
+                if (next is Spinner)
+                {
+                    resetStacking();
+                    continue;
+                }
+
+                if (next.StartTime - current.StartTime < stackTimeThreshold)
+                {
+                    resetStacking();
+                    continue;
+                }                
+
+                //Current may be modified if the previous object overlapped with it
+                //So offset current with the current stacking amount
+                //Then check if it stacks with the next object, which has not been stacked yet
+
+                if ((current.Position - currentStack) == next.Position)
+                {
+                    //Keep making the stack bigger while they overlap
+                    currentStack += new System.Numerics.Vector2(3, 3);
+                    
+                    //Next will be current in the next iteration
+                    next.Position += currentStack;
+                }
+                else
+                {
+                    //Reset stacking when these objects no longer stack
+                    resetStacking();
+                }
+            }
+        }
+
         public void GenerateHitObjects(Mods mods = Mods.NM)
         {
             System.Diagnostics.Debug.Assert(!(HitObjects.Count > 0));
@@ -320,6 +381,8 @@ namespace RTCircles
             Preempt = mapDifficultyRange(AR, 1800, 1200, 450);
             Fadein = 400 * Math.Min(1, Preempt / 450);
 
+            applyStacking();
+
             int colorIndex = 0;
             int combo = 1;
 
@@ -327,6 +390,7 @@ namespace RTCircles
             {
                 var hitObject = InternalBeatmap.HitObjects[i];
 
+                /*
                 //Fix this shitty stacking mechanism
                 for (int j = i; j < InternalBeatmap.HitObjects.Count - 1; j++)
                 {
@@ -336,7 +400,9 @@ namespace RTCircles
                     if (next is Spinner)
                         break;
 
-                    if (next.StartTime - previous.StartTime < 25)
+                    double stackThreshold = Preempt * InternalBeatmap.GeneralSection.StackLeniency;
+
+                    if (next.StartTime - previous.StartTime < stackThreshold)
                         break;
 
                     if (hitObject.Position == next.Position)
@@ -354,7 +420,7 @@ namespace RTCircles
                     else
                         break;
                 }
-
+                */
                 if (hitObject.IsNewCombo)
                 {
                     combo = 1;

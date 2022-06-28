@@ -375,7 +375,7 @@ namespace RTCircles
             double beatLength = OsuContainer.CurrentBeatTimingPoint.BeatLength;
 
             //When this is 0 it will be 2 beats behind the first object
-            double offsetFromStart = OsuContainer.SongPosition - OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime + beatLength * 3;
+            double offsetFromStart = OsuContainer.SongPosition - OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime + beatLength * 2;
 
             //Console.WriteLine(offsetFromStart);
 

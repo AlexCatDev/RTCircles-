@@ -100,11 +100,6 @@ namespace RTCircles
             base.Update(delta);
         }
 
-        private string formatInt(int i)
-        {
-            return $"{(i > 0 ? "+" : "")}{i}";
-        }
-
         private int lastBeat;
         private double repeatCountdownTimer = 0;
         private double repeatTimer = 0;
@@ -112,6 +107,11 @@ namespace RTCircles
         {
             if (OsuContainer.Beatmap == null)
                 return;
+
+            string formatInt(int i)
+            {
+                return $"{(i > 0 ? "+" : "")}{i}";
+            }
 
             Vector2 position = new Vector2(50, 100) * MainGame.Scale;
             Vector2 buttonSize = new Vector2(235, 60) * MainGame.Scale;

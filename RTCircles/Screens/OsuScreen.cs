@@ -262,8 +262,11 @@ namespace RTCircles
 
         public override void OnEnter()
         {
-            NotificationManager.DoNotDisturb = true;
-            Input.InputContext.Mice[0].Cursor.CursorMode = CursorMode.Hidden;
+            if (!OsuContainer.CookieziMode)
+            {
+                NotificationManager.DoNotDisturb = true;
+                Input.InputContext.Mice[0].Cursor.CursorMode = CursorMode.Hidden;
+            }
         }
 
         public override void OnExit()

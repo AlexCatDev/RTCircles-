@@ -183,8 +183,6 @@ namespace Easy2D.Game
             OnRender();
             GPUSched.Instance.RunPendingTasks();
             View.SwapBuffers();
-            //Max delete 2 GL handles per frame, i don't know if this is a good idea
-            GLObject.DeletionScheduler.RunPendingTasks(2);
             GL.Instance.Clear(ClearBufferMask);
         }
 

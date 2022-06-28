@@ -11,6 +11,12 @@ namespace Easy2D.Game
     {
         public static IInputContext InputContext { get; private set; }
 
+        public static float MouseSensitivity = 0.5f;
+
+        private static System.Numerics.Vector2 _previousPos = System.Numerics.Vector2.Zero;
+
+        private static Vector2 _mousePosition;
+
         public static Vector2 MousePosition
         {
             get
@@ -23,6 +29,15 @@ namespace Easy2D.Game
         internal static void SetContext(IInputContext inputContext)
         {
             InputContext = inputContext;
+
+            //This returns the Window Cursor Position if CursorMode is not raw
+            //Else it returns the mouse delta
+            /*
+            inputContext.Mice[0].MouseMove += (s, e) =>
+            {
+                Console.WriteLine(e);
+            };
+            */
         }
 
         public static event Action OnBackPressed;

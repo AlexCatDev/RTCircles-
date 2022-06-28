@@ -16,23 +16,15 @@ namespace RTCircles
 
         static Settings()
         {
-            string appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
-            /*
-            foreach (Environment.SpecialFolder item in Enum.GetValues(typeof(Environment.SpecialFolder)))
+            if (!Directory.Exists(localAppData))
             {
-                Console.WriteLine($"Value: {item}");
-                Console.WriteLine($"Path: {Environment.GetFolderPath(item)}");
-            }
-
-            */
-            if (string.IsNullOrEmpty(appdata))
-            {
-                appdata = ".";
+                localAppData = ".";
                 Utils.Log($"Could not find appdata directory, save directory is now path of executable", LogLevel.Warning);
             }
 
-            SettingsDirectory = $"{appdata}/{Assembly.GetCallingAssembly().GetName().Name}";
+            SettingsDirectory = $"{localAppData}/Settings/{Assembly.GetCallingAssembly().GetName().Name}";
 
             new DirectoryInfo(SettingsDirectory).Create();
         }

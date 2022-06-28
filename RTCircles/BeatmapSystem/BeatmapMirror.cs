@@ -81,8 +81,6 @@ namespace RTCircles
 
         public static event Action<DBBeatmapInfo, bool> OnNewBeatmapAvailable;
 
-        public static string SongsFolder { get; private set; }
-
         private static object beatmapDecoderLock = new object();
 
         private static Thread realmsThread;
@@ -90,16 +88,17 @@ namespace RTCircles
 
         public static bool RealmThreadActive = true;
 
+        public static readonly string RootDirectory = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "/RTCircles";
+        public static readonly string SongsDirectory = RootDirectory + "/Songs";
+        
         static BeatmapMirror()
         {
-            SongsFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "/Songs";
-
             realmsThread = new Thread(() =>
             {
                 if (!RealmThreadActive)
                     return;
                 
-                realm = Realm.GetInstance(new RealmConfiguration("RTCircles.realm") { SchemaVersion = 2 });
+                realm = Realm.GetInstance(new RealmConfiguration(RootDirectory + "/RTCircles.realm") { SchemaVersion = 2, });
                 Utils.Log($"Started Realm Thread.", LogLevel.Important);
                 Utils.Log($"Realm Path: {realm.Config.DatabasePath}", LogLevel.Important);
 
@@ -181,7 +180,7 @@ namespace RTCircles
 
             realmsThread.Start();
 
-            Utils.Log($"SongsFolder: {SongsFolder}", LogLevel.Important);
+            Utils.Log($"SongsFolder: {SongsDirectory}", LogLevel.Important);
         }
 
         public static void DatabaseAction(Action<Realm> action)
@@ -269,7 +268,7 @@ namespace RTCircles
             }
 
             Utils.Log("Copying...", LogLevel.Info);
-            Utils.CopyDirectory(directory, $"{SongsFolder}/{newFolderName}", recursive: true);
+            Utils.CopyDirectory(directory, $"{SongsDirectory}/{newFolderName}", recursive: true);
 
             Utils.Log("Writing to database...", LogLevel.Info);
 
@@ -343,10 +342,10 @@ namespace RTCircles
                 }
 
                 //Handle when the beatmap already exists and is open, just ignore it?
-                Directory.CreateDirectory($"{SongsFolder}/{folderGUID}");
+                Directory.CreateDirectory($"{SongsDirectory}/{folderGUID}");
                 try
                 {
-                    archive.ExtractToDirectory($"{SongsFolder}/{folderGUID}", true);
+                    archive.ExtractToDirectory($"{SongsDirectory}/{folderGUID}", true);
                 }
                 catch (Exception ex)
                 {

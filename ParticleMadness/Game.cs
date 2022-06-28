@@ -315,10 +315,58 @@ namespace ParticleMadness
 
         public override void OnRender()
         {
-            Vector2 pos = new Vector2(200, 200);
-            float radius = 50;
-            g.DrawEllipse(pos, 0, 360, radius, 0, MathUtils.IsPointInsideRadius(pos, Input.MousePosition, radius) ? Colors.Red : Colors.White);
-            Console.WriteLine(MathUtils.GetAngleFromOrigin(pos, Input.MousePosition, 90));
+            for (int i = 0; i < points.Count; i++)
+            {
+                g.DrawRectangleCentered(points[i], new Vector2(4), Colors.Red);
+            }
+
+            float radius = 40;
+            float thickness = 3;
+            /*
+            if (points.Count > 1)
+            {
+                for (int i = 0; i < points.Count - 1; i++)
+                {
+                    var now = points[i];
+                    var next = points[i + 1];
+
+                    var angle = MathUtils.AtanVec(now, next);
+
+                    if (i > 0)
+                    {
+                        var start = (float)MathUtils.ToDegrees(angle);
+                        //g.DrawEllipse(now, start - 90, start + 90, radius, radius - thickness, Colors.White);
+                    }
+                    
+
+                    var dir = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
+
+                    var perpen = (now - next).PerpendicularLeft.Normalized();
+
+                    g.DrawOneSidedLine(now + perpen * radius, next + perpen * radius, Colors.White, Colors.White, -thickness);
+                    g.DrawOneSidedLine(now - perpen * radius, next - perpen * radius, Colors.White, Colors.White, thickness);
+                    //g.DrawRectangleCentered(points[i], new Vector2(4), Colors.Red);
+                }
+
+                var zero = points[0];
+                var one = points[1];
+
+                var angleStart = MathUtils.AtanVec(zero, one);
+
+                var angleStartDeg = (float)MathUtils.ToDegrees(angleStart);
+                g.DrawEllipse(zero, angleStartDeg - 90, angleStartDeg + 90, radius, radius - thickness, Colors.White);
+
+                var last = points[^1];
+                var secondLast = points[^2];
+
+                var angleEnd = MathUtils.AtanVec(last, secondLast);
+
+                var angleEndDeg = (float)MathUtils.ToDegrees(angleEnd);
+                g.DrawEllipse(last, angleEndDeg - 90, angleEndDeg + 90, radius, radius - thickness, Colors.White);
+            }
+            */
+            Polyline2D.Render(g, points, radius * 2, new Vector4(1f, 1f, 1f, 1f), sliderTex);
+
             g.Projection = projection;
             g.EndDraw();
         }

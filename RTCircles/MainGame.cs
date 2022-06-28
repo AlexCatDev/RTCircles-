@@ -113,7 +113,6 @@ namespace RTCircles
 
             PostProcessing.Use(new Vector2i((int)WindowWidth, (int)WindowHeight), new Vector2i((int)WindowWidth, (int)WindowHeight));
             ScreenManager.Render(g);
-
             drawFPSGraph(g);
             drawLog(g);
 
@@ -121,6 +120,9 @@ namespace RTCircles
             NotificationManager.Render(g);
 
             drawVolumeBar(g);
+
+            //c
+            //g.DrawRectangleCentered(Input.MousePosition, new Vector2(16), Colors.Red);
 
             g.EndDraw();
 

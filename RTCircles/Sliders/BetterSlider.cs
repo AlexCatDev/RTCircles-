@@ -7,13 +7,6 @@ using System.IO;
 
 namespace RTCircles
 {
-    //Batching the sliders solved alot of issues
-
-    //TODO: Optimizations
-    //fuck the interpolating cancer, i will fix later 
-    //+ optimize to use polylines for less vertices
-
-    //Disable snaking on mobile?
     public class BetterSlider : ISlider
     {
         private const int CIRCLE_RESOLUTION = 40;
@@ -303,7 +296,7 @@ namespace RTCircles
 
         public void Cleanup()
         {
-            GLObject.DeletionScheduler.Enqueue(() =>
+            GPUSched.Instance.Enqueue(() =>
             {
                 //Todo: Check if delete is still pending when this is called.         
                 frameBuffer.Delete();

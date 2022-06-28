@@ -710,7 +710,6 @@ namespace Easy2D
             tri[2].Color = color;
         }
 
-
         public void DrawRectangle(Vector2 position, Vector2 size, Vector4 color, Texture texture = null, Rectangle? textureRectangle = null, bool uvNormalized = false, float rotDegrees = 0)
         {
             float texX = 0;

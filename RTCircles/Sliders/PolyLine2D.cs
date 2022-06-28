@@ -2,9 +2,8 @@
 using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
-namespace ParticleMadness
+namespace RTCircles.Sliders
 {
     public struct LineSegment
     {
@@ -85,9 +84,9 @@ namespace ParticleMadness
             return a.start + (r * t);
         }
     }
-        public class Polyline2D
+    public class Polyline2D
     {
-        struct PolySegment
+        public struct PolySegment
         {
             public PolySegment(LineSegment center, float thickness)
             {
@@ -156,7 +155,7 @@ namespace ParticleMadness
          */
         private const float roundMinAngle = 0.174533f; // ~10 degrees
 
-        private static void createTriangleFan(Graphics g, Vector4 color, Texture texture, Vector2 connectTo, Vector2 origin, Vector2 start, Vector2 end, bool clockwise, bool isEndCap)
+        private static void createTriangleFan(Graphics g, Vector4 color, int texSlot, Vector2 connectTo, Vector2 origin, Vector2 start, Vector2 end, bool clockwise, bool isEndCap)
         {
             var point1 = start - origin;
             var point2 = end - origin;
@@ -178,13 +177,11 @@ namespace ParticleMadness
             var jointAngle = angle2 - angle1;
 
             var numTriangles = Math.Max(1, (int)Math.Floor(Math.Abs(jointAngle) / roundMinAngle));
-
             var triAngle = jointAngle / numTriangles;
 
             Vector2 startPoint = start;
             Vector2 endPoint;
 
-            int slot = g.GetTextureSlot(texture);
             for (int t = 0; t < numTriangles; t++)
             {
                 if (t + 1 == numTriangles)
@@ -205,26 +202,28 @@ namespace ParticleMadness
                     endPoint = endPoint + origin;
                 }
 
+                
                 var triangle = g.VertexBatch.GetTriangle();
 
                 triangle[0].Position = startPoint;
                 triangle[0].Color = color;
-                triangle[0].TextureSlot = slot;
+                triangle[0].TextureSlot = texSlot;
                 triangle[0].Rotation = 0;
                 triangle[0].TexCoord = Vector2.Zero;
 
                 triangle[1].Position = endPoint;
                 triangle[1].Color = color;
-                triangle[1].TextureSlot = slot;
+                triangle[1].TextureSlot = texSlot;
                 triangle[1].Rotation = 0;
                 triangle[1].TexCoord = Vector2.Zero;
 
                 triangle[2].Position = connectTo;
                 triangle[2].Color = color;
-                triangle[2].TextureSlot = slot;
+                triangle[2].TextureSlot = texSlot;
                 triangle[2].Rotation = 0;
                 triangle[2].TexCoord = isEndCap ? new Vector2(0.5f) : Vector2.One;
-                //g.DrawTriangle(startPoint, endPoint, connectTo, color);
+
+                //g.DrawTriangle(startPoint, endPoint, connectTo, new Vector4(1f,1f,1f,color.W*0.5f));
 
                 // emit the triangle
                 //*vertices++ = startPoint;
@@ -237,13 +236,11 @@ namespace ParticleMadness
             //return vertices;
         }
 
-        public static void Render(Graphics g, List<Vector2> points, float thickness, Vector4 color, Texture texture,
+        public static void Render(Graphics g, List<PolySegment> segments, Texture texture, Vector4 color, float thickness,
             JointStyle jointStyle = JointStyle.ROUND, EndCapStyle endCapStyle = EndCapStyle.ROUND,
             bool allowOverlap = false)
         {
-            // operate on half the thickness to make our lives easier
-            thickness /= 2;
-
+            /*
             // create poly segments from the points
             List<PolySegment> segments = new List<PolySegment>();
             for (int i = 0; i + 1 < points.Count; i++)
@@ -272,12 +269,29 @@ namespace ParticleMadness
                     segments.Add(new PolySegment(new LineSegment(point1, point2), thickness));
                 }
             }
+            */
 
             if (segments.Count == 0)
             {
                 return;
                 // handle the case of insufficient input points
                 //return vertices;
+            }
+
+            int slot = g.GetTextureSlot(texture);
+
+            if (endCapStyle == EndCapStyle.JOINT)
+            {
+                // create a connecting segment from the last to the first point
+                //last point
+                var point1 = segments[^1].center.end;
+                //first point
+                var point2 = segments[0].center.start;
+
+                // to avoid division-by-zero errors,
+                // only create a line segment for non-identical points
+                if (point1 != point2)
+                    segments.Add(new PolySegment(new LineSegment(point1, point2), thickness));
             }
 
             Vector2 nextStart1 = Vector2.Zero;
@@ -309,20 +323,18 @@ namespace ParticleMadness
             else if (endCapStyle == EndCapStyle.ROUND)
             {
                 // draw half circle end caps
-                createTriangleFan(g, color, texture, firstSegment.center.start, firstSegment.center.start,
+                createTriangleFan(g, color, slot, firstSegment.center.start, firstSegment.center.start,
                                   firstSegment.edge1.start, firstSegment.edge2.start, false, true);
-                createTriangleFan(g, color, texture, lastSegment.center.end, lastSegment.center.end,
+                createTriangleFan(g, color, slot, lastSegment.center.end, lastSegment.center.end,
                                   lastSegment.edge1.end, lastSegment.edge2.end, true, true);
 
             }
             else if (endCapStyle == EndCapStyle.JOINT)
             {
                 // join the last (connecting) segment and the first segment
-                createJoint(g, color, texture, lastSegment, firstSegment, jointStyle,
+                createJoint(g, color, slot, lastSegment, firstSegment, jointStyle,
                             ref pathEnd1, ref pathEnd2, ref pathStart1, ref pathStart2, allowOverlap);
             }
-
-            int slot = g.GetTextureSlot(texture);
 
             // generate mesh data for path segments
             for (int i = 0; i < segments.Count; i++)
@@ -346,9 +358,12 @@ namespace ParticleMadness
                 }
                 else
                 {
-                    createJoint(g, color, texture, segment, segments[i + 1], jointStyle,
+                    createJoint(g, color, slot, segment, segments[i + 1], jointStyle,
                                 ref end1, ref end2, ref nextStart1, ref nextStart2, allowOverlap);
                 }
+
+                //g.DrawTriangle(start1, start2, end1, color);
+                //g.DrawTriangle(end1, start2, end2, color);
 
                 var triangle = g.VertexBatch.GetTriangle();
 
@@ -390,9 +405,6 @@ namespace ParticleMadness
                 triangle[2].Rotation = 0;
                 triangle[2].TexCoord = Vector2.Zero;
 
-                //g.DrawTriangle(start1, start2, end1, color);
-                //g.DrawTriangle(end1, start2, end2, color);
-
                 // emit vertices
                 //*vertices++ = start1;
                 //*vertices++ = start2;
@@ -414,7 +426,7 @@ namespace ParticleMadness
             return MathF.Acos(Vector2.Dot(a, b) / a.Length * b.Length);
         }
 
-        private static void createJoint(Graphics g, Vector4 color, Texture texture, in PolySegment segment1, in PolySegment segment2,
+        private static void createJoint(Graphics g, Vector4 color, int texSlot, in PolySegment segment1, in PolySegment segment2,
             JointStyle jointStyle, ref Vector2 end1, ref Vector2 end2,
             ref Vector2 nextStart1, ref Vector2 nextStart2, bool allowOverlap)
         {
@@ -534,7 +546,7 @@ namespace ParticleMadness
 
                 if (jointStyle == JointStyle.BEVEL)
                 {
-                    g.DrawTriangle(outer1.end, outer2.start, innerSec, color);
+                    //g.DrawTriangle(outer1.end, outer2.start, innerSec, color);
                     // simply connect the intersection points
                     //*vertices++ = outer1->b;
                     //*vertices++ = outer2->a;
@@ -546,7 +558,7 @@ namespace ParticleMadness
                     // draw a circle between the ends of the outer edges,
                     // centered at the actual point
                     // with half the line thickness as the radius
-                    createTriangleFan(g, color, texture, innerSec, segment1.center.end, outer1.end, outer2.start, clockwise, false);
+                    createTriangleFan(g, color, texSlot, innerSec, segment1.center.end, outer1.end, outer2.start, clockwise, false);
                 }
                 else
                 {

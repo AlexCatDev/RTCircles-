@@ -10,8 +10,6 @@ namespace Easy2D
     /// </summary>
     public abstract class GLObject
     {
-        public static readonly Scheduler DeletionScheduler = new();
-
         public uint Handle { get; protected set; } = UInt32.MaxValue;
 
         public bool IsInitialized => Handle != UInt32.MaxValue;
@@ -66,7 +64,7 @@ namespace Easy2D
             if (IsInitialized)
             {
                 //Schedule the delete call to the gpu thread scheduler, since the deconstructor is run on another thread in 60% of cases
-                DeletionScheduler.Enqueue(() =>
+                GPUSched.Instance.Enqueue(() =>
                 {
                     Delete();
                 });

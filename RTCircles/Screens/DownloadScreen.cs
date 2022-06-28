@@ -341,7 +341,7 @@ namespace RTCircles
             {
                 var bm = list.data[i];
 
-                if (Directory.Exists($"{BeatmapMirror.SongsFolder}/{bm.sid}"))
+                if (Directory.Exists($"{BeatmapMirror.SongsDirectory}/{bm.sid}"))
                 {
                     Utils.Log($"Ignored a beatmap we already have", LogLevel.Info);
                     continue;

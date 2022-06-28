@@ -93,7 +93,7 @@ namespace RTCircles
                 }
             }
 
-            buffer.Add(new Vector2(slider.Position.X, slider.Position.Y));
+            //buffer.Add(new Vector2(slider.Position.X, slider.Position.Y));
 
             //Go through each slider control points
             for (int i = 0; i < slider.SliderPoints.Count; i++)
@@ -114,7 +114,7 @@ namespace RTCircles
                 fullPath.Add(new Vector2(slider.Position.X, slider.Position.Y));
 
 
-            #region TRIM_TO_PIXEL_LENGTH
+            #region Slider trimming to pixel length
             float length = (float)slider.PixelLength;
             for (int i = 0; i < fullPath.Count - 1; i++)
             {
@@ -219,8 +219,6 @@ namespace RTCircles
             float to = (slider.EndTime - slider.StartTime);
 
             float progress = MathUtils.Map(current, 0, to, 0, 1f).Clamp(0, 1);
-
-            float unCapped = MathUtils.Map(current, 0, to, 0, 1f);
 
             float osc = MathUtils.OscillateValue(progress * slider.Repeats, 0f, 1f);
 
@@ -497,9 +495,9 @@ namespace RTCircles
             if(!OsuContainer.MuteHitsounds && IsTracking && (Skin.SliderSlide.PlaybackPosition > Skin.SliderSlide.PlaybackLength - 50f || Skin.SliderSlide.IsPlaying == false) && OsuContainer.SongPosition > slider.StartTime && OsuContainer.SongPosition < slider.EndTime && (IsHit || IsMissed) && !(OsuContainer.Beatmap.Song?.IsPaused ?? false))
                Skin.SliderSlide.Play(true);
 
-            float timeElapsed = (float)(OsuContainer.SongPosition - slider.StartTime + OsuContainer.Beatmap.Preempt);
+            double timeElapsed = (OsuContainer.SongPosition - slider.StartTime + OsuContainer.Beatmap.Preempt);
 
-            float fadeOutStart = slider.EndTime;
+            double fadeOutStart = slider.EndTime;
 
             //Neeed a better way to handle this
             if (fadeout)
@@ -508,8 +506,8 @@ namespace RTCircles
             }
             else
             {
-                approachRing = MathUtils.Map(timeElapsed, 0, (float)OsuContainer.Beatmap.Preempt, (float)OsuContainer.ApproachCircleScale, 1f);
-                approachRing = MathUtils.Clamp(approachRing, 1f, (float)OsuContainer.ApproachCircleScale);
+                approachRing = (float)MathUtils.Map(timeElapsed, 0, OsuContainer.Beatmap.Preempt, OsuContainer.ApproachCircleScale, 1f).
+                    Clamp(1, OsuContainer.ApproachCircleScale);
 
                 if (approachRing == 1f && OsuContainer.CookieziMode)
                 {
@@ -518,7 +516,16 @@ namespace RTCircles
 
                 circleAlpha = (float)MathUtils.Map(timeElapsed, 0, OsuContainer.Beatmap.Fadein, 0, 1f).Clamp(0, 1f);
 
-                snakeIn = GlobalOptions.SliderSnakeIn.Value ? MathUtils.Map(timeElapsed, 0, (float)OsuContainer.Beatmap.Fadein / 2f, 0, 1f).Clamp(0, 1f) : 1;
+                if (GlobalOptions.SliderSnakeIn.Value)
+                {
+                    double snakeInEndTime = OsuContainer.Beatmap.Fadein / 2;
+                    snakeIn = (float)Interpolation.ValueAt(timeElapsed.Clamp(0, snakeInEndTime), 0, 1, 0, snakeInEndTime, EasingTypes.Out);
+                }
+                else
+                {
+                    snakeIn = 1;
+                }
+
                 //snakeIn = (float)MathUtils.Map(OsuContainer.SongPosition, slider.StartTime - 400, slider.EndTime, 0, 1);
             }
 
@@ -551,10 +558,13 @@ namespace RTCircles
                 //var hitsound = slider.EdgeHitSounds?[1] ?? slider.HitSound;
                 //var sample = slider.EdgeAdditions?[1].Item1 ?? slider.Extras.SampleSet;
 
-                var hitsound = slider.EdgeHitSounds?[repeatsDone] ?? slider.HitSound;
-                var sample = slider.EdgeAdditions?[repeatsDone].Item1 ?? slider.Extras.SampleSet;
+                HitSoundType hitsound = slider.EdgeHitSounds?[repeatsDone] ?? slider.HitSound;
+                SampleSet sampleSet = slider.EdgeAdditions?[repeatsDone].Item1 ?? SampleSet.None;
 
-                SampleSet? sample2 = slider.EdgeAdditions?[repeatsDone].Item2;
+                //var hitsound = slider.EdgeHitSounds?[repeatsDone] ?? slider.HitSound;
+                //var sample = slider.EdgeAdditions?[repeatsDone].Item1 ?? slider.Extras.SampleSet;
+
+                SampleSet? sampleSetAddition = slider.EdgeAdditions?[repeatsDone].Item2;
 
                 if (IsHit == false && IsMissed == false)
                 {
@@ -597,20 +607,20 @@ namespace RTCircles
 
                     if (result != HitResult.Miss)
                     {
-                        OsuContainer.PlayHitsound(hitsound, sample);
+                        OsuContainer.PlayHitsound(hitsound, sampleSet);
 
-                        if (sample2.HasValue)
-                            OsuContainer.PlayHitsound(hitsound, sample2.Value);
+                        if (sampleSetAddition.HasValue)
+                            OsuContainer.PlayHitsound(hitsound, sampleSetAddition.Value);
                     }
 
                     OsuContainer.HUD.AddHit(result == HitResult.Miss ? OsuContainer.Beatmap.Window50 : 0, result, sliderballPosition);
                 }
                 else if (IsValidTrack)
                 {
-                    OsuContainer.PlayHitsound(hitsound, sample);
+                    OsuContainer.PlayHitsound(hitsound, sampleSet);
 
-                    if (sample2.HasValue)
-                        OsuContainer.PlayHitsound(hitsound, sample2.Value);
+                    if (sampleSetAddition.HasValue)
+                        OsuContainer.PlayHitsound(hitsound, sampleSetAddition.Value);
 
                     OsuContainer.HUD.AddHit(0, HitResult.Max, sliderballPosition, false);
                 }

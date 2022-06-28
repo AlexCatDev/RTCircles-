@@ -609,10 +609,10 @@ namespace RTCircles
             test2(SmoothBuffer[0..10], g, step, new Vector4(1, 1, 1, 1), BarLength, 0.1);
             */
             //Kicks/drums/bass?
-            test2(GetFrequencyRangeFFT(20, 150), g, 0, new Vector4(1, 1, 1, 1), BarLength);
+            test2(GetFrequencyRangeFFT(20, 150), g, 0, new Vector4(1, 1, 1, 1), BarLength / 1.5f);
 
             //Symbals idk just the more high pitched stuff
-            test2(GetFrequencyRangeFFT(200, 300), g, MathF.PI/2, new Vector4(1, 0, 0, 1), BarLength);
+            test2(GetFrequencyRangeFFT(200, 300), g, MathF.PI/2, new Vector4(1, 0, 0, 1), BarLength / 1.5f);
 
             //Male-Female vocal range
             test2(GetFrequencyRangeFFT(100, 220), g, MathF.PI, new Vector4(1, 1, 0, 1), BarLength / 2);
@@ -704,7 +704,7 @@ namespace RTCircles
             }
         }
 
-        private void test2(Span<float> fft, Graphics g, float startRotation, Vector4 color, float height, double rotationSpeed = 0.25)
+        private void test2(Span<float> fft, Graphics g, float startRotation, Vector4 color, float height, double rotationSpeed = 0.1)
         {
             if (fft.Length == 0)
                 return;

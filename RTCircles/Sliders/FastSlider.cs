@@ -9,7 +9,7 @@ namespace RTCircles
 {
     public class FastSlider : ISlider
     {
-        private static readonly Easy2D.Texture circleTexture = new Easy2D.Texture(Utils.GetResource("Sliders.flatcircle.png")) { GenerateMipmaps = false, MinFilter = TextureMinFilter.Nearest, MagFilter = TextureMagFilter.Nearest };
+        private static readonly Easy2D.Texture gradientTexture = new Easy2D.Texture(Utils.GetResource("Sliders.sliderGradientDouble.png"));
 
         public Path path = new Path();
 
@@ -17,20 +17,9 @@ namespace RTCircles
 
         private float osuRadius = -1;
 
-        private void drawLine(Graphics g, Vector2 startPosition, Vector2 endPosition)
+        public void SetRadius(float osuRadius)
         {
-            g.DrawLine(startPosition, endPosition, color, radius.Y);
-        }
-
-        //Circles can be pregenerated, optimize circle resolution for the radius
-        private void drawCircle(Graphics g, Vector2 pos)
-        {
-            g.DrawRectangleCentered(pos, radius, color, circleTexture);
-        }
-
-        public void SetRadius(float radius)
-        {
-            osuRadius = radius * 0.96f;
+            this.osuRadius = osuRadius;
         }
 
         public void SetPoints(List<Vector2> points) => Path.SetPoints(points);
@@ -45,7 +34,7 @@ namespace RTCircles
 
         public void DeleteFramebuffer() { }
 
-        private Vector4 color = new Vector4(Skin.Config.SliderBorder ?? new Vector3(0.92f), 1f);
+        private Vector4 color = new Vector4(1f);
         public float Alpha
         {
             get
@@ -63,58 +52,61 @@ namespace RTCircles
         public float DrawScale { get; set; } = 1;
         public Vector2? ScalingOrigin { get; set; }
 
+        private List<Sliders.Polyline2D.PolySegment> segments = new List<Sliders.Polyline2D.PolySegment>();
+
         private void drawSlider(Graphics g)
         {
             float startLength = Path.Length * startProgress;
             float endLength = Path.Length * endProgress;
 
-            //All of this is stupid, unreadable and gave me cancer looking at it and made me die writing it all for stupid optimizations
-            if (startLength == endLength)
-                drawCircle(g, OsuContainer.MapToPlayfield(Path.CalculatePositionAtProgress(endProgress)));
-            else
+            segments.Clear();
+
+            for (int i = 0; i < Path.Points.Count - 1; i++)
             {
-                int count = 0;
+                float dist = Vector2.Distance(Path.Points[i], Path.Points[i + 1]);
 
-                Vector2? start = null;
-                Vector2? end = null;
+                Vector2 start;
+                Vector2 end;
 
-                for (int i = 0; i < Path.Points.Count - 1; i++)
+                if(segments.Count == 0)
                 {
-                    float dist = Vector2.Distance(Path.Points[i], Path.Points[i + 1]);
-
-                    if (startLength - dist <= 0 && count == 0)
+                    if (startLength - dist <= 0)
                     {
                         float blend = startLength / dist;
                         start = OsuContainer.MapToPlayfield(Vector2.Lerp(Path.Points[i], Path.Points[i + 1], blend));
-                        drawCircle(g, start.Value);
-                        count++;
                     }
-
-                    if (endLength - dist <= 0 && end.HasValue == false)
+                    else
                     {
-                        float blend = endLength / dist;
-                        end = OsuContainer.MapToPlayfield(Vector2.Lerp(Path.Points[i], Path.Points[i + 1], blend));
-                        drawCircle(g, end.Value);
-                        count++;
-                    }
-                    startLength -= dist;
-                    endLength -= dist;
-
-                    if (count > 0)
-                    {
-                        drawLine(g, start ?? OsuContainer.MapToPlayfield(Path.Points[i]), end ?? OsuContainer.MapToPlayfield(Path.Points[i + 1]));
-                        start = null;
-
-                        if (end.HasValue == false)
-                            drawCircle(g, OsuContainer.MapToPlayfield(Path.Points[i + 1]));
-
-                        count++;
-
-                        if (end.HasValue)
-                            break;
+                        startLength -= dist;
+                        continue;
                     }
                 }
+                else
+                {
+                    start = OsuContainer.MapToPlayfield(Path.Points[i]);
+                }
+
+                if (endLength - dist <= 0)
+                {
+                    float blend = endLength / dist;
+                    end = OsuContainer.MapToPlayfield(Vector2.Lerp(Path.Points[i], Path.Points[i + 1], blend));
+                    
+                    segments.Add(new Sliders.Polyline2D.PolySegment(new Sliders.LineSegment(start, end), radius.X / 2));
+
+                    break;
+                }
+
+                end = OsuContainer.MapToPlayfield(Path.Points[i + 1]);
+
+                endLength -= dist;
+
+                if (start == end)
+                    continue;
+
+                segments.Add(new Sliders.Polyline2D.PolySegment(new Sliders.LineSegment(start, end), radius.X / 2));
             }
+
+            Sliders.Polyline2D.Render(g, segments, gradientTexture, color, radius.X / 2);
         }
 
         public void Render(Graphics g)
@@ -126,6 +118,8 @@ namespace RTCircles
                 throw new Exception("Slider radius was less than 0????");
 
             radius = new Vector2(osuRadius * (OsuContainer.Playfield.Width / 512)) * DrawScale * 2;
+            drawSlider(g);
+            /*
             var prevRadius = radius;
             var prevColor = color;
 
@@ -136,6 +130,7 @@ namespace RTCircles
 
             radius = prevRadius;
             color = prevColor;
+            */
         }
 
         public void Cleanup()

@@ -111,6 +111,7 @@
     <None Remove="Sliders\slider.frag" />
     <None Remove="Sliders\slider.vert" />
     <None Remove="Sliders\slidergradient.png" />
+    <None Remove="Sliders\sliderGradientDouble.png" />
     <None Remove="Sliders\sliderPass.frag" />
     <None Remove="Sliders\sliderPass.vert" />
     <None Remove="UI\Assets\arrowexpand.png" />
@@ -191,6 +192,7 @@
     <EmbeddedResource Include="Skin\hover.wav" />
     <EmbeddedResource Include="Skin\loading.png" />
     <EmbeddedResource Include="Skin\logo.png" />
+    <EmbeddedResource Include="Sliders\sliderGradientDouble.png" />
     <EmbeddedResource Include="UI\Assets\hitmarker.png" />
     <EmbeddedResource Include="UI\Assets\menu-flash.png" />
     <EmbeddedResource Include="Skin\message-button.png" />

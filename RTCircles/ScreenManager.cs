@@ -62,7 +62,8 @@ namespace RTCircles
 
         private static double transitionStartTime = 0;
         private static bool captureScreenFlag = false;
-        private static FrameBuffer previousScreenFramebuffer = new FrameBuffer(1, 1);
+        private static bool isBackwards = false;
+        private static FrameBuffer previousScreenFramebuffer = new FrameBuffer(1, 1, Silk.NET.OpenGLES.FramebufferAttachment.ColorAttachment0, Silk.NET.OpenGLES.InternalFormat.Rgb, Silk.NET.OpenGLES.PixelFormat.Rgb);
 
         public static void GoBack()
         {
@@ -86,6 +87,7 @@ namespace RTCircles
 
             transitionStartTime = MainGame.Instance.TotalTime;
             captureScreenFlag = true;
+            isBackwards = true;
             inIntroSequence = true;
             inOutroSequence = false;
             currentScreen.OnExiting();
@@ -114,12 +116,13 @@ namespace RTCircles
             Utils.Log($"{currentScreen.GetType().Name} -> {typeof(T).Name}", LogLevel.Info);
 
 
-            if(screens.TryGetValue(typeof(T), out var screen))
+            if (screens.TryGetValue(typeof(T), out var screen))
             {
                 if (allowGoBack)
                     screenHistory.Push(currentScreen.GetType());
 
                 transitionStartTime = MainGame.Instance.TotalTime;
+                isBackwards = false;
                 captureScreenFlag = true;
                 inIntroSequence = true;
                 inOutroSequence = false;
@@ -135,7 +138,7 @@ namespace RTCircles
 
         public static void Render(Graphics g)
         {
-            const double DURATION = 0.15;
+            const double DURATION = 0.5;
 
             const double FADE_IN = 0.15;
             const double FADE_OUT = 0.3;
@@ -162,14 +165,19 @@ namespace RTCircles
 
                 double startTime = transitionStartTime;
                 double endTime = transitionStartTime + DURATION;
-                var easing = EasingTypes.Out;
+                var easing = EasingTypes.InOutExpo;
 
-                float alpha = (float)Interpolation.ValueAt(MainGame.Instance.TotalTime.Clamp(startTime, endTime),
+                float progress = (float)Interpolation.ValueAt(MainGame.Instance.TotalTime.Clamp(startTime, endTime),
                     0, 1, startTime, endTime, easing);
 
-                g.FinalColorMult.W = alpha;
+                var startProj = g.Projection;
+
+                //ååååååååå
+
+                g.Projection = Matrix4.CreateTranslation((isBackwards ? progress - 1 : 1 - progress) * MainGame.WindowWidth, 0, 0) * startProj;
                 currentScreen.Render(g);
-                if (alpha == 1)
+                g.EndDraw();
+                if (progress == 1)
                 {
                     currentScreen.OnEnter();
 
@@ -177,14 +185,8 @@ namespace RTCircles
                 }
                 else
                 {
-                    //g.FinalColorMult.W = alpha;
-                    //currentScreen.Render(g);
-                    //g.EndDraw();
-
-                    //g.FinalColorMult.W = 1;
-                    g.DrawFrameBuffer(Vector2.Zero, new Vector4(new Vector3(1), 1 - alpha), previousScreenFramebuffer);
-                    //g.EndDraw();
-
+                    g.Projection = Matrix4.CreateTranslation((isBackwards ? progress : -progress) * MainGame.WindowWidth, 0, 0) * startProj;
+                    g.DrawFrameBuffer(Vector2.Zero, new Vector4(new Vector3(1), 1), previousScreenFramebuffer);
                 }
             }
             else
@@ -200,34 +202,34 @@ namespace RTCircles
 
         public static void OnTextInput(char c)
         {
-            if (!inIntroSequence)
-                currentScreen.OnTextInput(c);
+            //if (!inIntroSequence)
+            currentScreen.OnTextInput(c);
         }
 
         public static void OnKeyDown(Key key)
         {
-            if (!inIntroSequence)
-                currentScreen.OnKeyDown(key);
+            //if (!inIntroSequence)
+            currentScreen.OnKeyDown(key);
         }
         public static void OnKeyUp(Key key)
         {
-            if (!inIntroSequence)
-                currentScreen.OnKeyUp(key);
+            //if (!inIntroSequence)
+            currentScreen.OnKeyUp(key);
         }
         public static void OnMouseDown(MouseButton button)
         {
-            if (!inIntroSequence)
-                currentScreen.OnMouseDown(button);
+            //if (!inIntroSequence)
+            currentScreen.OnMouseDown(button);
         }
         public static void OnMouseUp(MouseButton button)
         {
-            if (!inIntroSequence)
-                currentScreen.OnMouseUp(button);
+            //if (!inIntroSequence)
+            currentScreen.OnMouseUp(button);
         }
         public static void OnMouseWheel(float delta)
         {
-            if (!inIntroSequence)
-                currentScreen.OnMouseWheel(delta);
+            //if (!inIntroSequence)
+            currentScreen.OnMouseWheel(delta);
         }
     }
 

@@ -5,21 +5,22 @@ using System.Text;
 
 namespace ParticleMadness
 {
+    public enum JointStyle
+    {
+        Bevel,
+        Miter,
+        Round
+    }
+
+    public enum CapStyle
+    {
+        Butt,
+        Square,
+        Round
+    }
+
     public static class Polyline
     {
-        public enum JointStyle
-        {
-            Bevel,
-            Miter,
-            Round
-        }
-
-        public enum CapStyle
-        {
-            Butt,
-            Square,
-            Round
-        }
         private const float EPSILON = 0.0001f;
 
         private static List<Vector2> middlePoints = new List<Vector2>();

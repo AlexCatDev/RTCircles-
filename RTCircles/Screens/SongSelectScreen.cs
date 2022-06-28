@@ -98,8 +98,8 @@ namespace RTCircles
             Text = dbBeatmap.Filename.Replace(".osu", "");
             Hash = dbBeatmap.Hash;
             Folder = dbBeatmap.SetInfo.Foldername;
-            FullPath = $"{BeatmapMirror.SongsFolder}/{dbBeatmap.SetInfo.Foldername}/{dbBeatmap.Filename}";
-            BackgroundPath = dbBeatmap.BackgroundFilename is not null ? $"{BeatmapMirror.SongsFolder}/{dbBeatmap.SetInfo.Foldername}/{dbBeatmap.BackgroundFilename}" : null;
+            FullPath = $"{BeatmapMirror.SongsDirectory}/{dbBeatmap.SetInfo.Foldername}/{dbBeatmap.Filename}";
+            BackgroundPath = dbBeatmap.BackgroundFilename is not null ? $"{BeatmapMirror.SongsDirectory}/{dbBeatmap.SetInfo.Foldername}/{dbBeatmap.BackgroundFilename}" : null;
         }
 
         public bool OnShow()
@@ -369,6 +369,7 @@ namespace RTCircles
 
         public override void OnEntering()
         {
+            
             ScreenManager.GetScreen<OsuScreen>().EnsureObjectIndexSynchronization();
         }
 
