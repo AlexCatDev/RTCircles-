@@ -17,7 +17,7 @@ namespace RTCircles
 
         public readonly static Option<bool> SliderSnakeOut = new Option<bool>("SliderSnakeOut", true) { Description = "Significant performance hit" };
 
-        public readonly static Option<bool> SliderSnakeExplode = new Option<bool>("SliderSnakeExplode", true) { Description = "No performance hit" };
+        public readonly static Option<bool> SliderSnakeExplode = new Option<bool>("SliderSnakeExplode", false) { Description = "No performance hit" };
 
         public readonly static Option<bool> AutoCursorDance = new Option<bool>("AutoCursorDance", false);
 
@@ -37,9 +37,9 @@ namespace RTCircles
 
         public readonly static Option<bool> RGBCircles = new Option<bool>("RGBCircles", false) { Description = "RGB ;) (Might not look good with all skins)" };
 
-        public readonly static Option<bool> UseFastSliders = new Option<bool>("UseFastSliders", false) { Description = "Ugly sliders (Requires the current map to be reloaded, Please use slider snaking with this option)"};
+        public readonly static Option<bool> UseFastSliders = new Option<bool>("UseFastSliders", false) { Description = "If your device suck (Requires map reload, best to use slider snaking with this option)"};
 
-        public readonly static Option<bool> EnableComboBursts = new Option<bool>("EnableComboBursts", true) { Description = "Want some anime girl to clutter your screen every 50 combo?" };
+        public readonly static Option<bool> EnableComboBursts = new Option<bool>("EnableComboBursts", false) { Description = "Want some anime girl to clutter your screen every 50 combo?" };
 
         public readonly static Option<bool> EnableMouseButtons = new Option<bool>("MouseButtons", false) { Description = "Enable Mouse Buttons?" };
         #endregion

@@ -93,6 +93,9 @@ namespace RTCircles
         
         static BeatmapMirror()
         {
+            //This does nothing if the directory already exists
+            Directory.CreateDirectory(RootDirectory);
+
             realmsThread = new Thread(() =>
             {
                 if (!RealmThreadActive)
