@@ -98,9 +98,9 @@ namespace RTCircles
         {
             if (new Rectangle(Position, Size).IntersectsWith(Input.MousePosition))
             {
-                isExpanded = !isExpanded;
-                dropdownAnimation.Easing = EasingTypes.OutCubic;
+                dropdownAnimation.Easing = isExpanded ? EasingTypes.InQuint : EasingTypes.OutQuint;
                 dropdownAnimation.Duration = 0.25f;
+                isExpanded = !isExpanded;
 
                 if (isExpanded)
                     expand();

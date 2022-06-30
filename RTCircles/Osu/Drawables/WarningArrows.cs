@@ -16,7 +16,7 @@ namespace RTCircles
         {
             get {
                 float height = 160 * MainGame.Scale;
-                return new Vector2(height * Skin.WarningArrow.Texture.Size.AspectRatio(), height) * Skin.GetScale(Skin.WarningArrow);
+                return new Vector2(height * Skin.WarningArrow.Texture.Size.AspectRatio(), height);
             }
         }
 

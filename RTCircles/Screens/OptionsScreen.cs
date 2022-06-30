@@ -49,6 +49,8 @@ namespace RTCircles
             Add(osuFolderTextbox);
             Add(skinDropdown);
 
+            Add(new MapBackground() { BEAT_SIZE = 0, Zoom = 0, ParallaxAmount = 0, Opacity = 0.1f, KiaiFlash = 0.1f, ShowMenuFlash = false, Layer = -1000 });
+
             populateSkinList();
         }
 
@@ -186,6 +188,8 @@ namespace RTCircles
 
         public override void Render(Graphics g)
         {
+            base.Render(g);
+
             drawOffsetAdjuster(g);
             /*
             layoutDrawableStack(g, MainGame.WindowCenter, new Vector2(1200, 300) * MainGame.Scale, 10 * MainGame.Scale, origin,
@@ -241,7 +245,6 @@ namespace RTCircles
             }
 
             clickedSomewhere = false;
-            base.Render(g);
         }
 
         enum PositionOrigin

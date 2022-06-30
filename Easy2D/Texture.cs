@@ -38,7 +38,16 @@ namespace Easy2D
 
         public bool ImageDoneUploading { get; private set; } 
 
+        //Default = true
+        /// <summary>
+        /// Default = true, when true and loading from a stream the stream will be read on another thread, so it doesn't hang
+        /// </summary>
         public bool UseAsyncLoading { get; set; } = true;
+
+        /// <summary>
+        /// Default = false, when true the stream will be automatically disposed when the texture has finished uploading.
+        /// </summary>
+        public bool AutoDisposeStream { get; set; } = false;
 
         private Stream stream;
 
@@ -219,6 +228,12 @@ namespace Easy2D
             Utils.Log($"Loaded texture [{Handle}] {Width}x{Height} {GetMemoryUsage()} mb  Mipmaps: {GenerateMipmaps} Async: {UseAsyncLoading} Stream: {stream is null}", LogLevel.Debug);
             image.Dispose();
 
+            if (AutoDisposeStream)
+            {
+                stream?.Dispose();
+                stream = null;
+            }
+
             ImageDoneUploading = true;
         }
 
@@ -234,7 +249,7 @@ namespace Easy2D
             GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
             GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
 
-            //If no path was supplied just use empty texture, else load texture from file
+            //If stream is null just assume we're trying to create a texture without data, else load texture from the stream
             if (stream is null)
             {
                 if (Width < 0 || Height < 0)

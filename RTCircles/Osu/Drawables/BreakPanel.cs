@@ -11,6 +11,7 @@ namespace RTCircles
         private AnimFloat scrollProgress = new AnimFloat();
 
         private double breakEnd;
+        private double breakStart;
 
         public BreakPanel()
         {
@@ -37,6 +38,7 @@ namespace RTCircles
             });
 
             breakEnd = next.BaseObject.StartTime - OsuContainer.Beatmap.Preempt - 600f;
+            breakStart = OsuContainer.SongPosition;
         }
 
         public void Reset()
@@ -55,6 +57,14 @@ namespace RTCircles
             float alpha = MathUtils.OscillateValue(scrollProgress.Value, 0, 1);
 
             g.DrawRoundedRect(position + size / 2, size, Colors.From255RGBA(37, 37, 37, alpha * 127), size.Y / 2f);
+
+            var progressHeight = size.Y * 0.1f;
+            var progressWidth = (float)OsuContainer.SongPosition.Map(breakStart, breakEnd, size.X * 0.65, progressHeight);
+
+            progressWidth = MathF.Max(progressWidth, progressHeight);
+
+            g.DrawRoundedRect(position + new Vector2(size.X / 2, size.Y / 1.25f), new Vector2(progressWidth, progressHeight), new Vector4(1,1,1, alpha), progressHeight / 2f);
+
             //g.DrawRectangle(position, size, Colors.From255RGBA(37, 37, 37, 127));
 
             int remainingBreakTime = (int)Math.Max((breakEnd - OsuContainer.SongPosition) / 1000, 0);

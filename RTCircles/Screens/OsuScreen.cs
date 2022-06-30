@@ -43,6 +43,9 @@ namespace RTCircles
 
         private Cursor cursor = new Cursor();
         private float delta;
+
+        private DrawableContainer hitObjectContainer = new DrawableContainer();
+
         public OsuScreen()
         {
             OsuContainer.HUD.Container = this;
@@ -345,13 +348,13 @@ namespace RTCircles
                 if (OsuContainer.SongPosition < OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime)
                     return true;
 
-                if (objectIndex - 1 < 0)
-                    return true;
-
                 if (objectIndex >= OsuContainer.Beatmap.HitObjects.Count)
                     return OsuContainer.SongPosition > OsuContainer.Beatmap.HitObjects[^1].BaseObject.EndTime;
 
-                var prevObject = OsuContainer.Beatmap.HitObjects[objectIndex -1];
+                if (objectIndex < 1)
+                    return true;
+
+                var prevObject = OsuContainer.Beatmap.HitObjects[objectIndex - 1];
                 var currObject = OsuContainer.Beatmap.HitObjects[objectIndex];
 
                 if (currObject.BaseObject.StartTime - prevObject.BaseObject.EndTime >= 3000)
@@ -540,8 +543,6 @@ namespace RTCircles
         private bool dyingAllowed = true;
         public void reportDeath()
         {
-            return;
-
             if (dyingAllowed && ScreenManager.ActiveScreen == this)
             {
                 dyingAllowed = false;
@@ -563,6 +564,9 @@ namespace RTCircles
         {
             if (key == Key.Escape)
             {
+                if (dyingAllowed == false)
+                    return;
+
                 if(OsuContainer.Beatmap == null || OsuContainer.SongPosition <= 0)
                 {
                     ScreenManager.GoBack();

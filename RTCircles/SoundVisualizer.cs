@@ -609,7 +609,7 @@ namespace RTCircles
             test2(SmoothBuffer[0..10], g, step, new Vector4(1, 1, 1, 1), BarLength, 0.1);
             */
             //Kicks/drums/bass?
-            test2(GetFrequencyRangeFFT(20, 150), g, 0, new Vector4(1, 1, 1, 1), BarLength / 1.5f);
+            test2(GetFrequencyRangeFFT(40, 150), g, 0, new Vector4(1, 1, 1, 1), BarLength / 2f);
 
             //Symbals idk just the more high pitched stuff
             test2(GetFrequencyRangeFFT(200, 300), g, MathF.PI/2, new Vector4(1, 0, 0, 1), BarLength / 1.5f);

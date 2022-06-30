@@ -4,6 +4,8 @@ using System;
 using System.IO;
 using Easy2D.Game;
 using Silk.NET.Input;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace RTCircles
 {
@@ -82,25 +84,29 @@ namespace RTCircles
                 }
 
                 int index = BeatmapCollection.SearchItems.FindIndex((o) => o.Hash == OsuContainer.Beatmap.Hash);
-                //int index = -1;
-
-                if (index == -1)
-                {
-                    Utils.Log($"Could not scroll to selected beatmap, it wasnt found it the list of beatmaps!", LogLevel.Error);
-                    return;
-                }
-
-                scrollTo = -(ElementSize.Y + ElementSpacing) * index;
-
-                scrollTo += ((MainGame.WindowHeight - ElementSize.Y + ElementSpacing) / 2) - HeaderSize.Y;
-
-                scrollMomentum = 0;
-
-                if (selectedItem is null)
-                    scrollOffset = scrollTo.Value;
-
-                selectedItem = BeatmapCollection.SearchItems[index];
+                
+                TryScrollToItemAtIndex(index);
             };
+        }
+
+        public void TryScrollToItemAtIndex(int index)
+        {
+            if (index < 0)
+            {
+                Utils.Log($"Could not scroll to selected beatmap, it wasnt found it the list of beatmaps!", LogLevel.Error);
+                return;
+            }
+
+            scrollTo = -(ElementSize.Y + ElementSpacing) * index;
+
+            scrollTo += ((MainGame.WindowHeight - ElementSize.Y + ElementSpacing) / 2) - HeaderSize.Y;
+
+            scrollMomentum = 0;
+
+            if (selectedItem is null)
+                scrollOffset = scrollTo.Value;
+
+            selectedItem = BeatmapCollection.SearchItems[index];
         }
 
         private BouncingButton downloadBtn, settingsBtn, modsBtn;
@@ -141,6 +147,10 @@ namespace RTCircles
             Container.Add(modsBtn);
         }
 
+
+        private Vector2i? prevViewport;
+        private List<CarouselItem> lastViewedItems = new List<CarouselItem>();
+        private List<CarouselItem> viewedItems = new List<CarouselItem>();
         public override void Render(Graphics g)
         {
             if (shouldGenBlur)
@@ -155,6 +165,19 @@ namespace RTCircles
                 }
             }
 
+            if (!prevViewport.HasValue)
+                prevViewport = (Vector2i)Viewport.Area.Size;
+
+            if(prevViewport != (Vector2i)Viewport.Area.Size)
+            {
+                prevViewport = (Vector2i)Viewport.Area.Size;
+
+                if (selectedItem == null)
+                    TryScrollToItemAtIndex(0);
+                else
+                    TryScrollToItemAtIndex(BeatmapCollection.SearchItems.FindIndex((o) => o == selectedItem));
+            }
+
             Vector2 offset = new Vector2();
             offset.Y += HeaderSize.Y;
             offset.X += MainGame.WindowWidth - ElementSize.X;
@@ -163,22 +186,18 @@ namespace RTCircles
             //Console.WriteLine(scrollOffset.ToString() + " min: " + ScrollMin + " actual: " + offset.Y + $" diff: {scrollOffset-offset.Y}");
             for (int i = 0; i < BeatmapCollection.SearchItems.Count; i++)
             {
+                if (offset.Y < -HeaderSize.Y * 2)
+                {
+                    //Item is not viewable because it's outside the screen
+                    goto incrementYOffset;
+                }
+
                 Rectangle bounds = new Rectangle(offset, ElementSize);
 
                 var currentItem = BeatmapCollection.SearchItems[i];
 
-                //I NEVER USE GOTOS BUT ITS FINE TO DO HERE HONESTLY IT FITS
-                if (bounds.Y < -HeaderSize.Y * 2)
-                {
-                    currentItem.OnHide();
-                    goto incrementYOffset;
-                }
-
-                if (currentItem.OnShow() == false)
-                {
-                    BeatmapCollection.SearchItems.RemoveAt(i);
-                    continue;
-                }
+                viewedItems.Add(currentItem);
+                currentItem.Update();
 
                 float distance = MathF.Abs(MainGame.WindowCenter.Y - bounds.Center.Y);
 
@@ -247,14 +266,33 @@ namespace RTCircles
             incrementYOffset:
                 offset.Y += ElementSize.Y + ElementSpacing;
 
+                
+                //We incremented the offset and it was outside the screen, so break the loop, since no more items can be rendered.
                 if (offset.Y > MainGame.WindowHeight)
-                {
-                    if (BeatmapCollection.SearchItems.Count > i + 1)
-                        BeatmapCollection.SearchItems[i + 1].OnHide();
-
                     break;
+            }
+
+            for (int i = 0; i < viewedItems.Count; i++)
+            {
+                if (!lastViewedItems.Contains(viewedItems[i]))
+                {
+                    viewedItems[i].OnShow();
+                    //Console.WriteLine($"Show item: {viewedItems[i].Hash}");
                 }
             }
+
+            for (int i = 0; i < lastViewedItems.Count; i++)
+            {
+                if (!viewedItems.Contains(lastViewedItems[i]))
+                {
+                    lastViewedItems[i].OnHide();
+                    //Console.WriteLine($"Hide item: {lastViewedItems[i].Hash}");
+                }
+            }
+
+            lastViewedItems.Clear();
+            lastViewedItems.AddRange(viewedItems);
+            viewedItems.Clear();
 
             string searchForString = "Search: ";
             float searchForStringScale = 0.5f * MainGame.Scale;

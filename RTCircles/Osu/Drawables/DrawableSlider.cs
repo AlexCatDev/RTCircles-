@@ -204,7 +204,7 @@ namespace RTCircles
 
             var angle = MathF.Atan2(secondLast.Y - last.Y, secondLast.X - last.X);
 
-            drawSliderRepeat(g, last, angle, 1, circleAlpha);
+            drawSliderRepeat(g, OsuContainer.MapToPlayfield(SliderPath.Path.CalculatePositionAtProgress(snakeIn)), angle, 1, circleAlpha);
         }
 
         private Vector2 sliderballPosition;
@@ -266,7 +266,7 @@ namespace RTCircles
             //The way i've done slider repeats are very confusing to me 
             var repeatsToGo = slider.Repeats - repeatsDone;
 
-            if (repeatsToGo > 1 && snakeIn == 1f)
+            if (repeatsToGo > 1)
             {
                 if (slider.Repeats % 2 == 0)
                 {

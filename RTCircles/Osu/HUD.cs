@@ -220,16 +220,15 @@ namespace RTCircles
                 default:
                     break;
             }
+
+            if (currentHealth == 0)
+                ScreenManager.GetScreen<OsuScreen>().reportDeath();
         }
 
         public void AddHP(float val)
         {
             currentHealth += val;
-
             currentHealth.ClampRef(0, 1);
-
-            if (currentHealth == 0)
-                ScreenManager.GetScreen<OsuScreen>().reportDeath();
         }
 
         private void drawComboText(Graphics g)
@@ -238,7 +237,7 @@ namespace RTCircles
 
             float comboScale = 70 * MainGame.Scale;
 
-            float margin = 10 * MainGame.Scale;
+            float margin = 5 * MainGame.Scale;
 
             Vector2 comboSize = Skin.ComboNumbers.Meassure(comboScale * scale2, comboText);
             Skin.ComboNumbers.Draw(g, new Vector2(margin, MainGame.WindowHeight - comboSize.Y - margin), comboScale * scale2, new Vector4(1f, 1f, 1f, 0.7f), comboText);
