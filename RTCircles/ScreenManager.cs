@@ -63,7 +63,11 @@ namespace RTCircles
         private static double transitionStartTime = 0;
         private static bool captureScreenFlag = false;
         private static bool isBackwards = false;
-        private static FrameBuffer previousScreenFramebuffer = new FrameBuffer(1, 1, Silk.NET.OpenGLES.FramebufferAttachment.ColorAttachment0, Silk.NET.OpenGLES.InternalFormat.Rgb, Silk.NET.OpenGLES.PixelFormat.Rgb);
+        private static FrameBuffer previousScreenFramebuffer = new FrameBuffer(1, 1, 
+            Silk.NET.OpenGLES.FramebufferAttachment.ColorAttachment0, 
+            Silk.NET.OpenGLES.InternalFormat.Rgb16f, 
+            Silk.NET.OpenGLES.PixelFormat.Rgb, 
+            Silk.NET.OpenGLES.PixelType.Float);
 
         public static void GoBack()
         {
@@ -170,23 +174,26 @@ namespace RTCircles
                 float progress = (float)Interpolation.ValueAt(MainGame.Instance.TotalTime.Clamp(startTime, endTime),
                     0, 1, startTime, endTime, easing);
 
-                var startProj = g.Projection;
-
                 //ååååååååå
-
-                g.Projection = Matrix4.CreateTranslation((isBackwards ? progress - 1 : 1 - progress) * MainGame.WindowWidth, 0, 0) * startProj;
-                currentScreen.Render(g);
-                g.EndDraw();
                 if (progress == 1)
                 {
+                    currentScreen.Render(g);
+
                     currentScreen.OnEnter();
 
                     inIntroSequence = false;
                 }
                 else
                 {
-                    g.Projection = Matrix4.CreateTranslation((isBackwards ? progress : -progress) * MainGame.WindowWidth, 0, 0) * startProj;
-                    g.DrawFrameBuffer(Vector2.Zero, new Vector4(new Vector3(1), 1), previousScreenFramebuffer);
+                    var startProj = g.Projection;
+
+                    g.Projection = Matrix4.CreateTranslation((isBackwards ? progress - 1 : 1 - progress) * MainGame.WindowWidth, 0, 0) * startProj;
+                    currentScreen.Render(g);
+
+                    //g.Projection = Matrix4.CreateTranslation((isBackwards ? progress : -progress) * MainGame.WindowWidth, 0, 0) * startProj;
+                    g.DrawFrameBuffer(new Vector2(MainGame.WindowWidth * (isBackwards ? 1 : -1), 0), new Vector4(new Vector3(1), 1), previousScreenFramebuffer);
+                    g.EndDraw();
+                    g.Projection = startProj;
                 }
             }
             else

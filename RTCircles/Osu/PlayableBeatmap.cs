@@ -17,6 +17,11 @@ namespace RTCircles
         public HitsoundStore Hitsounds { get; private set; }
         public Sound Song { get; private set; }
 
+        private Guid backgroundGuid = Guid.NewGuid();
+        private string backgroundPath = "";
+
+        public bool IsNewBackground { get; private set; } = true;
+
         public Texture Background { get; private set; }
 
         public Beatmap InternalBeatmap { get; private set; }
@@ -51,8 +56,6 @@ namespace RTCircles
         public float CircleRadiusInOsuPixels => 54.4f - 4.48f * CS;
 
         public List<double> DifficultyGraph = new List<double>();
-
-        public string BackgroundPath { get; private set; } = "";
 
         public string AudioPath { get; private set; } = "";
 
@@ -134,14 +137,11 @@ namespace RTCircles
 
             string bgPath = $"{folderPath}/{playableBeatmap.InternalBeatmap.EventsSection.BackgroundImage}";
 
-            playableBeatmap.BackgroundPath = bgPath;
+            playableBeatmap.backgroundPath = bgPath;
+            //Just get the cache since it was properly already loaded from beatmap carousel
+            playableBeatmap.Background = DynamicTexureCache.AquireCache(playableBeatmap.backgroundGuid, playableBeatmap.backgroundPath);
 
-            if (playableBeatmap.BackgroundPath == OsuContainer.Beatmap?.BackgroundPath)
-                playableBeatmap.Background = OsuContainer.Beatmap.Background;
-            else if (File.Exists(bgPath)) 
-                playableBeatmap.Background = new Texture(File.OpenRead(bgPath));
-            else
-                playableBeatmap.Background = Skin.DefaultBackground;
+            playableBeatmap.IsNewBackground = OsuContainer.Beatmap?.Background != playableBeatmap.Background;
 
             return playableBeatmap;
         }
@@ -484,6 +484,11 @@ namespace RTCircles
 
             return mid;
 
+        }
+
+        ~PlayableBeatmap()
+        {
+            DynamicTexureCache.ReleaseCache(backgroundGuid, backgroundPath);
         }
     }
 }

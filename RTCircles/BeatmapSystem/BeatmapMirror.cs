@@ -79,7 +79,7 @@ namespace RTCircles
 
         private static Realm realm;
 
-        public static event Action<DBBeatmapInfo, bool> OnNewBeatmapAvailable;
+        public static event Action<DBBeatmapSetInfo, bool> OnNewBeatmapSetAvailable;
 
         private static object beatmapDecoderLock = new object();
 
@@ -284,10 +284,7 @@ namespace RTCircles
                     realm.Add(setInfo, true);
                 });
 
-                foreach (var item in setInfo.Beatmaps)
-                {
-                    OnNewBeatmapAvailable?.Invoke(item, false);
-                }
+                OnNewBeatmapSetAvailable?.Invoke(setInfo, false);
 
                 Utils.Log("Done!", LogLevel.Success);
             });
@@ -368,10 +365,7 @@ namespace RTCircles
                         realm.Add(setInfo, true);
                     });
 
-                    foreach (var item in setInfo.Beatmaps)
-                    {
-                        OnNewBeatmapAvailable?.Invoke(item, true);
-                    }
+                    OnNewBeatmapSetAvailable?.Invoke(setInfo , true);
 
                     Utils.Log("Done!", LogLevel.Success);
                 });

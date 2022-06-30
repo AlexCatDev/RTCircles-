@@ -330,6 +330,7 @@ namespace RTCircles
 
         public static OsuTexture HealthBar_BG { get; private set; }
         public static OsuTexture HealthBar_Fill { get; private set; }
+        public static OsuTexture HealthBar_Marker { get; private set; }
 
         public static Texture FlashlightOverlay = new Texture(Utils.GetResource("Skin.FlashlightOverlay.png"));
 
@@ -437,10 +438,12 @@ namespace RTCircles
             DTModIcon = LoadTexture(path, "selection-mod-doubletime");
             EZModIcon = LoadTexture(path, "selection-mod-easy");
 
-            HealthBar_BG = LoadTexture(path, "scorebar-bg", false, true);
-            HealthBar_Fill = LoadTexture(path, "scorebar-colour", false, true);
+            HealthBar_Marker = LoadTexture(path, "scorebar-marker", false, true);
+
+            HealthBar_BG = LoadTexture(path, "scorebar-bg", false, false);
+            HealthBar_Fill = LoadTexture(path, "scorebar-colour-0", false, true);
             if(HealthBar_Fill == null)
-                HealthBar_Fill = LoadTexture(path, "scorebar-colour-0", false, true);
+                HealthBar_Fill = LoadTexture(path, "scorebar-colour", false, false);
 
             RankingXH = LoadTexture(path, "ranking-XH-small");
             RankingX = LoadTexture(path, "ranking-X-small");

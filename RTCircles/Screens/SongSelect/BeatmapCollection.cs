@@ -52,8 +52,12 @@ namespace RTCircles
                     {
                         //Remove the texture cache item
                         textureCache.Remove(path);
-                        //And delete the texture
-                        texture.Delete();
+
+                        GPUSched.Instance.Enqueue(() =>
+                        {
+                            //And delete the texture
+                            texture.Delete();
+                        });
                     }
                 }
             }
@@ -93,14 +97,11 @@ namespace RTCircles
             Hash = dbBeatmap.Hash;
             Folder = dbBeatmap.SetInfo.Foldername;
             FullPath = $"{BeatmapMirror.SongsDirectory}/{dbBeatmap.SetInfo.Foldername}/{dbBeatmap.Filename}";
-            BackgroundPath = dbBeatmap.BackgroundFilename is not null ? $"{BeatmapMirror.SongsDirectory}/{dbBeatmap.SetInfo.Foldername}/{dbBeatmap.BackgroundFilename}" : null;
+            BackgroundPath = dbBeatmap.BackgroundFilename is not null ? $"{BeatmapMirror.SongsDirectory}/{dbBeatmap.SetInfo.Foldername}/{dbBeatmap.BackgroundFilename}" : "";
         }
 
         public void Update()
         {
-            if (string.IsNullOrEmpty(BackgroundPath))
-                return;
-
             if (!IsVisible)
                 return;
 
@@ -133,9 +134,9 @@ namespace RTCircles
 
             loadTextureDelay = 0;
 
-            //It can happend that onhide gets called before onshow on the very first instance or some shit
-            if (!string.IsNullOrEmpty(BackgroundPath))
-                DynamicTexureCache.ReleaseCache(id, BackgroundPath);
+            sFloat.Value = 0;
+
+            DynamicTexureCache.ReleaseCache(id, BackgroundPath);
 
             Texture = null;
         }

@@ -207,14 +207,35 @@ namespace RTCircles
             drawSliderRepeat(g, OsuContainer.MapToPlayfield(SliderPath.Path.CalculatePositionAtProgress(snakeIn)), angle, 1, circleAlpha);
         }
 
+        private void drawSliderRepeats(Graphics g)
+        {
+            //The way i've done slider repeats are very confusing to me 
+            var repeatsToGo = slider.Repeats - repeatsDone;
+
+            if (repeatsToGo > 1)
+            {
+                if (slider.Repeats % 2 == 0)
+                {
+                    drawSliderRepeatTail(g);
+
+                    if (repeatsToGo > 2)
+                        drawSliderRepeatHead(g);
+                }
+                else
+                {
+                    drawSliderRepeatHead(g);
+
+                    if (repeatsToGo > 2)
+                        drawSliderRepeatTail(g);
+                }
+            }
+        }
+
         private Vector2 sliderballPosition;
         private Vector2 previousBallPos;
 
-
         private void drawSliderBall(Graphics g)
         {
-            drawSliderRepeats(g);
-
             float current = (float)OsuContainer.SongPosition - slider.StartTime;
             float to = (slider.EndTime - slider.StartTime);
 
@@ -238,7 +259,7 @@ namespace RTCircles
             float sliderBallAngle = MathHelper.RadiansToDegrees(MathF.Atan2(pos.Y - previousBallPos.Y, pos.X - previousBallPos.X));
             if (OsuContainer.SongPosition >= slider.StartTime)
             {
-                if (OsuContainer.SongPosition < slider.EndTime)
+                if (OsuContainer.SongPosition <= slider.EndTime)
                 {
                     g.DrawRectangleCentered(sliderballPosition, Size * Skin.GetScale(Skin.SliderBall), color, Skin.SliderBall, rotDegrees: sliderBallAngle);
 
@@ -255,33 +276,7 @@ namespace RTCircles
                 Vector2 followCircleSize = Size * sliderFollowScaleAnim * Skin.GetScale(Skin.SliderFollowCircle, 256, 512) * fadeoutScale;
 
                 //g.DrawEllipse(sliderballPosition, 360, 0, SliderBallActiveScale * OsuContainer.Beatmap.CircleRadius, 0, new Vector4(1f, 1f, 1f, 0.5f));
-                g.DrawRectangleCentered(sliderballPosition, followCircleSize, new Vector4(1f, 1f, 1f, followCircleAlpha), Skin.SliderFollowCircle, null, false, sliderBallAngle);
-            }
-
-            drawHitCircle(g);
-        }
-
-        private void drawSliderRepeats(Graphics g)
-        {
-            //The way i've done slider repeats are very confusing to me 
-            var repeatsToGo = slider.Repeats - repeatsDone;
-
-            if (repeatsToGo > 1)
-            {
-                if (slider.Repeats % 2 == 0)
-                {
-                    drawSliderRepeatTail(g);
-
-                    if (repeatsToGo > 2)
-                        drawSliderRepeatHead(g);
-                }
-                else
-                {
-                    drawSliderRepeatHead(g);
-
-                    if (repeatsToGo > 2)
-                        drawSliderRepeatTail(g);
-                }
+                g.DrawRectangleCentered(sliderballPosition, followCircleSize, new Vector4(1f, 1f, 1f, followCircleAlpha), Skin.SliderFollowCircle);
             }
         }
 
@@ -702,6 +697,10 @@ namespace RTCircles
 
             if (circleAlpha > 0)
             {
+                drawHitCircle(g);
+
+                drawSliderRepeats(g);
+
                 drawSliderBall(g);
             }
 

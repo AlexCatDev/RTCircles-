@@ -1073,7 +1073,7 @@ namespace RTCircles
                 SmoothBuffer[i] = MathHelper.Lerp(SmoothBuffer[i], buffValue, delta * LerpSpeed);
             }
 
-            for (int i = 0; i < RawBuffer.Length; i++)
+            for (int i = 0; i < 512; i++)
             {
                 lol[i] = MathHelper.Lerp(lol[i], RawBuffer[i], delta * LerpSpeed);
             }

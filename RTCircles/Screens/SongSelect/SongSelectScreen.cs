@@ -19,23 +19,24 @@ namespace RTCircles
 
         public SongSelectScreen()
         {
-            BeatmapMirror.OnNewBeatmapAvailable += (beatmap, showNotification) =>
+            BeatmapMirror.OnNewBeatmapSetAvailable += (set, showNotification) =>
             {
-                AddBeatmapToCarousel(beatmap);
+                CarouselItem firstItem = null;
+                foreach (var beatmap in set.Beatmaps)
+                {
+                    var itemAdded = AddBeatmapToCarousel(beatmap);
+
+                    if(firstItem == null)
+                        firstItem = itemAdded;
+                }
 
                 if (!showNotification)
                     return;
 
-                string hash = beatmap.Hash;
-                NotificationManager.ShowMessage($"Imported {beatmap.Filename}", ((Vector4)Color4.LightGreen).Xyz, 3, () => {
+                NotificationManager.ShowMessage($"Imported {firstItem.Folder}", ((Vector4)Color4.LightGreen).Xyz, 3, () => {
                     if (ScreenManager.ActiveScreen is not OsuScreen)
                     {
-                        var foundBeatmap = BeatmapCollection.SearchItems.Find((o) => o.Hash == hash);
-
-                        if (foundBeatmap != null)
-                            this.SongSelector.SelectBeatmap(foundBeatmap);
-                        else
-                            NotificationManager.ShowMessage("The beatmap was somehow not found even though it was just imported it? o.o", Colors.White.Xyz, 5f);
+                        this.SongSelector.SelectBeatmap(firstItem);
                     }
                 });
             };
@@ -48,24 +49,26 @@ namespace RTCircles
             Add(SongSelector);
         }
 
-        public void AddBeatmapToCarousel(DBBeatmapInfo dBBeatmap)
+        public CarouselItem AddBeatmapToCarousel(DBBeatmapInfo dBBeatmap)
         {
             //Dont add to carousel if we already have this item
             //Utils.Log($"Adding DBBeatmap: {dBBeatmap.Filename} Current carousel item count: {BeatmapCollection.Items.Count}", LogLevel.Debug);
 
-            if (BeatmapCollection.HashedItems.ContainsKey(dBBeatmap.Hash))
-                return;
+            if (BeatmapCollection.HashedItems.TryGetValue(dBBeatmap.Hash, out var existingItem))
+                return existingItem;
 
             if(dBBeatmap.SetInfo == null)
             {
                 //Utils.Log($"Beatmap set info was null", LogLevel.Error);
-                return;
+                throw new Exception("SetInfo was null?");
             }
 
             CarouselItem newItem = new CarouselItem();
             newItem.SetDBBeatmap(dBBeatmap);
 
             BeatmapCollection.AddItem(newItem);
+
+            return newItem;
         }
 
         public void LoadCarouselItems(Realm realm)

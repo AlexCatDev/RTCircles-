@@ -83,6 +83,9 @@
     <None Remove="Skin\ranking-XH-small.png" />
     <None Remove="Skin\reversearrow.png" />
     <None Remove="Skin\score-x.png" />
+    <None Remove="Skin\scorebar-bg.png" />
+    <None Remove="Skin\scorebar-colour.png" />
+    <None Remove="Skin\scorebar-marker.png" />
     <None Remove="Skin\selection-mod-doubletime.png" />
     <None Remove="Skin\selection-mod-easy.png" />
     <None Remove="Skin\selection-mod-hardrock.png" />
@@ -192,6 +195,9 @@
     <EmbeddedResource Include="Skin\hover.wav" />
     <EmbeddedResource Include="Skin\loading.png" />
     <EmbeddedResource Include="Skin\logo.png" />
+    <EmbeddedResource Include="Skin\scorebar-bg.png" />
+    <EmbeddedResource Include="Skin\scorebar-colour.png" />
+    <EmbeddedResource Include="Skin\scorebar-marker.png" />
     <EmbeddedResource Include="Sliders\sliderGradientDouble.png" />
     <EmbeddedResource Include="UI\Assets\hitmarker.png" />
     <EmbeddedResource Include="UI\Assets\menu-flash.png" />

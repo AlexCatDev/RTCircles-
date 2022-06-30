@@ -143,13 +143,15 @@ namespace RTCircles
             }
         }
 
-        private float scale = 1f;
-        private float scaleTime = 0.2f;
+        private float comboScale = 1f;
+        private float comboScaleTime = 0.2f;
 
-        private float scale2 = 0;
-        private float scaleTime2 = 0.4f;
+        private float comboScale2 = 0;
+        private float comboScaleTime2 = 0.4f;
 
-        private float unstableRateBarWidth => (float)OsuContainer.Beatmap.Window50 * 3.9f * MainGame.Scale;
+        private float healthbarMarkerScale = 1;
+
+        private float unstableRateBarWidth => (float)OsuContainer.Beatmap.Window50 * 4.4f * MainGame.Scale;
         private float unstableRateBarHeight => 14 * MainGame.Scale;
 
         private float currentHealth = 1;
@@ -180,11 +182,17 @@ namespace RTCircles
                 if (OsuContainer.Combo > OsuContainer.MaxCombo)
                     OsuContainer.MaxCombo = OsuContainer.Combo;
 
-                scaleTime = 0f;
-                scaleTime2 = 0;
+                comboScaleTime = 0f;
+                comboScaleTime2 = 0;
+
+                healthbarMarkerScale = 2;
 
                 if (GlobalOptions.EnableComboBursts.Value && Skin.ComboBurst is not null && OsuContainer.Combo % 50 == 0 && OsuContainer.Combo > 0)
                     ScreenManager.GetScreen<OsuScreen>().Add(new ComboBurst());
+            }
+            else
+            {
+                healthbarMarkerScale = 1;
             }
 
 
@@ -237,13 +245,13 @@ namespace RTCircles
 
             float comboScale = 70 * MainGame.Scale;
 
-            float margin = 5 * MainGame.Scale;
+            float margin = 2;
 
-            Vector2 comboSize = Skin.ComboNumbers.Meassure(comboScale * scale2, comboText);
-            Skin.ComboNumbers.Draw(g, new Vector2(margin, MainGame.WindowHeight - comboSize.Y - margin), comboScale * scale2, new Vector4(1f, 1f, 1f, 0.7f), comboText);
+            Vector2 comboSize = Skin.ComboNumbers.Meassure(comboScale * comboScale2, comboText);
+            Skin.ComboNumbers.Draw(g, new Vector2(margin, MainGame.WindowHeight - comboSize.Y - margin), comboScale * comboScale2, new Vector4(1f, 1f, 1f, 0.7f), comboText);
 
-            comboSize = Skin.ComboNumbers.Meassure(comboScale * scale, comboText);
-            Skin.ComboNumbers.Draw(g, new Vector2(margin, MainGame.WindowHeight - comboSize.Y - margin), comboScale * scale, Colors.White, comboText);
+            comboSize = Skin.ComboNumbers.Meassure(comboScale * this.comboScale, comboText);
+            Skin.ComboNumbers.Draw(g, new Vector2(margin, MainGame.WindowHeight - comboSize.Y - margin), comboScale * this.comboScale, Colors.White, comboText);
         }
         
         private void drawURBar(Graphics g)
@@ -404,20 +412,25 @@ namespace RTCircles
 
             interpolatedHP = MathHelper.Lerp(interpolatedHP, currentHealth, (float)MainGame.Instance.DeltaTime * 30f);
 
+            healthbarMarkerScale = (float)Interpolation.Damp(healthbarMarkerScale, 1, 0.35, MainGame.Instance.DeltaTime * 10);
+
             float hpScale = MainGame.Scale * 1.405f;
 
             if (Skin.HealthBar_BG != null)
             {
-                //g.DrawRectangle(Vector2.Zero, Skin.HealthBar_BG.Texture.Size * MainGame.Scale / hpScale, Colors.White, Skin.HealthBar_BG);
                 var size = Skin.HealthBar_BG.Texture.Size;
 
                 if (Skin.HealthBar_BG.IsX2)
-                    size /= 2;
+                    size *= 0.5f;
 
                 g.DrawRectangle(Vector2.Zero, size * hpScale, Colors.White, Skin.HealthBar_BG);
-
-                //g.DrawRectangle(Vector2.Zero, new Vector2(MainGame.WindowHeight * Skin.HealthBar_BG.Texture.Size.AspectRatio(), MainGame.WindowHeight), Colors.White, Skin.HealthBar_BG);
             }
+
+            Vector2 fillOffset = Skin.HealthBar_Marker == null ? new Vector2(5, 16) : new Vector2(12, 12);
+            Vector4 healthColor = new Vector4(1, 1, 1, 1);
+
+            if (PostProcessing.Bloom)
+                healthColor.Xyz += new Vector3(healthbarMarkerScale.Map(1, 2, 0, 0.5f));
 
             if (Skin.HealthBar_Fill != null)
             {
@@ -426,13 +439,25 @@ namespace RTCircles
                     Skin.HealthBar_Fill.Texture.Size.Y) * hpScale;
 
                 if (Skin.HealthBar_Fill.IsX2)
-                    healthSize /= 2;
+                    healthSize *= 0.5f;
 
-                g.DrawRectangle(new Vector2(5, 16) * hpScale, healthSize, Colors.White, Skin.HealthBar_Fill, healthUV, true);
+                var healthFillPos = fillOffset * hpScale;
+
+                g.DrawRectangle(healthFillPos, healthSize, healthColor, Skin.HealthBar_Fill, healthUV, true);
+
+                if (Skin.HealthBar_Marker != null)
+                {
+                    Vector2 markerSize = Skin.HealthBar_Marker.Texture.Size * hpScale;
+
+                    if (Skin.HealthBar_Marker.IsX2)
+                        markerSize *= 0.5f;
+
+                    g.DrawRectangleCentered(new Vector2(healthFillPos.X + healthSize.X, 16 * hpScale), markerSize * healthbarMarkerScale, healthColor, Skin.HealthBar_Marker);
+                }
             }
             else
             {
-                g.DrawRectangle(new Vector2(5, 16) * MainGame.Scale, new Vector2(500 * interpolatedHP, 32) * MainGame.Scale, new Vector4(0.85f, 0.85f, 0.85f, 1));
+                g.DrawRectangle(fillOffset * MainGame.Scale, new Vector2(500 * interpolatedHP, 32) * MainGame.Scale, new Vector4(0.85f, 0.85f, 0.85f, 1));
             }
         }
 
@@ -472,15 +497,15 @@ namespace RTCircles
             rollingScore = Interpolation.Damp(rollingScore, OsuContainer.Score, 0.05, delta * 10f);
             rollingAcc = Interpolation.Damp(rollingAcc, OsuContainer.Accuracy * 100, 0.05, delta * 10f);
 
-            scaleTime += delta;
-            scaleTime = scaleTime.Clamp(0f, 0.2f);
+            comboScaleTime += delta;
+            comboScaleTime = comboScaleTime.Clamp(0f, 0.2f);
 
-            scale = Interpolation.ValueAt(scaleTime, 1.8f, 1.5f, 0, 0.2f, EasingTypes.OutQuart);
+            comboScale = Interpolation.ValueAt(comboScaleTime, 1.8f, 1.5f, 0, 0.2f, EasingTypes.OutQuart);
 
-            scaleTime2 += delta;
-            scaleTime2 = scaleTime2.Clamp(0f, 0.4f);
+            comboScaleTime2 += delta;
+            comboScaleTime2 = comboScaleTime2.Clamp(0f, 0.4f);
 
-            scale2 = Interpolation.ValueAt(scaleTime2, 2.7f, 1.5f, 0, 0.4f, EasingTypes.OutQuart);
+            comboScale2 = Interpolation.ValueAt(comboScaleTime2, 2.7f, 1.5f, 0, 0.4f, EasingTypes.OutQuart);
 
             float pressSize = 50f * MainGame.Scale;
             float size = 65f * MainGame.Scale;
