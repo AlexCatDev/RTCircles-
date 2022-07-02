@@ -41,10 +41,34 @@ namespace RTCircles
 
         private int objectIndex = 0;
 
-        private Cursor cursor = new Cursor();
-        private float delta;
+        public bool IsCurrentlyBreakTime
+        {
+            get
+            {
+                if (OsuContainer.Beatmap.HitObjects.Count == 0)
+                    return true;
 
-        private DrawableContainer hitObjectContainer = new DrawableContainer();
+                if (OsuContainer.SongPosition < OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime)
+                    return true;
+
+                if (objectIndex >= OsuContainer.Beatmap.HitObjects.Count)
+                    return OsuContainer.SongPosition > OsuContainer.Beatmap.HitObjects[^1].BaseObject.EndTime;
+
+                if (objectIndex < 1)
+                    return true;
+
+                var prevObject = OsuContainer.Beatmap.HitObjects[objectIndex - 1];
+                var currObject = OsuContainer.Beatmap.HitObjects[objectIndex];
+
+                if (currObject.BaseObject.StartTime - prevObject.BaseObject.EndTime >= 3000)
+                    return OsuContainer.SongPosition > prevObject.BaseObject.EndTime && OsuContainer.SongPosition < currObject.BaseObject.StartTime;
+
+                return false;
+            }
+        }
+
+        private readonly Cursor cursor = new Cursor();
+        private float delta;
 
         public OsuScreen()
         {
@@ -78,10 +102,10 @@ namespace RTCircles
                 }
             };
 
-            retryButton.OnClick += (s, e) =>
+            retryButton.OnClick += () =>
             {
-                if (!faderino.fade.HasCompleted)
-                    return;
+                if (!pauseOverlayFade.HasCompleted)
+                    return false;
 
                 OnEnter();
 
@@ -91,14 +115,23 @@ namespace RTCircles
                 {
                     OnEntering();
                     faderino.FadeTo(0f, 0.25f, EasingTypes.Out);
+
+                    retryButton.IsAcceptingInput = true;
                 });
+
+                return true;
             };
 
-            quitButton.OnClick += (s, e) =>
+            quitButton.OnClick += () =>
             {
+                if (!pauseOverlayFade.HasCompleted)
+                    return false;
+
                 ScreenManager.GoBack();
                 OsuContainer.Beatmap.Song.Play(false);
                 pauseOverlayFade.Value = 0f;
+
+                return true;
             };
         }
 
@@ -112,11 +145,12 @@ namespace RTCircles
             Clear<FollowPoints>();
 
             pauseStart = double.MaxValue;
-            dyingAllowed = true;
+            canDie = true;
 
             OsuContainer.HUD.AddHP(1000);
 
             bgAlpha.Value = 1f;
+            bgAlpha.Wait(0.2f);
             bgAlpha.TransformTo(0.1f, 1f, EasingTypes.Out);
 
             objectIndex = 0;
@@ -260,7 +294,19 @@ namespace RTCircles
 
         public override void OnExiting()
         {
-            
+            //We're dying or we're dead
+            if (!canDie)
+            {
+                pauseOverlayFade.Value = 0;
+                canDie = true;
+
+                if (OsuContainer.Beatmap != null)
+                {
+                    OsuContainer.Beatmap.Song.Play(false);
+                    dieAnim.ClearTransforms();
+                    dieAnim.TransformTo((float)OsuContainer.Beatmap.Song.DefaultFrequency, 0.5f, EasingTypes.In);
+                }
+            }
         }
 
         public override void OnEnter()
@@ -338,31 +384,6 @@ namespace RTCircles
             }
         }
 
-        public bool IsCurrentlyBreakTime
-        {
-            get
-            {
-                if (OsuContainer.Beatmap.HitObjects.Count == 0)
-                    return true;
-
-                if (OsuContainer.SongPosition < OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime)
-                    return true;
-
-                if (objectIndex >= OsuContainer.Beatmap.HitObjects.Count)
-                    return OsuContainer.SongPosition > OsuContainer.Beatmap.HitObjects[^1].BaseObject.EndTime;
-
-                if (objectIndex < 1)
-                    return true;
-
-                var prevObject = OsuContainer.Beatmap.HitObjects[objectIndex - 1];
-                var currObject = OsuContainer.Beatmap.HitObjects[objectIndex];
-
-                if (currObject.BaseObject.StartTime - prevObject.BaseObject.EndTime >= 3000)
-                    return OsuContainer.SongPosition > prevObject.BaseObject.EndTime && OsuContainer.SongPosition < currObject.BaseObject.StartTime;
-
-                return false;
-            }
-        }
         private void spawnWarningArrowsCheck(IDrawableHitObject current, IDrawableHitObject next)
         {
             if (next.BaseObject.StartTime - current.BaseObject.EndTime >= 3000)
@@ -518,6 +539,9 @@ namespace RTCircles
         {
             pauseOverlayFade.Update((float)MainGame.Instance.DeltaTime);
 
+            if (pauseOverlayFade.Value == 0)
+                return;
+
             retryButton.Color.W = pauseOverlayFade.Value;
             retryButton.TextColor.W = pauseOverlayFade.Value;
 
@@ -540,18 +564,18 @@ namespace RTCircles
         private SmoothFloat dieAnim = new SmoothFloat() { Value = 1f };
 
         //buggy af, everything spaghetti code
-        private bool dyingAllowed = true;
+        private bool canDie = true;
         public void reportDeath()
         {
-            if (dyingAllowed && ScreenManager.ActiveScreen == this)
+            if (canDie && ScreenManager.ActiveScreen == this && !OsuContainer.CookieziMode)
             {
-                dyingAllowed = false;
+                canDie = false;
                 var start = OsuContainer.Beatmap.Song.Frequency;
                 dieAnim.Value = (float)start;
-                dieAnim.TransformTo(0f, 3f, EasingTypes.OutQuad, () =>
+                dieAnim.TransformTo(0f, 3f, EasingTypes.Out, () =>
                 {
-                    OsuContainer.Beatmap.Song.Frequency = start;
                     OsuContainer.Beatmap.Song.Pause();
+                    OsuContainer.Beatmap.Song.Frequency = start;
                     pauseOverlayFade.TransformTo(1f, 0.25f, EasingTypes.Out);
                     OnExit();
                 });
@@ -564,8 +588,11 @@ namespace RTCircles
         {
             if (key == Key.Escape)
             {
-                if (dyingAllowed == false)
+                if (!dieAnim.HasCompleted)
+                {
+                    dieAnim.EndCurrentTransform();
                     return;
+                }
 
                 if(OsuContainer.Beatmap == null || OsuContainer.SongPosition <= 0)
                 {

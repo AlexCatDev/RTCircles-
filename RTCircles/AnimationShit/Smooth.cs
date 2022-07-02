@@ -204,6 +204,19 @@ namespace RTCircles
         private Queue<TransformFunction> pendingTransforms = new Queue<TransformFunction>();
         private TransformFunction currentTransform;
 
+        public void EndCurrentTransform()
+        {
+            if (currentTransform is not null)
+            {
+                var status = currentTransform(float.MaxValue);
+
+                System.Diagnostics.Debug.Assert(status.hasCompleted);
+
+                status.onComplete?.Invoke();
+                currentTransform = null;
+            }
+        }
+
         public Smooth<T> TransformTo(T value, float duration = 0, EasingTypes easing = EasingTypes.None, Action onComplete = null)
         {
             float elapsed = 0;

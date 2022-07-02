@@ -266,7 +266,7 @@ namespace RTCircles
             //Ignore if no beatmaps found
             if (setInfo.Beatmaps.Count == 0)
             {
-                Utils.Log($"A whole folder was skipped because it contained no osu! standard maps.", LogLevel.Warning);
+                Utils.Log($"The whole beatmap set was skipped because no maps could be extracted", LogLevel.Warning);
                 return;
             }
 
@@ -303,6 +303,8 @@ namespace RTCircles
 
                 string folderGUID = Guid.NewGuid().ToString();
 
+                int itemsExtracted = 0;
+
                 foreach (var item in beatmapFiles)
                 {
                     Utils.Log($"Processing beatmap: {item.FullName}", LogLevel.Info);
@@ -313,16 +315,15 @@ namespace RTCircles
 
                         var bytes = beatmapStream.ToArray();
                         var hashString = Utils.ComputeSHA256Hash(bytes, 0, bytes.Length); 
-                        Utils.Log($"\tHash: {hashString}", LogLevel.Success);
 
-                        //optionally open the beatmap to write extra database entries
                         beatmapStream.Position = 0;
                         Beatmap beatmap = DecodeBeatmap(beatmapStream);
-                        Utils.Log($"\tBeatmap ID: {beatmap.MetadataSection.BeatmapID}", LogLevel.Success);
+
+                        Utils.Log($"\tBeatmap Hash: {hashString} ID: {beatmap.MetadataSection.BeatmapID}", LogLevel.Success);
 
                         if (beatmap.GeneralSection.Mode != OsuParsers.Enums.Ruleset.Standard)
                         {
-                            Utils.Log($"\tSkipping ID: {beatmap.MetadataSection.BeatmapID} NOT A STANDARD MAP!!", LogLevel.Warning);
+                            Utils.Log($"\tSkipping [{hashString}] Mode: {beatmap.GeneralSection.Mode}", LogLevel.Warning);
                             continue;
                         }
                         else
@@ -337,11 +338,18 @@ namespace RTCircles
                             beatmapInfo.BackgroundFilename = beatmap.EventsSection.BackgroundImage;
 
                             setInfo.Beatmaps.Add(beatmapInfo);
+
+                            itemsExtracted++;
                         }
                     }
                 }
 
-                //Handle when the beatmap already exists and is open, just ignore it?
+                if(itemsExtracted == 0)
+                {
+                    Utils.Log($"0 items were extracted from the archive..", LogLevel.Error);
+                    return;
+                }
+
                 Directory.CreateDirectory($"{SongsDirectory}/{folderGUID}");
                 try
                 {
@@ -362,6 +370,19 @@ namespace RTCircles
                 {
                     realm.Write(() =>
                     {
+                        var existingSetInfo = (realm.Find<DBBeatmapInfo>(setInfo.Beatmaps[0].Hash)?.SetInfo);
+
+                        if(existingSetInfo != null)
+                        {
+                            var oldDirectory = $"{SongsDirectory}/{existingSetInfo.Foldername}";
+
+                            if (Directory.Exists(oldDirectory))
+                            {
+                                Directory.Delete(oldDirectory, recursive: true);
+                                Utils.Log($"Setinfo existed before with these beatmaps but has now been deleted!", LogLevel.Warning);
+                            }
+                        }
+
                         realm.Add(setInfo, true);
                     });
 

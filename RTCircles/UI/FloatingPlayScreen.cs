@@ -39,7 +39,7 @@ namespace RTCircles
 
             difficultyAdjuster.ToggleInput(false);
 
-            difficultAdjustPanelBtn.OnClick += (s, e) =>
+            difficultAdjustPanelBtn.OnClick += () =>
             {
                 if (adjustPanelPopProgress.Value == 0f)
                 {
@@ -52,6 +52,8 @@ namespace RTCircles
                     adjustPanelPopProgress.TransformTo(0f, 0.25f, EasingTypes.InBack, () => { difficultyAdjuster.ToggleVisibility(false); });
                     difficultyAdjuster.ToggleInput(false);
                 }
+
+                return true;
             };
         }
 

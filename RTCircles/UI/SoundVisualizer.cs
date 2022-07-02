@@ -1046,6 +1046,9 @@ namespace RTCircles
             var startIndex = (int)(startFreq / indexFrequency);
             var count = (int)(endFreq / indexFrequency) - startIndex;
 
+            if (count < 1)
+                return Span<float>.Empty;
+
             return lol.AsSpan((int)(startFreq / indexFrequency), count);
         }
 

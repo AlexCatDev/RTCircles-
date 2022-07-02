@@ -60,7 +60,7 @@ namespace RTCircles
             }
         }
 
-        public int ScrollMax => (int)(MainGame.WindowHeight - (ElementSize.Y * 2) - HeaderSize.Y);
+        public int ScrollMax => (int)(MainGame.WindowHeight - ElementSize.Y - ElementSize.Y / 2);
 
         private double? scrollTo;
 

@@ -59,9 +59,20 @@ namespace RTCircles
             skinDropdown.ClearItems();
 
             var skinFolder = GlobalOptions.OsuFolder.Value + "/Skins";
-
+            
             if (System.IO.Directory.Exists(skinFolder))
             {
+                DropdownItem defaultSkin = new DropdownItem();
+                defaultSkin.Text = "Default";
+                defaultSkin.Color = Colors.White;
+                defaultSkin.TextColor = Colors.Black;
+                defaultSkin.OnClick += () =>
+                {
+                    Skin.Load("");
+                    GlobalOptions.SkinFolder.Value = "";
+                };
+                skinDropdown.AddItem(defaultSkin);
+
                 foreach (var directory in System.IO.Directory.EnumerateDirectories(skinFolder))
                 {
                     var dir = directory.Replace('\\', '/');

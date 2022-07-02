@@ -36,7 +36,7 @@ namespace Easy2D
         private int vertexAttribIndex;
         private int elementCount;
 
-        public PrimitiveType PrimitiveType { get; set; }
+        public PrimitiveType PrimitiveType { get; set; } = PrimitiveType.Triangles;
 
         public InstanceBatch(TBaseVertex[] model, int[] indices)
         {
@@ -109,10 +109,16 @@ namespace Easy2D
             scanType<TInstanceVertex>();
         }
 
-        public void UploadInstanceData(TInstanceVertex[] data)
+        public void UploadInstanceData(Span<TInstanceVertex> data)
         {
-            instanceVbo.Resize(data.Length);
-            instanceVbo.UploadData(0, data.Length, data);
+            if(instanceVbo.Capacity < data.Length)
+                instanceVbo.Resize(data.Length);
+
+            unsafe
+            {
+                fixed(TInstanceVertex* ptr = data)
+                    instanceVbo.UploadData(0, (uint)data.Length, ptr);
+            }
         }
 
         public void Draw(int instanceCount)

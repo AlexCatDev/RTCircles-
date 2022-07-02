@@ -53,7 +53,7 @@ namespace RTCircles
 
         public Vector4 AnimationColor = new Vector4(0.8f, 0.8f, 0.8f, 1f);
 
-        public event EventHandler OnClick;
+        public event Func<bool> OnClick;
 
         public Texture Texture;
 
@@ -105,20 +105,17 @@ namespace RTCircles
             {
                 hasFocus = false;
 
-                OnClick?.Invoke(this, EventArgs.Empty);
+                bool clickHandled = OnClick?.Invoke() ?? false;
+                if (clickHandled)
+                {
+                    buttonPressFadeAnimation.IsPaused = false;
 
-                buttonPressFadeAnimation.IsPaused = false;
+                    Skin.Click.Play(true);
+                }
 
-                Skin.Click.Play(true);
-
-                return true;
+                return clickHandled;
             }
 
-            return false;
-        }
-
-        public override bool OnMouseWheel(float delta)
-        {
             return false;
         }
 

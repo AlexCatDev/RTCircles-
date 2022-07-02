@@ -111,6 +111,8 @@
     <None Remove="Skin\text-singleplay.png" />
     <None Remove="Skin\visualizer-bar.png" />
     <None Remove="Sliders\flatcircle.png" />
+    <None Remove="Sliders\PooledSlider.frag" />
+    <None Remove="Sliders\PooledSlider.vert" />
     <None Remove="Sliders\slider.frag" />
     <None Remove="Sliders\slider.vert" />
     <None Remove="Sliders\slidergradient.png" />
@@ -198,6 +200,8 @@
     <EmbeddedResource Include="Skin\scorebar-bg.png" />
     <EmbeddedResource Include="Skin\scorebar-colour.png" />
     <EmbeddedResource Include="Skin\scorebar-marker.png" />
+    <EmbeddedResource Include="Sliders\PooledSlider.frag" />
+    <EmbeddedResource Include="Sliders\PooledSlider.vert" />
     <EmbeddedResource Include="Sliders\sliderGradientDouble.png" />
     <EmbeddedResource Include="UI\Assets\hitmarker.png" />
     <EmbeddedResource Include="UI\Assets\menu-flash.png" />

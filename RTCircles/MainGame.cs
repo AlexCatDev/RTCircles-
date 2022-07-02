@@ -414,22 +414,25 @@ namespace RTCircles
         {
             Utils.Log($"Somebody wants to open a file with this program and the path is: {path}", LogLevel.Info);
 
-            using (var fileStream = File.OpenRead(path))
+            System.Threading.ThreadPool.QueueUserWorkItem((o) =>
             {
-                if (path.EndsWith(".osz"))
+                using (var fileStream = File.OpenRead(path))
                 {
-                    //Handle osu beatmap import.
-                    BeatmapMirror.ImportBeatmap(fileStream);
+                    if (path.EndsWith(".osz"))
+                    {
+                        //Handle osu beatmap import.
+                        BeatmapMirror.ImportBeatmap(fileStream);
+                    }
+                    else if (path.EndsWith(".osk"))
+                    {
+                        //Handle skin import.
+                    }
+                    else if (path.EndsWith(".osr"))
+                    {
+                        //Handle replay import.
+                    }
                 }
-                else if (path.EndsWith(".osk"))
-                {
-                    //Handle skin import.
-                }
-                else if (path.EndsWith(".osr"))
-                {
-                    //Handle replay import.
-                }
-            }
+            }, null);
         }
 
         private void registerEvents()

@@ -55,7 +55,10 @@ namespace RTCircles
             //Utils.Log($"Adding DBBeatmap: {dBBeatmap.Filename} Current carousel item count: {BeatmapCollection.Items.Count}", LogLevel.Debug);
 
             if (BeatmapCollection.HashedItems.TryGetValue(dBBeatmap.Hash, out var existingItem))
+            {
+                existingItem.SetDBBeatmap(dBBeatmap);
                 return existingItem;
+            }
 
             if(dBBeatmap.SetInfo == null)
             {

@@ -40,11 +40,10 @@ namespace Easy2D
         /// <param name="objectCount"></param>
         public void Resize(int capacity)
         {
+            Capacity = capacity;
+
             if (IsInitialized == false)
-            {
-                Capacity = capacity;
                 return;
-            }
 
             bind(null);
 

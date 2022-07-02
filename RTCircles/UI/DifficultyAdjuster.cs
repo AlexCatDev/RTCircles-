@@ -102,7 +102,7 @@ namespace RTCircles
             Container.Add(hpSliderBar);
 
             Container.Add(csSliderLockBtn);
-            csSliderLockBtn.OnClick += (s, e) =>
+            csSliderLockBtn.OnClick += () =>
             {
                 csSliderLocked = !csSliderLocked;
 
@@ -110,10 +110,12 @@ namespace RTCircles
 
                 csSliderLockBtn.Texture = csSliderLocked ? lockTexture : unlockTexture;
                 csSliderLockBtn.Color = csSliderLocked ? Vector4.One : new Vector4(0.5f);
+
+                return true;
             };
 
             Container.Add(arSliderLockBtn);
-            arSliderLockBtn.OnClick += (s, e) =>
+            arSliderLockBtn.OnClick += () =>
             {
                 arSliderLocked = !arSliderLocked;
 
@@ -121,10 +123,12 @@ namespace RTCircles
 
                 arSliderLockBtn.Texture = arSliderLocked ? lockTexture : unlockTexture;
                 arSliderLockBtn.Color = arSliderLocked ? Vector4.One : new Vector4(0.5f);
+
+                return true;
             };
 
             Container.Add(odSliderLockBtn);
-            odSliderLockBtn.OnClick += (s, e) =>
+            odSliderLockBtn.OnClick += () =>
             {
                 odSliderLocked = !odSliderLocked;
 
@@ -132,10 +136,12 @@ namespace RTCircles
 
                 odSliderLockBtn.Texture = odSliderLocked ? lockTexture : unlockTexture;
                 odSliderLockBtn.Color = odSliderLocked ? Vector4.One : new Vector4(0.5f);
+
+                return true;
             };
 
             Container.Add(hpSliderLockBtn);
-            hpSliderLockBtn.OnClick += (s, e) =>
+            hpSliderLockBtn.OnClick += () =>
             {
                 hpSliderLocked = !hpSliderLocked;
 
@@ -143,6 +149,8 @@ namespace RTCircles
 
                 hpSliderLockBtn.Texture = hpSliderLocked ? lockTexture : unlockTexture;
                 hpSliderLockBtn.Color = hpSliderLocked ? Vector4.One : new Vector4(0.5f);
+
+                return true;
             };
         }
 

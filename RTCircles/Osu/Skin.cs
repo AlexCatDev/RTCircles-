@@ -342,6 +342,8 @@ namespace RTCircles
         {
             Utils.BeginProfiling("SkinLoad");
 
+            bool invalidPath = !Directory.Exists(path);
+
             CurrentPath = path;
 
             Config = new SkinConfiguration(File.Exists($"{path}/skin.ini") ? File.OpenRead($"{path}/skin.ini") : Utils.GetResource("Skin.skin.ini"));
@@ -438,7 +440,7 @@ namespace RTCircles
             DTModIcon = LoadTexture(path, "selection-mod-doubletime");
             EZModIcon = LoadTexture(path, "selection-mod-easy");
 
-            HealthBar_Marker = LoadTexture(path, "scorebar-marker", false, true);
+            HealthBar_Marker = LoadTexture(path, "scorebar-marker", false, allowNull: !invalidPath);
 
             HealthBar_BG = LoadTexture(path, "scorebar-bg", false, false);
             HealthBar_Fill = LoadTexture(path, "scorebar-colour-0", false, true);

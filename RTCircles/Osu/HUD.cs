@@ -185,8 +185,6 @@ namespace RTCircles
                 comboScaleTime = 0f;
                 comboScaleTime2 = 0;
 
-                healthbarMarkerScale = 2;
-
                 if (GlobalOptions.EnableComboBursts.Value && Skin.ComboBurst is not null && OsuContainer.Combo % 50 == 0 && OsuContainer.Combo > 0)
                     ScreenManager.GetScreen<OsuScreen>().Add(new ComboBurst());
             }
@@ -235,6 +233,9 @@ namespace RTCircles
 
         public void AddHP(float val)
         {
+            if(val > 0)
+                healthbarMarkerScale = 2;
+
             currentHealth += val;
             currentHealth.ClampRef(0, 1);
         }
@@ -300,7 +301,7 @@ namespace RTCircles
             drawURBar(g);
 
             if (OsuContainer.CookieziMode && ScreenManager.ActiveScreen is OsuScreen)
-                g.DrawStringCentered("Auto Play", ResultScreen.Font, new Vector2(MainGame.WindowCenter.X, 40*MainGame.Scale), new Vector4(0.6f, 0.6f, 0.6f, (float)Math.Cos(MainGame.Instance.TotalTime * 2).Map(-1, 1, 0.7f, 1f)), 1f * MainGame.Scale);
+                g.DrawStringCentered("Auto Play", ResultScreen.Font, new Vector2(MainGame.WindowCenter.X, 60*MainGame.Scale), new Vector4(0.6f, 0.6f, 0.6f, (float)Math.Cos(MainGame.Instance.TotalTime * 2).Map(-1, 1, 0.7f, 1f)), 1f * MainGame.Scale);
 
             drawCountDown(g);
 

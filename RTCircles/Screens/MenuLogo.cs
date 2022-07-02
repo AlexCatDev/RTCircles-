@@ -107,10 +107,12 @@ namespace RTCircles
             playButton.Color = Colors.From255RGBA(37, 37, 37, 37);
             playButton.TextColor = Colors.White;
             playButton.TextOffset = new Vector2(50, 0);
-            playButton.OnClick += (s, e) =>
+            playButton.OnClick += () =>
             {
                 slideBack();
                 ScreenManager.SetScreen<SongSelectScreen>();
+
+                return true;
             };
 
             multiPlayButton.Layer = -69;
@@ -119,10 +121,12 @@ namespace RTCircles
             multiPlayButton.TextOffset = new Vector2(50, 0);
             multiPlayButton.Color = Colors.From255RGBA(37, 37, 37, 37);
             multiPlayButton.TextColor = Colors.White;
-            multiPlayButton.OnClick += (s, e) =>
+            multiPlayButton.OnClick += () =>
             {
                 slideBack();
                 ScreenManager.SetScreen<MultiplayerScreen>();
+
+                return true;
             };
 
             optionsButton.Layer = -69;
@@ -131,10 +135,12 @@ namespace RTCircles
             optionsButton.Text = "Options";
             optionsButton.Color = Colors.From255RGBA(37, 37, 37, 37);
             optionsButton.TextColor = Colors.White;
-            optionsButton.OnClick += (s, e) =>
+            optionsButton.OnClick += () =>
             {
                 slideBack();
                 ScreenManager.SetScreen<OptionsScreen>();
+
+                return true;
             };
 
             exitButton.Layer = -69;
@@ -143,7 +149,7 @@ namespace RTCircles
             exitButton.TextOffset = new Vector2(50, 0);
             exitButton.Color = Colors.From255RGBA(37, 37, 37, 37);
             exitButton.TextColor = Colors.White;
-            exitButton.OnClick += (s, e) =>
+            exitButton.OnClick += () =>
             {
                 slideBack();
                 //Game.Instance.Window.Close();
@@ -157,6 +163,8 @@ namespace RTCircles
                     else
                         OsuContainer.Beatmap.Song.Play();
                 }
+
+                return true;
             };
 
             triangles.Layer = -1;

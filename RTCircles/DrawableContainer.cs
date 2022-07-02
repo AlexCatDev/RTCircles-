@@ -21,6 +21,14 @@ namespace RTCircles
 
         public void Add(Drawable drawable) => childrenPendingAdd.Add(drawable);
 
+        public void Clear()
+        {
+            for (int i = children.Count - 1; i >= 0; i--)
+            {
+                children[i].IsDead = true;
+            }
+        }
+
         public void Clear<T>() where T : Drawable
         {
             for (int i = children.Count - 1; i >= 0; i--)
