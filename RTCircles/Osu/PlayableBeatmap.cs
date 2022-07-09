@@ -58,6 +58,7 @@ namespace RTCircles
         public List<double> DifficultyGraph = new List<double>();
 
         public string AudioPath { get; private set; } = "";
+        public string FolderPath { get; private set; } = "";
 
         public readonly AutoGenerator AutoGenerator = new AutoGenerator();
 
@@ -109,9 +110,18 @@ namespace RTCircles
 
             if (GlobalOptions.AllowMapHitSounds.Value)
             {
-                playableBeatmap.Hitsounds = new HitsoundStore(folderPath, false);
-                playableBeatmap.Hitsounds.SetVolume(GlobalOptions.SkinVolume.Value);
+                if (OsuContainer.Beatmap?.FolderPath != folderPath)
+                {
+                    playableBeatmap.Hitsounds = new HitsoundStore(folderPath, false);
+                    playableBeatmap.Hitsounds.SetVolume(GlobalOptions.SkinVolume.Value);
+                }
+                else
+                {
+                    playableBeatmap.Hitsounds = OsuContainer.Beatmap?.Hitsounds;
+                }
             }
+
+            playableBeatmap.FolderPath = folderPath;
 
             string audioPath = $"{folderPath}/{playableBeatmap.InternalBeatmap.GeneralSection.AudioFilename}";
             playableBeatmap.AudioPath = audioPath;
@@ -120,6 +130,8 @@ namespace RTCircles
             if(OsuContainer.Beatmap?.AudioPath == audioPath)
             {
                 playableBeatmap.Song = OsuContainer.Beatmap.Song;
+                playableBeatmap.Song.Volume = OsuContainer.Beatmap.Song.Volume / 2;
+                ManagedBass.Bass.ChannelSlideAttribute(playableBeatmap.Song, ManagedBass.ChannelAttribute.Volume, (float)GlobalOptions.SongVolume.Value, 500, false);
             }
             else if (File.Exists(audioPath))
             {
@@ -127,18 +139,18 @@ namespace RTCircles
                 {
                     Sound song = new Sound(fs, useFX: true, noBuffer: false, bassFlags: ManagedBass.BassFlags.Prescan);
                     playableBeatmap.Song = song;
+
+                    playableBeatmap.Song.Volume = 0;
+                    ManagedBass.Bass.ChannelSlideAttribute(playableBeatmap.Song, ManagedBass.ChannelAttribute.Volume, (float)GlobalOptions.SongVolume.Value, 500, false);
                 }
             }
             else
                 playableBeatmap.Song = new Sound(null);
 
-            playableBeatmap.Song.Volume = 0;
-            ManagedBass.Bass.ChannelSlideAttribute(playableBeatmap.Song, ManagedBass.ChannelAttribute.Volume, (float)GlobalOptions.SongVolume.Value, 500, false);
-
             string bgPath = $"{folderPath}/{playableBeatmap.InternalBeatmap.EventsSection.BackgroundImage}";
 
             playableBeatmap.backgroundPath = bgPath;
-            //Just get the cache since it was properly already loaded from beatmap carousel
+            //Just get the cache since it was probably already loaded from beatmap carousel
             playableBeatmap.Background = DynamicTexureCache.AquireCache(playableBeatmap.backgroundGuid, playableBeatmap.backgroundPath);
 
             playableBeatmap.IsNewBackground = OsuContainer.Beatmap?.Background != playableBeatmap.Background;

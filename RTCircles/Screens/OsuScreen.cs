@@ -400,9 +400,18 @@ namespace RTCircles
         private SmoothFloat bgAlpha = new SmoothFloat() { Value = 0.1f };
         private void drawBackground(Graphics g)
         {
-            var tex = OsuContainer.Beatmap.Background;
+            var bgTexture = OsuContainer.Beatmap.Background;
 
-            if (tex is null || !GlobalOptions.RenderBackground.Value)
+            if (bgTexture == null)
+                return;
+
+            bool isMenuScreen = ScreenManager.ActiveScreen is MenuScreen;
+            bool isSongSelect = ScreenManager.ActiveScreen is SongSelectScreen;
+
+            if (isSongSelect)
+                return;
+
+            if (!GlobalOptions.RenderBackground.Value && !isMenuScreen)
                 return;
 
             bgAlpha.Update(delta);
@@ -410,7 +419,7 @@ namespace RTCircles
             float width = MainGame.WindowWidth + bgZoom;
             float height = MainGame.WindowHeight + bgZoom;
 
-            float aspectRatio = tex.Size.AspectRatio();
+            float aspectRatio = bgTexture.Size.AspectRatio();
 
             Vector2 bgSize;
             bgSize = new Vector2(width, width / aspectRatio);
@@ -418,7 +427,9 @@ namespace RTCircles
             if (bgSize.Y < MainGame.WindowHeight)
                 bgSize = new Vector2(height * aspectRatio, height);
 
-            g.DrawRectangleCentered(MainGame.WindowCenter, bgSize, new Vector4(1f, 1f, 1f, bgAlpha.Value), tex);
+            float alpha = isMenuScreen ? 0.15f : bgAlpha.Value;
+
+            g.DrawRectangleCentered(MainGame.WindowCenter, bgSize, new Vector4(1f, 1f, 1f, alpha), bgTexture);
 
             //g.DrawRectangle(OsuContainer.FullPlayfield.Position, OsuContainer.FullPlayfield.Size, new Vector4(1f, 1f, 1f, 0.1f));
         }

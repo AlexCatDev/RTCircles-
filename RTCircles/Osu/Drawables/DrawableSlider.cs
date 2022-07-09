@@ -12,9 +12,6 @@ namespace RTCircles
     {
         public static bool SliderOnScreen;
 
-        //TODO: add
-        public static float SliderResolution = 1f;
-
         public static Vector2? SliderBallPositionForAuto { get; private set; }
 
         private Slider slider;
@@ -159,11 +156,11 @@ namespace RTCircles
             //times an index
             float diff = (slider.EndTime - slider.StartTime) / slider.Repeats;
 
-            float beatProgress = (float)Interpolation.ValueAt(OsuContainer.GetBeatProgressAt(slider.StartTime + (diff * index)), OsuContainer.CircleExplodeScale, 1, 1, 0, EasingTypes.OutSine);
+            float beatProgress = (float)Interpolation.ValueAt(OsuContainer.GetBeatProgressAt(slider.StartTime + (diff * index)), OsuContainer.CircleExplodeScale, 1, 1, 0, EasingTypes.Out);
 
             //float beatProgress = (float)Interpolation.ValueAt(OsuContainer.GetBeatCountFrom(slider.StartTime + (diff * index), 0.5).OscillateValue(0, 1), 1, OsuContainer.CircleExplodeScale, 1, 0, EasingTypes.Out);
 
-            Vector2 size = new Vector2(Size.Y, Size.Y / Skin.SliderReverse.Texture.Size.AspectRatio()) * Skin.GetScale(Skin.SliderReverse);
+            Vector2 size = new Vector2(Size.X * Skin.SliderReverse.Texture.Size.AspectRatio(), Size.X) * Skin.GetScale(Skin.SliderReverse);
 
             g.DrawRectangleCentered(position, size * beatProgress, new Vector4(1f, 1f, 1f, alpha), Skin.SliderReverse, null, false, angle);
         }

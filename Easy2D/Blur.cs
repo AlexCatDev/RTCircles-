@@ -143,6 +143,49 @@ namespace Easy2D
             //Utils.Log($"Blured {w}x{h} texture Radius: {radius} Iterations: {iterations}", LogLevel.Info);
         }
 
+        public static void BlurFramebuffer(FrameBuffer target, FrameBuffer pong, float radius, int iterations)
+        {
+            var startViewport = Viewport.CurrentViewport;
+
+            pong.EnsureSize(target.Width, target.Height);
+
+            int w = pong.Width;
+            int h = pong.Height;
+
+            Vector2 quadSize = new Vector2(w, h);
+
+            Vector2 horizontalBlur = new Vector2(radius, 0);
+            Vector2 verticalBlur = new Vector2(0, radius);
+
+            blurShader.Bind();
+            blurShader.SetMatrix("u_Projection", Matrix4.CreateOrthographicOffCenter(0, w, h, 0, -1, 1));
+            blurShader.SetInt("u_SrcTexture", 0);
+
+            FrameBuffer readBuffer = target;
+            FrameBuffer writeBuffer = pong;
+
+            Vector2 blurDirection = horizontalBlur;
+            for (int i = 0; i < iterations * 2; i++)
+            {
+                blurDirection = blurDirection == horizontalBlur ? verticalBlur : horizontalBlur;
+
+                writeBuffer.Bind();
+                Viewport.SetViewport(0, 0, w, h);
+
+                readBuffer.Texture.Bind(0);
+
+                blurShader.SetVector("u_Direction", blurDirection);
+                GLDrawing.DrawQuad(Vector2.Zero, quadSize);
+
+                swap(ref writeBuffer, ref readBuffer);
+            }
+
+            FrameBuffer.BindDefault();
+            Viewport.SetViewport(startViewport);
+
+            //Utils.Log($"Blured {w}x{h} texture Radius: {radius} Iterations: {iterations}", LogLevel.Info);
+        }
+
         private static void swap(ref FrameBuffer a, ref FrameBuffer b)
         {
             var c = a;

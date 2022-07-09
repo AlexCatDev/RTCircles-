@@ -55,25 +55,31 @@ namespace RTCircles
 
         public bool UseBluredGameplayAsBackgroundSource;
 
-        private FrameBuffer fb = new FrameBuffer(1,1);
-        private FrameBuffer bluredFB = new FrameBuffer(1, 1);
-        private void drawBluredGameplay(Graphics g)
+        private FrameBuffer fb = new FrameBuffer(1, 1);
+        private FrameBuffer pongBlurfb = new FrameBuffer(1, 1);
+
+        private Graphics blurGraphics = new Graphics(40000, 60000);
+
+        private void drawBluredGameplay()
         {
             var osuScreen = ScreenManager.GetScreen<OsuScreen>();
 
-            fb.EnsureSize(MainGame.WindowWidth/10, MainGame.WindowHeight/10);
-
-            g.DrawInFrameBuffer(fb, () => {
+            fb.EnsureSize(MainGame.WindowWidth / 6, MainGame.WindowHeight / 6);
+            fb.BindDrawAction(() =>
+            {
+                GL.Instance.Clear(Silk.NET.OpenGLES.ClearBufferMask.ColorBufferBit);
+                blurGraphics.Projection = Matrix4.CreateOrthographicOffCenter(0, fb.Width, 0, fb.Height, -1, 1);
                 MainGame.Instance.FakeWindowSize(fb.Texture.Size, () =>
                 {
                     osuScreen.EnsureObjectIndexSynchronization();
                     osuScreen.Update((float)MainGame.Instance.DeltaTime);
-                    osuScreen.Render(g);
+                    osuScreen.Render(blurGraphics);
                 });
-            });
-            bluredFB.EnsureSize(fb.Width, fb.Height);
 
-            Blur.BlurTexture(fb.Texture, bluredFB, 1, 4);
+                blurGraphics.EndDraw();
+            });
+
+            Blur.BlurFramebuffer(fb, pongBlurfb, 1, 4);
         }
 
         public override void Render(Graphics g)
@@ -88,13 +94,10 @@ namespace RTCircles
 
             if (UseBluredGameplayAsBackgroundSource)
             {
-                drawBluredGameplay(g);
-                textureRectangle = new Rectangle(0, 1, 1, -1);
-                color.X += 1;
-                color.Y += 1;
-                color.Z += 1;
+                drawBluredGameplay();
+                color.Xyz *= 2;
 
-                tex = bluredFB.Texture;
+                tex = fb.Texture;
             }
 
             float aspectRatio = tex.Size.AspectRatio();

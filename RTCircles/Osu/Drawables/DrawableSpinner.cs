@@ -13,17 +13,13 @@ namespace RTCircles
     {
         public HitObject BaseObject => spinner;
 
-        public Vector2 FollowPointAttachment => position;
-
         public Vector4 CurrentColor => color;
 
-        public override Rectangle Bounds => new Rectangle(position - size/2f, size);
+        public override Rectangle Bounds => new Rectangle(position - size / 2f, size);
 
         private Vector2 size { 
             get {
-                float biggest = MathF.Max(OsuContainer.Playfield.Width, OsuContainer.Playfield.Height);
-
-                return new Vector2(biggest * 0.62f);
+                return new Vector2(OsuContainer.Playfield.Height * 0.8f);
             } 
         }
 

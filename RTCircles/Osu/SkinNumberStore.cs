@@ -43,12 +43,15 @@ namespace RTCircles
             {
                 Texture texture;
 
+                bool specialChar = false;
+
                 if (number[i] == '.' || number[i] == ',')
                 {
                     if (commaTexture is null)
                         continue;
 
                     texture = commaTexture;
+                    specialChar = true;
                 }
                 else if (number[i] == 'x')
                 {
@@ -56,6 +59,7 @@ namespace RTCircles
                         continue;
 
                     texture = xTexture;
+                    specialChar = true;
                 }
                 else if (number[i] == '%')
                 {
@@ -63,6 +67,7 @@ namespace RTCircles
                         continue;
 
                     texture = percentTexture;
+                    specialChar = true;
                 }
                 else
                 {
@@ -72,11 +77,13 @@ namespace RTCircles
                     texture = numbers[num];
                 }
 
-                Vector2 digitSize = new Vector2(ySize * texture.Size.AspectRatio(), ySize);
+                var measureTex = specialChar ? texture : numbers[0];
+
+                Vector2 digitSize = new Vector2(ySize * measureTex.Size.AspectRatio(), ySize);
 
                 offset.Y = digitSize.Y;
 
-                float overlap = (digitSize.X / texture.Width) * Overlap;
+                float overlap = (digitSize.X / measureTex.Width) * Overlap;
 
                 offset.X += digitSize.X;
 
@@ -99,6 +106,7 @@ namespace RTCircles
             for (int i = 0; i < number.Length; i++)
             {
                 Texture texture;
+                bool specialChar = false;
 
                 if (number[i] == '.' || number[i] == ',')
                 {
@@ -106,6 +114,7 @@ namespace RTCircles
                         continue;
 
                     texture = commaTexture;
+                    specialChar = true;
                 }
                 else if (number[i] == 'x')
                 {
@@ -113,6 +122,7 @@ namespace RTCircles
                         continue;
 
                     texture = xTexture;
+                    specialChar = true;
                 }
                 else if (number[i] == '%')
                 {
@@ -120,6 +130,7 @@ namespace RTCircles
                         continue;
 
                     texture = percentTexture;
+                    specialChar = true;
                 }
                 else
                 {
@@ -129,9 +140,10 @@ namespace RTCircles
                     texture = numbers[num];
                 }
 
-                Vector2 digitSize = new Vector2(ySize * texture.Size.AspectRatio(), ySize);
-                
-                float overlap = (Overlap / texture.Width) * digitSize.X;
+                var measureTex = specialChar ? texture : numbers[0];
+
+                Vector2 digitSize = new Vector2(ySize * measureTex.Size.AspectRatio(), ySize);
+                float overlap = (Overlap / measureTex.Width) * digitSize.X;
 
                 g.DrawRectangle(position, digitSize, color, texture);
                 //g.DrawRectangle(position + offset, digitSize, new Vector4(0f, 0f, 0f, 0.5f));

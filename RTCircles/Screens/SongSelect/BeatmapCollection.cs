@@ -200,6 +200,7 @@ namespace RTCircles
             if (string.IsNullOrEmpty(text))
             {
                 SearchItems = Items;
+                SearchResultsChanged?.Invoke();
                 return;
             }
 

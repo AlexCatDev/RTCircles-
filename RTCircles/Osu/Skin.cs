@@ -125,6 +125,9 @@ namespace RTCircles
 
         public bool HitCircleOverlayAboveNumber = true;
 
+        public Vector3 SongSelectActiveTextColor = Colors.From255RGB(255, 255, 255);
+        public Vector3 SongSelectInactiveTextColor = Colors.From255RGB(200, 200, 200);
+
         public SkinConfiguration(Stream stream)
         {
             if (stream is not null)
@@ -230,9 +233,18 @@ namespace RTCircles
                     {
                         Utils.Log($"Error parsing combo color Option: {option} Value: {value}", LogLevel.Error);
                     }
-                }else if(option.StartsWith("hitcircleoverlayabovenumer") || option.StartsWith("hitcircleoverlayabovenumber"))
+                }
+                else if(option.StartsWith("hitcircleoverlayabovenumer") || option.StartsWith("hitcircleoverlayabovenumber"))
                 {
                     HitCircleOverlayAboveNumber = Convert.ToBoolean(int.Parse(value));
+                }
+                else if (option.StartsWith("songselectactivetext"))
+                {
+                    SongSelectActiveTextColor = parseColor(value);
+                }
+                else if (option.StartsWith("songselectinactivetext"))
+                {
+                    SongSelectInactiveTextColor = parseColor(value);
                 }
             }
         }
@@ -334,6 +346,8 @@ namespace RTCircles
 
         public static Texture FlashlightOverlay = new Texture(Utils.GetResource("Skin.FlashlightOverlay.png"));
 
+        public static Sound SelectDifficulty { get; private set; }
+
         public static string CurrentPath { get; private set; }
 
         public static void Reload() => Load(CurrentPath);
@@ -403,7 +417,7 @@ namespace RTCircles
             HitCircleOverlay = LoadTexture(path, "hitcircleoverlay");
             ApproachCircle = LoadTexture(path,"approachcircle");
             Smoke = LoadTexture(path,"smoke");
-            SliderFollowCircle = LoadTexture(path, "sliderfollowcircle");
+            SliderFollowCircle = LoadTexture(path, "sliderfollowcircle", false);
             //Use hitcircle if sliderstartcircle wasnt found
             SliderStartCircle = LoadTexture(path, "sliderstartcircle", true, true) ?? HitCircle;
             SliderStartCircleOverlay = LoadTexture(path, "sliderstartcircleoverlay", true, true) ?? HitCircleOverlay;
@@ -442,7 +456,7 @@ namespace RTCircles
 
             HealthBar_Marker = LoadTexture(path, "scorebar-marker", false, allowNull: !invalidPath);
 
-            HealthBar_BG = LoadTexture(path, "scorebar-bg", false, false);
+            HealthBar_BG = LoadTexture(path, "scorebar-bg", false, true);
             HealthBar_Fill = LoadTexture(path, "scorebar-colour-0", false, true);
             if(HealthBar_Fill == null)
                 HealthBar_Fill = LoadTexture(path, "scorebar-colour", false, false);
@@ -456,9 +470,13 @@ namespace RTCircles
             RankingC = LoadTexture(path, "ranking-C-small");
             RankingD = LoadTexture(path, "ranking-D-small");
 
+            SelectDifficulty = LoadSound(path, "select-difficulty");
+
             double loadTime = Utils.EndProfiling("SkinLoad");
 
-            NotificationManager.ShowMessage($"\"{path}\" loaded in {loadTime:F0} ms", new Vector3(0.8f, 0.8f, 1f), 4f);
+            string name = string.IsNullOrEmpty(path) ? "Skin" : $"\"{path}\"";
+
+            NotificationManager.ShowMessage($"{name} loaded in {loadTime:F0} ms", new Vector3(0.8f, 0.8f, 1f), 4f);
         }
         
         //Better version
@@ -534,13 +552,18 @@ namespace RTCircles
 
                     if (File.Exists(file))
                     {
-                        Texture tex = new Texture(File.OpenRead(file));
-                        tex.GenerateMipmaps = genMipMaps;
-                        tex.UseAsyncLoading = false;
+                        using (FileStream fs = File.OpenRead(file))
+                        {
+                            Texture tex = new Texture(fs);
+                            tex.GenerateMipmaps = genMipMaps;
+                            tex.AutoDisposeStream = true;
+                            tex.UseAsyncLoading = false;
+                            tex.MipmapFilter = Silk.NET.OpenGLES.TextureMinFilter.LinearMipmapLinear;
 
-                        //Bind to preload it.
-                        tex.Bind();
-                        return tex;
+                            //Bind to preload it.
+                            tex.Bind();
+                            return tex;
+                        }
                     }
                 }
 
@@ -563,7 +586,14 @@ namespace RTCircles
             if (tex is null)
             {
                 Utils.Log($"Could not load {name} so default element is used", LogLevel.Warning);
-                return new OsuTexture(new Texture(Utils.GetResource($"Skin.{name}.png")), true, 0);
+
+                var defaultTexture = new Texture(Utils.GetResource($"Skin.{name}.png"));
+                defaultTexture.GenerateMipmaps = genMipMaps;
+                defaultTexture.AutoDisposeStream = true;
+                defaultTexture.MipmapFilter = Silk.NET.OpenGLES.TextureMinFilter.LinearMipmapLinear;
+                defaultTexture.Bind();
+
+                return new OsuTexture(defaultTexture, true, 0);
             }
             else
                 return new OsuTexture(tex, false, 0);

@@ -272,7 +272,6 @@ namespace RTCircles
 
         public override void OnMouseWheel(float delta)
         {
-
             base.OnMouseWheel(delta);
         }
     }

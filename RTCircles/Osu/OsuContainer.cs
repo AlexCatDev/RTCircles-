@@ -298,7 +298,11 @@ namespace RTCircles
             if (bm == null)
                 return false;
 
-            Beatmap?.Song.Stop();
+            if (Beatmap?.AudioPath != bm.AudioPath)
+            {
+                ManagedBass.Bass.ChannelSlideAttribute(Beatmap.Song, ManagedBass.ChannelAttribute.Volume, 0, 500);
+                //Beatmap?.Song.Stop();
+            }
 
             Beatmap = bm;
 

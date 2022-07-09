@@ -1,6 +1,6 @@
 ﻿#version 300 es
 //I really have no fucking clue what precision should be and how it matters so...
-precision highp float;
+precision mediump float;
 
 uniform sampler2D u_Texture;
 uniform sampler2D u_CombineTexture;

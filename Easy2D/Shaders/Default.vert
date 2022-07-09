@@ -1,7 +1,5 @@
 ﻿#version 300 es
 
-precision mediump float;
-
 uniform mat4 u_Projection;
 
 layout(location = 0) in vec2 a_Position;

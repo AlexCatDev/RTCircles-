@@ -72,6 +72,8 @@ namespace RTCircles
             {
                 scrollOffset = 0;
                 scrollTo = null;
+
+                TryScrollToItem(selectedItem);
             };
 
             OsuContainer.BeatmapChanged += () =>
@@ -88,14 +90,20 @@ namespace RTCircles
             };
         }
 
+        public void TryScrollToItem(CarouselItem item, bool instant = false)
+        {
+            int index = BeatmapCollection.SearchItems.FindIndex((o) => o.Hash == OsuContainer.Beatmap.Hash);
+
+            TryScrollToItemAtIndex(index);
+        }
+
         public void TryScrollToItemAtIndex(int index, bool instant = false)
         {
+            if (BeatmapCollection.Items.Count == 0)
+                return;
+
             if (index < 0)
-            {
-                //If the index couldn't be found, just force it to search all items
-                BeatmapCollection.SearchItems = BeatmapCollection.Items;
-                index = BeatmapCollection.SearchItems.FindIndex((o) => o.Hash == OsuContainer.Beatmap.Hash);
-            }
+                return;
 
             scrollTo = -(ElementSize.Y + ElementSpacing) * index;
 
@@ -147,6 +155,7 @@ namespace RTCircles
             Container.Add(modsBtn);
         }
 
+        private Rectangle searchRect => new Rectangle(SongsBounds.Position, new Vector2(ElementSize.X, ElementSize.Y / 2.3f));
 
         private Vector2i prevViewport;
         private List<CarouselItem> lastViewedItems = new List<CarouselItem>();
@@ -249,7 +258,9 @@ namespace RTCircles
                 float textScale = 0.5f * MainGame.Scale;
                 Vector2 textSize = Font.DefaultFont.MessureString(currentItem.Text, textScale);
                 Vector2 textPos = bounds.Position + new Vector2(bgSize.X + bgPadding * 2, bgPadding * 2);
-                g.DrawString(currentItem.Text, Font.DefaultFont, textPos, selectedItem == currentItem ? ItemSelectedTextColor : ItemTextColor, textScale);
+
+                Vector4 textColor = new Vector4(selectedItem == currentItem ? Skin.Config.SongSelectActiveTextColor : Skin.Config.SongSelectInactiveTextColor, 1);
+                g.DrawString(currentItem.Text, Font.DefaultFont, textPos, textColor, textScale);
 
                 if (selectedItem == currentItem)
                 {
@@ -266,6 +277,7 @@ namespace RTCircles
                     break;
             }
 
+            //Check if the currently displayed items has been seen before
             for (int i = 0; i < viewedItems.Count; i++)
             {
                 if (!lastViewedItems.Contains(viewedItems[i]))
@@ -275,6 +287,7 @@ namespace RTCircles
                 }
             }
 
+            //Check if the items loaded in the previous frame is no longer on screen
             for (int i = 0; i < lastViewedItems.Count; i++)
             {
                 if (!viewedItems.Contains(lastViewedItems[i]))
@@ -291,7 +304,8 @@ namespace RTCircles
             string searchForString = "Search: ";
             float searchForStringScale = 0.5f * MainGame.Scale;
             Vector2 searchForStringSize = Font.DefaultFont.MessureString(searchForString, searchForStringScale, true);
-            g.DrawRectangle(SongsBounds.Position, new Vector2(ElementSize.X, ElementSize.Y / 2.3f), new Vector4(0, 0, 0, 0.5f));
+
+            g.DrawRectangle(searchRect.Position, searchRect.Size, new Vector4(0, 0, 0, 0.5f));
 
             Vector2 searchForStringPos = SongsBounds.Position;
             searchForStringPos.X += 15f * MainGame.Scale;
@@ -442,9 +456,17 @@ namespace RTCircles
             dragging = false;
             Vector2 dragEnd = Input.MousePosition;
 
+            if (searchRect.IntersectsWith(Input.MousePosition))
+            {
+                Input.InputContext.Keyboards[0].BeginInput();
+                return false;
+            }
+
             if (MathUtils.IsPointInsideRadius(dragEnd, dragStart, 100) && button == MouseButton.Left)
             {
+                
                 clickedSomewhere = true;
+
                 dragEnd = dragStart;
                 return true;
             }
@@ -518,6 +540,10 @@ namespace RTCircles
             if (selectedItem == item)
                 return;
 
+            Skin.SelectDifficulty.Play(true);
+
+            var currentAudio = OsuContainer.Beatmap?.AudioPath;
+
             if (!OsuContainer.SetMap(item, true, mods))
             {
                 BeatmapCollection.SearchItems.Remove(item);
@@ -528,27 +554,31 @@ namespace RTCircles
 
             osuScreen.ResetState();
 
-            int previewTime = OsuContainer.Beatmap.InternalBeatmap.GeneralSection.PreviewTime;
-
-            //This monster is basically:
-            //If the preview time is before the first hitobject
-            //Try to find the first kiai instead
-            //if that fails or the kiai is before the first hitobject, then use the first hitobject as the preview time.
-            if (OsuContainer.Beatmap.HitObjects.Count > 0 && previewTime < OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime)
+            if (currentAudio != OsuContainer.Beatmap.AudioPath)
             {
-                var firstKiai = OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai);
+                int previewTime = OsuContainer.Beatmap.InternalBeatmap.GeneralSection.PreviewTime;
 
-                if (firstKiai != null && firstKiai.Offset >= OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime)
-                    previewTime = firstKiai.Offset - (int)OsuContainer.Beatmap.Preempt;
-                else
-                    previewTime = OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime - (int)OsuContainer.Beatmap.Preempt;
+                //This monster is basically:
+                //If the preview time is before the first hitobject
+                //Try to find the first kiai instead
+                //if that fails or the kiai is before the first hitobject, then use the first hitobject as the preview time.
+                if (OsuContainer.Beatmap.HitObjects.Count > 0 && previewTime < OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime)
+                {
+                    var firstKiai = OsuContainer.Beatmap.InternalBeatmap.TimingPoints.Find((o) => o.Effects == OsuParsers.Enums.Beatmaps.Effects.Kiai);
+
+                    if (firstKiai != null && firstKiai.Offset >= OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime)
+                        previewTime = firstKiai.Offset - (int)OsuContainer.Beatmap.Preempt;
+                    else
+                        previewTime = OsuContainer.Beatmap.HitObjects[0].BaseObject.StartTime - (int)OsuContainer.Beatmap.Preempt;
+                }
+
+                OsuContainer.SongPosition = previewTime;
+
+                if (previewTime > -1)
+                    OsuContainer.Beatmap.Song.Play(false);
             }
 
-            OsuContainer.SongPosition = previewTime;
             osuScreen.EnsureObjectIndexSynchronization();
-
-            if(previewTime > -1)
-            OsuContainer.Beatmap.Song.Play(false);
         }
     }
 }

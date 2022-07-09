@@ -507,7 +507,7 @@ namespace RTCircles
                 }
                 
 
-                if (Input.IsKeyDown(Key.F5) && Input.IsKeyDown(Key.ControlLeft) && Input.IsKeyDown(Key.ShiftLeft) && Input.IsKeyDown(Key.AltLeft))
+                if (Input.IsKeyDown(Key.S) && Input.IsKeyDown(Key.ControlLeft) && Input.IsKeyDown(Key.ShiftLeft) && Input.IsKeyDown(Key.AltLeft))
                 {
                     Skin.Reload();
                     NotificationManager.ShowMessage($"Reloaded skin!", new Vector3(0.4f, 0.4f, 1f), 2f);

@@ -38,12 +38,11 @@ namespace RTCircles
             {
                 targetScreen.Update((float)MainGame.Instance.DeltaTime);
 
-                g.DrawRectangle(Vector2.Zero, Size, Colors.Black);
+                //g.DrawRectangle(Vector2.Zero, Size, new Vector4(0,0,0,0.8f));
                 targetScreen.Render(g);
-
-                g.EndDraw();
             });
-            
+            g.EndDraw();
+
             g.Projection = prevProj;
             Viewport.SetViewport(prevView);
         }

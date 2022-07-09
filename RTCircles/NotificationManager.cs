@@ -81,32 +81,37 @@ namespace RTCircles
 
             float spacingX = 25 * MainGame.Scale;
 
+            float cornerRadius = 15f * MainGame.Scale;
+            float border = 0.88f;
+
             for (int i = 0; i < notifications.Count; i++)
             {
                 var notif = notifications[i];
 
-                Vector2 textSize = Font.DefaultFont.MessureString(notif.Text, scale);
+                if (notif.Alpha > 0)
+                {
+                    Vector2 textSize = Font.DefaultFont.MessureString(notif.Text, scale);
 
-                Vector2 textOffset = Vector2.Zero;
+                    Vector2 textOffset = Vector2.Zero;
 
-                textOffset.X -= notif.Progress.Map(0f, 1f, 0, textSize.X + spacingX);
+                    textOffset.X -= notif.Progress.Map(0f, 1f, 0, textSize.X + spacingX);
 
-                Rectangle clickBox = new Rectangle(position + textOffset - box / 2, textSize + box);
+                    Rectangle clickBox = new Rectangle(position + textOffset - box / 2, textSize + box);
 
-                //Bg rectangle
-                //g.DrawRectangle(clickBox.Position, clickBox.Size, new Vector4(notf.Color, notf.Alpha));
+                    //Bg rectangle
+                    //g.DrawRectangle(clickBox.Position, clickBox.Size, new Vector4(notf.Color, notf.Alpha));
 
-                float cornerRadius = 15f * MainGame.Scale;
 
-                g.DrawRoundedRect((Vector2i)clickBox.Center, clickBox.Size, new Vector4(notif.Color, notif.Alpha), cornerRadius);
+                    g.DrawRoundedRect((Vector2i)clickBox.Center, clickBox.Size, new Vector4(notif.Color, notif.Alpha), cornerRadius);
 
-                float border = 0.88f;
-                clickBox = new Rectangle(position + textOffset - ((box * border) / 2), textSize + box * border);
-                Vector3 bgColor = (clickBox.IntersectsWith(Input.MousePosition) ? new Vector3(0.1f) : new Vector3(0));
+                    clickBox = new Rectangle(position + textOffset - ((box * border) / 2), textSize + box * border);
+                    Vector3 bgColor = (clickBox.IntersectsWith(Input.MousePosition) ? new Vector3(0.1f) : new Vector3(0));
 
-                g.DrawRoundedRect((Vector2i)clickBox.Center, clickBox.Size, new Vector4(bgColor, notif.Alpha), cornerRadius);
+                    g.DrawRoundedRect((Vector2i)clickBox.Center, clickBox.Size, new Vector4(bgColor, notif.Alpha), cornerRadius);
 
-                g.DrawString(notif.Text, Font.DefaultFont, position + textOffset, new Vector4(notif.Color, notif.Alpha), scale);
+                    g.DrawString(notif.Text, Font.DefaultFont, position + textOffset, new Vector4(notif.Color, notif.Alpha), scale);
+                }
+
                 position.Y -= spacingY;
             }
         }

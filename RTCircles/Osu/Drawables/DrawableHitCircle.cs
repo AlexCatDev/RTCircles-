@@ -156,7 +156,7 @@ namespace RTCircles
 
             if (approachScale > 1f && !IsHit && !IsMissed)
             {
-                Vector2 approachCircleSize = (Vector2)Size * approachScale * Skin.GetScale(Skin.ApproachCircle);
+                Vector2 approachCircleSize = Size * approachScale * Skin.GetScale(Skin.ApproachCircle);
                 g.DrawRectangleCentered(Position, approachCircleSize, new Vector4(Color.X, Color.Y, Color.Z, alpha), Skin.ApproachCircle);
             }
         }

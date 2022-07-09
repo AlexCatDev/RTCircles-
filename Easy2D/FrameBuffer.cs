@@ -1,4 +1,5 @@
-﻿using Silk.NET.OpenGLES;
+﻿using OpenTK.Mathematics;
+using Silk.NET.OpenGLES;
 using System;
 
 namespace Easy2D
@@ -63,6 +64,30 @@ namespace Easy2D
         {
             //GL.Instance.InvalidateFramebuffer(FramebufferTarget.Framebuffer, new ReadOnlySpan<GLEnum>(new[] { (GLEnum)Attachment }));
             BindDefault();
+        }
+
+        /// <summary>
+        /// Will bind this framebuffer.
+        /// Set it as the default framebuffer.
+        /// Then set the viewport.
+        /// And when the action is executed all these are reverted to as they were before.
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="viewportOverride"></param>
+        public void BindDrawAction(Action a, Vector4i? viewportOverride = null)
+        {
+            var startViewport = Viewport.CurrentViewport;
+            DefaultFrameBuffer.TryGetTarget(out var prevDefault);
+
+            Bind();
+            DefaultFrameBuffer.SetTarget(this);
+            Viewport.SetViewport(viewportOverride ?? new Vector4i(0, 0, Width, Height));
+
+            a();
+
+            DefaultFrameBuffer.SetTarget(prevDefault);
+            Unbind();
+            Viewport.SetViewport(startViewport);
         }
 
         public static void BindDefault(bool forceUseScreen = false)

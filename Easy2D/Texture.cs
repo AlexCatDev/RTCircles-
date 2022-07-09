@@ -32,9 +32,12 @@ namespace Easy2D
         public static Texture WhiteFlatCircle { get; private set; }
         public static Texture WhiteFlatCircle2 { get; private set; }
 
-        public TextureMinFilter MipmapFilter { get; set; } = TextureMinFilter.LinearMipmapLinear;
+        public TextureMinFilter MipmapFilter { get; set; } = TextureMinFilter.LinearMipmapNearest;
         public TextureMinFilter MinFilter { get; set; } = TextureMinFilter.Linear;
         public TextureMagFilter MagFilter { get; set; } = TextureMagFilter.Linear;
+
+        public TextureWrapMode WrapS { get; set; } = TextureWrapMode.ClampToEdge;
+        public TextureWrapMode WrapT { get; set; } = TextureWrapMode.ClampToEdge;
 
         public bool ImageDoneUploading { get; private set; } 
 
@@ -56,7 +59,7 @@ namespace Easy2D
             WhiteSquare = new Texture(Utils.GetInternalResource("Textures.square.png"));
             WhiteCircle = new Texture(Utils.GetInternalResource("Textures.circle.png"));
             WhiteFlatCircle = new Texture(Utils.GetInternalResource("Textures.flatcircle.png"));
-            WhiteFlatCircle2 = new Texture(Utils.GetInternalResource("Textures.flatcircle.png")) { MipmapFilter = TextureMinFilter.NearestMipmapNearest };
+            WhiteFlatCircle2 = new Texture(Utils.GetInternalResource("Textures.flatcircle.png")) { MipmapFilter = TextureMinFilter.LinearMipmapLinear };
         }
 
         public Texture(int width, int height, InternalFormat componentCount = InternalFormat.Rgba, 
@@ -100,8 +103,8 @@ namespace Easy2D
             GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (float)MinFilter);
             GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (float)MagFilter);
 
-            GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
-            GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+            GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)WrapS);
+            GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)WrapT);
 
             unsafe
             {
@@ -184,12 +187,40 @@ namespace Easy2D
             {
                 if (UseAsyncLoading)
                 {
-                    GPUSched.Instance.EnqueueAsync(() => {
-                        return (true, Image.Load<Rgba32>(stream));
-                    }, (image) => {
+                    GPUSched.Instance.EnqueueAsync(() =>
+                    {
+                        var image = Image.Load<Rgba32>(stream);
 
-                        uploadImage(image);
+                        return (true, image);
+                    }, (img) =>
+                    {
+                        uploadImage(img);
                     });
+
+                    /*
+                    GPUSched.Instance.EnqueueAsync(() =>
+                    {
+                        byte[] data = new byte[stream.Length];
+
+                        stream.Read(data, 0, data.Length);
+
+                        var image = Image.Load<Rgba32>(data);
+
+                        return (true, image);
+                    }, (o) =>
+                    {
+                        uploadImage(o);
+                    });
+                    */
+                    /*
+                    Image.LoadAsync(stream).ContinueWith((o) =>
+                    {
+                        GPUSched.Instance.Enqueue(() =>
+                        {
+                            uploadImage((Image<Rgba32>)o.Result);
+                        });
+                    });
+                    */
                 }
                 else
                 {
@@ -219,7 +250,7 @@ namespace Easy2D
 
             if (GenerateMipmaps)
             {
-                GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (float)TextureMinFilter.LinearMipmapNearest);
+                GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (float)MipmapFilter);
 
                 //Gen mipmap
                 GL.Instance.GenerateMipmap(TextureTarget.Texture2D);
@@ -243,11 +274,11 @@ namespace Easy2D
 
             bind(slot);
 
-            GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (float)TextureMinFilter.Linear);
-            GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (float)TextureMagFilter.Linear);
+            GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (float)MinFilter);
+            GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (float)MagFilter);
 
-            GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
-            GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+            GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)WrapS);
+            GL.Instance.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)WrapT);
 
             //If stream is null just assume we're trying to create a texture without data, else load texture from the stream
             if (stream is null)

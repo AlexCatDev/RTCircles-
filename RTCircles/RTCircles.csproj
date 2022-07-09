@@ -86,6 +86,7 @@
     <None Remove="Skin\scorebar-bg.png" />
     <None Remove="Skin\scorebar-colour.png" />
     <None Remove="Skin\scorebar-marker.png" />
+    <None Remove="Skin\select-difficulty.wav" />
     <None Remove="Skin\selection-mod-doubletime.png" />
     <None Remove="Skin\selection-mod-easy.png" />
     <None Remove="Skin\selection-mod-hardrock.png" />
@@ -200,6 +201,7 @@
     <EmbeddedResource Include="Skin\scorebar-bg.png" />
     <EmbeddedResource Include="Skin\scorebar-colour.png" />
     <EmbeddedResource Include="Skin\scorebar-marker.png" />
+    <EmbeddedResource Include="Skin\select-difficulty.wav" />
     <EmbeddedResource Include="Sliders\PooledSlider.frag" />
     <EmbeddedResource Include="Sliders\PooledSlider.vert" />
     <EmbeddedResource Include="Sliders\sliderGradientDouble.png" />
