@@ -374,14 +374,17 @@ namespace RTCircles
 
         private void spawnFollowPointsCheck(IDrawableHitObject current, IDrawableHitObject next)
         {
-            if (next.BaseObject.IsNewCombo == false)
-            {
-                var followPoint = ObjectPool<FollowPoints>.Take();
+            if (next.BaseObject.IsNewCombo)
+                return;
 
-                followPoint.SetTarget(current.BaseObject, next.BaseObject);
+            if (current is DrawableSpinner || next is DrawableSpinner)
+                return;
 
-                Add(followPoint);
-            }
+            var followPoint = ObjectPool<FollowPoints>.Take();
+
+            followPoint.SetTarget(current.BaseObject, next.BaseObject);
+
+            Add(followPoint);
         }
 
         private void spawnWarningArrowsCheck(IDrawableHitObject current, IDrawableHitObject next)

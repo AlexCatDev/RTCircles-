@@ -456,7 +456,7 @@ namespace RTCircles
 
             HealthBar_Marker = LoadTexture(path, "scorebar-marker", false, allowNull: !invalidPath);
 
-            HealthBar_BG = LoadTexture(path, "scorebar-bg", false, true);
+            HealthBar_BG = LoadTexture(path, "scorebar-bg", false, false);
             HealthBar_Fill = LoadTexture(path, "scorebar-colour-0", false, true);
             if(HealthBar_Fill == null)
                 HealthBar_Fill = LoadTexture(path, "scorebar-colour", false, false);

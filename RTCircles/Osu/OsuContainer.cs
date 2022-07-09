@@ -300,6 +300,7 @@ namespace RTCircles
 
             if (Beatmap?.AudioPath != bm.AudioPath)
             {
+                //Fade out the current track
                 ManagedBass.Bass.ChannelSlideAttribute(Beatmap.Song, ManagedBass.ChannelAttribute.Volume, 0, 500);
                 //Beatmap?.Song.Stop();
             }
@@ -310,7 +311,7 @@ namespace RTCircles
                 Beatmap.GenerateHitObjects(mods);
 
             Utils.Log($"Map set to: {carouselItem.FullPath} GenObjects: {generateHitObjects} Mods: {mods}", LogLevel.Info);
-            Utils.Log($"Preempt: {Beatmap.Preempt} Fadein: {Beatmap.Fadein} AR: {Beatmap.AR}", LogLevel.Info);
+            Utils.Log($"Preempt: {Beatmap.Preempt} Fadein: {Beatmap.FadeIn} AR: {Beatmap.AR}", LogLevel.Info);
             Utils.Log($"Window300 {Beatmap.Window300} Window100 {Beatmap.Window100} Window50 {Beatmap.Window50} OD: {Beatmap.OD}", LogLevel.Info);
             Utils.Log($"CircleRadius {Beatmap?.CircleRadius ?? 0} CS: {Beatmap.CS}", LogLevel.Info);
             Utils.Log($"PlayfieldWidth {Playfield.Width} PlayfieldHeight {Playfield.Height}", LogLevel.Info);

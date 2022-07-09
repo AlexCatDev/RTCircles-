@@ -116,6 +116,7 @@ namespace RTCircles
         private int lastBeat;
         private double repeatCountdownTimer = 0;
         private double repeatTimer = 0;
+        private bool hover = false;
         private void drawOffsetAdjuster(Graphics g)
         {
             if (OsuContainer.Beatmap == null)
@@ -183,18 +184,25 @@ namespace RTCircles
 
             if (wholeArea.IntersectsWith(Input.MousePosition))
             {
-                OsuContainer.Beatmap.Song.Volume = 0.25;
+                if (!hover)
+                {
+                    OsuContainer.Beatmap.Song.SlideAttribute(ManagedBass.ChannelAttribute.Volume, 0.25f, time: 500);
+                    hover = true;
+                }
 
                 if (playTickSound)
                     Skin.Click.Play(true);
             }
-            else
-                OsuContainer.Beatmap.Song.Volume = GlobalOptions.SongVolume.Value;
+            else if (hover)
+            {
+                OnExit();
+            }
         }
 
         public override void OnExit()
         {
-            OsuContainer.Beatmap.Song.Volume = GlobalOptions.SongVolume.Value;
+            OsuContainer.Beatmap.Song.SlideAttribute(ManagedBass.ChannelAttribute.Volume, (float)GlobalOptions.SongVolume.Value, time: 500);
+            hover = false;
         }
 
         public override void Render(Graphics g)

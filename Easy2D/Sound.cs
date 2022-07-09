@@ -120,6 +120,11 @@ namespace Easy2D
             return Bass.ChannelGetLevel(Handle);
         }
 
+        public void SlideAttribute(ChannelAttribute attribute, float value, int time, bool logarithmic = false)
+        {
+            Bass.ChannelSlideAttribute(Handle, attribute, value, time, logarithmic);
+        }
+
         public double Frequency
         {
             get

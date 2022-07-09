@@ -92,7 +92,7 @@ namespace RTCircles
 
         public void TryScrollToItem(CarouselItem item, bool instant = false)
         {
-            int index = BeatmapCollection.SearchItems.FindIndex((o) => o.Hash == OsuContainer.Beatmap.Hash);
+            int index = BeatmapCollection.SearchItems.FindIndex((o) => o == item);
 
             TryScrollToItemAtIndex(index);
         }

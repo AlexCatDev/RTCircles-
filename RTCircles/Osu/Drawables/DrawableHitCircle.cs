@@ -13,7 +13,6 @@ namespace RTCircles
     public class DrawableHitCircle : Drawable, IDrawableHitObject
     {
         private float alpha = 0;
-        private float approachScale = 0;
         private bool playedSound = false;
         private int combo = 0;
 
@@ -58,8 +57,10 @@ namespace RTCircles
 
         public Vector4 CurrentColor => Color;
 
-        public bool IsHit = false;
-        public bool IsMissed = false;
+        public bool IsHit { get; private set; }
+        public bool IsMissed { get; private set; }
+
+        public int ObjectIndex { get; private set; }
 
         private float hitAlpha = 0;
         private double hitTime = 0;
@@ -68,11 +69,13 @@ namespace RTCircles
 
         private int colorIndex;
 
-        public DrawableHitCircle(HitCircle circle, int colorIndex, int combo)
+        public DrawableHitCircle(HitCircle circle, int colorIndex, int combo, int objectIndex)
         {
             this.circle = circle;
             this.combo = combo;
             this.colorIndex = colorIndex;
+
+            ObjectIndex = objectIndex;
         }
 
         public override void OnAdd()
@@ -85,46 +88,6 @@ namespace RTCircles
             hitAlpha = 0;
             hitTime = 0;
             playedSound = false;
-        }
-
-        public bool Hit()
-        {
-            if (!playedSound && !IsHit && !IsMissed)
-            {
-                 if(OsuContainer.SongPosition < circle.StartTime - OsuContainer.Beatmap.Fadein) { return true; }
-
-                hitTime = OsuContainer.SongPosition;
-                double t = Math.Abs(hittableTime);
-
-                OsuContainer.ScoreHit(circle);
-
-                if (t < OsuContainer.Beatmap.Window300)
-                    OsuContainer.HUD.AddHit(hittableTime, HitResult.Max, Position);
-                else if (t < OsuContainer.Beatmap.Window100)
-                    OsuContainer.HUD.AddHit(hittableTime, HitResult.Good, Position);
-                else if (t < OsuContainer.Beatmap.Window50)
-                    OsuContainer.HUD.AddHit(hittableTime, HitResult.Meh, Position);
-                else
-                {
-                    OsuContainer.HUD.AddHit(hittableTime, HitResult.Miss, Position);
-                    IsMissed = true;
-                    IsHit = true;
-                    return true;
-                }
-                
-                IsHit = true;
-                hitAlpha = alpha;
-
-                OsuContainer.PlayHitsound(circle.HitSound, circle.Extras.SampleSet);
-
-                //play the extra addition if there is one
-                if (circle.Extras.AdditionSet is not SampleSet.None)
-                    OsuContainer.PlayHitsound(circle.HitSound, circle.Extras.AdditionSet);
-
-                playedSound = true;
-                return true;
-            }
-            return false;
         }
 
         public override void Render(Graphics g)
@@ -154,10 +117,32 @@ namespace RTCircles
             if (OsuContainer.Beatmap.Mods.HasFlag(Mods.HD))
                 return;
 
-            if (approachScale > 1f && !IsHit && !IsMissed)
+            double preempt = OsuContainer.Beatmap.Preempt;
+            double songPos = OsuContainer.SongPosition;
+            int startTime = circle.StartTime;
+
+            double startScale = OsuContainer.ApproachCircleScale;
+            double endScale = 1;
+
+            float approachScale = (float)Interpolation.ValueAt(songPos, startScale, endScale,
+                startTime - preempt,
+                startTime          ).Clamp(endScale, startScale);
+
+            double startAlpha = 0;
+            double endAlpha = 0.9;
+
+            float approachCircleAlpha =
+                (float)Interpolation.ValueAt(songPos, startAlpha, endAlpha,
+                startTime - preempt,
+                Math.Min(startTime, Math.Min(startTime, startTime - preempt + OsuContainer.Beatmap.FadeIn * 2))).Clamp(startAlpha, endAlpha);
+
+            if (IsMissed)
+                approachCircleAlpha *= alpha;
+
+            if (approachScale > 1f && !IsHit)
             {
                 Vector2 approachCircleSize = Size * approachScale * Skin.GetScale(Skin.ApproachCircle);
-                g.DrawRectangleCentered(Position, approachCircleSize, new Vector4(Color.X, Color.Y, Color.Z, alpha), Skin.ApproachCircle);
+                g.DrawRectangleCentered(Position, approachCircleSize, new Vector4(Color.X, Color.Y, Color.Z, approachCircleAlpha), Skin.ApproachCircle);
             }
         }
 
@@ -179,13 +164,10 @@ namespace RTCircles
                         alpha = (float)MathUtils.Map(timeElapsed, OsuContainer.Beatmap.Preempt * 0.4, OsuContainer.Beatmap.Preempt * 0.4 + OsuContainer.Beatmap.Preempt * 0.3, 1, 0).Clamp(0, 1);
                 }
                 else
-                    alpha = (float)MathUtils.Map(timeElapsed, 0, OsuContainer.Beatmap.Fadein, 0, 1).Clamp(0, 1);
+                    alpha = (float)MathUtils.Map(timeElapsed, 0, OsuContainer.Beatmap.FadeIn, 0, 1).Clamp(0, 1);
 
-                approachScale = (float)MathUtils.Map(timeElapsed, 0, OsuContainer.Beatmap.Preempt, OsuContainer.ApproachCircleScale, 1)
-                    .Clamp(1, OsuContainer.ApproachCircleScale);
-
-                if (OsuContainer.CookieziMode && approachScale == 1f)
-                    Hit();
+                if (OsuContainer.CookieziMode && OsuContainer.SongPosition >= circle.StartTime)
+                    checkHit();
                 
                 //Auto miss when the hit window is outside 50
                 if (hittableTime > OsuContainer.Beatmap.Window50)
@@ -230,6 +212,48 @@ namespace RTCircles
             }
         }
 
+        private bool checkHit()
+        {
+            if (!playedSound && !IsHit && !IsMissed)
+            {
+                if (OsuContainer.SongPosition < circle.StartTime - OsuContainer.Beatmap.FadeIn) { return true; }
+
+                //Miss the previous object if not hit
+                if (ObjectIndex > 0)
+                    OsuContainer.Beatmap.HitObjects[ObjectIndex - 1].MissIfNotHit();
+
+                hitTime = OsuContainer.SongPosition;
+                double t = Math.Abs(hittableTime);
+
+                OsuContainer.ScoreHit(circle);
+
+                if (t < OsuContainer.Beatmap.Window300)
+                    OsuContainer.HUD.AddHit(hittableTime, HitResult.Max, Position);
+                else if (t < OsuContainer.Beatmap.Window100)
+                    OsuContainer.HUD.AddHit(hittableTime, HitResult.Good, Position);
+                else if (t < OsuContainer.Beatmap.Window50)
+                    OsuContainer.HUD.AddHit(hittableTime, HitResult.Meh, Position);
+                else
+                {
+                    MissIfNotHit();
+                    return true;
+                }
+
+                IsHit = true;
+                hitAlpha = alpha;
+
+                OsuContainer.PlayHitsound(circle.HitSound, circle.Extras.SampleSet);
+
+                //play the extra addition if there is one
+                if (circle.Extras.AdditionSet is not SampleSet.None)
+                    OsuContainer.PlayHitsound(circle.HitSound, circle.Extras.AdditionSet);
+
+                playedSound = true;
+                return true;
+            }
+            return false;
+        }
+
         public override bool OnKeyDown(Key key)
         {
             if (OsuContainer.CookieziMode)
@@ -243,7 +267,7 @@ namespace RTCircles
                 if (!IsHit || !IsMissed)
                 {
                     if (MathUtils.IsPointInsideRadius(OsuContainer.CursorPosition, Position, OsuContainer.Beatmap.CircleRadius))
-                        return Hit();
+                        return checkHit();
                 }
             }
             
@@ -263,16 +287,22 @@ namespace RTCircles
                 if (!IsHit || !IsMissed)
                 {
                     if (MathUtils.IsPointInsideRadius(OsuContainer.CursorPosition, Position, OsuContainer.Beatmap.CircleRadius))
-                        return Hit();
+                        return checkHit();
                 }
             }
 
             return false;
         }
 
-        public override void OnRemove()
+        public void MissIfNotHit()
         {
-            
+            if (IsHit || IsMissed)
+                return;
+
+            OsuContainer.HUD.AddHit(hittableTime, HitResult.Miss, Position);
+            IsMissed = true;
+            hitAlpha = alpha;
+            hitTime = OsuContainer.SongPosition;
         }
     }
 }

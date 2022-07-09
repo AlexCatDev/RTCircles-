@@ -39,9 +39,12 @@ namespace RTCircles
             }
             set
             {
-                setter?.Invoke(value);
+                if (!this.value.Equals(value))
+                {
+                    setter?.Invoke(value);
+                    Settings.SetValue<T>(value, name);
+                }
 
-                Settings.SetValue<T>(value, name);
                 this.value = value;
                 initialized = true;
             }

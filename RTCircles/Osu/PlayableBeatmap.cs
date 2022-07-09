@@ -36,7 +36,7 @@ namespace RTCircles
         public double Window100 { get; private set; }
         public double Window300 { get; private set; }
 
-        public double Fadein { get; private set; }
+        public double FadeIn { get; private set; }
         public double Preempt { get; private set; }
 
         public List<IDrawableHitObject> HitObjects = new List<IDrawableHitObject>();
@@ -130,8 +130,8 @@ namespace RTCircles
             if(OsuContainer.Beatmap?.AudioPath == audioPath)
             {
                 playableBeatmap.Song = OsuContainer.Beatmap.Song;
-                playableBeatmap.Song.Volume = OsuContainer.Beatmap.Song.Volume / 2;
-                ManagedBass.Bass.ChannelSlideAttribute(playableBeatmap.Song, ManagedBass.ChannelAttribute.Volume, (float)GlobalOptions.SongVolume.Value, 500, false);
+                playableBeatmap.Song.Volume = OsuContainer.Beatmap.Song.Volume / 4;
+                ManagedBass.Bass.ChannelSlideAttribute(playableBeatmap.Song, ManagedBass.ChannelAttribute.Volume, (float)GlobalOptions.SongVolume.Value, 500, true);
             }
             else if (File.Exists(audioPath))
             {
@@ -221,7 +221,7 @@ namespace RTCircles
         {
             AR = ar;
             Preempt = mapDifficultyRange(AR, 1800, 1200, 450);
-            Fadein = 400 * Math.Min(1, Preempt / 450);
+            FadeIn = 400 * Math.Min(1, Preempt / 450);
         }
 
         public void SetCS(float cs)
@@ -395,7 +395,7 @@ namespace RTCircles
             Window300 = mapDifficultyRange(OD, 80, 50, 20);
 
             Preempt = mapDifficultyRange(AR, 1800, 1200, 450);
-            Fadein = 400 * Math.Min(1, Preempt / 450);
+            FadeIn = 400 * Math.Min(1, Preempt / 450);
 
             applyStacking();
 
@@ -417,7 +417,7 @@ namespace RTCircles
                 switch (hitObject)
                 {
                     case HitCircle circle:
-                        DrawableHitCircle drawableCircle = new DrawableHitCircle(circle, colorIndex, combo++);
+                        DrawableHitCircle drawableCircle = new DrawableHitCircle(circle, colorIndex, combo++, i);
                         drawableCircle.Layer = layer;
                         HitObjects.Add(drawableCircle);
                         MaxCombo++;
@@ -429,7 +429,7 @@ namespace RTCircles
                         if(slider.EndTime - slider.StartTime < 1)
                             slider.EndTime = slider.StartTime + 1;
 
-                        DrawableSlider drawableSlider = new DrawableSlider(slider, colorIndex, combo++);
+                        DrawableSlider drawableSlider = new DrawableSlider(slider, colorIndex, combo++, i);
                         drawableSlider.Layer = layer;
                         HitObjects.Add(drawableSlider);
                         MaxCombo += slider.Repeats + 1;
@@ -459,7 +459,7 @@ namespace RTCircles
 
                         break;
                     case Spinner spinner:
-                        DrawableSpinner drawableSpinner = new DrawableSpinner(spinner, colorIndex, combo++);
+                        DrawableSpinner drawableSpinner = new DrawableSpinner(spinner, colorIndex, combo++, i);
                         drawableSpinner.Layer = -layer;
                         HitObjects.Add(drawableSpinner);
                         MaxCombo++;

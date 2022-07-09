@@ -15,25 +15,29 @@ namespace RTCircles
 
         public Vector4 CurrentColor => color;
 
-        public override Rectangle Bounds => new Rectangle(position - size / 2f, size);
+        public override Rectangle Bounds => new Rectangle(Position - Size / 2f, Size);
 
-        private Vector2 size { 
-            get {
-                return new Vector2(OsuContainer.Playfield.Height * 0.8f);
-            } 
-        }
+        private Vector2 Size => new Vector2(OsuContainer.Playfield.Height * 0.8f);
 
-        private Vector2 position => OsuContainer.Playfield.Center;
+        private Vector2 Position => OsuContainer.Playfield.Center;
+
+        public bool IsHit => true;
+
+        public bool IsMissed => false;
+
+        public int ObjectIndex { get; private set; }
 
         private Spinner spinner;
         private Vector4 color;
         private int combo;
 
-        public DrawableSpinner(Spinner spinner, int colorIndex, int combo)
+        public DrawableSpinner(Spinner spinner, int colorIndex, int combo, int objectIndex)
         {
             this.spinner = spinner;
             this.color = Colors.White;
             this.combo = combo;
+
+            ObjectIndex = objectIndex;
         }
 
         public override void OnAdd()
@@ -85,13 +89,13 @@ namespace RTCircles
 
             float approachTextureScale = Skin.GetScale(Skin.SpinnerApproachCircle, 256, 512);
 
-            g.DrawRectangleCentered(position, size * spinnerTextureScale, color * colorBoost, Skin.SpinnerCircle, rotDegrees: rotation);
+            g.DrawRectangleCentered(Position, Size * spinnerTextureScale, color * colorBoost, Skin.SpinnerCircle, rotDegrees: rotation);
 
             if (!OsuContainer.Beatmap.Mods.HasFlag(Mods.HD))
-                g.DrawRectangleCentered(position, size * approachTextureScale * approachScale, color * colorBoost, Skin.SpinnerApproachCircle);
+                g.DrawRectangleCentered(Position, Size * approachTextureScale * approachScale, color * colorBoost, Skin.SpinnerApproachCircle);
 
             if (score > 0)
-                Skin.ScoreNumbers.DrawCentered(g, OsuContainer.MapToPlayfield(512 / 2, 280, ignoreMods: true), (size.Y / 9) * scoreBonusScale, new Vector4(1f, 1f, 1f, scoreBonusAlpha * color.W), score.ToString());
+                Skin.ScoreNumbers.DrawCentered(g, OsuContainer.MapToPlayfield(512 / 2, 280, ignoreMods: true), (Size.Y / 9) * scoreBonusScale, new Vector4(1f, 1f, 1f, scoreBonusAlpha * color.W), score.ToString());
 
             if (OsuContainer.SongPosition >= spinner.EndTime + OsuContainer.Fadeout)
                 IsDead = true;
@@ -120,12 +124,12 @@ namespace RTCircles
             {
                 if (rotationCounter > 0)
                 {
-                    OsuContainer.HUD.AddHit(0f, HitResult.Max, position);
+                    OsuContainer.HUD.AddHit(0f, HitResult.Max, Position);
                     OsuContainer.PlayHitsound(spinner.HitSound, spinner.Extras.SampleSet);
                 }
                 else
                 {
-                    OsuContainer.HUD.AddHit(0f, HitResult.Miss, position);
+                    OsuContainer.HUD.AddHit(0f, HitResult.Miss, Position);
                 }
 
                 spinnerCompletedCheck = true;
@@ -136,7 +140,7 @@ namespace RTCircles
             else
                 color.W = (float)MathUtils.Map(OsuContainer.SongPosition, spinner.EndTime, spinner.EndTime + OsuContainer.Fadeout, 1, 0).Clamp(0, 1);
 
-            var thisAngle = -MathHelper.RadiansToDegrees(MathF.Atan2(OsuContainer.CursorPosition.X - position.X, OsuContainer.CursorPosition.Y - position.Y));
+            var thisAngle = -MathHelper.RadiansToDegrees(MathF.Atan2(OsuContainer.CursorPosition.X - Position.X, OsuContainer.CursorPosition.Y - Position.Y));
 
             var deltaRot = thisAngle - lastAngle;
 
@@ -176,5 +180,7 @@ namespace RTCircles
                 }
             }
         }
+
+        public void MissIfNotHit() { }
     }
 }
