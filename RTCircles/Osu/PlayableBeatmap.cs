@@ -130,7 +130,7 @@ namespace RTCircles
             if(OsuContainer.Beatmap?.AudioPath == audioPath)
             {
                 playableBeatmap.Song = OsuContainer.Beatmap.Song;
-                playableBeatmap.Song.Volume = OsuContainer.Beatmap.Song.Volume / 4;
+                playableBeatmap.Song.Volume = GlobalOptions.SongVolume.Value / 4;
                 ManagedBass.Bass.ChannelSlideAttribute(playableBeatmap.Song, ManagedBass.ChannelAttribute.Volume, (float)GlobalOptions.SongVolume.Value, 500, true);
             }
             else if (File.Exists(audioPath))

@@ -301,7 +301,7 @@ namespace RTCircles
             if (Beatmap?.AudioPath != bm.AudioPath)
             {
                 //Fade out the current track
-                ManagedBass.Bass.ChannelSlideAttribute(Beatmap.Song, ManagedBass.ChannelAttribute.Volume, 0, 500);
+                ManagedBass.Bass.ChannelSlideAttribute(Beatmap.Song, ManagedBass.ChannelAttribute.Volume, 0, 250);
                 //Beatmap?.Song.Stop();
             }
 

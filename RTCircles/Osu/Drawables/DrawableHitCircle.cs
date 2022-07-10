@@ -148,7 +148,10 @@ namespace RTCircles
 
         public override void Update(float delta)
         {
-            Position = OsuContainer.MapToPlayfield(circle.Position.X, circle.Position.Y);
+            shakeAnim.Update(delta);
+            Vector2 shakeOffset = new Vector2(8, 0) * (OsuContainer.Playfield.Width / 512) * shakeAnim.Value;
+
+            Position = OsuContainer.MapToPlayfield(circle.Position.X, circle.Position.Y) + shakeOffset;
 
             double timeElapsed = (OsuContainer.SongPosition - circle.StartTime + OsuContainer.Beatmap.Preempt);
 
@@ -218,9 +221,25 @@ namespace RTCircles
             {
                 if (OsuContainer.SongPosition < circle.StartTime - OsuContainer.Beatmap.FadeIn) { return true; }
 
-                //Miss the previous object if not hit
-                if (ObjectIndex > 0)
-                    OsuContainer.Beatmap.HitObjects[ObjectIndex - 1].MissIfNotHit();
+                //Auto gets to ignore notelock :tf:
+                if (!OsuContainer.CookieziMode)
+                {
+                    //We're hitting to far ahead
+                    if (ObjectIndex > 1)
+                    {
+                        var secondPreviousObject = OsuContainer.Beatmap.HitObjects[ObjectIndex - 2];
+
+                        if (!secondPreviousObject.IsHit && !secondPreviousObject.IsMissed)
+                        {
+                            Shake();
+                            return true;
+                        }
+                    }
+
+                    //Miss the previous object if not hit
+                    if (ObjectIndex > 0)
+                        OsuContainer.Beatmap.HitObjects[ObjectIndex - 1].MissIfNotHit();
+                }
 
                 hitTime = OsuContainer.SongPosition;
                 double t = Math.Abs(hittableTime);
@@ -292,6 +311,19 @@ namespace RTCircles
             }
 
             return false;
+        }
+
+        private SmoothFloat shakeAnim = new SmoothFloat();
+        public void Shake()
+        {
+            shakeAnim.ClearTransforms();
+
+            shakeAnim.TransformTo(1 , 0.020f);
+            shakeAnim.TransformTo(-1, 0.020f);
+            shakeAnim.TransformTo(1 , 0.020f);
+            shakeAnim.TransformTo(-1, 0.020f);
+            shakeAnim.TransformTo(1 , 0.020f);
+            shakeAnim.TransformTo(0 , 0.020f);
         }
 
         public void MissIfNotHit()

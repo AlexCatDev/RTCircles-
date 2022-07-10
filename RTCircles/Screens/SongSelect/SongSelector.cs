@@ -573,6 +573,7 @@ namespace RTCircles
                 }
 
                 OsuContainer.SongPosition = previewTime;
+                OsuContainer.Beatmap.Song.SlideAttribute(ManagedBass.ChannelAttribute.Volume, (float)GlobalOptions.SongVolume.Value, 250, false);
 
                 if (previewTime > -1)
                     OsuContainer.Beatmap.Song.Play(false);

@@ -125,6 +125,11 @@ namespace Easy2D
             Bass.ChannelSlideAttribute(Handle, attribute, value, time, logarithmic);
         }
 
+        public void SetSync(SyncFlags flags, long parameter, SyncProcedure procedure, IntPtr user = default)
+        {
+            Bass.ChannelSetSync(Handle, flags, parameter, procedure, user);
+        }
+
         public double Frequency
         {
             get
