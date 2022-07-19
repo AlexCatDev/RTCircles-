@@ -15,14 +15,24 @@ namespace Easy2D
             return color.Xyz;
         }
 
+        public static float ToDegrees(float radians)
+        {
+            return radians * 57.2957795131f;
+        }
+
+        public static float ToRadians(float degrees)
+        {
+            return degrees * 0.01745329251f;
+        }
+
         public static double ToDegrees(double radians)
         {
-            return radians / 0.017453292519943295769236907684886;
+            return radians * 57.2957795131;
         }
 
         public static double ToRadians(double degrees)
         {
-            return degrees * 0.017453292519943295769236907684886;
+            return degrees *0.01745329251;
         }
 
         public static int GetSize<T>(this T t) where T : unmanaged

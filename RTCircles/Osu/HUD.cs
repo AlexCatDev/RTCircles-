@@ -387,8 +387,8 @@ namespace RTCircles
 
             //Console.WriteLine(offsetFromStart);
 
-            double duration = 200;
-            double pause = beatLength * 2;
+            double duration = 150;
+            double pause = beatLength * 1;
 
             float textScale = MainGame.Scale;
 
@@ -428,32 +428,33 @@ namespace RTCircles
             }
 
             Vector2 fillOffset = Skin.HealthBar_Marker == null ? new Vector2(5, 16) : new Vector2(12, 12);
-            Vector4 healthColor = new Vector4(1, 1, 1, 1);
-
-            if (PostProcessing.Bloom)
-                healthColor.Xyz += new Vector3(healthbarMarkerScale.Map(1, 2, 0, 0.5f));
 
             if (Skin.HealthBar_Fill != null)
             {
-                Rectangle healthUV = new Rectangle(0, 0, interpolatedHP, 1);
-                Vector2 healthSize = new Vector2(Skin.HealthBar_Fill.Texture.Size.X * interpolatedHP,
-                    Skin.HealthBar_Fill.Texture.Size.Y) * hpScale;
+                var currentFill = Skin.HealthBar_Fill.GetTexture(MainGame.Instance.TotalTime);
 
-                if (Skin.HealthBar_Fill.IsX2)
+                Rectangle healthUV = new Rectangle(0, 0, interpolatedHP, 1);
+                Vector2 healthSize = new Vector2(currentFill.Texture.Size.X * interpolatedHP,
+                    currentFill.Texture.Size.Y) * hpScale;
+
+                if (currentFill.IsX2)
                     healthSize *= 0.5f;
 
                 var healthFillPos = fillOffset * hpScale;
 
-                g.DrawRectangle(healthFillPos, healthSize, healthColor, Skin.HealthBar_Fill, healthUV, true);
+                g.DrawRectangle(healthFillPos, healthSize, Colors.White, currentFill, healthUV, true);
 
                 if (Skin.HealthBar_Marker != null)
                 {
+                    Vector4 healthMarkerColor = new Vector4(1, 1, 1, 1);
+                    healthMarkerColor.Xyz += new Vector3(healthbarMarkerScale.Map(1, 2, 0, 0.5f));
+
                     Vector2 markerSize = Skin.HealthBar_Marker.Texture.Size * hpScale;
 
                     if (Skin.HealthBar_Marker.IsX2)
                         markerSize *= 0.5f;
 
-                    g.DrawRectangleCentered(new Vector2(healthFillPos.X + healthSize.X, 16 * hpScale), markerSize * healthbarMarkerScale, healthColor, Skin.HealthBar_Marker);
+                    g.DrawRectangleCentered(new Vector2(healthFillPos.X + healthSize.X, 16 * hpScale), markerSize * healthbarMarkerScale, healthMarkerColor, Skin.HealthBar_Marker);
                 }
             }
             else

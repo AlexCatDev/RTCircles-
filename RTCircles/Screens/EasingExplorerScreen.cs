@@ -19,6 +19,7 @@ namespace RTCircles
         private Shaker shaker = new Shaker() { Duration = 1, Radius = 250, Speed = 40 };
 
         private Vector2 scrollOffset = new Vector2(400, 20);
+        private Vector2 rawScrollOffset = new Vector2(400, 20);
         public override void Render(Graphics g)
         {
             double t = (MainGame.Instance.TotalTime / 2).OscillateValue(0, 1);
@@ -45,15 +46,26 @@ namespace RTCircles
                 startPos.Y += spacing;
             }
 
-            shaker.Update();
             g.Projection = Matrix4.CreateTranslation(new Vector3(shaker.OutputShake)) * Matrix4.CreateOrthographicOffCenter(0, MainGame.WindowWidth, MainGame.WindowHeight, 0, -1, 1);
             //g.DrawRectangleCentered(Input.MousePosition + shaker.OutputShake, new Vector2(256), Colors.Red);
 
             base.Render(g);
         }
 
+        public override void Update(float delta)
+        {
+            shaker.Update(delta);
+
+            scrollOffset.Y = MathHelper.Lerp(scrollOffset.Y, rawScrollOffset.Y, delta * 10);
+
+            base.Update(delta);
+        }
+
         public override void OnKeyDown(Key key)
         {
+            if (key == Key.Escape)
+                ScreenManager.GoBack();
+
             if(key == Key.S)
             {
                 shaker.Shake();
@@ -63,8 +75,7 @@ namespace RTCircles
 
         public override void OnMouseWheel(float delta)
         {
-            scrollOffset.Y += delta*20;
-            scrollOffset.Y.ClampRef(-4893423894, 20);
+            rawScrollOffset.Y += delta * 200;
             base.OnMouseWheel(delta);
         }
     }

@@ -11,7 +11,9 @@ namespace Easy2D
         private BufferTargetARB bufferType;
         private BufferUsageARB bufferUsage;
 
-        private uint sizeOfTypeInBytes;
+        public uint SizeOfTypeInBytes { get; private set; }
+
+        public uint SizeInBytes => (uint)Capacity * SizeOfTypeInBytes;
 
         public GLBuffer(BufferTargetARB bufferType, BufferUsageARB bufferUsage, int capacity)
         {
@@ -21,7 +23,7 @@ namespace Easy2D
             this.bufferType = bufferType;
             this.bufferUsage = bufferUsage;
 
-            sizeOfTypeInBytes = (uint)Marshal.SizeOf<T>();
+            SizeOfTypeInBytes = (uint)Marshal.SizeOf<T>();
 
             Capacity = capacity;
         }
@@ -29,7 +31,7 @@ namespace Easy2D
         public double GetMemoryUsage()
         {
             if (IsInitialized)
-                return Math.Round((sizeOfTypeInBytes * Capacity) / 1048576d, 2);
+                return Math.Round((SizeOfTypeInBytes * Capacity) / 1048576d, 2);
             else
                 return 0;
         }
@@ -47,14 +49,14 @@ namespace Easy2D
 
             bind(null);
 
-            nuint sizeInBytes = (nuint)(capacity * sizeOfTypeInBytes);
+            nuint sizeInBytes = (nuint)(capacity * SizeOfTypeInBytes);
 
             unsafe
             {
                 GL.Instance.BufferData(bufferType, sizeInBytes, null, bufferUsage);
             }
 
-            Utils.Log($"Initialised {bufferType}<{typeof(T)}> with a capacity of {capacity} elements which is {GetMemoryUsage():F2} MB / {sizeOfTypeInBytes} bytes per element", LogLevel.Info);
+            //Utils.Log($"Initialised {bufferType}<{typeof(T)}> with a capacity of {capacity} elements which is {GetMemoryUsage():F2} MB / {sizeOfTypeInBytes} bytes per element", LogLevel.Info);
         }
 
         /// <summary>
@@ -84,8 +86,8 @@ namespace Easy2D
         {
             Bind();
 
-            uint sizeInBytes = objectCount * sizeOfTypeInBytes;
-            uint offsetInBytes = startIndex * sizeOfTypeInBytes;
+            uint sizeInBytes = objectCount * SizeOfTypeInBytes;
+            uint offsetInBytes = startIndex * SizeOfTypeInBytes;
 
             GL.Instance.BufferSubData(bufferType, (IntPtr)offsetInBytes, sizeInBytes, data);
 

@@ -56,18 +56,20 @@ namespace RTCircles
 
             float alpha = MathUtils.OscillateValue(scrollProgress.Value, 0, 1);
 
-            g.DrawRoundedRect(position + size / 2, size, Colors.From255RGBA(37, 37, 37, alpha * 127), size.Y / 2f);
+            g.DrawRoundedRect(position + size / 2, size, Colors.From255RGBA(60, 60, 60, alpha * 127), size.Y / 2f);
 
             var progressHeight = size.Y * 0.1f;
             var progressWidth = (float)OsuContainer.SongPosition.Map(breakStart, breakEnd, size.X * 0.65, progressHeight);
 
             progressWidth = MathF.Max(progressWidth, progressHeight);
 
-            g.DrawRoundedRect(position + new Vector2(size.X / 2, size.Y / 1.25f), new Vector2(progressWidth, progressHeight), new Vector4(1,1,1, alpha), progressHeight / 2f);
+            Vector4 progressColor = new Vector4(1.5f, 1.5f, 1.5f, alpha);
+
+            g.DrawRoundedRect(position + new Vector2(size.X / 2, size.Y / 1.25f), new Vector2(progressWidth, progressHeight), progressColor, progressHeight / 2f);
 
             //g.DrawRectangle(position, size, Colors.From255RGBA(37, 37, 37, 127));
 
-            int remainingBreakTime = (int)Math.Max((breakEnd - OsuContainer.SongPosition) / 1000, 0);
+            int remainingBreakTime = (int)Math.Max(Math.Ceiling((breakEnd - OsuContainer.SongPosition) / 1000), 0);
 
             Vector4 textColor = new Vector4(1f, 1f, 1f, alpha);
 
@@ -77,7 +79,7 @@ namespace RTCircles
 
             g.DrawStringCentered(remainingBreakTime.ToString(), Font.DefaultFont, rect.Center, textColor, textScale);
 
-            const string subText = "^ that is how much time you have left to live";
+            const string subText = "Gaming";
 
             var subTextScale = textScale / 6;
             var subTextSize = Font.DefaultFont.MessureString(subText, subTextScale);

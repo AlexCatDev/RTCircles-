@@ -79,6 +79,8 @@ namespace RTCircles
     {
         private Dictionary<string, Sound> hitsounds = new Dictionary<string, Sound>();
 
+        public int Count => hitsounds.Count;
+
         public void SetVolume(double volume)
         {
             foreach (var hitsound in hitsounds)

@@ -20,7 +20,7 @@ namespace RTCircles
         private void explodeFadeout()
         {
             progress.Value = 1;
-            progress.TransformTo(3.5f, 0.5f, EasingTypes.OutQuad);
+            progress.TransformTo(3.5f, 1f, EasingTypes.OutQuint);
         }
 
         public override void Render(Graphics g)

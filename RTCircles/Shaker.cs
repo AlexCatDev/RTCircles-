@@ -17,26 +17,26 @@ namespace RTCircles
         public Vector2 OutputShake { get; private set; }
 
         public EasingTypes Easing = EasingTypes.None;
-        public float ShakeFadeoutScale = 1;
 
         public void Shake()
         {
+            shakeTime = 0;
+
             shakeAmountSpeed.Value = 1;
             shakeAmountSpeed.TransformTo(0, Duration, Easing);
         }
 
         private double shakeTime;
 
-        public void Update()
+        public void Update(float delta)
         {
-            double delta = MainGame.Instance.DeltaTime;
-            shakeAmountSpeed.Update((float)delta);
+            shakeAmountSpeed.Update(delta);
 
-            shakeTime += delta * Speed * shakeAmountSpeed.Value.Map(1, 0, 1, ShakeFadeoutScale);
+            shakeTime += delta * Speed * shakeAmountSpeed;
             double noiseX = Math.Cos(shakeTime).Map(-1, 1, 0, 1);
             double noiseY = Math.Sin(shakeTime).Map(-1, 1, 0, 1);
 
-            Vector2 shakeFinal = new Vector2();
+            Vector2 shakeFinal = Vector2.Zero;
 
             float radius = Radius * shakeAmountSpeed;
 

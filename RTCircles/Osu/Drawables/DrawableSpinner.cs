@@ -96,9 +96,6 @@ namespace RTCircles
 
             if (score > 0)
                 Skin.ScoreNumbers.DrawCentered(g, OsuContainer.MapToPlayfield(512 / 2, 280, ignoreMods: true), (Size.Y / 9) * scoreBonusScale, new Vector4(1f, 1f, 1f, scoreBonusAlpha * color.W), score.ToString());
-
-            if (OsuContainer.SongPosition >= spinner.EndTime + OsuContainer.Fadeout)
-                IsDead = true;
         }
 
         private int score;
@@ -107,6 +104,11 @@ namespace RTCircles
 
         private float spinRPM;
 
+        //idk if it makes sense to have a preempt and a fadein for spinners? lol
+        const float preempt = 600;
+        const float fadein = 450;
+        const float fadeout = 180;
+
         public override void Update(float delta)
         {
             //Just complete all spinners with a duration of less than some value thats impossible to complete
@@ -114,9 +116,6 @@ namespace RTCircles
             if (spinner.EndTime - spinner.StartTime < 250)
                 rotationCounter = 1;
 
-
-            const float preempt = 600;
-            const float fadein = 450;
 
             float timeElapsed = (float)(OsuContainer.SongPosition - spinner.StartTime + preempt);
 
@@ -138,7 +137,7 @@ namespace RTCircles
             if (timeElapsed < fadein)
                 color.W = (float)MathUtils.Map(timeElapsed, 0, fadein, 0, 1).Clamp(0, 1);
             else
-                color.W = (float)MathUtils.Map(OsuContainer.SongPosition, spinner.EndTime, spinner.EndTime + OsuContainer.Fadeout, 1, 0).Clamp(0, 1);
+                color.W = (float)MathUtils.Map(OsuContainer.SongPosition, spinner.EndTime, spinner.EndTime + fadeout, 1, 0).Clamp(0, 1);
 
             var thisAngle = -MathHelper.RadiansToDegrees(MathF.Atan2(OsuContainer.CursorPosition.X - Position.X, OsuContainer.CursorPosition.Y - Position.Y));
 
@@ -179,6 +178,9 @@ namespace RTCircles
                     OsuContainer.Score += 1000;
                 }
             }
+
+            if (OsuContainer.SongPosition >= spinner.EndTime + fadeout)
+                IsDead = true;
         }
 
         public void MissIfNotHit() { }

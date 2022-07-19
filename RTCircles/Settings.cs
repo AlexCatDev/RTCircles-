@@ -24,7 +24,7 @@ namespace RTCircles
                 Utils.Log($"Could not find appdata directory, save directory is now path of executable", LogLevel.Warning);
             }
 
-            SettingsDirectory = $"{localAppData}/Settings/{Assembly.GetCallingAssembly().GetName().Name}";
+            SettingsDirectory = $"{localAppData}/{Assembly.GetCallingAssembly().GetName().Name}/Settings";
 
             new DirectoryInfo(SettingsDirectory).Create();
         }

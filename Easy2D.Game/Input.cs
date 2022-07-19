@@ -11,9 +11,10 @@ namespace Easy2D.Game
     {
         public static IInputContext InputContext { get; private set; }
 
-        public static float MouseSensitivity = 0.5f;
-
-        private static System.Numerics.Vector2 _previousPos = System.Numerics.Vector2.Zero;
+        /// <summary>
+        /// Only affects raw cursor mode
+        /// </summary>
+        public static float MouseSensitivity = 1f;
 
         private static Vector2 _mousePosition;
 
@@ -21,8 +22,18 @@ namespace Easy2D.Game
         {
             get
             {
-                var pos = InputContext.Mice[0].Position;
-                return new Vector2(pos.X, pos.Y);
+                return _mousePosition;
+            }
+        }
+
+        private static CursorMode cursorMode;
+        public static CursorMode CursorMode
+        {
+            get { return cursorMode; }
+            set
+            {
+                cursorMode = value;
+                InputContext.Mice[0].Cursor.CursorMode = value;
             }
         }
 
@@ -32,12 +43,33 @@ namespace Easy2D.Game
 
             //This returns the Window Cursor Position if CursorMode is not raw
             //Else it returns the mouse delta
-            /*
-            inputContext.Mice[0].MouseMove += (s, e) =>
+
+            var mouse = inputContext.Mice[0];
+
+            Vector2 previousRaw = Vector2.Zero;
+
+            _mousePosition = new Vector2(mouse.Position.X, mouse.Position.Y);
+
+            mouse.MouseMove += (s, e) =>
             {
-                Console.WriteLine(e);
+                if(mouse.Cursor.CursorMode == CursorMode.Raw)
+                {
+                    Vector2 rawMousePos = new Vector2(e.X, e.Y);
+
+                    Vector2 mouseDelta = rawMousePos - previousRaw;
+                    previousRaw = rawMousePos;
+
+                    _mousePosition += (MouseSensitivity * mouseDelta);
+                    _mousePosition.X.ClampRef(0, Viewport.Width);
+                    _mousePosition.Y.ClampRef(0, Viewport.Height);
+                }
+                else
+                {
+                    previousRaw = Vector2.Zero;
+                    _mousePosition = new Vector2(e.X, e.Y);
+                }
             };
-            */
+            
         }
 
         public static event Action OnBackPressed;
@@ -45,6 +77,8 @@ namespace Easy2D.Game
         {
             OnBackPressed?.Invoke();
         }
+
+        public static IReadOnlyList<TouchFingerEvent> TouchInputs => TouchFingerEvents.AsReadOnly();
 
         public static List<TouchFingerEvent> TouchFingerEvents = new List<TouchFingerEvent>();
 

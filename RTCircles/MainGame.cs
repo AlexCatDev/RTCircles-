@@ -23,7 +23,7 @@ namespace RTCircles
 
         private SmoothFloat kiaiAnimation = new SmoothFloat();
 
-        public Shaker Shaker = new Shaker() { Duration = 0.8f, Radius = 180, Speed = 60, ShakeFadeoutScale = 3, Easing = EasingTypes.Out };
+        public Shaker Shaker = new Shaker() { Duration = 1.5f, Radius = 125, Speed = 100, Easing = EasingTypes.OutQuint };
         private Matrix4 shakeMatrix => Matrix4.CreateTranslation(new Vector3(Shaker.OutputShake * MainGame.Scale)) * Projection;
 
         private bool debugCameraActive = false;
@@ -33,15 +33,10 @@ namespace RTCircles
 
         public override void OnLoad()
         {
-            /*
-            View.GLContext.SwapBuffers();
-            GPUSched.Instance.Enqueue(() =>
-            {
-                Size = new Silk.NET.Maths.Vector2D<int>(1920, 1080);
-                (View as Silk.NET.Windowing.IWindow).WindowState = Silk.NET.Windowing.WindowState.Maximized;
-                View.DoEvents();
-            });
-            */
+#if RELEASE
+            ToggleFullScreen();
+#endif
+            Input.CursorMode = CursorMode.Raw;
 
             Size = new Silk.NET.Maths.Vector2D<int>(1600, 900);
 
@@ -64,10 +59,6 @@ namespace RTCircles
             Utils.WriteToConsole = true;
             registerEvents();
 
-            //Skin.Load(@"");
-            //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\- 『BlooXoo』 -");
-            //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  idke 1.2 without sliderendcircle");
-            //Skin.Load(@"C:\Users\user\Desktop\osu!\Skins\-  AlexSkin 1.0");
             Skin.Load(GlobalOptions.SkinFolder.Value);
 
             g = new Graphics();
@@ -87,6 +78,8 @@ namespace RTCircles
 
         private Camera debugCamera = new Camera();
         private float debugCameraScale = 1f;
+
+        public Cursor MenuCursor = new Cursor();
 
         public override void OnRender()
         {
@@ -121,6 +114,8 @@ namespace RTCircles
 
             drawVolumeBar(g);
 
+            if(ScreenManager.ActiveScreen is not OsuScreen)
+                MenuCursor.Render(g, (float)DeltaTime, Input.MousePosition, Colors.White);
             //c
             //g.DrawRectangleCentered(Input.MousePosition, new Vector2(16), Colors.Red);
 
@@ -139,25 +134,13 @@ namespace RTCircles
         }
         public override void OnUpdate()
         {
-            if (ScreenManager.ActiveScreen is OsuScreen)
-                PostProcessing.BloomThreshold = kiaiAnimation.Value.Map(2, 0, 0.2f, 0.8f);
-            else
-                PostProcessing.BloomThreshold = 0.8f;
-
-            PostProcessing.BloomThreshold = 1;
-
-            if (PostProcessing.Bloom)
-            {
-                var mult = kiaiAnimation.Value * (ScreenManager.ActiveScreen is OsuScreen ? 0.5f : 0.1f);  
-                g.FinalColorMult.Xyz = new Vector3(1 + mult);
-            }
-            else
-            {
-                g.FinalColorMult.Xyz = new Vector3(1);
-            }
+            float mult = kiaiAnimation.Value * 1;
+            float finalScale = ScreenManager.ActiveScreen is OsuScreen or MenuScreen ? 1 : 0.2f;
+            g.FinalColorMult.Xyz = new Vector3(1 + mult * finalScale);
 
             kiaiAnimation.Update((float)DeltaTime);
-            Shaker.Update();
+            Shaker.Update((float)DeltaTime);
+
             OsuContainer.Update(DeltaTime * 1000);
             ScreenManager.Update((float)DeltaTime);
         }
@@ -440,8 +423,8 @@ namespace RTCircles
             OsuContainer.OnKiai += () =>
             {
                 //Det her ser bedere ud tbh
-                kiaiAnimation.Value = 2f;
-                kiaiAnimation.TransformTo(0f, 1f, EasingTypes.OutQuart);
+                kiaiAnimation.Value = 1f;
+                kiaiAnimation.TransformTo(0f, 1f, EasingTypes.Out);
             };
 
             Input.OnBackPressed += () =>
@@ -480,27 +463,63 @@ namespace RTCircles
                 ScreenManager.OnMouseWheel(e.Y);
             };
 
+            bool importing = false;
             Input.InputContext.Keyboards[0].KeyDown += (s, e, x) =>
             {
+                if (Input.IsKeyDown(Key.ShiftLeft) && Input.IsKeyDown(Key.ShiftRight) && Input.IsKeyDown(Key.Space))
+                {
+                    ScreenManager.SetScreen<EasingExplorerScreen>();
+                    return;
+                }
+
+                /*
+                if (Input.IsKeyDown(Key.U))
+                {
+                    ScreenManager.SetScreen<ResultScreen>();
+                    return;
+                }
+                */
+
                 if (e == Key.F3)
                 {
+                    var osuSongsFolder = GlobalOptions.OsuFolder.Value + "/Songs";
+
+                    if (!Directory.Exists(osuSongsFolder))
+                    {
+                        NotificationManager.ShowMessage("Can't import maps because i dont know where to look", new Vector3(1, 0, 0), 5);
+                        return;
+                    }
+
+                    if (importing)
+                    {
+                        importing = false;
+                        return;
+                    }
+
+                    importing = true;
+
                     new System.Threading.Thread(() => {
-                        NotificationManager.ShowMessage("Started import process! close client to abort", new Vector3(0.5f, 0.5f, 0.5f), 2f);
+                        NotificationManager.ShowMessage("Started import process! press f3 to abort", new Vector3(0.5f, 0.5f, 0.5f), 2f);
 
                         byte[] buffer = new byte[1024];
 
                         int startCount = BeatmapCollection.Items.Count;
                         if (!string.IsNullOrEmpty(GlobalOptions.OsuFolder.Value))
                         {
-                            foreach (var item in System.IO.Directory.EnumerateDirectories(GlobalOptions.OsuFolder.Value + "/Songs"))
+                            foreach (var item in System.IO.Directory.EnumerateDirectories(osuSongsFolder))
                             {
-                                if(!IsClosing)
-                                BeatmapMirror.ImportBeatmapFolder(item, ref buffer);
+                                if (!IsClosing)
+                                {
+                                    BeatmapMirror.ImportBeatmapFolder(item, ref buffer);
+
+                                    if (!importing)
+                                        break;
+                                }
                             }
                         }
                         int endCount = BeatmapCollection.Items.Count;
 
-                        NotificationManager.ShowMessage($"Wow it actually finished {endCount - startCount} maps were imported", new Vector3(0.5f, 1, 0.5f), 10f);
+                        NotificationManager.ShowMessage($"Import finished! Imported: {endCount - startCount} maps.", new Vector3(0.5f, 1, 0.5f), 10f);
                     }).Start();
 
                     return;
@@ -554,45 +573,6 @@ namespace RTCircles
                 }
 
                 ScreenManager.OnTextInput(e);
-            };
-
-            float outroTime = 0;
-            float outroDuration = 0.125f;
-            ScreenManager.OnOutroTransition += (delta) =>
-            {
-                return true;
-
-                outroTime += delta;
-                outroTime = outroTime.Clamp(0f, outroDuration);
-                float progress = Interpolation.ValueAt(outroTime, 1f, 0f, 0f, outroDuration, EasingTypes.None);
-                g.DrawRectangle(Vector2.Zero, WindowSize, new Vector4(0f, 0f, 0f, progress));
-                if (outroTime == outroDuration)
-                {
-                    outroTime = 0;
-                    return true;
-                }
-
-                return false;
-            };
-
-            float introDuration = 0.125f;
-            float introTime = 0;
-            ScreenManager.OnIntroTransition += (delta) =>
-            {
-                return true;
-
-                introTime += delta;
-                introTime = introTime.Clamp(0f, introDuration);
-                float progress = Interpolation.ValueAt(introTime, 0f, 1f, 0f, introDuration, EasingTypes.None);
-                g.DrawRectangle(Vector2.Zero, WindowSize, new Vector4(0f, 0f, 0f, progress));
-
-                if (introTime == introDuration)
-                {
-                    introTime = 0;
-                    return true;
-                }
-
-                return false;
             };
         }
 

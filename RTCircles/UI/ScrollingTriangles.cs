@@ -22,7 +22,7 @@ namespace RTCircles
             {
                 pos = new Vector2(RNG.Next(0, 1000), RNG.Next(-1000, 0));
 
-                colorOffset = RNG.Next(0.85f, 1.15f);
+                colorOffset = RNG.Next(0.70f, 1.3f);
 
                 Size *= RNG.Next(1f, 2f);
 
@@ -81,12 +81,7 @@ namespace RTCircles
         private FrameBuffer triangleFramebuffer = new FrameBuffer(1, 1, textureComponentCount: InternalFormat.Rgba16f, pixelFormat: PixelFormat.Rgba, pixelType: (PixelType)GLEnum.HalfFloat);
         private List<Triangle> triangles = new List<Triangle>();
 
-        private static Easy2D.Texture catJamSpritesheet;
-
-        static ScrollingTriangles()
-        {
-            catJamSpritesheet = new Easy2D.Texture(Utils.GetResource("UI.Assets.catjam-spritesheet.png"));
-        }
+        private static readonly Easy2D.Texture catJamSpritesheet = new Easy2D.Texture(Utils.GetResource("UI.Assets.catjam-spritesheet.png"));
 
         public ScrollingTriangles(int TriangleCount)
         {

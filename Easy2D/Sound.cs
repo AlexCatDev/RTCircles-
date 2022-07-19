@@ -8,6 +8,16 @@ using ManagedBass;
 using ManagedBass.Fx;
 namespace Easy2D
 {
+    public struct SoundSync
+    {
+        private int handle;
+
+        private SoundSync(int handle) { this.handle = handle; }
+
+        public static implicit operator int (SoundSync sync) => sync.handle;
+        public static implicit operator SoundSync(int sync) => new SoundSync(sync);
+    }
+
     public class Sound
     {
         #region STATIC
@@ -125,10 +135,21 @@ namespace Easy2D
             Bass.ChannelSlideAttribute(Handle, attribute, value, time, logarithmic);
         }
 
-        public void SetSync(SyncFlags flags, long parameter, SyncProcedure procedure, IntPtr user = default)
+        public SoundSync SetSync(SyncFlags flag, long parameter, SyncProcedure procedure, IntPtr user = default)
         {
-            Bass.ChannelSetSync(Handle, flags, parameter, procedure, user);
+            return Bass.ChannelSetSync(Handle, flag, parameter, procedure, user);
         }
+
+        public void RemoveSync(SoundSync sync)
+        {
+            Bass.ChannelRemoveSync(Handle, sync);
+        }
+
+        public bool AddFlag(BassFlags flag) => Bass.ChannelAddFlag(Handle, flag);
+
+        public bool HasFlag(BassFlags flag) => Bass.ChannelHasFlag(Handle, flag);
+
+        public bool RemoveFlag(BassFlags flag) => Bass.ChannelRemoveFlag(Handle, flag);
 
         public double Frequency
         {
@@ -142,6 +163,9 @@ namespace Easy2D
             }
         }
 
+        /// <summary>
+        /// 0 = silent, 1 = full
+        /// </summary>
         public double Volume
         {
             get

@@ -26,13 +26,13 @@ namespace RTCircles
             }
 
             if (comma is not null)
-                commaTexture = Skin.LoadTexture(path, comma);
+                commaTexture = Skin.LoadTexture(path, $"{name}{comma}");
 
             if (percent is not null)
-                percentTexture = Skin.LoadTexture(path, percent);
+                percentTexture = Skin.LoadTexture(path, $"{name}{percent}");
 
             if (x is not null)
-                xTexture = Skin.LoadTexture(path, x);
+                xTexture = Skin.LoadTexture(path, $"{name}{x}");
         }
 
         public Vector2 Meassure(float ySize, string number)
@@ -143,10 +143,11 @@ namespace RTCircles
                 var measureTex = specialChar ? texture : numbers[0];
 
                 Vector2 digitSize = new Vector2(ySize * measureTex.Size.AspectRatio(), ySize);
-                float overlap = (Overlap / measureTex.Width) * digitSize.X;
 
                 g.DrawRectangle(position, digitSize, color, texture);
                 //g.DrawRectangle(position + offset, digitSize, new Vector4(0f, 0f, 0f, 0.5f));
+
+                float overlap = (Overlap / measureTex.Width) * digitSize.X;
 
                 position.X += digitSize.X - overlap;
             }

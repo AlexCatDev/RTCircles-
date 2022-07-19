@@ -13,7 +13,6 @@ namespace RTCircles
     public class DrawableHitCircle : Drawable, IDrawableHitObject
     {
         private float alpha = 0;
-        private bool playedSound = false;
         private int combo = 0;
 
         private float explodeScale = 1f;
@@ -87,7 +86,6 @@ namespace RTCircles
             explodeScale = 1f;
             hitAlpha = 0;
             hitTime = 0;
-            playedSound = false;
         }
 
         public override void Render(Graphics g)
@@ -98,7 +96,7 @@ namespace RTCircles
             void drawNumber()
             {
                 if (!IsHit && !IsMissed)
-                    Skin.CircleNumbers.DrawCentered(g, Position, Size.X / 2.7f, new Vector4(1f, 1f, 1f, alpha), combo.ToString());
+                    Skin.CircleNumbers.DrawCentered(g, Position, Size.X / 2.8f, new Vector4(1f, 1f, 1f, alpha), combo.ToString());
             }
 
             g.DrawRectangleCentered(Position, (Vector2)Size * explodeScale * Skin.GetScale(Skin.HitCircle), new Vector4(Color.X, Color.Y, Color.Z, alpha), Skin.HitCircle);
@@ -149,7 +147,7 @@ namespace RTCircles
         public override void Update(float delta)
         {
             shakeAnim.Update(delta);
-            Vector2 shakeOffset = new Vector2(8, 0) * (OsuContainer.Playfield.Width / 512) * shakeAnim.Value;
+            Vector2 shakeOffset = new Vector2(8, 0) * OsuContainer.OsuScale * shakeAnim.Value;
 
             Position = OsuContainer.MapToPlayfield(circle.Position.X, circle.Position.Y) + shakeOffset;
 
@@ -174,12 +172,7 @@ namespace RTCircles
                 
                 //Auto miss when the hit window is outside 50
                 if (hittableTime > OsuContainer.Beatmap.Window50)
-                {
-                    IsMissed = true;
-                    hitAlpha = 1f;
-                    OsuContainer.HUD.AddHit((float)OsuContainer.Beatmap.Window50, HitResult.Miss, Position);
-                    hitTime = (float)OsuContainer.SongPosition;
-                }
+                    MissIfNotHit();
             }
             else
             {
@@ -204,7 +197,7 @@ namespace RTCircles
                 }
                 else if (IsMissed)
                 {
-                    to = hitTime + OsuContainer.Fadeout - 120;
+                    to = hitTime + (OsuContainer.Fadeout / 2);
                     time = OsuContainer.SongPosition.Clamp(start, to);
 
                     alpha = (float)Interpolation.ValueAt(time, hitAlpha, 0, start, to, EasingTypes.None);
@@ -217,28 +210,29 @@ namespace RTCircles
 
         private bool checkHit()
         {
-            if (!playedSound && !IsHit && !IsMissed)
+            if (!IsHit && !IsMissed)
             {
-                if (OsuContainer.SongPosition < circle.StartTime - OsuContainer.Beatmap.FadeIn) { return true; }
+                //if we're pressing the note and it's further than 300ms away just auto shake it
+                if (OsuContainer.SongPosition < circle.StartTime - 300) 
+                {
+                    Shake();
+                    return true;
+                }
 
                 //Auto gets to ignore notelock :tf:
                 if (!OsuContainer.CookieziMode)
                 {
                     //We're hitting to far ahead
-                    if (ObjectIndex > 1)
+                    if (ObjectIndex > 0)
                     {
-                        var secondPreviousObject = OsuContainer.Beatmap.HitObjects[ObjectIndex - 2];
+                        var previousObject = OsuContainer.Beatmap.HitObjects[ObjectIndex - 1];
 
-                        if (!secondPreviousObject.IsHit && !secondPreviousObject.IsMissed)
+                        if (!previousObject.IsHit && !previousObject.IsMissed)
                         {
                             Shake();
                             return true;
                         }
                     }
-
-                    //Miss the previous object if not hit
-                    if (ObjectIndex > 0)
-                        OsuContainer.Beatmap.HitObjects[ObjectIndex - 1].MissIfNotHit();
                 }
 
                 hitTime = OsuContainer.SongPosition;
@@ -267,7 +261,6 @@ namespace RTCircles
                 if (circle.Extras.AdditionSet is not SampleSet.None)
                     OsuContainer.PlayHitsound(circle.HitSound, circle.Extras.AdditionSet);
 
-                playedSound = true;
                 return true;
             }
             return false;

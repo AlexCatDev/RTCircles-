@@ -26,6 +26,7 @@ namespace TestECS
 
         public override void OnLoad()
         {
+
             VSync = false;
 
             Renderer = new Graphics();

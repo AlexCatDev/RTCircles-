@@ -67,6 +67,8 @@ namespace RTCircles
     //Make items, sets
     public class CarouselItem
     {
+        public float XOffset;
+
         public string Text { get; private set; }
 
         public string Hash { get; private set; }
@@ -139,6 +141,8 @@ namespace RTCircles
             DynamicTexureCache.ReleaseCache(id, BackgroundPath);
 
             Texture = null;
+
+            XOffset = 0;
         }
     }
 
@@ -163,7 +167,7 @@ namespace RTCircles
         {
             HashedItems.Add(item.Hash, item);
             Items.Add(item);
-            FindText(SearchQuery);
+            FindText(SearchQuery, false);
         }
 
         public static void DeleteMap(CarouselItem item)
@@ -172,11 +176,9 @@ namespace RTCircles
             Items.Remove(item);
             SearchItems.Remove(item);
 
-            bool fileExists = false;
-            if (System.IO.File.Exists(item.FullPath))
+            if (File.Exists(item.FullPath))
             {
-                fileExists = true;
-                System.IO.File.Delete(item.FullPath);
+                File.Delete(item.FullPath);
             }
 
             BeatmapMirror.DatabaseAction((realm) =>
@@ -187,20 +189,28 @@ namespace RTCircles
                 {
                     bm.SetInfo.Beatmaps.Remove(bm);
                     realm.Remove(bm);
+
+                    if(bm.SetInfo.Beatmaps.Count == 0)
+                    {
+                        Directory.Delete($"{BeatmapMirror.SongsDirectory}/{bm.SetInfo.Foldername}");
+                    }
                 });
             });
 
-            NotificationManager.ShowMessage($"Beatmap with hash: {item.Hash} has been deleted! File: {(fileExists ? "Existed" : "Did not exist")}", ((Vector4)Color4.CornflowerBlue).Xyz, 5f);
+            NotificationManager.ShowMessage($"Beatmap with hash: {item.Hash} deleted", ((Vector4)Color4.CornflowerBlue).Xyz, 5f);
         }
 
-        public static void FindText(string text)
+        public static void FindText(string text, bool invokeSearchResultChange = true)
         {
             SearchQuery = text;
 
             if (string.IsNullOrEmpty(text))
             {
                 SearchItems = Items;
-                SearchResultsChanged?.Invoke();
+
+                if(invokeSearchResultChange)
+                    SearchResultsChanged?.Invoke();
+
                 return;
             }
 
@@ -221,7 +231,8 @@ namespace RTCircles
                 return foundMatch;
             }).ToList();
 
-            SearchResultsChanged?.Invoke();
+            if(invokeSearchResultChange)
+                SearchResultsChanged?.Invoke();
         }
     }
 }

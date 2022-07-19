@@ -76,7 +76,7 @@ namespace RTCircles
         /// </summary>
         public static double CircleExplodeScale = 1.4;
 
-        private static Vector2 lastViewport;
+        private static Vector2 lastWindowSize;
 
         //Cache of playfield
         private static Rectangle _playfield;
@@ -87,20 +87,21 @@ namespace RTCircles
                 var windowSize = MainGame.WindowSize;
 
                 //If the viewport hasnt changed, return the cached value.
-                if (lastViewport == windowSize)
+                if (lastWindowSize == windowSize)
                     return _playfield;
 
-
                 //Else update the playfield and recache.
-
-                lastViewport = windowSize;
+                lastWindowSize = windowSize;
 
                 const float aspectRatio = 4f / 3f;
 
-                float PlayfieldHeight = MainGame.WindowHeight - (MainGame.WindowHeight * 0.2f);
+                //Playfield height is 80% of the window height
+                float PlayfieldHeight = MainGame.WindowHeight * 0.8f;
 
-                float PlayfieldWidth = (int)(PlayfieldHeight * aspectRatio);
+                //Playfield width is playfield height * 4:3 aspect ratio
+                float PlayfieldWidth = PlayfieldHeight * aspectRatio;
 
+                //If there isn't enough space on screen for the playfield
                 //Max pixel gap of 100 pixels or 50 on either side then haram and change viewport height instead to match
                 if (PlayfieldWidth > MainGame.WindowWidth - 100)
                 {
@@ -108,22 +109,28 @@ namespace RTCircles
                     PlayfieldHeight = (PlayfieldWidth / aspectRatio);
                 }
 
+                OsuScale = PlayfieldHeight / 384;
+
                 Vector2 PlayfieldTopLeft = new Vector2(MainGame.WindowCenter.X - PlayfieldWidth / 2f, MainGame.WindowCenter.Y - PlayfieldHeight / 2f);
 
-                //This will offset the playfield down so it matches stable
+                //Offset the playfield down by 2% of it's height like stable
                 PlayfieldTopLeft.Y += PlayfieldHeight * 0.020f;
 
+                //i should probably cast these to Vector2i
                 _playfield = new Rectangle(PlayfieldTopLeft, new Vector2(PlayfieldWidth, PlayfieldHeight));
 
                 return _playfield;
             }
         }
 
+        public static float OsuScale { get; private set; }
+
         public static Rectangle FullPlayfield
         {
             get
             {
-                var magicOsuRadius = 70f * (Playfield.Height / 384);
+                //CS 0 circle size to screen size
+                var magicOsuRadius = 70f * OsuScale;
 
                 return new Rectangle(
                 Playfield.Position - new Vector2(magicOsuRadius) / 2,
@@ -179,6 +186,7 @@ namespace RTCircles
         public static PlayableBeatmap Beatmap { get; private set; }
 
         public static event Action BeatmapChanged;
+        public static event Action<PlayableBeatmap?> OnBeatmapChanged;
 
         public static event Action OnKiai;
 
@@ -285,38 +293,39 @@ namespace RTCircles
 
         public static void SetMap(PlayableBeatmap beatmap)
         {
+            var currentBeatmap = Beatmap;
             Beatmap?.Song?.Stop();
 
             Beatmap = beatmap;
             BeatmapChanged?.Invoke();
+            OnBeatmapChanged?.Invoke(currentBeatmap);
         }
 
         public static bool SetMap(CarouselItem carouselItem, bool generateHitObjects = true, Mods mods = Mods.NM)
         {
-            var bm = PlayableBeatmap.FromCarouselItem(carouselItem);
+            var currentBeatmap = Beatmap;
 
-            if (bm == null)
+            var newBeatmap = PlayableBeatmap.FromCarouselItem(carouselItem);
+
+            if (newBeatmap == null)
                 return false;
 
-            if (Beatmap?.AudioPath != bm.AudioPath)
+            if (Beatmap?.AudioPath != newBeatmap.AudioPath)
             {
                 //Fade out the current track
                 ManagedBass.Bass.ChannelSlideAttribute(Beatmap.Song, ManagedBass.ChannelAttribute.Volume, 0, 250);
                 //Beatmap?.Song.Stop();
             }
 
-            Beatmap = bm;
-
             if (generateHitObjects)
-                Beatmap.GenerateHitObjects(mods);
+                newBeatmap.GenerateHitObjects(mods);
+
+            Beatmap = newBeatmap;
 
             Utils.Log($"Map set to: {carouselItem.FullPath} GenObjects: {generateHitObjects} Mods: {mods}", LogLevel.Info);
-            Utils.Log($"Preempt: {Beatmap.Preempt} Fadein: {Beatmap.FadeIn} AR: {Beatmap.AR}", LogLevel.Info);
-            Utils.Log($"Window300 {Beatmap.Window300} Window100 {Beatmap.Window100} Window50 {Beatmap.Window50} OD: {Beatmap.OD}", LogLevel.Info);
-            Utils.Log($"CircleRadius {Beatmap?.CircleRadius ?? 0} CS: {Beatmap.CS}", LogLevel.Info);
-            Utils.Log($"PlayfieldWidth {Playfield.Width} PlayfieldHeight {Playfield.Height}", LogLevel.Info);
 
             BeatmapChanged?.Invoke();
+            OnBeatmapChanged?.Invoke(currentBeatmap);
 
             return true;
         }
@@ -331,7 +340,6 @@ namespace RTCircles
             //Osu hitobjects are in the coordinate system X: 0-512 and Y: 0-384, we need to map these to our playfield, which is based on the current screen size
 
             x = MathUtils.Map(x, 0, 512, Playfield.Left, Playfield.Right);
-
             y = MathUtils.Map(y, 0, 384, Playfield.Top, Playfield.Bottom);
 
             Vector2 pos = new Vector2(x, y);
@@ -343,6 +351,9 @@ namespace RTCircles
 
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public static Vector2 MapToPlayfield(Vector2 pos, bool ignoreMods = false) => MapToPlayfield(pos.X, pos.Y, ignoreMods);
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static Vector2 MapToPlayfield(System.Numerics.Vector2 pos, bool ignoreMods = false) => MapToPlayfield(pos.X, pos.Y, ignoreMods);
 
         public static IEnumerable<T> GetFlags<T>(this T en) where T : struct, Enum
         {

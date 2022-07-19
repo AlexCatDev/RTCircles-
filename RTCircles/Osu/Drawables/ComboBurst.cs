@@ -15,6 +15,9 @@ namespace RTCircles
         {
             get 
             {
+                if (Skin.ComboBurst == null)
+                    return Vector2.Zero;
+
                 float height = MainGame.WindowHeight;
                 float width  = height * Skin.ComboBurst.Texture.Size.AspectRatio();
                 return new Vector2(width, height);

@@ -196,31 +196,6 @@ namespace Easy2D
                     {
                         uploadImage(img);
                     });
-
-                    /*
-                    GPUSched.Instance.EnqueueAsync(() =>
-                    {
-                        byte[] data = new byte[stream.Length];
-
-                        stream.Read(data, 0, data.Length);
-
-                        var image = Image.Load<Rgba32>(data);
-
-                        return (true, image);
-                    }, (o) =>
-                    {
-                        uploadImage(o);
-                    });
-                    */
-                    /*
-                    Image.LoadAsync(stream).ContinueWith((o) =>
-                    {
-                        GPUSched.Instance.Enqueue(() =>
-                        {
-                            uploadImage((Image<Rgba32>)o.Result);
-                        });
-                    });
-                    */
                 }
                 else
                 {

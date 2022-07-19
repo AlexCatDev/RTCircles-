@@ -103,8 +103,8 @@ namespace Easy2D.Game
             //Event driven is actually slower than just inserting a threadsleep LMAO
             //options.IsEventDriven = true;
             options.API = new GraphicsAPI(ContextAPI.OpenGLES, ContextProfile.Core, ContextFlags.Default, new APIVersion(3, 0));
-            options.PreferredBitDepth = new Silk.NET.Maths.Vector4D<int>(8, 8, 8, 0);
-
+            options.PreferredBitDepth = new Silk.NET.Maths.Vector4D<int>(8, 8, 8, 8);
+            
             var view = Silk.NET.Windowing.Window.GetView(options);
 
             View = view;
@@ -144,6 +144,19 @@ namespace Easy2D.Game
                         View.GLContext.SwapInterval(0);
                 }
             });
+
+            if (!hasFocus)
+                Input.InputContext.Mice[0].Cursor.CursorMode = CursorMode.Normal;
+            else
+                Input.InputContext.Mice[0].Cursor.CursorMode = Input.CursorMode;
+
+            if (!hasFocus)
+            {
+                if (View is IWindow wnd && wnd.WindowState == WindowState.Fullscreen)
+                {
+                    wnd.WindowState = WindowState.Minimized;
+                }
+            }
         }
 
         private void View_Resize(Vector2D<int> obj)
@@ -274,11 +287,6 @@ namespace Easy2D.Game
                     if (ev.Key.Keysym.Sym == 1073742094)
                         Easy2D.Game.Input.BackPressed();
 
-                    if (ev.Key.Keysym.Mod == 4352 && ev.Key.Keysym.Sym == 13)
-                    {
-                        ToggleFullScreen();
-                        return 0;
-                    }
                     else if (ev.Key.Keysym.Sym == 1073741892)
                     {
                         ToggleFullScreen();

@@ -11,6 +11,8 @@ namespace RTCircles
         public readonly static Option<bool> MotionBlur
             = Option<bool>.CreateProxy("MotionBlur", (value) => { GPUSched.Instance.Enqueue(() => { PostProcessing.MotionBlur = value; }); }, false, "This only looks good if you get over 800 fps");
 
+        public readonly static Option<bool> EnableStoryboard = new Option<bool>("EnableStoryboard", false) { Description = "WIP" };
+
         public readonly static Option<bool> UseFancyCursorTrail = new Option<bool>("UseFancyCursorTrail", false);
 
         public readonly static Option<bool> SliderSnakeIn = new Option<bool>("SliderSnakeIn", true) { Description = "Negligible performance hit" };
@@ -65,6 +67,9 @@ namespace RTCircles
             if(OsuContainer.Beatmap != null)
                 OsuContainer.Beatmap.Song.Volume = volume;
         }, 1);
+
+        public readonly static Option<double> MouseSensitivity = Option<double>.CreateProxy("MouseSensitivity", (val) => Easy2D.Game.Input.MouseSensitivity = (float)val, 1);
+
         #endregion
         #region ints
         public readonly static Option<int> SongOffsetMS = new Option<int>("SongOffset", 0);

@@ -28,6 +28,7 @@ namespace RTCircles
         private int lastRepeatsDone = 0;
 
         private SmoothFloat sliderFollowScaleAnim = new SmoothFloat();
+        private SmoothFloat sliderFollowFadeAnim = new SmoothFloat();
 
         public override Rectangle Bounds => SliderPath.Path.Bounds;
 
@@ -151,7 +152,7 @@ namespace RTCircles
         /// <summary>
         /// Allow releasing the slider 36ms too early
         /// </summary>
-        private const double TrackingErrorAcceptance = 36;
+        private const double TrackingErrorAcceptance = 24;
         private bool IsValidTrack => (OsuContainer.SongPosition - lastTrackingTime) <= TrackingErrorAcceptance || OsuContainer.CookieziMode;
 
         private bool previousTracking;
@@ -308,9 +309,15 @@ namespace RTCircles
             {
                 if (OsuContainer.SongPosition <= slider.EndTime)
                 {
-                    g.DrawRectangleCentered(sliderballPosition, Size * Skin.GetScale(Skin.SliderBall), Color, Skin.SliderBall, rotDegrees: sliderBallAngle);
+                    var sliderBallTextureTime = (slider.PixelLength / ((slider.EndTime - slider.StartTime) / slider.Repeats)) * OsuContainer.SongPosition * 0.020;
+                    var currentTexture = Skin.SliderBall.GetTexture(sliderBallTextureTime, true);
 
-                    if(Vector2.Distance(pos, previousBallPos) > 1)
+                    g.DrawRectangleCentered(sliderballPosition, Size * Skin.GetScale(currentTexture), Color, currentTexture, rotDegrees: sliderBallAngle);
+
+                    if(Skin.SliderBallSpecular != null)
+                        g.DrawRectangleCentered(sliderballPosition, Size * Skin.GetScale(Skin.SliderBallSpecular), new Vector4(1, 1, 1, Color.W), Skin.SliderBallSpecular, rotDegrees: sliderBallAngle);
+
+                    if (Vector2.Distance(pos, previousBallPos) > 1)
                         previousBallPos = pos;
                 }
 
@@ -349,7 +356,7 @@ namespace RTCircles
             void drawNumber()
             {
                 if (IsHit == false && IsMissed == false)
-                    Skin.CircleNumbers.DrawCentered(g, hitCirclePos, Size.X / 2.7f, new Vector4(1f, 1f, 1f, hitCircleAlpha), combo.ToString());
+                    Skin.CircleNumbers.DrawCentered(g, hitCirclePos, Size.X / 2.8f, new Vector4(1f, 1f, 1f, hitCircleAlpha), combo.ToString());
             }
 
             if (IsMissed == false)
@@ -414,7 +421,7 @@ namespace RTCircles
         public override void Update(float delta)
         {
             shakeAnim.Update(delta);
-            Vector2 shakeOffset = new Vector2(8, 0) * (OsuContainer.Playfield.Width / 512) * shakeAnim.Value;
+            Vector2 shakeOffset = new Vector2(8, 0) * OsuContainer.OsuScale * shakeAnim.Value;
 
             hitCirclePos = OsuContainer.MapToPlayfield(slider.Position.X, slider.Position.Y) + shakeOffset;
 
@@ -426,14 +433,14 @@ namespace RTCircles
                 {
                     sliderFollowScaleAnim.ClearTransforms();
 
-                    //150ms if slider duration is longer than 150, else use slider duration.
-                    float time = Math.Min(150, slider.EndTime - slider.StartTime);
-                    sliderFollowScaleAnim.TransformTo(SliderBallActiveScale, time, EasingTypes.Out);
+                    //sliderfollow circle expansion animation, set time, or time left
+                    float duration = (float)Math.Min(160, slider.EndTime - OsuContainer.SongPosition);
+                    sliderFollowScaleAnim.TransformTo(SliderBallActiveScale, duration, EasingTypes.Out);
                 }
                 else
                 {
                     sliderFollowScaleAnim.ClearTransforms();
-                    sliderFollowScaleAnim.TransformTo(1, 50f, EasingTypes.Out);
+                    sliderFollowScaleAnim.TransformTo(1, 50f, EasingTypes.In);
                 }
             }
 
@@ -443,10 +450,24 @@ namespace RTCircles
             if (OsuContainer.SongPosition > slider.StartTime && OsuContainer.SongPosition < slider.EndTime)
                 sliderFollowScaleAnim.Update((float)OsuContainer.DeltaSongPosition);
 
+            if (!OsuContainer.Beatmap.Song.IsPaused)
+            {
+                if (IsTracking && !Skin.SliderSlide.IsPlaying && !OsuContainer.MuteHitsounds && OsuContainer.SongPosition >= slider.StartTime && OsuContainer.SongPosition <= slider.EndTime)
+                    Skin.SliderSlide.Play(true);
+                else if (!IsTracking && Skin.SliderSlide.IsPlaying && OsuContainer.SongPosition >= slider.StartTime && OsuContainer.SongPosition <= slider.EndTime)
+                    Skin.SliderSlide.Stop();
+            }
+            else
+            {
+                Skin.SliderSlide.Stop();
+            }
+
             //Todo investigate: ChannelAddFlag BassFlag.Loop
             //yikes
+            /*
             if(!OsuContainer.MuteHitsounds && IsTracking && (Skin.SliderSlide.PlaybackPosition > Skin.SliderSlide.PlaybackLength - 50f || Skin.SliderSlide.IsPlaying == false) && OsuContainer.SongPosition > slider.StartTime && OsuContainer.SongPosition < slider.EndTime && (IsHit || IsMissed) && !(OsuContainer.Beatmap.Song?.IsPaused ?? false))
                Skin.SliderSlide.Play(true);
+            */
 
             double timeElapsed = (OsuContainer.SongPosition - slider.StartTime + OsuContainer.Beatmap.Preempt);
 
@@ -498,10 +519,13 @@ namespace RTCircles
                 lastRepeatsDone = repeatsDone;
                 if (repeatsDone < slider.Repeats && IsValidTrack)
                 {
-                    var sliderRepeatExplode = ObjectPool<ExplodingSliderRepeat>.Take();
-                    sliderRepeatExplode.SetTarget(SliderPath, repeatsDone);
+                    if (!OsuContainer.Beatmap.Mods.HasFlag(Mods.HD))
+                    {
+                        var sliderRepeatExplode = ObjectPool<ExplodingSliderRepeat>.Take();
+                        sliderRepeatExplode.SetTarget(SliderPath, repeatsDone);
 
-                    Container.Add(sliderRepeatExplode);
+                        Container.Add(sliderRepeatExplode);
+                    }
                 }
                 //var hitsound = slider.EdgeHitSounds?[1] ?? slider.HitSound;
                 //var sample = slider.EdgeAdditions?[1].Item1 ?? slider.Extras.SampleSet;
@@ -523,14 +547,14 @@ namespace RTCircles
                 //Last slider point check
                 if (slider.Repeats - repeatsDone == 0)
                 {
+                    Skin.SliderSlide.Stop();
+
                     //The rules are:
                     //If there was a miss within the slider
                     //Grant a 50
 
                     //If no miss within the slider
                     //grant a 300
-
-                    Skin.SliderSlide.Stop();
 
                     HitResult result = HitResult.Miss;
 
@@ -612,11 +636,8 @@ namespace RTCircles
             SliderPath.SetRadius(OsuContainer.Beatmap.CircleRadiusInOsuPixels);
             SliderOnScreen = true;
 
-            if (OsuContainer.SongPosition > slider.StartTime + OsuContainer.Beatmap.Window50 && !IsHit && !IsMissed)
-            {
-                OsuContainer.HUD.AddHit((float)OsuContainer.Beatmap.Window50, HitResult.Miss, hitCirclePos, true);
-                IsMissed = true;
-            }
+            if (OsuContainer.SongPosition > slider.StartTime + OsuContainer.Beatmap.Window50)
+                MissIfNotHit();
 
             if (fadeout && circleAlpha == 0)
                 IsDead = true;
@@ -630,7 +651,7 @@ namespace RTCircles
 
         public override void Render(Graphics g)
         {
-            Vector3 sliderBorder = new Vector3(Skin.Config.SliderBorder ?? new Vector3(1f, 1f, 1f));
+            Vector3 sliderBorder = new Vector3(Skin.Config.SliderBorder ?? new Vector3(0.8f, 0.8f, 0.8f));
             Vector3 sliderTrack = new Vector3(Skin.Config.SliderTrackOverride ?? new Vector3(0));
 
             if (OsuContainer.IsKiaiTimeActive && GlobalOptions.RGBCircles.Value)
@@ -666,26 +687,27 @@ namespace RTCircles
             {
                 if (MathUtils.IsPointInsideRadius(OsuContainer.CursorPosition, hitCirclePos, OsuContainer.Beatmap.CircleRadius) || OsuContainer.CookieziMode)
                 {
-                    if (OsuContainer.SongPosition < slider.StartTime - OsuContainer.Beatmap.FadeIn) { return true; }
+                    //300 ms???
+                    if (OsuContainer.SongPosition < slider.StartTime - 300)
+                    {
+                        Shake();
+                        return true;
+                    }
 
                     //Auto gets to ignore notelock :tf:
                     if (!OsuContainer.CookieziMode)
                     {
                         //We're hitting to far ahead
-                        if (ObjectIndex > 1)
+                        if (ObjectIndex > 0)
                         {
-                            var secondPreviousObject = OsuContainer.Beatmap.HitObjects[ObjectIndex - 2];
+                            var previousObject = OsuContainer.Beatmap.HitObjects[ObjectIndex - 1];
 
-                            if (!secondPreviousObject.IsHit && !secondPreviousObject.IsMissed)
+                            if (!previousObject.IsHit && !previousObject.IsMissed)
                             {
                                 Shake();
                                 return true;
                             }
                         }
-
-                        //Miss the previous object if not hit
-                        if (ObjectIndex > 0)
-                            OsuContainer.Beatmap.HitObjects[ObjectIndex - 1].MissIfNotHit();
                     }
 
                     double hittableTime = Math.Abs(OsuContainer.SongPosition - slider.StartTime);
@@ -762,7 +784,7 @@ namespace RTCircles
             if (IsHit || IsMissed)
                 return;
 
-            OsuContainer.HUD.AddHit(Math.Abs(OsuContainer.SongPosition - slider.StartTime), HitResult.Miss, sliderballPosition, true);
+            OsuContainer.HUD.AddHit(Math.Abs(OsuContainer.SongPosition - slider.StartTime), HitResult.Miss, hitCirclePos, true);
             hitTime = OsuContainer.SongPosition;
             IsMissed = true;
         }

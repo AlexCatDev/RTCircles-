@@ -376,10 +376,10 @@ namespace RTCircles
             visualizer.BarEndColor = visualizer.BarStartColor;
 
             if (OsuContainer.IsKiaiTimeActive)
-                visualizer.FreckleSpawnRate = 0.01f;
+                visualizer.FreckleSpawnRate = 0.04f;
             else
                 visualizer.FreckleSpawnRate = float.MaxValue;
-            
+
             if (OsuContainer.IsKiaiTimeActive && PostProcessing.Bloom)
             {
                 visualizer.BarHighlight = new Vector3(5f);

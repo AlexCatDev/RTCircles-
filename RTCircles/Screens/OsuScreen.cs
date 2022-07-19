@@ -113,6 +113,7 @@ namespace RTCircles
 
                 pauseOverlayFade.TransformTo(0f, 0.5f, EasingTypes.Out, () =>
                 {
+                    OsuContainer.Beatmap.Song.Frequency = OsuContainer.Beatmap.Song.DefaultFrequency;
                     OnEntering();
                     faderino.FadeTo(0f, 0.25f, EasingTypes.Out);
 
@@ -145,7 +146,7 @@ namespace RTCircles
             Clear<FollowPoints>();
 
             pauseStart = double.MaxValue;
-            canDie = true;
+            isDead = false;
 
             OsuContainer.HUD.AddHP(1000);
 
@@ -294,11 +295,10 @@ namespace RTCircles
 
         public override void OnExiting()
         {
-            //We're dying or we're dead
-            if (!canDie)
+            if (isDead)
             {
                 pauseOverlayFade.Value = 0;
-                canDie = true;
+                isDead = false;
 
                 if (OsuContainer.Beatmap != null)
                 {
@@ -314,14 +314,12 @@ namespace RTCircles
             if (!OsuContainer.CookieziMode)
             {
                 NotificationManager.DoNotDisturb = true;
-                Input.InputContext.Mice[0].Cursor.CursorMode = CursorMode.Hidden;
             }
         }
 
         public override void OnExit()
         {
             NotificationManager.DoNotDisturb = false;
-            Input.InputContext.Mice[0].Cursor.CursorMode = CursorMode.Normal;
         }
 
         public override void Update(float delta)
@@ -382,7 +380,7 @@ namespace RTCircles
 
             var followPoint = ObjectPool<FollowPoints>.Take();
 
-            followPoint.SetTarget(current.BaseObject, next.BaseObject);
+            followPoint.SetTarget(current, next);
 
             Add(followPoint);
         }
@@ -403,16 +401,19 @@ namespace RTCircles
         private SmoothFloat bgAlpha = new SmoothFloat() { Value = 0.1f };
         private void drawBackground(Graphics g)
         {
+            DrawableStoryboard.Render(g);
+
+            bool isSongSelect = ScreenManager.ActiveScreen is SongSelectScreen;
+
+            if (isSongSelect)
+                return;
+
             var bgTexture = OsuContainer.Beatmap.Background;
 
             if (bgTexture == null)
                 return;
 
             bool isMenuScreen = ScreenManager.ActiveScreen is MenuScreen;
-            bool isSongSelect = ScreenManager.ActiveScreen is SongSelectScreen;
-
-            if (isSongSelect)
-                return;
 
             if (!GlobalOptions.RenderBackground.Value && !isMenuScreen)
                 return;
@@ -538,7 +539,8 @@ namespace RTCircles
 
             bool isPaused = pauseOverlayFade.Value == 1;
 
-            cursor.Render(g, delta, OsuContainer.CustomCursorPosition ?? Input.MousePosition, isPaused ? Vector4.Zero : Colors.White);
+            //If is paused always render current cursorPos
+            cursor.Render(g, delta, isPaused ? Input.MousePosition : OsuContainer.CustomCursorPosition ?? Input.MousePosition, Colors.White);
         }
 
         private double pauseStart;
@@ -578,18 +580,16 @@ namespace RTCircles
         private SmoothFloat dieAnim = new SmoothFloat() { Value = 1f };
 
         //buggy af, everything spaghetti code
-        private bool canDie = true;
+        private bool isDead = false;
         public void reportDeath()
         {
-            if (canDie && ScreenManager.ActiveScreen == this && !OsuContainer.CookieziMode)
+            if (!isDead && ScreenManager.ActiveScreen == this && !OsuContainer.CookieziMode)
             {
-                canDie = false;
+                isDead = true;
                 var start = OsuContainer.Beatmap.Song.Frequency;
                 dieAnim.Value = (float)start;
-                dieAnim.TransformTo(0f, 3f, EasingTypes.Out, () =>
+                dieAnim.TransformTo(0f, 2.5f, EasingTypes.Out, () =>
                 {
-                    OsuContainer.Beatmap.Song.Pause();
-                    OsuContainer.Beatmap.Song.Frequency = start;
                     pauseOverlayFade.TransformTo(1f, 0.25f, EasingTypes.Out);
                     OnExit();
                 });
@@ -605,10 +605,11 @@ namespace RTCircles
                 if (!dieAnim.HasCompleted)
                 {
                     dieAnim.EndCurrentTransform();
+                    OsuContainer.Beatmap.Song.Pause();
                     return;
                 }
 
-                if(OsuContainer.Beatmap == null || OsuContainer.SongPosition <= 0)
+                if(isDead || OsuContainer.Beatmap == null || OsuContainer.SongPosition <= 0)
                 {
                     ScreenManager.GoBack();
                     return;

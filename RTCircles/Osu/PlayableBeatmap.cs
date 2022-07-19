@@ -12,6 +12,7 @@ using System.IO;
 
 namespace RTCircles
 {
+    //This class makes me depressed
     public class PlayableBeatmap
     {
         public HitsoundStore Hitsounds { get; private set; }
@@ -48,17 +49,18 @@ namespace RTCircles
         public float OD { get; private set; }
         public float HP { get; private set; }
 
+        //420 XDDDDDD
         public string Hash { get; private set; }
 
         public CarouselItem CarouselItem { get; private set; }
 
-        public float CircleRadius => (OsuContainer.Playfield.Width / 16f) * (1f - (0.7f * (CS - 5f) / 5f));
-        public float CircleRadiusInOsuPixels => 54.4f - 4.48f * CS;
+        public float CircleRadius => CircleRadiusInOsuPixels * OsuContainer.OsuScale;
+        public float CircleRadiusInOsuPixels { get; private set; }
 
         public List<double> DifficultyGraph = new List<double>();
 
         public string AudioPath { get; private set; } = "";
-        public string FolderPath { get; private set; } = "";
+        public string DirectoryPath { get; private set; } = "";
 
         public readonly AutoGenerator AutoGenerator = new AutoGenerator();
 
@@ -110,10 +112,12 @@ namespace RTCircles
 
             if (GlobalOptions.AllowMapHitSounds.Value)
             {
-                if (OsuContainer.Beatmap?.FolderPath != folderPath)
+                if (OsuContainer.Beatmap?.DirectoryPath != folderPath)
                 {
                     playableBeatmap.Hitsounds = new HitsoundStore(folderPath, false);
                     playableBeatmap.Hitsounds.SetVolume(GlobalOptions.SkinVolume.Value);
+
+                    Utils.Log($"Loaded {playableBeatmap.Hitsounds.Count} hitsounds from: {folderPath}", LogLevel.Info);
                 }
                 else
                 {
@@ -121,7 +125,7 @@ namespace RTCircles
                 }
             }
 
-            playableBeatmap.FolderPath = folderPath;
+            playableBeatmap.DirectoryPath = folderPath;
 
             string audioPath = $"{folderPath}/{playableBeatmap.InternalBeatmap.GeneralSection.AudioFilename}";
             playableBeatmap.AudioPath = audioPath;
@@ -140,6 +144,8 @@ namespace RTCircles
                     Sound song = new Sound(fs, useFX: true, noBuffer: false, bassFlags: ManagedBass.BassFlags.Prescan);
                     playableBeatmap.Song = song;
 
+                    Utils.Log($"Loaded song from: {audioPath}", LogLevel.Info);
+
                     playableBeatmap.Song.Volume = 0;
                     ManagedBass.Bass.ChannelSlideAttribute(playableBeatmap.Song, ManagedBass.ChannelAttribute.Volume, (float)GlobalOptions.SongVolume.Value, 500, false);
                 }
@@ -153,7 +159,10 @@ namespace RTCircles
             //Just get the cache since it was probably already loaded from beatmap carousel
             playableBeatmap.Background = DynamicTexureCache.AquireCache(playableBeatmap.backgroundGuid, playableBeatmap.backgroundPath);
 
-            playableBeatmap.IsNewBackground = OsuContainer.Beatmap?.Background != playableBeatmap.Background;
+            playableBeatmap.IsNewBackground = OsuContainer.Beatmap?.backgroundPath != bgPath;
+
+            if (playableBeatmap.IsNewBackground)
+                Utils.Log($"Got new beatmap background from cache: {bgPath}", LogLevel.Info);
 
             return playableBeatmap;
         }
@@ -227,6 +236,7 @@ namespace RTCircles
         public void SetCS(float cs)
         {
             CS = cs;
+            CircleRadiusInOsuPixels = 54.4f - 4.48f * CS;
         }
 
         public void SetHP(float hp)
@@ -396,6 +406,8 @@ namespace RTCircles
 
             Preempt = mapDifficultyRange(AR, 1800, 1200, 450);
             FadeIn = 400 * Math.Min(1, Preempt / 450);
+
+            CircleRadiusInOsuPixels = 54.4f - 4.48f * CS;
 
             applyStacking();
 

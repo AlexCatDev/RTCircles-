@@ -82,6 +82,8 @@
     <None Remove="Skin\ranking-X-small.png" />
     <None Remove="Skin\ranking-XH-small.png" />
     <None Remove="Skin\reversearrow.png" />
+    <None Remove="Skin\score-dot.png" />
+    <None Remove="Skin\score-percent.png" />
     <None Remove="Skin\score-x.png" />
     <None Remove="Skin\scorebar-bg.png" />
     <None Remove="Skin\scorebar-colour.png" />
@@ -181,7 +183,6 @@
     <EmbeddedResource Include="Skin\default-8.png" />
     <EmbeddedResource Include="Skin\default-9.png" />
     <EmbeddedResource Include="Skin\defaultbackground.png" />
-    <EmbeddedResource Include="Skin\dot.png" />
     <EmbeddedResource Include="Skin\download-button.png" />
     <EmbeddedResource Include="Skin\drum-hitclap.wav" />
     <EmbeddedResource Include="Skin\drum-hitfinish.wav" />
@@ -198,6 +199,8 @@
     <EmbeddedResource Include="Skin\hover.wav" />
     <EmbeddedResource Include="Skin\loading.png" />
     <EmbeddedResource Include="Skin\logo.png" />
+    <EmbeddedResource Include="Skin\score-dot.png" />
+    <EmbeddedResource Include="Skin\score-percent.png" />
     <EmbeddedResource Include="Skin\scorebar-bg.png" />
     <EmbeddedResource Include="Skin\scorebar-colour.png" />
     <EmbeddedResource Include="Skin\scorebar-marker.png" />
@@ -212,7 +215,6 @@
     <EmbeddedResource Include="Skin\normal-hitfinish.wav" />
     <EmbeddedResource Include="Skin\normal-hitnormal.wav" />
     <EmbeddedResource Include="Skin\normal-hitwhistle.wav" />
-    <EmbeddedResource Include="Skin\percent.png" />
     <EmbeddedResource Include="Skin\play-warningarrow.png" />
     <EmbeddedResource Include="Skin\ranking-A-small.png" />
     <EmbeddedResource Include="Skin\ranking-B-small.png" />

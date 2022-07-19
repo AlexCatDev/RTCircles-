@@ -1,255 +1,10 @@
 ﻿using Easy2D;
 using OpenTK.Mathematics;
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
 namespace RTCircles
 {
-    //TODO: Compile texture elements to an atlas.
-    //TODO: Somehow fix when circle/combo/score numbers share the same texture, dont load them again
-    //TODO: Support animated texture correctly
-    //Basically redo this whole thing !
-
-    public class OsuAnimatedTexture
-    {
-        private OsuAnimatedTexture() { }
-
-        private List<OsuTexture> textures;
-
-        public IReadOnlyList<OsuTexture> Textures => textures;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="path"></param>
-        /// <param name="nameWithoutDash"></param>
-        /// <param name="range">From and to are inclusive. If no range is specified it will keep going from 0 to 100 and only stop when it runs out of textures to load</param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
-        public OsuAnimatedTexture FromPath(string path, string nameWithoutDash, (int from, int to)? range = null)
-        {
-            OsuAnimatedTexture osuAnimTex = new OsuAnimatedTexture();
-            if (range.HasValue)
-            {
-                if (range.Value.from > range.Value.to)
-                    throw new ArgumentOutOfRangeException("From can't be bigger than to");
-                if(range.Value.from < 0 || range.Value.to < 0)
-                    throw new ArgumentOutOfRangeException("From or To can't be less than 0");
-
-                for (int i = range.Value.from; i < range.Value.to + 1; i++)
-                {
-                    var filename = $"{nameWithoutDash}-{i}";
-                    var osuTexture = Skin.LoadTexture(path, filename, true, false);
-
-                    textures.Add(osuTexture);
-                }
-            }
-            else
-            {
-                for (int i = 0; i < 100; i++)
-                {
-                    var filename = $"{nameWithoutDash}-{i}";
-                    var osuTexture = Skin.LoadTexture(path, filename, true, true);
-
-                    if (osuTexture == null)
-                        break;
-
-                    textures.Add(osuTexture);
-                }
-            }
-
-            return osuAnimTex;
-        }
-
-
-    }
-
-    public class OsuTexture
-    {
-        public float Scale { get; private set; }
-
-        public Texture Texture { get; private set; }
-
-        public bool IsX2 { get; private set; }
-
-        public static implicit operator Texture(OsuTexture ot) => ot.Texture;
-
-        public OsuTexture(Texture texture, bool isX2, float X2Size)
-        {
-            Texture = texture;
-
-            IsX2 = isX2;
-
-            Scale = isX2 ? X2Size : X2Size / 2;
-        }
-    }
-
-    public class SkinConfiguration
-    {
-        public List<Vector3> ComboColors = new List<Vector3>() {  Colors.From255RGBA(139, 233, 253, 255).Xyz,
-                                                                  Colors.From255RGBA(80, 250, 123, 255).Xyz,
-                                                                  Colors.From255RGBA(255, 121, 198, 255).Xyz,
-                                                                  Colors.From255RGBA(189, 147, 249, 255).Xyz,
-                                                                  Colors.From255RGBA(241, 250, 140, 255).Xyz,
-                                                                  Colors.From255RGBA(255, 255, 255, 255).Xyz
-        };
-
-        public Vector3 ColorFromIndex(int index) {
-            var col = ComboColors[index % ComboColors.Count];
-
-            if (GlobalOptions.RGBCircles.Value && OsuContainer.IsKiaiTimeActive)
-                col = MathUtils.RainbowColor(OsuContainer.SongPosition/1000, 0.5f, 1.1f);
-            
-            if (OsuContainer.IsKiaiTimeActive)
-                col *= 1 + (float)(OsuContainer.BeatProgress * 0.25);
-
-                return col;
-        }
-
-        public Vector3 MenuGlow = new Vector3(1f,0.8f,0f);
-
-        public Vector3? SliderBorder = null;
-
-        public Vector3? SliderTrackOverride = null;
-
-        public string HitCirclePrefix = "default";
-        public float HitCircleOverlap = 0;
-
-        public string ScorePrefix = "score";
-        public float ScoreOverlap = 0;
-
-        public string ComboPrefix = "score";
-        public float ComboOverlap = 0;
-
-        public bool HitCircleOverlayAboveNumber = true;
-
-        public Vector3 SongSelectActiveTextColor = Colors.From255RGB(255, 255, 255);
-        public Vector3 SongSelectInactiveTextColor = Colors.From255RGB(200, 200, 200);
-
-        public SkinConfiguration(Stream stream)
-        {
-            if (stream is not null)
-            {
-                ComboColors.Clear();
-
-                var reader = new StreamReader(stream);
-
-                while (reader.EndOfStream == false)
-                {
-                    string line = reader.ReadLine();
-
-                    if (line.StartsWith("//"))
-                        continue;
-
-                    parse(line);
-                }
-
-                Utils.Log($"Loaded Skin.ini SliderBorder: {SliderBorder} SliderTrack: {SliderTrackOverride}", LogLevel.Important);
-            }
-            else
-            {
-                Utils.Log($"Skin.ini was not found!! using default values!", LogLevel.Error);
-            }
-
-            if (ComboColors.Count == 0)
-            {
-                ComboColors.Add(Colors.From255RGBA(255, 150, 0, 255).Xyz);
-                ComboColors.Add(Colors.From255RGBA(5, 240, 5, 255).Xyz);
-                ComboColors.Add(Colors.From255RGBA(5, 5, 240, 255).Xyz);
-                ComboColors.Add(Colors.From255RGBA(240, 5, 5, 255).Xyz);
-                Utils.Log($"Skin.ini parsing completed with 0 combo colors ???", LogLevel.Error);
-            }
-        }
-
-        private Vector3 parseColor(string text)
-        {
-            string[] colors = text.Split(',');
-
-            byte r = byte.Parse(colors[0]);
-            byte g = byte.Parse(colors[1]);
-            byte b = byte.Parse(colors[2]);
-
-            return new Vector3(r / 255f, g / 255f, b / 255f);
-        }
-
-        // i fucking hate making parsers
-        private void parse(string line)
-        {
-            //Remove comments
-            int indexOfComment = line.IndexOf("//");
-
-            if(indexOfComment != -1)
-                line = line.Remove(indexOfComment);
-
-            var options = line.Replace(" ", "").Split(':');
-            if(options.Length == 2)
-            {
-                var option = options[0].ToLower();
-                var value = options[1];
-
-                if (option.StartsWith("menuglow"))
-                {
-                    MenuGlow = parseColor(value);
-                }else if (option.StartsWith("sliderborder"))
-                {
-                    SliderBorder = parseColor(value);
-                }else if (option.StartsWith("slidertrackoverride"))
-                {
-                    SliderTrackOverride = parseColor(value);
-                }else if (option.StartsWith("hitcircleprefix"))
-                {
-                    HitCirclePrefix = value;
-                }
-                else if (option.StartsWith("hitcircleoverlap"))
-                {
-                    HitCircleOverlap = float.Parse(value);
-                }
-                else if (option.StartsWith("scoreprefix"))
-                {
-                    ScorePrefix = value;
-                }
-                else if (option.StartsWith("scoreoverlap"))
-                {
-                    ScoreOverlap = float.Parse(value);
-                }
-                else if (option.StartsWith("comboprefix"))
-                {
-                    ComboPrefix = value;
-                }
-                else if (option.StartsWith("combooverlap"))
-                {
-                    ComboOverlap = float.Parse(value);
-                }
-                else if(option.StartsWith("combo") && option.Length == 6)
-                {
-                    try
-                    {
-                        var col = parseColor(value);
-                        ComboColors.Add(col);
-                    }
-                    catch
-                    {
-                        Utils.Log($"Error parsing combo color Option: {option} Value: {value}", LogLevel.Error);
-                    }
-                }
-                else if(option.StartsWith("hitcircleoverlayabovenumer") || option.StartsWith("hitcircleoverlayabovenumber"))
-                {
-                    HitCircleOverlayAboveNumber = Convert.ToBoolean(int.Parse(value));
-                }
-                else if (option.StartsWith("songselectactivetext"))
-                {
-                    SongSelectActiveTextColor = parseColor(value);
-                }
-                else if (option.StartsWith("songselectinactivetext"))
-                {
-                    SongSelectInactiveTextColor = parseColor(value);
-                }
-            }
-        }
-    }
-
     public static class Skin
     {
         public static string[] SupportedAudioExtensions { get; private set; } = new string[] { ".mp3", ".wav", ".ogg" };
@@ -272,11 +27,12 @@ namespace RTCircles
         public static OsuTexture Smoke { get; private set; }
 
         public static OsuTexture SliderFollowCircle { get; private set; }
-        public static OsuTexture SliderBall { get; private set; }
+        public static OsuAnimatedTexture SliderBall { get; private set; }
+        public static OsuTexture SliderBallSpecular { get; private set; }
 
         public static OsuTexture SliderReverse { get; private set; }
 
-        public static OsuTexture FollowPoint { get; private set; }
+        public static OsuAnimatedTexture FollowPoint { get; private set; }
 
         
         public static SkinNumberStore CircleNumbers { get; private set; }
@@ -341,12 +97,14 @@ namespace RTCircles
         public static OsuTexture RankingD { get; private set; }
 
         public static OsuTexture HealthBar_BG { get; private set; }
-        public static OsuTexture HealthBar_Fill { get; private set; }
+        public static OsuAnimatedTexture HealthBar_Fill { get; private set; }
         public static OsuTexture HealthBar_Marker { get; private set; }
 
         public static Texture FlashlightOverlay = new Texture(Utils.GetResource("Skin.FlashlightOverlay.png"));
 
         public static Sound SelectDifficulty { get; private set; }
+
+        public static Sound Applause { get; private set; }
 
         public static string CurrentPath { get; private set; }
 
@@ -369,6 +127,7 @@ namespace RTCircles
             SpinnerApproachCircle = LoadTexture(path, "spinner-approachcircle");
 
             SliderSlide = LoadSound(path, "sliderslide");
+            SliderSlide.AddFlag(ManagedBass.BassFlags.Loop);
             SliderSlide.Volume = GlobalOptions.SkinVolume.Value;
 
             SpinnerBonus = LoadSound(path, "spinnerbonus");
@@ -422,20 +181,25 @@ namespace RTCircles
             SliderStartCircle = LoadTexture(path, "sliderstartcircle", true, true) ?? HitCircle;
             SliderStartCircleOverlay = LoadTexture(path, "sliderstartcircleoverlay", true, true) ?? HitCircleOverlay;
 
-            SliderBall = LoadTexture(path, "sliderb0");
+            SliderBall = OsuAnimatedTexture.FromPath(path, "sliderb");
+            if (SliderBall == null)
+                SliderBall = new OsuAnimatedTexture(LoadTexture(path, "sliderb0", true, false));
+
+            //SliderBallSpecular = LoadTexture(path, "sliderb-spec", true, true);
+
             SliderReverse = LoadTexture(path, "reversearrow");
 
-            FollowPoint = LoadTexture(path, "followpoint");
-            if (FollowPoint.Texture.Size.X == 1 || FollowPoint.Texture.Size.Y == 1)
-                FollowPoint = new OsuTexture(new Texture(Utils.GetResource($"Skin.followpoint.png")), true, 0);
+            FollowPoint = OsuAnimatedTexture.FromPath(path, "followpoint-");
+            if (FollowPoint == null)
+                FollowPoint = new OsuAnimatedTexture(LoadTexture(path, "followpoint", true, false));
 
             CircleNumbers = new SkinNumberStore(path, $"{Config.HitCirclePrefix}-");
             CircleNumbers.Overlap = Config.HitCircleOverlap;
 
-            ComboNumbers = new SkinNumberStore(path, $"{Config.ComboPrefix}-", "dot", "percent", "combo-x");
+            ComboNumbers = new SkinNumberStore(path, $"{Config.ComboPrefix}-", null, null, "x");
             ComboNumbers.Overlap = Config.ComboOverlap;
 
-            ScoreNumbers = new SkinNumberStore(path, $"{Config.ScorePrefix}-", "dot", "percent", "score-x");
+            ScoreNumbers = new SkinNumberStore(path, $"{Config.ScorePrefix}-", "dot", "percent", "x");
             ScoreNumbers.Overlap = Config.ScoreOverlap;
 
             Hitsounds = new HitsoundStore(path, true);
@@ -457,9 +221,9 @@ namespace RTCircles
             HealthBar_Marker = LoadTexture(path, "scorebar-marker", false, allowNull: !invalidPath);
 
             HealthBar_BG = LoadTexture(path, "scorebar-bg", false, false);
-            HealthBar_Fill = LoadTexture(path, "scorebar-colour-0", false, true);
-            if(HealthBar_Fill == null)
-                HealthBar_Fill = LoadTexture(path, "scorebar-colour", false, false);
+            HealthBar_Fill = OsuAnimatedTexture.FromPath(path, "scorebar-colour-"); //LoadTexture(path, "scorebar-colour-0", false, true);
+            if (HealthBar_Fill == null)
+                HealthBar_Fill = new OsuAnimatedTexture(LoadTexture(path, "scorebar-colour", false, false));
 
             RankingXH = LoadTexture(path, "ranking-XH-small");
             RankingX = LoadTexture(path, "ranking-X-small");
@@ -471,6 +235,8 @@ namespace RTCircles
             RankingD = LoadTexture(path, "ranking-D-small");
 
             SelectDifficulty = LoadSound(path, "select-difficulty");
+
+            Applause = LoadSound(path, "applause", true);
 
             double loadTime = Utils.EndProfiling("SkinLoad");
 

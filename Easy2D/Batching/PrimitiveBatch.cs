@@ -17,7 +17,7 @@ namespace Easy2D
         private T[] vertexPool;
 
         public int IndexRenderCount { get; private set; }
-        public int VertexRenderCount { get; private set; } 
+        public int VertexRenderCount { get; private set; }
 
         public int TriangleRenderCount => IndexRenderCount / 3;
 
@@ -48,12 +48,13 @@ namespace Easy2D
         {
             ensureCapacity(3, 3);
 
-            indexPool[IndexRenderCount++] = VertexRenderCount + 0;
-            indexPool[IndexRenderCount++] = VertexRenderCount + 1;
-            indexPool[IndexRenderCount++] = VertexRenderCount + 2;
+            indexPool[IndexRenderCount + 0] = VertexRenderCount + 0;
+            indexPool[IndexRenderCount + 1] = VertexRenderCount + 1;
+            indexPool[IndexRenderCount + 2] = VertexRenderCount + 2;
 
             var data = vertexPool.AsSpan(VertexRenderCount, 3);
             VertexRenderCount += 3;
+            IndexRenderCount += 3;
 
             return data;
         }
@@ -65,16 +66,17 @@ namespace Easy2D
         public Span<T> GetQuad()
         {
             ensureCapacity(4, 6);
-            indexPool[IndexRenderCount++] = VertexRenderCount + 0;
-            indexPool[IndexRenderCount++] = VertexRenderCount + 1;
-            indexPool[IndexRenderCount++] = VertexRenderCount + 2;
+            indexPool[IndexRenderCount + 0] = VertexRenderCount + 0;
+            indexPool[IndexRenderCount + 1] = VertexRenderCount + 1;
+            indexPool[IndexRenderCount + 2] = VertexRenderCount + 2;
 
-            indexPool[IndexRenderCount++] = VertexRenderCount + 0;
-            indexPool[IndexRenderCount++] = VertexRenderCount + 2;
-            indexPool[IndexRenderCount++] = VertexRenderCount + 3;
+            indexPool[IndexRenderCount + 3] = VertexRenderCount + 0;
+            indexPool[IndexRenderCount + 4] = VertexRenderCount + 2;
+            indexPool[IndexRenderCount + 5] = VertexRenderCount + 3;
 
             var data = vertexPool.AsSpan(VertexRenderCount, 4);
             VertexRenderCount += 4;
+            IndexRenderCount += 6;
 
             return data;
         }
@@ -92,15 +94,19 @@ namespace Easy2D
             ensureCapacity(pointCount, (pointCount - 2) * 3);
 
             //Generate the first triangle
-            indexPool[IndexRenderCount++] = VertexRenderCount + 0;
-            indexPool[IndexRenderCount++] = VertexRenderCount + 1;
-            indexPool[IndexRenderCount++] = VertexRenderCount + 2;
+            indexPool[IndexRenderCount + 0] = VertexRenderCount + 0;
+            indexPool[IndexRenderCount + 1] = VertexRenderCount + 1;
+            indexPool[IndexRenderCount + 2] = VertexRenderCount + 2;
+
+            IndexRenderCount += 3;
 
             for (int i = 3; i < pointCount; i++)
             {
-                indexPool[IndexRenderCount++] = VertexRenderCount - 2 + i;
-                indexPool[IndexRenderCount++] = VertexRenderCount - 1 + i;
-                indexPool[IndexRenderCount++] = VertexRenderCount + 0 + i;
+                indexPool[IndexRenderCount + 0] = VertexRenderCount - 2 + i;
+                indexPool[IndexRenderCount + 1] = VertexRenderCount - 1 + i;
+                indexPool[IndexRenderCount + 2] = VertexRenderCount + 0 + i;
+
+                IndexRenderCount += 3;
             }
 
             var data = vertexPool.AsSpan(VertexRenderCount, pointCount);
@@ -122,15 +128,19 @@ namespace Easy2D
             ensureCapacity(pointCount, (pointCount - 2) * 3);
 
             //Generate the first triangle
-            indexPool[IndexRenderCount++] = VertexRenderCount + 0;
-            indexPool[IndexRenderCount++] = VertexRenderCount + 1;
-            indexPool[IndexRenderCount++] = VertexRenderCount + 2;
+            indexPool[IndexRenderCount + 0] = VertexRenderCount + 0;
+            indexPool[IndexRenderCount + 1] = VertexRenderCount + 1;
+            indexPool[IndexRenderCount + 2] = VertexRenderCount + 2;
+
+            IndexRenderCount += 3;
 
             for (int i = 3; i < pointCount; i++)
             {
-                indexPool[IndexRenderCount++] = VertexRenderCount + 0;
-                indexPool[IndexRenderCount++] = VertexRenderCount - 1 + i;
-                indexPool[IndexRenderCount++] = VertexRenderCount + 0 + i;
+                indexPool[IndexRenderCount + 0] = VertexRenderCount + 0;
+                indexPool[IndexRenderCount + 1] = VertexRenderCount - 1 + i;
+                indexPool[IndexRenderCount + 2] = VertexRenderCount + 0 + i;
+
+                IndexRenderCount += 3;
             }
 
             var data = vertexPool.AsSpan(VertexRenderCount, pointCount);
@@ -212,7 +222,7 @@ namespace Easy2D
         {
             //Copy cpu vertices to gpu
             vertexBuffer.UploadData(0, VertexRenderCount, vertexPool);
-            
+
             vao.Bind();
 
             //Copy cpu indices to gpu
@@ -223,7 +233,7 @@ namespace Easy2D
                 GL.DrawElements(PrimitiveType.Triangles, (uint)IndexRenderCount, DrawElementsType.UnsignedInt, null);
             }
 
-            if(AutoClearOnRender)
+            if (AutoClearOnRender)
                 Clear();
         }
 

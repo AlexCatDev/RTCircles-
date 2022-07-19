@@ -21,7 +21,7 @@ namespace RTCircles
         public static Vector4 ItemSelectedTextColor = Colors.From255RGBA(255, 255, 255, 255);
         public static Vector4 ItemSelectedColor = Colors.From255RGBA(100, 100, 100, 175);//Colors.From255RGBA(255, 80, 175, 255);
 
-        public static Vector4 HeaderColor = Colors.From255RGBA(12, 12, 12, 255);//Colors.From255RGBA(52, 49, 50, 255);
+        public static Vector4 HeaderColor = Colors.From255RGBA(37, 37, 37, 255);//Colors.From255RGBA(52, 49, 50, 255);
         public static Vector4 HeaderTextColor1 = Colors.White;
         public static Vector4 HeaderTextColor2 = Colors.White;
 
@@ -94,7 +94,7 @@ namespace RTCircles
         {
             int index = BeatmapCollection.SearchItems.FindIndex((o) => o == item);
 
-            TryScrollToItemAtIndex(index);
+            TryScrollToItemAtIndex(index, instant);
         }
 
         public void TryScrollToItemAtIndex(int index, bool instant = false)
@@ -200,14 +200,19 @@ namespace RTCircles
 
                 Rectangle bounds = new Rectangle(offset, ElementSize);
 
-                var currentItem = BeatmapCollection.SearchItems[i];
+                CarouselItem currentItem = BeatmapCollection.SearchItems[i];
 
                 viewedItems.Add(currentItem);
                 currentItem.Update();
 
+                float popout = 150 * MainGame.Scale;
                 float distance = MathF.Abs(MainGame.WindowCenter.Y - bounds.Center.Y);
+                float offsetSmooth = popout * Interpolation.ValueAt(distance, 1, 0, 0, MainGame.WindowCenter.Y, EasingTypes.In);
+                //currentItem.XOffset = (float)MathHelper.Lerp(currentItem.XOffset, offsetSmooth, MainGame.Instance.DeltaTime);
+                currentItem.XOffset = (float)Interpolation.Damp(currentItem.XOffset, offsetSmooth, 0.1, MainGame.Instance.DeltaTime);
 
-                bounds.X = MainGame.WindowWidth - ElementSize.X * Interpolation.ValueAt(distance, 1, 0.85f, 0, MainGame.WindowCenter.Y, EasingTypes.In);//distance.Map(0, MainGame.WindowCenter.Y, 1, 0.8f);
+                bounds.X -= currentItem.XOffset - popout;
+                //bounds.X = MainGame.WindowWidth - ElementSize.X * Interpolation.ValueAt(distance, 1, 0.85f, 0, MainGame.WindowCenter.Y, EasingTypes.In);
 
                 Vector4 color = ItemColor;
 
@@ -345,19 +350,15 @@ namespace RTCircles
 
             FloatingPlayScreen.Position = previewPos;
             FloatingPlayScreen.Size = previewSize;
-            /*
-        Vector2 previewSize = new Vector2(SongInfoBounds.Width, SongInfoBounds.Width / 1.77777f);
-        Vector2 previewPos = SongInfoBounds.Position;
+            
+            previewSize.X = ConfirmPlayAnimation.Value.Map(0f, 1f, previewSize.X, MainGame.WindowWidth);
+            previewSize.Y = ConfirmPlayAnimation.Value.Map(0f, 1f, previewSize.Y, MainGame.WindowHeight);
 
-        previewSize.X = ConfirmPlayAnimation.Value.Map(0f, 1f, previewSize.X, MainGame.WindowWidth);
-        previewSize.Y = ConfirmPlayAnimation.Value.Map(0f, 1f, previewSize.Y, MainGame.WindowHeight);
+            previewPos.X = ConfirmPlayAnimation.Value.Map(0f, 1f, previewPos.X, 0);
+            previewPos.Y = ConfirmPlayAnimation.Value.Map(0f, 1f, previewPos.Y, 0);
 
-        previewPos.X = ConfirmPlayAnimation.Value.Map(0f, 1f, previewPos.X, 0);
-        previewPos.Y = ConfirmPlayAnimation.Value.Map(0f, 1f, previewPos.Y, 0);
-
-        FloatingPlayScreen.Position = previewPos;
-        FloatingPlayScreen.Size = previewSize;
-            */
+            FloatingPlayScreen.Position = previewPos;
+            FloatingPlayScreen.Size = previewSize;
         }
 
         private void enterSelectedMap()
@@ -375,7 +376,7 @@ namespace RTCircles
 
             OsuContainer.Beatmap.Song.Pause();
             ConfirmPlayAnimation.ClearTransforms();
-            ConfirmPlayAnimation.TransformTo(1f, 0.5f, EasingTypes.OutElasticHalf, () =>
+            ConfirmPlayAnimation.TransformTo(1f, 0.5f, EasingTypes.InOutQuint, () =>
             {
                 ScreenManager.SetScreen<OsuScreen>();
                 //OsuContainer.Beatmap.Mods &= ~Mods.Auto;
@@ -400,7 +401,7 @@ namespace RTCircles
 
             if (scrollTo.HasValue)
             {
-                scrollOffset = MathHelper.Lerp(scrollOffset, scrollTo.Value.Clamp(ScrollMin, ScrollMax), delta * 10f);
+                scrollOffset = MathHelper.Lerp(scrollOffset, scrollTo.Value.Clamp(ScrollMin, ScrollMax), delta * 12);
             }
             else if (dragging)
             {
@@ -539,6 +540,8 @@ namespace RTCircles
         {
             if (selectedItem == item)
                 return;
+
+            selectedItem = item;
 
             Skin.SelectDifficulty.Play(true);
 

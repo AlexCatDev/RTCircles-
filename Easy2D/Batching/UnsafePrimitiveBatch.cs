@@ -147,12 +147,12 @@ namespace Easy2D
             if (IndexRenderCount + indexCount > indexBuffer.Capacity)
             {
                 Draw();
-                Utils.Log($"IndexBuffer ran out of space, so the whole batch ha been FLUSHED", LogLevel.Warning);
+                Utils.Log($"IndexBuffer ran out of space, so the whole batch has been FLUSHED", LogLevel.Warning);
             }
             else if (VertexRenderCount + vertexCount > vertexBuffer.Capacity)
             {
                 Draw();
-                Utils.Log($"VertexBuffer ran out of space, so the whole batch ha been FLUSHED", LogLevel.Warning);
+                Utils.Log($"VertexBuffer ran out of space, so the whole batch has been FLUSHED", LogLevel.Warning);
             }
         }
 
