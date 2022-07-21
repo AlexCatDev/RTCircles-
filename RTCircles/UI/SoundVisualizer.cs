@@ -758,6 +758,16 @@ namespace RTCircles
             return SmoothBuffer.AsSpan((int)(startFreq / indexFrequency), count);
         }
 
+        public float Sum(Span<float> span)
+        {
+            float sum = 0;
+            for (int i = 0; i < span.Length; i++)
+            {
+                sum += span[i];
+            }
+            return sum / span.Length;
+        }
+
         public override void Update(float delta)
         {
             if (Sound is null)
@@ -789,30 +799,13 @@ namespace RTCircles
             //30% bass, 70% kicks
             //BeatValue = bass * .3f + kicks * .7f;
 
-            var lows = GetMagnitudesForFrequencyRange(40, 80);
-            var mids = GetMagnitudesForFrequencyRange(80, 300);
+            var lows = Sum( GetMagnitudesForFrequencyRange(40, 80) );
+            var mids = Sum( GetMagnitudesForFrequencyRange(80, 150) );
+            var vocals = Sum( GetMagnitudesForFrequencyRange(180, 250) );
 
-            float lowsSum = 0;
+            BeatValue = mids + lows * 0.5f + vocals * 0.25f;
 
-            for (int i = 0; i < lows.Length; i++)
-            {
-                lowsSum += lows[i];
-            }
-
-            lowsSum /= lows.Length;
-
-            float midsSum = 0;
-
-            for (int i = 0; i < mids.Length; i++)
-            {
-                midsSum += mids[i];
-            }
-
-            midsSum /= mids.Length;
-
-            BeatValue = midsSum + lowsSum * 0.5f;
-
-            freckleSpawnTimer += delta;
+            //freckleSpawnTimer += delta;
 
             if (freckleSpawnTimer >= FreckleSpawnRate && Sound.IsPlaying)
             {

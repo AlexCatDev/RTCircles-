@@ -13,7 +13,7 @@ namespace RTCircles
     {
         private class TrailPiece
         {
-            public float FadeOutSpeed = 6;
+            public float FadeOutSpeed = 12;
 
             public Vector2 Position;
             public Vector4 Color;
@@ -34,14 +34,15 @@ namespace RTCircles
 
             public void Update(float delta)
             {
-                //Width -= delta * 60;
+                //Use with FadeOutSpeed 2
+                //Color.Xyz = MathUtils.RainbowColor(Color.W * 10 + MainGame.Instance.TotalTime * 25, 0.5f, 2.0f);
                 Color.W -= delta * FadeOutSpeed;
 
                 Color.W.ClampRef(0, 1);
 
                 Width = Interpolation.ValueAt(Color.W, startWidth, 0, 1, 0, EasingTypes.None);
 
-                if (Color.W <= 0)
+                if (Color.W == 0)
                     RemoveMe = true;
             }
         }

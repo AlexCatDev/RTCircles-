@@ -387,7 +387,7 @@ namespace RTCircles
 
             //Console.WriteLine(offsetFromStart);
 
-            double duration = 150;
+            double duration = 200;
             double pause = beatLength * 1;
 
             float textScale = MainGame.Scale;
@@ -395,7 +395,7 @@ namespace RTCircles
             float letterGOAlpha = (float)(offsetFromStart > duration ? 
                 offsetFromStart.Map(duration + pause, duration + pause + duration, 1, 0) : offsetFromStart.Map(0, duration, 0, 1)).Clamp(0, 1);
 
-            float letterGOScale = (float)Interpolation.ValueAt(offsetFromStart.Clamp(0, duration), 2, 1, 0, duration, EasingTypes.Out);
+            float letterGOScale = (float)Interpolation.ValueAt(offsetFromStart.Clamp(0, duration), 2, 1, 0, duration, EasingTypes.OutBack);
 
             if (letterGOAlpha > 0)
                 g.DrawStringCentered("GO!", Font.DefaultFont, MainGame.WindowCenter, new Vector4(1f, 1f, 1f, letterGOAlpha), letterGOScale * textScale);

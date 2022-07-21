@@ -242,7 +242,7 @@ namespace RTCircles
 
             string name = string.IsNullOrEmpty(path) ? "Skin" : $"\"{path}\"";
 
-            NotificationManager.ShowMessage($"{name} loaded in {loadTime:F0} ms", new Vector3(0.8f, 0.8f, 1f), 4f);
+            NotificationManager.ShowMessage($"{name} loaded in {loadTime:F0} ms", new Vector3(0.8f, 0.8f, 1f), 2f);
         }
         
         //Better version

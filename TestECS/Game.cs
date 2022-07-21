@@ -6,6 +6,86 @@ using System.Collections.Concurrent;
 
 namespace TestECS
 {
+    public class Cool : OpenGLObject
+    {
+        protected override void bind(int slot)
+        {
+            GL.Instance.BindBuffer(Silk.NET.OpenGLES.BufferTargetARB.ArrayBuffer, Handle);
+        }
+
+        protected override void delete()
+        {
+            GL.Instance.DeleteBuffer(Handle);
+            Handle = UninitializedHandle;
+        }
+
+        protected override void initialize(int slot)
+        {
+            Handle = GL.Instance.GenBuffer();
+
+            bind(slot);
+        }
+    }
+
+    public abstract class OpenGLObject : IDisposable
+    {
+        public uint Handle { get; protected set; }
+
+        protected const uint UninitializedHandle = uint.MaxValue;
+
+        public bool IsInitialized => Handle != UninitializedHandle;
+
+        /// <summary>
+        /// Bind the object, if it isn't initialized yet, it will be initialized and bound after this call
+        /// </summary>
+        /// <param name="slot">The slot to bind to if the underlying object implements it</param>
+        public void Bind(int slot = 0)
+        {
+            if (!IsInitialized)
+            {
+                initialize(slot);
+                System.Diagnostics.Debug.Assert(IsInitialized);
+            }
+            else
+            {
+                bind(slot);
+            }
+        }
+        protected abstract void initialize(int slot);
+        protected abstract void bind(int slot);
+        protected abstract void delete();
+
+        private bool disposedValue;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                GPUSched.Instance.Enqueue(() =>
+                {
+                    delete();
+                    System.Diagnostics.Debug.Assert(!IsInitialized);
+                }, tryExecuteNow: true);
+
+                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
+                // TODO: set large fields to null
+                disposedValue = true;
+            }
+        }
+
+        ~OpenGLObject()
+        {
+            Dispose(false);
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+    }
+
     public class Game : GameBase
     {
         public static Game Instance { get; private set; }
@@ -26,7 +106,6 @@ namespace TestECS
 
         public override void OnLoad()
         {
-
             VSync = false;
 
             Renderer = new Graphics();

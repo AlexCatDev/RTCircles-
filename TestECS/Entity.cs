@@ -122,7 +122,7 @@
             {
                 for (int i = 0; i < componentList.Count; i++)
                 {
-                    componentList[i].Update();
+                    //componentList[i].Update();
                 }
             }
         }

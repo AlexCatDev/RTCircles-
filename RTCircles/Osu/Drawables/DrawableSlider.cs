@@ -180,7 +180,7 @@ namespace RTCircles
             IsMissed = false;
             IsEndingHit = false;
 
-            circleAlpha = 0f;
+            alpha = 0f;
             repeatsDone = 0;
             lastRepeatsDone = 0;
             snakeIn = 0f;
@@ -196,7 +196,7 @@ namespace RTCircles
 
         private bool fadeout;
 
-        private float circleAlpha;
+        private float alpha;
 
         private void drawSliderRepeat(Graphics g, Vector2 position, float angle, int index, float alpha)
         {
@@ -252,7 +252,7 @@ namespace RTCircles
 
             var angle = MathF.Atan2(secondLast.Y - last.Y, secondLast.X - last.X);
 
-            drawSliderRepeat(g, OsuContainer.MapToPlayfield(SliderPath.Path.CalculatePositionAtProgress(snakeIn)), angle, 1, circleAlpha);
+            drawSliderRepeat(g, OsuContainer.MapToPlayfield(SliderPath.Path.CalculatePositionAtProgress(snakeIn)), angle, 1, alpha);
         }
 
         private void drawSliderRepeats(Graphics g)
@@ -321,9 +321,9 @@ namespace RTCircles
                         previousBallPos = pos;
                 }
 
-                float followCircleAlpha = Interpolation.ValueAt(sliderFollowScaleAnim.Value, 0, 1, 1, 2, EasingTypes.None) * circleAlpha;
+                float followCircleAlpha = Interpolation.ValueAt(sliderFollowScaleAnim.Value, 0, 1, 1, 2, EasingTypes.None) * alpha;
                 
-                float fadeoutScale = Interpolation.ValueAt(circleAlpha, 1f, 0.75f, 1f, 0f, EasingTypes.Out).Clamp(0.75f, 1f);
+                float fadeoutScale = Interpolation.ValueAt(alpha, 1f, 0.75f, 1f, 0f, EasingTypes.Out).Clamp(0.75f, 1f);
 
                 const float Size_Correction_Scale = 1.15f;
 
@@ -336,7 +336,7 @@ namespace RTCircles
 
         private void drawHitCircle(Graphics g)
         {
-            float hitCircleAlpha = circleAlpha;
+            float hitCircleAlpha = alpha;
             if (OsuContainer.Beatmap.Mods.HasFlag(Mods.HD))
             {
                 double hiddenFadeIn = OsuContainer.Beatmap.Preempt * 0.4;
@@ -364,7 +364,7 @@ namespace RTCircles
                 float scaleExplode = 1f;
                 if (hitTime.HasValue)
                 {
-                    hitCircleAlpha = (float)OsuContainer.SongPosition.Map(hitTime.Value, hitTime.Value + OsuContainer.Fadeout, circleAlpha, 0).Clamp(0, 1f);
+                    hitCircleAlpha = (float)OsuContainer.SongPosition.Map(hitTime.Value, hitTime.Value + OsuContainer.Fadeout, alpha, 0).Clamp(0, 1f);
                     scaleExplode = (float)Interpolation.ValueAt(OsuContainer.SongPosition, 1, OsuContainer.CircleExplodeScale, hitTime.Value, hitTime.Value + OsuContainer.Fadeout, EasingTypes.Out);
                 }
 
@@ -476,14 +476,14 @@ namespace RTCircles
             //Neeed a better way to handle this
             if (fadeout)
             {
-                 circleAlpha = (float)MathUtils.Map(OsuContainer.SongPosition, fadeOutStart, fadeOutStart + OsuContainer.Fadeout, 1, 0).Clamp(0, 1);
+                 alpha = (float)MathUtils.Map(OsuContainer.SongPosition, fadeOutStart, fadeOutStart + OsuContainer.Fadeout, 1, 0).Clamp(0, 1);
             }
             else
             {
                 if (OsuContainer.CookieziMode && OsuContainer.SongPosition >= slider.StartTime)
                     checkHit();
 
-                circleAlpha = (float)MathUtils.Map(timeElapsed, 0, OsuContainer.Beatmap.FadeIn, 0, 1f).Clamp(0, 1f);
+                alpha = (float)MathUtils.Map(timeElapsed, 0, OsuContainer.Beatmap.FadeIn, 0, 1f).Clamp(0, 1f);
 
                 if (GlobalOptions.SliderSnakeIn.Value)
                 {
@@ -612,7 +612,7 @@ namespace RTCircles
                 else
                     SliderPath.ScalingOrigin = OsuContainer.MapToPlayfield(SliderPath.Path.Bounds.Center);
 
-                SliderPath.DrawScale = (float)Interpolation.ValueAt(circleAlpha, 1, OsuContainer.CircleExplodeScale, 1, 0, EasingTypes.Out);
+                SliderPath.DrawScale = (float)Interpolation.ValueAt(alpha, 1, OsuContainer.CircleExplodeScale, 1, 0, EasingTypes.Out);
             }
             else
             {
@@ -622,14 +622,14 @@ namespace RTCircles
 
             //Fade out the slider based on its duration when hidden (bad mod)
             if (OsuContainer.Beatmap.Mods.HasFlag(Mods.HD))
-                SliderPath.Alpha = circleAlpha * Interpolation.ValueAt(OsuContainer.SongPosition.Clamp(slider.StartTime, slider.EndTime), 1, 0, slider.StartTime, slider.EndTime, EasingTypes.None);
+                SliderPath.Alpha = alpha * Interpolation.ValueAt(OsuContainer.SongPosition.Clamp(slider.StartTime, slider.EndTime), 1, 0, slider.StartTime, slider.EndTime, EasingTypes.None);
             else
             {
                 //If we reached the end of the slider and snake out is enabled and exploding is disabled, just instantly make it disappear
                 if (GlobalOptions.SliderSnakeOut.Value && !GlobalOptions.SliderSnakeExplode.Value && OsuContainer.SongPosition > slider.EndTime)
                     SliderPath.Alpha = 0f;
                 else
-                    SliderPath.Alpha = circleAlpha;
+                    SliderPath.Alpha = alpha;
             }
 
             SliderPath.SetProgress(snakeOut, snakeIn);
@@ -639,7 +639,7 @@ namespace RTCircles
             if (OsuContainer.SongPosition > slider.StartTime + OsuContainer.Beatmap.Window50)
                 MissIfNotHit();
 
-            if (fadeout && circleAlpha == 0)
+            if (fadeout && alpha == 0)
                 IsDead = true;
 
             //Instead of making it like this, maybe i should map the fadein time so that when it overflows it fades out?
@@ -651,34 +651,59 @@ namespace RTCircles
 
         public override void Render(Graphics g)
         {
-            Vector3 sliderBorder = new Vector3(Skin.Config.SliderBorder ?? new Vector3(0.8f, 0.8f, 0.8f));
-            Vector3 sliderTrack = new Vector3(Skin.Config.SliderTrackOverride ?? new Vector3(0));
-
-            if (OsuContainer.IsKiaiTimeActive && GlobalOptions.RGBCircles.Value)
-            {
-                sliderBorder = MathUtils.RainbowColor(OsuContainer.SongPosition / 1000, 0.5f, 1.1f);
-            }
-
-            g.BorderColorInner = sliderBorder;
-            g.BorderColorOuter = g.BorderColorInner;
-
-            g.ShadowColor = new Vector4(0, 0, 0, 0.5f);
-
-            g.TrackColorOuter = Shade(-0.1f, new Vector4(sliderTrack, 1.0f)).Xyz;
-            g.TrackColorInner = Shade(0.5f, new Vector4(sliderTrack, 1.0f)).Xyz;
+            setSliderColor(g);
 
             SliderPath.Render(g);
 
-            if (circleAlpha > 0)
+            drawHitCircle(g);
+
+            drawSliderRepeats(g);
+
+            drawSliderBall(g);
+        }
+
+        private void setSliderColor(Graphics g)
+        {
+            float deltaLerp = (float)(OsuContainer.DeltaSongPosition / 250);
+
+            Vector3 borderColorInner;
+            Vector3 borderColorOuter;
+
+            Vector3 trackColorOuter;
+            Vector3 trackColorInner;
+
+            if (OsuContainer.IsKiaiTimeActive && GlobalOptions.RGBCircles.Value)
             {
-                drawHitCircle(g);
+                var rgbTime = OsuContainer.SongPosition / 1000;
 
-                drawSliderRepeats(g);
+                var rgbBorder = MathUtils.RainbowColor(rgbTime, 0.5f, 1.2f);
 
-                drawSliderBall(g);
+                borderColorInner = rgbBorder;
+                borderColorOuter = rgbBorder;
+
+                var rgbFill = MathUtils.RainbowColor(rgbTime, 0.5f, 1f);
+
+                trackColorOuter = rgbFill;
+                trackColorInner = new Vector3(0.25f);
+            }
+            else
+            {
+                var border = new Vector3(Skin.Config.SliderBorder ?? new Vector3(0.8f, 0.8f, 0.8f));
+
+                borderColorInner = border;
+                borderColorOuter = border;
+
+                var trackOuter = new Vector3(Skin.Config.SliderTrackOverride ?? new Vector3(0));
+
+                trackColorOuter = Shade(-0.1f, new Vector4(trackOuter, 1.0f)).Xyz;
+                trackColorInner = Shade(0.5f, new Vector4(trackOuter, 1.0f)).Xyz;
             }
 
-            //g.DrawString($"In: {snakeIn:F2} A: {SliderPath.Alpha:F2}", Font.DefaultFont, hitCirclePos, Colors.White, 0.5f);
+            g.BorderColorOuter = Vector3.Lerp(g.BorderColorOuter, borderColorInner, deltaLerp);
+            g.BorderColorInner = Vector3.Lerp(g.BorderColorInner, borderColorOuter, deltaLerp);
+
+            g.TrackColorOuter = Vector3.Lerp(g.TrackColorOuter, trackColorOuter, deltaLerp);
+            g.TrackColorInner = Vector3.Lerp(g.TrackColorInner, trackColorInner, deltaLerp);
         }
 
         private bool checkHit()
@@ -756,16 +781,6 @@ namespace RTCircles
             return false;
         }
 
-        public override bool OnMouseUp(MouseButton args)
-        {
-            return false;
-        }
-
-        public override bool OnKeyUp(Key key)
-        {
-            return false;
-        }
-
         private SmoothFloat shakeAnim = new SmoothFloat();
         public void Shake()
         {
@@ -817,5 +832,3 @@ namespace RTCircles
         }
     }
 }
-
-//jeg skal redo det her lort

@@ -76,11 +76,16 @@ namespace RTCircles
 
         public void LoadCarouselItems(Realm realm)
         {
+            long startMem = GC.GetTotalMemory(false);
             foreach (var item in realm.All<DBBeatmapInfo>())
             {
                 AddBeatmapToCarousel(item);
                 Utils.Log($"Loaded DBBeatmap: {item.Filename}", LogLevel.Debug);
             }
+
+            long endMem = GC.GetTotalMemory(false);
+
+            NotificationManager.ShowMessage($"{BeatmapCollection.Items.Count} beatmaps available {(endMem - startMem) / 1024} kb", new Vector3(0.5f, 1, 0), 2);
         }
 
         private static float searchTimer;

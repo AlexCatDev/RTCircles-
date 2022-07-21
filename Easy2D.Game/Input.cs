@@ -22,7 +22,13 @@ namespace Easy2D.Game
         {
             get
             {
-                return _mousePosition;
+                if (InputContext.Mice[0].Cursor.CursorMode == CursorMode.Raw)
+                    return _mousePosition;
+                else
+                {
+                    var windowMousePos = InputContext.Mice[0].Position;
+                    return new Vector2(windowMousePos.X, windowMousePos.Y);
+                }
             }
         }
 
@@ -66,7 +72,6 @@ namespace Easy2D.Game
                 else
                 {
                     previousRaw = Vector2.Zero;
-                    _mousePosition = new Vector2(e.X, e.Y);
                 }
             };
             

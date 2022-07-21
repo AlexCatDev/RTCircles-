@@ -204,6 +204,13 @@ namespace RTCircles
         private Queue<TransformFunction> pendingTransforms = new Queue<TransformFunction>();
         private TransformFunction currentTransform;
 
+        public bool IsReversed { get; private set; }
+        public void ReverseCurrentTransform()
+        {
+            if (currentTransform != null)
+                IsReversed = true;
+        }
+
         public void EndCurrentTransform()
         {
             if (currentTransform is not null)
@@ -219,7 +226,7 @@ namespace RTCircles
 
         public Smooth<T> TransformTo(T value, float duration = 0, EasingTypes easing = EasingTypes.None, Action onComplete = null)
         {
-            float elapsed = 0;
+            float elapsed = 0f;
 
             bool initStart = false;
             T start = currentValue;
@@ -234,8 +241,10 @@ namespace RTCircles
 
                 elapsed += delta;
                 elapsed = elapsed.Clamp(0, duration);
-
                 currentValue = GetValueAt(elapsed, start, value, duration, easing);
+
+                if (delta < 0 && elapsed == 0)
+                    return (true, null);
 
                 return (elapsed == duration, onComplete);
             });
@@ -269,11 +278,15 @@ namespace RTCircles
 
             if (currentTransform is not null)
             {
+                if (IsReversed)
+                    delta *= -1;
+
                 var status = currentTransform(delta);
 
                 if (status.hasCompleted)
                 {
                     status.onComplete?.Invoke();
+                    IsReversed = false;
                     currentTransform = null;
                 }
             }

@@ -18,7 +18,7 @@ namespace RTCircles
         private SmoothVector4 colorTransform = new SmoothVector4();
 
         private Vector2 position = new Vector2();
-        private Vector2 size => new Vector2(750) * MainGame.Scale + new Vector2(300) * visualizer.BeatValue * MainGame.Scale;
+        private Vector2 size => new Vector2(750) * MainGame.Scale + new Vector2(300) * visualizer.BeatValue;
 
         private Vector2 parallaxPosition => mapBackground.ParallaxPosition * 2f;
         private Vector2 offset = Vector2.Zero;
@@ -57,7 +57,7 @@ namespace RTCircles
             OsuContainer.OnKiai += () =>
             {
                 logoExplodeKiaiAnim.Value = 1f;
-                logoExplodeKiaiAnim.TransformTo(0f, 0.5f, EasingTypes.Out);
+                logoExplodeKiaiAnim.TransformTo(0f, 0.5f, EasingTypes.OutQuad);
             };
 
             buttonAlpha.Value = 0f;
@@ -71,7 +71,7 @@ namespace RTCircles
             visualizer.BarTexture = null;
             visualizer.Layer = -727;
             visualizer.MirrorCount = 2;
-            visualizer.LerpSpeed = 40f;
+            visualizer.LerpSpeed = 25f;
             visualizer.Thickness = 25;
             visualizer.BarLength = 800f;
             visualizer.FreckleSpawnRate = float.MaxValue;
@@ -189,7 +189,7 @@ namespace RTCircles
 
             if (!logoExplodeKiaiAnim.HasCompleted)
             {
-                float logoExplodeScale = logoExplodeKiaiAnim.Value.Map(1f, 0f, 1f, 2f);
+                float logoExplodeScale = (float)Interpolation.ValueAt(logoExplodeKiaiAnim, 1, 2.2, 1, 0, EasingTypes.Out);
                 g.DrawRectangleCentered(visualizer.Position, Bounds.Size * logoExplodeScale, new Vector4(colorTransform.Value.Xyz, LogoTextTexture.ImageDoneUploading ? logoExplodeKiaiAnim.Value : 0), LogoTextTexture);
             }
         }

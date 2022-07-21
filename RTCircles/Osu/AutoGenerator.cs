@@ -8,21 +8,21 @@ namespace RTCircles
     //God im retarded
     public class AutoGenerator
     {
-        public struct KeyFrame
+        public struct AutoFrame
         {
             public Vector2 Position;
             public double Time;
             public bool IsSliderSlide;
         }
 
-        private List<KeyFrame> frames = new List<KeyFrame>();
+        private List<AutoFrame> frames = new List<AutoFrame>();
 
         private int frameIndex = 0;
-        private KeyFrame? first;
+        private AutoFrame? first;
 
         public Vector2 CurrentPosition { get; private set; } = new Vector2(512, 384) / 2;
 
-        private Vector2 onFrame(double time, KeyFrame from, KeyFrame to, int index)
+        private Vector2 onFrame(double time, AutoFrame from, AutoFrame to, int index)
         {
             bool cursorDance = GlobalOptions.AutoCursorDance.Value;
             
@@ -31,31 +31,35 @@ namespace RTCircles
 
             float blend = Interpolation.ValueAt(time, 0, 1, from.Time, to.Time);
 
-            var easing = ((from.Position - to.Position).Length < OsuContainer.Beatmap.CircleRadiusInOsuPixels * 2 || cursorDance) ? EasingTypes.None : EasingTypes.InOutQuad; 
+            var easing = ((from.Position - to.Position).Length < OsuContainer.Beatmap.CircleRadiusInOsuPixels * 2 || cursorDance) ? EasingTypes.None : EasingTypes.InOutQuad;
 
-            var vec2 = Vector2.Lerp(from.Position, to.Position, Interpolation.ValueAt(blend, 0, 1, 0, 1, easing));
+            var output = Vector2.Lerp(from.Position, to.Position, Interpolation.ValueAt(blend, 0, 1, 0, 1, easing));
 
             if (!cursorDance)
-                return vec2;
+                return output;
 
-            //float angle = MathUtils.AtanVec(from.Position, to.Position);
             float length = (from.Position - to.Position).Length / 2;
 
             if (length < OsuContainer.Beatmap.CircleRadiusInOsuPixels)
-                return vec2;
+                return output;
+
+            blend = Interpolation.ValueAt(time, 0, 1, from.Time, to.Time);
+
+            Vector2 danceVec = new Vector2(
+                (float)Math.Sin(blend.Map(0, 1, MathF.PI, 0)), 
+                (float)Math.Cos(blend.Map(0, 1, MathF.PI / 2, -MathF.PI / 2))) * length;
+
+            float angle = MathUtils.AtanVec(from.Position, to.Position);
 
             if (index % 2 == 0)
             {
-                vec2.Y += (float)Math.Sin(blend.Map(0, 1, MathF.PI, 0)) * length;
-                vec2.X += (float)Math.Cos(blend.Map(0, 1, MathF.PI / 2, -MathF.PI / 2)) * length;
+                output += danceVec;
             }
             else
             {
-                vec2.Y -= (float)Math.Sin(blend.Map(0, 1, MathF.PI, 0)) * length;
-                vec2.X -= (float)Math.Cos(blend.Map(0, 1, MathF.PI / 2, -MathF.PI / 2)) * length;
+               output -= danceVec;
             }
-
-            return vec2;
+            return output;
         }
 
         public void Sort()
@@ -105,7 +109,7 @@ namespace RTCircles
                 return;
 
             if (first == null)
-                first = new KeyFrame() { Time = currentTime, Position = CurrentPosition };
+                first = new AutoFrame() { Time = currentTime, Position = CurrentPosition };
 
             while (currentTime > frames[frameIndex].Time)
             {
@@ -119,13 +123,12 @@ namespace RTCircles
 
             currentTime = Math.Min(currentTime, frames[frameIndex].Time);
 
-
-            CurrentPosition = onFrame(currentTime, hasPreviousIndex ? frames[frameIndex - 1] : first.Value, frames[frameIndex], frameIndex);//OnTransformCursor(currentTime, hasPreviousIndex ? frames[frameIndex - 1] : first.Value, frames[frameIndex], frameIndex);
+            CurrentPosition = onFrame(currentTime, hasPreviousIndex ? frames[frameIndex - 1] : first.Value, frames[frameIndex], frameIndex);
         }
 
         public void AddDestination(Vector2 destination, double time, bool isSliderSlide)
         {
-            frames.Add(new KeyFrame() { Position = destination, Time = time, IsSliderSlide = isSliderSlide });
+            frames.Add(new AutoFrame() { Position = destination, Time = time, IsSliderSlide = isSliderSlide });
         }
     }
 }

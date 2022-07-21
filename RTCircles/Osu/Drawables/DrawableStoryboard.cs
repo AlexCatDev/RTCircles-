@@ -29,12 +29,14 @@ namespace RTCircles
             public int StartTime { get; private set; } = int.MaxValue;
             public int EndTime { get; private set; } = int.MinValue;
 
-            private AnimationTFloat fadeAnim = new AnimationTFloat() { DefaultValue = 1 };
+            private AnimationTFloat fadeAnim = new AnimationTFloat() { DefaultValue = 0 };
             private AnimationTVec4 colorAnim = new AnimationTVec4() { DefaultValue = new Vector4(1f, 1f, 1f, 0f) };
             private AnimationTFloat xAnim = new AnimationTFloat();
             private AnimationTFloat yAnim = new AnimationTFloat();
             private AnimationTFloat rotationAnim = new AnimationTFloat() { DefaultValue = 0 };
             private AnimationTVec2 scaleAnim = new AnimationTVec2() { DefaultValue = Vector2.One };
+
+            private Vector2 origin = Vector2.Zero;
 
             public DrawableStoryboardSprite(StoryboardSprite sSprite)
             {
@@ -159,7 +161,19 @@ namespace RTCircles
                 scaleAnim.Sort();
                 xAnim.Sort();
                 yAnim.Sort();
-                
+
+                if (sSprite.Origin == OsuParsers.Enums.Storyboards.Origins.TopLeft)
+                    origin = new Vector2(-0.5f);
+                else if (sSprite.Origin == OsuParsers.Enums.Storyboards.Origins.BottomCentre)
+                    origin.Y = 0.5f;
+                else if (sSprite.Origin == OsuParsers.Enums.Storyboards.Origins.TopCentre)
+                    origin.Y = -0.5f;
+                else if (sSprite.Origin == OsuParsers.Enums.Storyboards.Origins.CentreRight)
+                    origin.X = 0.5f;
+                else if (sSprite.Origin == OsuParsers.Enums.Storyboards.Origins.CentreLeft)
+                    origin.X = -0.5f;
+                else if (sSprite.Origin == OsuParsers.Enums.Storyboards.Origins.BottomRight)
+                    origin = new Vector2(0.5f);
             }
 
             public void Render(Graphics g)
@@ -187,14 +201,11 @@ namespace RTCircles
 
                 float drawRotation = MathHelper.RadiansToDegrees(rotation);
 
-                if (sSprite.Origin == OsuParsers.Enums.Storyboards.Origins.TopLeft)
-                    drawPos -= drawSize / 2f;
-                else if (sSprite.Origin == OsuParsers.Enums.Storyboards.Origins.BottomCentre)
-                    drawPos.Y += drawSize.Y / 2;
+                drawPos += drawSize * origin;
 
                 //else if(sSprite.Origin != OsuParsers.Enums.Storyboards.Origins.Centre)
-                    //throw new Exception("cum");
-                
+                //throw new Exception("cum");
+
                 g.DrawRectangleCentered(drawPos, drawSize, color, texture, rotDegrees: drawRotation);
             }
         }

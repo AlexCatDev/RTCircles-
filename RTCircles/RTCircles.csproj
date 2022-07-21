@@ -45,6 +45,9 @@
     <None Remove="Skin\default-7.png" />
     <None Remove="Skin\default-8.png" />
     <None Remove="Skin\default-9.png" />
+    <None Remove="Skin\default-dot.png" />
+    <None Remove="Skin\default-percent.png" />
+    <None Remove="Skin\default-x.png" />
     <None Remove="Skin\defaultbackground.png" />
     <None Remove="Skin\dot.png" />
     <None Remove="Skin\download-button.png" />
@@ -182,6 +185,9 @@
     <EmbeddedResource Include="Skin\default-7.png" />
     <EmbeddedResource Include="Skin\default-8.png" />
     <EmbeddedResource Include="Skin\default-9.png" />
+    <EmbeddedResource Include="Skin\default-dot.png" />
+    <EmbeddedResource Include="Skin\default-percent.png" />
+    <EmbeddedResource Include="Skin\default-x.png" />
     <EmbeddedResource Include="Skin\defaultbackground.png" />
     <EmbeddedResource Include="Skin\download-button.png" />
     <EmbeddedResource Include="Skin\drum-hitclap.wav" />
@@ -199,8 +205,6 @@
     <EmbeddedResource Include="Skin\hover.wav" />
     <EmbeddedResource Include="Skin\loading.png" />
     <EmbeddedResource Include="Skin\logo.png" />
-    <EmbeddedResource Include="Skin\score-dot.png" />
-    <EmbeddedResource Include="Skin\score-percent.png" />
     <EmbeddedResource Include="Skin\scorebar-bg.png" />
     <EmbeddedResource Include="Skin\scorebar-colour.png" />
     <EmbeddedResource Include="Skin\scorebar-marker.png" />
@@ -226,7 +230,6 @@
     <EmbeddedResource Include="Skin\ranking-X-small.png" />
     <EmbeddedResource Include="Skin\ranking-XH-small.png" />
     <EmbeddedResource Include="Skin\reversearrow.png" />
-    <EmbeddedResource Include="Skin\score-x.png" />
     <EmbeddedResource Include="Skin\selection-mod-doubletime.png" />
     <EmbeddedResource Include="Skin\selection-mod-easy.png" />
     <EmbeddedResource Include="Skin\selection-mod-hardrock.png" />

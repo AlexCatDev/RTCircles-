@@ -207,10 +207,10 @@ namespace RTCircles
                     IsDead = true;
             }
         }
-
+         
         private bool checkHit()
         {
-            if (!IsHit && !IsMissed)
+            if (!IsHit && !IsMissed && MathUtils.IsPointInsideRadius(OsuContainer.CursorPosition, Position, OsuContainer.Beatmap.CircleRadius))
             {
                 //if we're pressing the note and it's further than 300ms away just auto shake it
                 if (OsuContainer.SongPosition < circle.StartTime - 300) 
@@ -272,16 +272,7 @@ namespace RTCircles
                 return false;
 
             if (key == OsuContainer.Key1 || key == OsuContainer.Key2)
-            {
-                if (IsHit)
-                    return false;
-
-                if (!IsHit || !IsMissed)
-                {
-                    if (MathUtils.IsPointInsideRadius(OsuContainer.CursorPosition, Position, OsuContainer.Beatmap.CircleRadius))
-                        return checkHit();
-                }
-            }
+                return checkHit();
             
             return false;
         }
@@ -292,17 +283,8 @@ namespace RTCircles
                 return false;
 
             if (args == MouseButton.Left && OsuContainer.EnableMouseButtons)
-            {
-                if (IsHit)
-                    return false;
-
-                if (!IsHit || !IsMissed)
-                {
-                    if (MathUtils.IsPointInsideRadius(OsuContainer.CursorPosition, Position, OsuContainer.Beatmap.CircleRadius))
-                        return checkHit();
-                }
-            }
-
+                return checkHit();
+            
             return false;
         }
 

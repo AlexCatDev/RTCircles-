@@ -7,9 +7,6 @@ using System.Reflection;
 
 namespace RTCircles
 {
-    //This is a fine class, but i want to redo with better pragmatism
-
-
     public static class ScreenManager
     {
         private static Dictionary<Type, Screen> screens = new Dictionary<Type, Screen>();
@@ -63,10 +60,10 @@ namespace RTCircles
         private static double transitionStartTime = 0;
         private static bool captureScreenFlag = false;
         private static bool isBackwards = false;
-        private static FrameBuffer previousScreenFramebuffer = new FrameBuffer(1, 1, 
-            Silk.NET.OpenGLES.FramebufferAttachment.ColorAttachment0, 
-            Silk.NET.OpenGLES.InternalFormat.Rgb16f, 
-            Silk.NET.OpenGLES.PixelFormat.Rgb, 
+        private static FrameBuffer previousScreenFramebuffer = new FrameBuffer(1, 1,
+            Silk.NET.OpenGLES.FramebufferAttachment.ColorAttachment0,
+            Silk.NET.OpenGLES.InternalFormat.Rgb16f,
+            Silk.NET.OpenGLES.PixelFormat.Rgb,
             Silk.NET.OpenGLES.PixelType.Float);
 
         public static void GoBack()
@@ -108,14 +105,14 @@ namespace RTCircles
                 return;
             }
 
+            if (currentScreen is T)
+                return;
+
             if (inIntroSequence || inOutroSequence && !force)
             {
                 Utils.Log($"{currentScreen.GetType().Name} tried to change to {typeof(T).Name} mid-transition!", LogLevel.Error);
                 return;
             }
-
-            if (currentScreen is T)
-                return;
 
             Utils.Log($"{currentScreen.GetType().Name} -> {typeof(T).Name}", LogLevel.Info);
 
@@ -143,9 +140,6 @@ namespace RTCircles
         public static void Render(Graphics g)
         {
             const double DURATION = 0.5;
-
-            const double FADE_IN = 0.15;
-            const double FADE_OUT = 0.3;
 
             if (inIntroSequence)
             {

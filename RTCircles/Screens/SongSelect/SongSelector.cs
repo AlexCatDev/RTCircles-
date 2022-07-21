@@ -541,9 +541,9 @@ namespace RTCircles
             if (selectedItem == item)
                 return;
 
-            selectedItem = item;
-
             Skin.SelectDifficulty.Play(true);
+
+            selectedItem = item;
 
             var currentAudio = OsuContainer.Beatmap?.AudioPath;
 

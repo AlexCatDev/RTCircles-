@@ -76,7 +76,7 @@ namespace Easy2D
             TexturesBound = 0;
         }
 
-        public Graphics(int vertexCount = 500000, int indexCount = 2000000)
+        public Graphics(int vertexCount = 40_000, int indexCount = 60_000)
         {
             VertexBatch = new PrimitiveBatch<Vertex>(vertexCount, indexCount);
 

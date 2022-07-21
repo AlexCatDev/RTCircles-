@@ -98,7 +98,7 @@ namespace RTCircles
                     skinDropdown.AddItem(item);
                 }
 
-                NotificationManager.ShowMessage($"Added {skinDropdown.Items.Count} skins", new Vector3(0.5f, 1f, 0.5f), 5f);
+                NotificationManager.ShowMessage($"Added {skinDropdown.Items.Count} skins", new Vector3(0.5f, 1f, 0.5f), 2f);
             }
         }
 

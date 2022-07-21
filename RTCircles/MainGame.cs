@@ -33,11 +33,11 @@ namespace RTCircles
 
         public override void OnLoad()
         {
+            if (View is Silk.NET.Windowing.IWindow)
+                Input.CursorMode = CursorMode.Raw;
 #if RELEASE
             ToggleFullScreen();
 #endif
-            Input.CursorMode = CursorMode.Raw;
-
             Size = new Silk.NET.Maths.Vector2D<int>(1600, 900);
 
             string build = "RELEASE";
@@ -62,11 +62,6 @@ namespace RTCircles
             Skin.Load(GlobalOptions.SkinFolder.Value);
 
             g = new Graphics();
-
-            GPUSched.Instance.EnqueueDelayed(() =>
-            {
-                NotificationManager.ShowMessage($"App is work in progress!", ((Vector4)Color4.Orange).Xyz, 5);
-            }, 500);
 
             lastOpened = Settings.GetValue<DateTime>("LastOpened", out bool exists);
             Settings.SetValue(DateTime.Now, "LastOpened");

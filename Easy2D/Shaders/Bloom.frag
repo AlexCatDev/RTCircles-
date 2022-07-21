@@ -145,8 +145,7 @@ void main() {
         // check whether fragment output is higher than threshold, if so output as brightness color
         
         float autoExposure = 1.0;
-        vec4 _Params = vec4(1.0);
-        vec4 _Threshold = vec4(1.0);
+        vec4 _Threshold = vec4(u_BloomThreshold);
         color *= autoExposure;
 
         color.rgb = QuadraticThreshold(color.rgb, _Threshold.x, _Threshold.yzw);

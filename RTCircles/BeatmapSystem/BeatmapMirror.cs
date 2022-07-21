@@ -294,6 +294,7 @@ namespace RTCircles
         {
             try
             {
+                //Todo: Better system for this, and 'sanitize' file names, because windows pepega
                 ZipArchive archive = new ZipArchive(oszStream);
 
                 var beatmapFiles = archive.Entries.Where((o) => o.FullName.EndsWith(".osu"));
@@ -302,6 +303,8 @@ namespace RTCircles
                 DBBeatmapSetInfo setInfo = new DBBeatmapSetInfo();
 
                 string folderGUID = Guid.NewGuid().ToString();
+
+                string folderPath = $"{SongsDirectory}/{folderGUID}";
 
                 int itemsExtracted = 0;
 
@@ -314,7 +317,10 @@ namespace RTCircles
                         stream.CopyTo(beatmapStream);
 
                         var bytes = beatmapStream.ToArray();
-                        var hashString = Utils.ComputeSHA256Hash(bytes, 0, bytes.Length); 
+                        var hashString = Utils.ComputeSHA256Hash(bytes, 0, bytes.Length);
+
+                        if (BeatmapCollection.HashedItems.ContainsKey(hashString))
+                            continue;
 
                         beatmapStream.Position = 0;
                         Beatmap beatmap = DecodeBeatmap(beatmapStream);
@@ -350,16 +356,16 @@ namespace RTCircles
                     return;
                 }
 
-                Directory.CreateDirectory($"{SongsDirectory}/{folderGUID}");
+                Directory.CreateDirectory(folderPath);
                 try
                 {
-                    archive.ExtractToDirectory($"{SongsDirectory}/{folderGUID}", true);
+                    archive.ExtractToDirectory(folderPath, true);
                 }
                 catch (Exception ex)
                 {
                     Utils.Log($"Extracting archive failed due to: {ex.Message} import process aborted :(", LogLevel.Error);
                     archive.Dispose();
-                    return;
+                    throw ex;
                 }
 
                 Utils.Log("Writing to database...", LogLevel.Info);
@@ -370,19 +376,6 @@ namespace RTCircles
                 {
                     realm.Write(() =>
                     {
-                        var existingSetInfo = (realm.Find<DBBeatmapInfo>(setInfo.Beatmaps[0].Hash)?.SetInfo);
-
-                        if(existingSetInfo != null)
-                        {
-                            var oldDirectory = $"{SongsDirectory}/{existingSetInfo.Foldername}";
-
-                            if (Directory.Exists(oldDirectory))
-                            {
-                                Directory.Delete(oldDirectory, recursive: true);
-                                Utils.Log($"Setinfo existed before with these beatmaps but has now been deleted!", LogLevel.Warning);
-                            }
-                        }
-
                         realm.Add(setInfo, true);
                     });
 
