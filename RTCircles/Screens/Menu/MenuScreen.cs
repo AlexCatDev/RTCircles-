@@ -62,7 +62,7 @@ namespace RTCircles
                             mapBG.TriggerFadeIn();
                             Add(new ExpandingCircle(logo.Bounds.Center, logo.Bounds.Size.X / 2) { Layer = -1337 });
                         });
-                        logo.IntroSizeAnimation.TransformTo(Vector2.Zero, 200f, EasingTypes.InOutSine);
+                        logo.IntroSizeAnimation.TransformTo(Vector2.Zero, 200f, EasingTypes.InOutQuad);
                     });
                 }
             });

@@ -81,7 +81,7 @@ namespace RTCircles
 
         public override void Render(Graphics g)
         {
-            float colorBoost = rotationCounter > 0 ? 1.1f : 1;
+            Vector4 colorBoost = rotationCounter > 0 ? new Vector4(new Vector3(0.3f)) : Vector4.Zero;
 
             float approachScale = (float)MathUtils.Map(OsuContainer.SongPosition, spinner.StartTime, spinner.EndTime, 1, 0).Clamp(0, 1);
 
@@ -89,13 +89,13 @@ namespace RTCircles
 
             float approachTextureScale = Skin.GetScale(Skin.SpinnerApproachCircle, 256, 512);
 
-            g.DrawRectangleCentered(Position, Size * spinnerTextureScale, color * colorBoost, Skin.SpinnerCircle, rotDegrees: rotation);
+            g.DrawRectangleCentered(Position, Size * spinnerTextureScale, color + colorBoost, Skin.SpinnerCircle, rotDegrees: rotation);
 
             if (!OsuContainer.Beatmap.Mods.HasFlag(Mods.HD))
-                g.DrawRectangleCentered(Position, Size * approachTextureScale * approachScale, color * colorBoost, Skin.SpinnerApproachCircle);
+                g.DrawRectangleCentered(Position, Size * approachTextureScale * approachScale, color + colorBoost, Skin.SpinnerApproachCircle);
 
             if (score > 0)
-                Skin.ScoreNumbers.DrawCentered(g, OsuContainer.MapToPlayfield(512 / 2, 280, ignoreMods: true), (Size.Y / 9) * scoreBonusScale, new Vector4(1f, 1f, 1f, scoreBonusAlpha * color.W), score.ToString());
+                Skin.ScoreNumbers.DrawCentered(g, OsuContainer.MapToPlayfield(512 / 2, 280, ignoreMods: true), (Size.Y / 7) * scoreBonusScale, new Vector4(1f, 1f, 1f, scoreBonusAlpha * color.W), score.ToString());
         }
 
         private int score;
@@ -123,12 +123,12 @@ namespace RTCircles
             {
                 if (rotationCounter > 0)
                 {
-                    OsuContainer.HUD.AddHit(0f, HitResult.Max, Position);
+                    OsuContainer.HUD.AddHit(0f, HitResult.Max, Position, true, false);
                     OsuContainer.PlayHitsound(spinner.HitSound, spinner.Extras.SampleSet);
                 }
                 else
                 {
-                    OsuContainer.HUD.AddHit(0f, HitResult.Miss, Position);
+                    OsuContainer.HUD.AddHit(0f, HitResult.Miss, Position, true, false);
                 }
 
                 spinnerCompletedCheck = true;

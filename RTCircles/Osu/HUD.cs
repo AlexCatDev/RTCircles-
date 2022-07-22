@@ -156,13 +156,15 @@ namespace RTCircles
 
         private float currentHealth = 1;
 
+        public float HP => currentHealth;
+
         private Rectangle unstableRateBar => new Rectangle(new Vector2(MainGame.WindowCenter.X - unstableRateBarWidth / 2f, 1052 * MainGame.AbsoluteScale.Y), new Vector2(unstableRateBarWidth, unstableRateBarHeight));
 
         public override Rectangle Bounds => throw new NotImplementedException();
 
         private List<(double hitTime, double songTime, Vector3 color)> URJudgements = new List<(double hitTime, double songTime, Vector3 color)>();
 
-        public void AddHit(double time, HitResult result, Vector2 position, bool displayJudgement = true)
+        public void AddHit(double time, HitResult result, Vector2 position, bool displayJudgement = true, bool displayUnstableRate = true)
         {
             if (result != HitResult.Miss)
             {
@@ -197,7 +199,8 @@ namespace RTCircles
             if (displayJudgement && result != HitResult.Max)
                 ScreenManager.GetScreen<OsuScreen>().Add(new HitJudgement(position, result));
 
-            URJudgements.Add((hitTime: time, songTime: OsuContainer.SongPosition, colorFromHitResult(result)));
+            if(displayUnstableRate)
+                URJudgements.Add((hitTime: time, songTime: OsuContainer.SongPosition, colorFromHitResult(result)));
 
             switch (result)
             {
@@ -362,13 +365,13 @@ namespace RTCircles
 
             if (OsuContainer.IsKiaiTimeActive)
             {
-                rankScale = (float)Interpolation.Damp(rankScale, 1, 0.001, MainGame.Instance.DeltaTime);
+                rankScale = (float)Interpolation.Damp(rankScale, 0.95, 0.001, MainGame.Instance.DeltaTime);
                 rankAlpha = (float)Interpolation.Damp(rankAlpha, 1, 0.001, MainGame.Instance.DeltaTime);
             }
             else
             {
                 rankScale = (float)Interpolation.Damp(rankScale, 0.75, 0.02, MainGame.Instance.DeltaTime);
-                rankAlpha = (float)Interpolation.Damp(rankAlpha, 0.5, 0.02, MainGame.Instance.DeltaTime);
+                rankAlpha = (float)Interpolation.Damp(rankAlpha, 0.33, 0.02, MainGame.Instance.DeltaTime);
             }
 
             float rankSize = radius * 3.8f * rankScale;
@@ -473,20 +476,22 @@ namespace RTCircles
             if (OsuContainer.CookieziMode)
                 return;
 
-            Vector2 key1Position = new Vector2(MainGame.WindowWidth - key1Size.X, MainGame.WindowHeight / 2.2f);
-            float padding = 5f * MainGame.Scale;
-            Vector2 key2Postion = new Vector2(MainGame.WindowWidth - key2Size.X, MainGame.WindowHeight / 2.2f + key1Size.Y + padding);
+            float paddingX = 4f * MainGame.Scale;
+
+            Vector2 key1Position = new Vector2(MainGame.WindowWidth - key1Size.X - paddingX, MainGame.WindowHeight / 2.2f);
+            float padding = 70f * MainGame.Scale;
+            Vector2 key2Postion = new Vector2(MainGame.WindowWidth - key2Size.X - paddingX, MainGame.WindowHeight / 2.2f + padding);
             float fontScale = 0.45f * MainGame.Scale;
 
             string key1Text = OsuContainer.Key1.ToString();
             string key2Text = OsuContainer.Key2.ToString();
 
-            g.DrawRectangle(key1Position, key1Size, key1Color, Texture.WhiteFlatCircle);
+            g.DrawRectangle(key1Position, key1Size, key1Color);
 
             Vector2 textSize = Font.DefaultFont.MessureString(key1Text, fontScale);
             g.DrawString(key1Text, Font.DefaultFont, key1Position + key1Size / 2f - textSize / 2f, Colors.White, fontScale);
 
-            g.DrawRectangle(key2Postion, key2Size, key2Color, Texture.WhiteFlatCircle);
+            g.DrawRectangle(key2Postion, key2Size, key2Color);
 
             textSize = Font.DefaultFont.MessureString(key2Text, fontScale);
             g.DrawString(key2Text, Font.DefaultFont, key2Postion + key2Size / 2f - textSize / 2f, Colors.White, fontScale);
@@ -513,26 +518,31 @@ namespace RTCircles
             float size = 65f * MainGame.Scale;
             const float lerpSpeed = 32f;
 
+            Vector4 pressAddBloom = PostProcessing.Bloom ? new Vector4(new Vector3(1)) : Vector4.Zero;
+            Vector4 pressColor = Colors.Pink;
+            //Depression xddd
+            Vector4 depressColor = Colors.Black;
+
             if (OsuContainer.Key1Down)
             {
                 key1Size = Vector2.Lerp(key1Size, new Vector2(pressSize), delta * lerpSpeed);
-                key1Color = Vector4.Lerp(key1Color, Colors.Pink, delta * lerpSpeed);
+                key1Color = Vector4.Lerp(key1Color, pressColor + pressAddBloom, delta * lerpSpeed);
             }
             else
             {
                 key1Size = Vector2.Lerp(key1Size, new Vector2(size), delta * lerpSpeed);
-                key1Color = Vector4.Lerp(key1Color, Colors.Black, delta * lerpSpeed);
+                key1Color = Vector4.Lerp(key1Color, depressColor, delta * lerpSpeed);
             }
 
             if (OsuContainer.Key2Down)
             {
                 key2Size = Vector2.Lerp(key2Size, new Vector2(pressSize), delta * lerpSpeed);
-                key2Color = Vector4.Lerp(key2Color, Colors.Pink, delta * lerpSpeed);
+                key2Color = Vector4.Lerp(key2Color, pressColor + pressAddBloom, delta * lerpSpeed);
             }
             else
             {
                 key2Size = Vector2.Lerp(key2Size, new Vector2(size), delta * lerpSpeed);
-                key2Color = Vector4.Lerp(key2Color, Colors.Black, delta * lerpSpeed);
+                key2Color = Vector4.Lerp(key2Color, depressColor, delta * lerpSpeed);
             }
 
             hitPositions.Update(delta);

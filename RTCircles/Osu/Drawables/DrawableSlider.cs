@@ -155,7 +155,7 @@ namespace RTCircles
         private const double TrackingErrorAcceptance = 24;
         private bool IsValidTrack => (OsuContainer.SongPosition - lastTrackingTime) <= TrackingErrorAcceptance || OsuContainer.CookieziMode;
 
-        private bool previousTracking;
+        private bool previousFrameIsTracking;
 
         private double lastTrackingTime = 0;
 
@@ -187,7 +187,7 @@ namespace RTCircles
             fadeout = false;
             sliderFollowScaleAnim.Value = 1f;
             lastTrackingTime = 0;
-            previousTracking = false;
+            previousFrameIsTracking = false;
             hitTime = null;
         }
 
@@ -321,13 +321,19 @@ namespace RTCircles
                         previousBallPos = pos;
                 }
 
-                float followCircleAlpha = Interpolation.ValueAt(sliderFollowScaleAnim.Value, 0, 1, 1, 2, EasingTypes.None) * alpha;
-                
-                float fadeoutScale = Interpolation.ValueAt(alpha, 1f, 0.75f, 1f, 0f, EasingTypes.Out).Clamp(0.75f, 1f);
+                float followCircleAlpha = Interpolation.ValueAt(sliderFollowScaleAnim.Value, 0, 1, 1, SliderBallActiveScale, EasingTypes.None) * alpha;
+
+                float followCircleFadeoutScale = Interpolation.ValueAt(alpha, 1f, 0.75f, 1f, 0f, EasingTypes.Out).Clamp(0.75f, 1f);
+
+                if (sliderFollowScaleAnim.Value > SliderBallActiveScale)
+                {
+                    followCircleAlpha = Interpolation.ValueAt(sliderFollowScaleAnim.Value, 1, 0, 2, 4, EasingTypes.None);
+                    followCircleFadeoutScale = 1;
+                }
 
                 const float Size_Correction_Scale = 1.15f;
 
-                Vector2 followCircleSize = Size * sliderFollowScaleAnim * Skin.GetScale(Skin.SliderFollowCircle, 256, 512) * fadeoutScale;
+                Vector2 followCircleSize = Size * sliderFollowScaleAnim * Skin.GetScale(Skin.SliderFollowCircle, 256, 512) * followCircleFadeoutScale;
 
                 //g.DrawEllipse(sliderballPosition, 360, 0, SliderBallActiveScale * OsuContainer.Beatmap.CircleRadius, 0, new Vector4(1f, 1f, 1f, 0.5f));
                 g.DrawRectangleCentered(sliderballPosition, followCircleSize, new Vector4(1f, 1f, 1f, followCircleAlpha), Skin.SliderFollowCircle);
@@ -425,9 +431,9 @@ namespace RTCircles
 
             hitCirclePos = OsuContainer.MapToPlayfield(slider.Position.X, slider.Position.Y) + shakeOffset;
 
-            if (IsValidTrack != previousTracking && IsHit || IsMissed)
+            if (IsValidTrack != previousFrameIsTracking && (IsHit || IsMissed) && OsuContainer.SongPosition >= slider.StartTime && OsuContainer.SongPosition < slider.EndTime)
             {
-                previousTracking = IsTracking;
+                previousFrameIsTracking = IsTracking;
 
                 if (IsTracking)
                 {
@@ -440,15 +446,17 @@ namespace RTCircles
                 else
                 {
                     sliderFollowScaleAnim.ClearTransforms();
-                    sliderFollowScaleAnim.TransformTo(1, 50f, EasingTypes.In);
+
+                    //When we release the key expand it alot
+                    float duration = (float)Math.Min(100, slider.EndTime - OsuContainer.SongPosition);
+                    sliderFollowScaleAnim.TransformTo(4, duration, EasingTypes.None);
                 }
             }
 
             if (IsTracking)
                 lastTrackingTime = OsuContainer.SongPosition;
 
-            if (OsuContainer.SongPosition > slider.StartTime && OsuContainer.SongPosition < slider.EndTime)
-                sliderFollowScaleAnim.Update((float)OsuContainer.DeltaSongPosition);
+            sliderFollowScaleAnim.Update((float)OsuContainer.DeltaSongPosition);
 
             if (!OsuContainer.Beatmap.Song.IsPaused)
             {
@@ -541,7 +549,7 @@ namespace RTCircles
                 if (IsHit == false && IsMissed == false)
                 {
                     IsMissed = true;
-                    OsuContainer.HUD.AddHit(OsuContainer.Beatmap.Window50, HitResult.Miss, sliderballPosition, false);
+                    OsuContainer.HUD.AddHit(OsuContainer.Beatmap.Window50, HitResult.Miss, sliderballPosition, false, false);
                 }
 
                 //Last slider point check
@@ -585,7 +593,7 @@ namespace RTCircles
                             OsuContainer.PlayHitsound(hitsound, sampleSetAddition.Value);
                     }
 
-                    OsuContainer.HUD.AddHit(result == HitResult.Miss ? OsuContainer.Beatmap.Window50 : 0, result, sliderballPosition);
+                    OsuContainer.HUD.AddHit(0, result, sliderballPosition, true, false);
                 }
                 else if (IsValidTrack)
                 {
@@ -594,12 +602,12 @@ namespace RTCircles
                     if (sampleSetAddition.HasValue)
                         OsuContainer.PlayHitsound(hitsound, sampleSetAddition.Value);
 
-                    OsuContainer.HUD.AddHit(0, HitResult.Max, sliderballPosition, false);
+                    OsuContainer.HUD.AddHit(0, HitResult.Max, sliderballPosition, false, false);
                 }
                 else
                 {
                     IsMissed = true;
-                    OsuContainer.HUD.AddHit(OsuContainer.Beatmap.Window50, HitResult.Miss, sliderballPosition, false);
+                    OsuContainer.HUD.AddHit(OsuContainer.Beatmap.Window50, HitResult.Miss, sliderballPosition, false, false);
                 }
             }
 
