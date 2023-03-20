@@ -115,7 +115,11 @@ namespace RTCircles
                     }
 
                     dataBase = null;
-                    GC.Collect();
+
+                    GPUSched.Instance.EnqueueDelayed(() =>
+                    {
+                        GC.Collect();
+                    }, 5000);
                 }
                 else
                 {

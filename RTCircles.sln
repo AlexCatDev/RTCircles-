@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RTCircles", "RTCircles\RTCi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RTCircles.Desktop", "RTCircles.Desktop\RTCircles.Desktop.csproj", "{38DB095D-8A05-49A2-9082-852C04110B72}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "bullshit", "bullshit\bullshit.csproj", "{9FD5E183-F6F9-4E29-8060-CE8A09DB5B61}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestingAndBenchmarks", "bullshit\TestingAndBenchmarks.csproj", "{9FD5E183-F6F9-4E29-8060-CE8A09DB5B61}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unrelated", "Unrelated", "{EFA1D1DC-7B59-41BB-99D9-6F24630BF309}"
 EndProject

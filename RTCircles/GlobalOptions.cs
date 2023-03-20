@@ -1,4 +1,5 @@
 ﻿using Easy2D;
+using OpenTK.Mathematics;
 
 namespace RTCircles
 {
@@ -43,7 +44,7 @@ namespace RTCircles
 
         public readonly static Option<bool> EnableMouseButtons = new Option<bool>("MouseButtons", false) { Description = "Enable Mouse Buttons?" };
 
-        public readonly static Option<bool> ShowStableMaps = new Option<bool>("ShowStableMaps", false) { Description = "When this is enabled and a valid osu! installation is linked the maps from the osu! installation will be available to play." };
+        public readonly static Option<bool> ShowStableMaps = new Option<bool>("ShowStableMaps", false) { Description = "Enable to load maps on startup from osu installation if linked." };
         #endregion
         #region doubles
         public readonly static Option<double> GlobalVolume = Option<double>.CreateProxy("GlobalVolume", (volume) => Sound.GlobalVolume = volume, 0.3);
