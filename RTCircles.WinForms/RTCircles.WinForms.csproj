@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="GLControl\DummyGLFWGraphicsContext.cs" />
+    <Compile Remove="GLControl\GLControl.cs" />
+    <Compile Remove="GLControl\GLControlDesignTimeRenderer.cs" />
+    <Compile Remove="GLControl\GLControlSettings.cs" />
+    <Compile Remove="GLControl\INativeInput.cs" />
+    <Compile Remove="GLControl\NativeInput.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="GLControl\DummyGLFWGraphicsContext.cs" />
+    <None Include="GLControl\GLControl.cs" />
+    <None Include="GLControl\GLControlDesignTimeRenderer.cs" />
+    <None Include="GLControl\GLControlSettings.cs" />
+    <None Include="GLControl\INativeInput.cs" />
+    <None Include="GLControl\NativeInput.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RTCircles\RTCircles.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="SilkControl\GLControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+  </ItemGroup>
+
+</Project>
