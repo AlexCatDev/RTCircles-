@@ -85,9 +85,11 @@ namespace RTCircles
         /// <returns>Null if the beatmap couldn't be found.</returns>
         public static PlayableBeatmap FromCarouselItem(CarouselItem item)
         {
+            //Holy fuck this is disgusting
+
             PlayableBeatmap playableBeatmap = new PlayableBeatmap();
 
-            string folderPath = $"{BeatmapMirror.SongsDirectory}/{item.Folder}";
+            string folderPath = $"{item.SongsDirectory}/{item.Folder}";
 
             OsuParsers.Beatmaps.Beatmap beatmap;
 
@@ -317,6 +319,8 @@ namespace RTCircles
 
         private void applyStacking()
         {
+            //I was drunk when i made this or on something
+
             System.Numerics.Vector2 currentStack = System.Numerics.Vector2.Zero;
             double stackTimeThreshold = Preempt * InternalBeatmap.GeneralSection.StackLeniency;
 
@@ -379,6 +383,8 @@ namespace RTCircles
                 }
             }
         }
+
+        static int SomeRandomNumberThatWillForeverIncrease;
 
         public void GenerateHitObjects(Mods mods = Mods.NM)
         {

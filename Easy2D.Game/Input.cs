@@ -43,7 +43,7 @@ namespace Easy2D.Game
             }
         }
 
-        internal static void SetContext(IInputContext inputContext)
+        public static void SetContext(IInputContext inputContext)
         {
             InputContext = inputContext;
 
@@ -72,6 +72,7 @@ namespace Easy2D.Game
                 else
                 {
                     previousRaw = Vector2.Zero;
+                    _mousePosition = new Vector2(e.X, e.Y);
                 }
             };
             

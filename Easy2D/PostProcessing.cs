@@ -74,17 +74,20 @@ namespace Easy2D
             if (dst is not null)
             {
                 bloomShader.SetMatrix("u_Projection", Matrix4.CreateOrthographicOffCenter(0, dst.Width, dst.Height, 0, -1f, 1f));
+                bloomShader.SetVector("u_QuadSize", new Vector2(dst.Width, dst.Height));
                 dst.Bind();
                 Viewport.SetViewport(0, 0, dst.Width, dst.Height);
 
-                GLDrawing.DrawQuad(Vector2.Zero, dst.Texture.Size);
+                GLDrawing.DrawQuad();
             }
             else
             {
                 bloomShader.SetMatrix("u_Projection", Matrix4.CreateOrthographicOffCenter(0, drawSize.X, drawSize.Y, 0, -1f, 1f));
+                bloomShader.SetVector("u_QuadSize", new Vector2(drawSize.X, drawSize.Y));
                 FrameBuffer.BindDefault(forceUseScreen: true);
                 Viewport.SetViewport(viewPort);
-                GLDrawing.DrawQuad(Vector2.Zero, new Vector2(drawSize.X, drawSize.Y));
+
+                GLDrawing.DrawQuad();
             }
         }
 
@@ -206,8 +209,9 @@ namespace Easy2D
             MainFrameBuffer.Texture.Bind(5);
 
             motionBlurShader.SetMatrix("u_Projection", Matrix4.CreateOrthographicOffCenter(0, motionBlurBuffer.Width, motionBlurBuffer.Height, 0, -1f, 1f));
+            motionBlurShader.SetVector("u_QuadSize", new Vector2(motionBlurBuffer.Width, motionBlurBuffer.Height));
             Viewport.SetViewport(0, 0, motionBlurBuffer.Width, motionBlurBuffer.Height);
-            GLDrawing.DrawQuad(Vector2.Zero, new Vector2(motionBlurBuffer.Width, motionBlurBuffer.Height));
+            GLDrawing.DrawQuad();
 
             bloomShader.Bind();
             blitFramebuffer(motionBlurBuffer, null);

@@ -158,7 +158,7 @@ namespace RTCircles
             public void DrawUpdate(Graphics g, float delta)
             {
                 if(Skin.CursorMiddle is null)
-                color.W -= TrailFadeRate * delta;
+                    color.W -= TrailFadeRate * delta;
                 else
                     color.W -= 3 * delta;
 

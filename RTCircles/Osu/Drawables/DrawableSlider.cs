@@ -28,6 +28,7 @@ namespace RTCircles
         private int lastRepeatsDone = 0;
 
         private SmoothFloat sliderFollowScaleAnim = new SmoothFloat();
+        private SmoothFloat sliderFollowPulseAnim = new SmoothFloat();
         private SmoothFloat sliderFollowFadeAnim = new SmoothFloat();
 
         public override Rectangle Bounds => SliderPath.Path.Bounds;
@@ -43,10 +44,7 @@ namespace RTCircles
 
         public DrawableSlider(Slider slider, int colorIndex, int combo, int objectIndex)
         {
-            if (GlobalOptions.UseFastSliders.Value)
-                SliderPath = new FastSlider();
-            else
-                SliderPath = new BetterSlider();
+            SliderPath = new BetterSlider();
 
             this.slider = slider;
             this.colorIndex = colorIndex;
@@ -146,6 +144,7 @@ namespace RTCircles
 
 
         private const float SliderBallActiveScale = 2f;
+        private const float SliderBallReleaseScale = 4f;
 
         private bool IsTracking => (OsuContainer.Key1Down || OsuContainer.Key2Down) && MathUtils.IsPointInsideRadius(OsuContainer.CursorPosition, sliderballPosition, OsuContainer.Beatmap.CircleRadius * SliderBallActiveScale) || OsuContainer.CookieziMode;
 
@@ -158,6 +157,7 @@ namespace RTCircles
         private bool previousFrameIsTracking;
 
         private double lastTrackingTime = 0;
+        private double trackingBeatProgress = 0;
 
         public override void OnRemove()
         {
@@ -180,6 +180,7 @@ namespace RTCircles
             IsMissed = false;
             IsEndingHit = false;
 
+            trackingBeatProgress = 0;
             alpha = 0f;
             repeatsDone = 0;
             lastRepeatsDone = 0;
@@ -333,7 +334,14 @@ namespace RTCircles
 
                 const float Size_Correction_Scale = 1.15f;
 
-                Vector2 followCircleSize = Size * sliderFollowScaleAnim * Skin.GetScale(Skin.SliderFollowCircle, 256, 512) * followCircleFadeoutScale;
+                float animScaledBeatProgress = (float)trackingBeatProgress * (float)(sliderFollowScaleAnim.Value > SliderBallActiveScale ?
+                    sliderFollowScaleAnim.Value.Map(SliderBallActiveScale, SliderBallReleaseScale, 1, 0) :
+                    sliderFollowScaleAnim.Value.Map(1, SliderBallActiveScale, 0, 1));
+
+                float beat = (float)Interpolation.ValueAt(animScaledBeatProgress, 1, 1.1f, 0, 1, EasingTypes.Out);
+                //g.DrawStringCentered($"{animScaledBeatProgress:F2} : {OsuContainer.BeatProgress:F2}", Font.DefaultFont, pos, Colors.Red, 0.5f);
+
+                Vector2 followCircleSize = Size * sliderFollowScaleAnim * Skin.GetScale(Skin.SliderFollowCircle, 256, 512) * followCircleFadeoutScale * beat;
 
                 //g.DrawEllipse(sliderballPosition, 360, 0, SliderBallActiveScale * OsuContainer.Beatmap.CircleRadius, 0, new Vector4(1f, 1f, 1f, 0.5f));
                 g.DrawRectangleCentered(sliderballPosition, followCircleSize, new Vector4(1f, 1f, 1f, followCircleAlpha), Skin.SliderFollowCircle);
@@ -449,16 +457,22 @@ namespace RTCircles
 
                     //When we release the key expand it alot
                     float duration = (float)Math.Min(100, slider.EndTime - OsuContainer.SongPosition);
-                    sliderFollowScaleAnim.TransformTo(4, duration, EasingTypes.None);
+                    sliderFollowScaleAnim.TransformTo(SliderBallReleaseScale, duration, EasingTypes.None);
                 }
             }
 
             if (IsTracking)
+            {
                 lastTrackingTime = OsuContainer.SongPosition;
 
-            sliderFollowScaleAnim.Update((float)OsuContainer.DeltaSongPosition);
+                if(OsuContainer.SongPosition < slider.EndTime)
+                    trackingBeatProgress = OsuContainer.BeatProgress;
+            }
 
-            if (!OsuContainer.Beatmap.Song.IsPaused)
+            sliderFollowScaleAnim.Update((float)OsuContainer.DeltaSongPosition);
+            sliderFollowPulseAnim.Update((float)OsuContainer.DeltaSongPosition);
+
+            if (!OsuContainer.Beatmap.Song?.IsPaused ?? false)
             {
                 if (IsTracking && !Skin.SliderSlide.IsPlaying && !OsuContainer.MuteHitsounds && OsuContainer.SongPosition >= slider.StartTime && OsuContainer.SongPosition <= slider.EndTime)
                     Skin.SliderSlide.Play(true);
@@ -533,6 +547,7 @@ namespace RTCircles
                         sliderRepeatExplode.SetTarget(SliderPath, repeatsDone);
 
                         Container.Add(sliderRepeatExplode);
+
                     }
                 }
                 //var hitsound = slider.EdgeHitSounds?[1] ?? slider.HitSound;
@@ -630,7 +645,24 @@ namespace RTCircles
 
             //Fade out the slider based on its duration when hidden (bad mod)
             if (OsuContainer.Beatmap.Mods.HasFlag(Mods.HD))
-                SliderPath.Alpha = alpha * Interpolation.ValueAt(OsuContainer.SongPosition.Clamp(slider.StartTime, slider.EndTime), 1, 0, slider.StartTime, slider.EndTime, EasingTypes.None);
+            {
+                var fadeInDuration = OsuContainer.Beatmap.Preempt * 0.4;
+                var fadeInStartTime = slider.StartTime - OsuContainer.Beatmap.Preempt;
+                var fadeInEndTime = fadeInStartTime + fadeInDuration;
+
+                SliderPath.Alpha = (float)OsuContainer.SongPosition.Map(fadeInStartTime, fadeInEndTime, 0, 1).Clamp(0, 1);
+
+                if(SliderPath.Alpha == 1)
+                {
+                    var fadeOutStartTime = fadeInEndTime;
+                    var fadeOutEndTime = slider.EndTime;
+
+                    SliderPath.Alpha = (float)Interpolation.ValueAt(
+                        OsuContainer.SongPosition.Clamp(fadeOutStartTime, fadeOutEndTime),
+                        1, 0, fadeOutStartTime, fadeOutEndTime, EasingTypes.Out);
+                }
+
+            }
             else
             {
                 //If we reached the end of the slider and snake out is enabled and exploding is disabled, just instantly make it disappear
@@ -642,7 +674,6 @@ namespace RTCircles
 
             SliderPath.SetProgress(snakeOut, snakeIn);
             SliderPath.SetRadius(OsuContainer.Beatmap.CircleRadiusInOsuPixels);
-            SliderOnScreen = true;
 
             if (OsuContainer.SongPosition > slider.StartTime + OsuContainer.Beatmap.Window50)
                 MissIfNotHit();
@@ -659,6 +690,8 @@ namespace RTCircles
 
         public override void Render(Graphics g)
         {
+            SliderOnScreen = true;
+
             setSliderColor(g);
 
             SliderPath.Render(g);
@@ -716,52 +749,49 @@ namespace RTCircles
 
         private bool checkHit()
         {
-            if (IsHit == false && IsMissed == false)
+            if (!IsHit && !IsMissed && (OsuContainer.CookieziMode || MathUtils.IsPointInsideRadius(OsuContainer.CursorPosition, hitCirclePos, OsuContainer.Beatmap.CircleRadius)))
             {
-                if (MathUtils.IsPointInsideRadius(OsuContainer.CursorPosition, hitCirclePos, OsuContainer.Beatmap.CircleRadius) || OsuContainer.CookieziMode)
+                //300 ms???
+                if (OsuContainer.SongPosition < slider.StartTime - 300)
                 {
-                    //300 ms???
-                    if (OsuContainer.SongPosition < slider.StartTime - 300)
-                    {
-                        Shake();
-                        return true;
-                    }
-
-                    //Auto gets to ignore notelock :tf:
-                    if (!OsuContainer.CookieziMode)
-                    {
-                        //We're hitting to far ahead
-                        if (ObjectIndex > 0)
-                        {
-                            var previousObject = OsuContainer.Beatmap.HitObjects[ObjectIndex - 1];
-
-                            if (!previousObject.IsHit && !previousObject.IsMissed)
-                            {
-                                Shake();
-                                return true;
-                            }
-                        }
-                    }
-
-                    double hittableTime = Math.Abs(OsuContainer.SongPosition - slider.StartTime);
-
-                    OsuContainer.ScoreHit(slider);
-
-                    if (hittableTime > OsuContainer.Beatmap.Window50)
-                    {
-                        MissIfNotHit();
-                        return true;
-                    }
-
-                    IsHit = true;
-                    hitTime = OsuContainer.SongPosition;
-                    var hitsound = slider.EdgeHitSounds?[0] ?? slider.HitSound;
-                    var sample = slider.EdgeAdditions?[0].Item1 ?? slider.Extras.SampleSet;
-                    OsuContainer.PlayHitsound(hitsound, sample);
-                    OsuContainer.HUD.AddHit((float)hittableTime, HitResult.Max, sliderballPosition, true);
-
+                    Shake();
                     return true;
                 }
+
+                //Auto gets to ignore notelock :tf:
+                if (!OsuContainer.CookieziMode)
+                {
+                    //We're hitting to far ahead
+                    if (ObjectIndex > 0)
+                    {
+                        var previousObject = OsuContainer.Beatmap.HitObjects[ObjectIndex - 1];
+
+                        if (!previousObject.IsHit && !previousObject.IsMissed)
+                        {
+                            Shake();
+                            return true;
+                        }
+                    }
+                }
+
+                double hittableTime = Math.Abs(OsuContainer.SongPosition - slider.StartTime);
+
+                OsuContainer.ScoreHit(slider);
+
+                if (hittableTime > OsuContainer.Beatmap.Window50)
+                {
+                    MissIfNotHit();
+                    return true;
+                }
+
+                IsHit = true;
+                hitTime = OsuContainer.SongPosition;
+                var hitsound = slider.EdgeHitSounds?[0] ?? slider.HitSound;
+                var sample = slider.EdgeAdditions?[0].Item1 ?? slider.Extras.SampleSet;
+                OsuContainer.PlayHitsound(hitsound, sample);
+                OsuContainer.HUD.AddHit((float)hittableTime, HitResult.Max, sliderballPosition, true);
+
+                return true;
             }
 
             return false;

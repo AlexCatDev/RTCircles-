@@ -16,7 +16,7 @@ namespace Easy2D
         public float HeightOf(char c) => Info.GetCharacter(c).Height;
         public float YOffsetOf(char c) => Info.GetCharacter(c).YOffset;
 
-        public Vector2 MessureString(string text, float scale = 1f, bool includeLastCharAdvance = false)
+        public Vector2 MessureString(ReadOnlySpan<char> text, float scale = 1f, bool includeLastCharAdvance = false)
         {
             scale = Math.Max(0, scale);
 
@@ -86,8 +86,8 @@ namespace Easy2D
             return new Vector2(biggestWidth, totalHeight);
         }
 
-        public Font(Stream fontFile, Stream fontImageFile) {
-            Info = BitmapFont.FromStream(fontFile, FormatHint.Binary, false);
+        public Font(Stream fontFile, Stream fontImageFile, FormatHint formatHint = FormatHint.Binary) {
+            Info = BitmapFont.FromStream(fontFile, formatHint, false);
             Texture = new Texture(fontImageFile);
         }
 

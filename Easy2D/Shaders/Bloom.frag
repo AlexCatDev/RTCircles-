@@ -1,5 +1,4 @@
 ﻿#version 300 es
-//I really have no fucking clue what precision should be and how it matters so...
 precision mediump float;
 
 uniform float u_BloomThreshold;

@@ -72,14 +72,16 @@ namespace Easy2D.Game
 
         public double MaxAllowedDeltaTime = double.MaxValue;
 
-        public double TotalTime { get; private set; }
-        public double DeltaTime { get; private set; }
+        public double TotalTime { get; protected set; }
+        public double DeltaTime { get; protected set; }
 
         public double TimeScale = 1;
 
         public int UPS { get; private set; }
 
         public int FPS { get; private set; }
+
+        public GameBase(IView view) => View = view;
 
         public GameBase()
         {
@@ -96,12 +98,14 @@ namespace Easy2D.Game
             };
 
             Silk.NET.Windowing.Sdl.SdlWindowing.Use();
+            //Silk.NET.Windowing.Glfw.GlfwWindowing.Use();
 
             ViewOptions options = ViewOptions.Default;
             options.Samples = 0;
             //TODO: 
             //Event driven is actually slower than just inserting a threadsleep LMAO
             //options.IsEventDriven = true;
+            //options.API = new GraphicsAPI(ContextAPI.OpenGL, ContextProfile.Core, ContextFlags.Default, new APIVersion(3, 0));
             options.API = new GraphicsAPI(ContextAPI.OpenGLES, ContextProfile.Core, ContextFlags.Default, new APIVersion(3, 0));
             options.PreferredBitDepth = new Silk.NET.Maths.Vector4D<int>(8, 8, 8, 8);
             
@@ -197,6 +201,8 @@ namespace Easy2D.Game
             GPUSched.Instance.RunPendingTasks();
             View.SwapBuffers();
             GL.Instance.Clear(ClearBufferMask);
+
+            //System.Threading.Thread.Sleep(1);
         }
 
         private double elapsedFPS;

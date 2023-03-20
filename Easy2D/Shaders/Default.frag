@@ -1,8 +1,8 @@
 ﻿#version 300 es
-//I really have no fucking clue what precision should be and how it matters so...
 precision mediump float;
 
 //Programmatically insert the correct amount of textures supported on this system
+//Gets replaced when this file is loaded
 //#uniform sampler2D u_Textures[];
 
 uniform vec4 u_FinalColorMult;
@@ -120,6 +120,7 @@ void main() {
     vec4 texColor;
     
     //Programmatically insert the switch statement for choosing the correct sampler
+    //Gets inserted when this file is loaded
     //#SWITCH
 
     //Red color hack to choose a slider lol

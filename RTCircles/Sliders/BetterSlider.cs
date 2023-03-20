@@ -265,7 +265,7 @@ namespace RTCircles
             }
 
             //Convert the size of the slider from osu pixels to playfield pixels, since the points and the radius are in osu pixels
-            Vector2 renderSize = new Vector2(frameBuffer.Width, frameBuffer.Height) * (OsuContainer.Playfield.Width / 512);
+            Vector2 renderSize = new Vector2(frameBuffer.Width, frameBuffer.Height) * OsuContainer.OsuScale;
 
             if (ScalingOrigin.HasValue)
             {

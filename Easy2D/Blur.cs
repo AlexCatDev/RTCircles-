@@ -110,7 +110,8 @@ namespace Easy2D
             blurShader.SetInt("u_SrcTexture", 0);
 
             blurShader.SetVector("u_Direction", horizontalBlur);
-            GLDrawing.DrawQuad(Vector2.Zero, quadSize);
+            blurShader.SetVector("u_QuadSize", new Vector2(w, h));
+            GLDrawing.DrawQuad();
 
             var writeBuffer = destPong;
             var readBuffer = dest;
@@ -127,7 +128,7 @@ namespace Easy2D
                 readBuffer.Texture.Bind(0);
 
                 blurShader.SetVector("u_Direction", blurDirection);
-                GLDrawing.DrawQuad(Vector2.Zero, quadSize);
+                GLDrawing.DrawQuad();
 
                 swap(ref writeBuffer, ref readBuffer);
             }
@@ -160,6 +161,7 @@ namespace Easy2D
             blurShader.Bind();
             blurShader.SetMatrix("u_Projection", Matrix4.CreateOrthographicOffCenter(0, w, h, 0, -1, 1));
             blurShader.SetInt("u_SrcTexture", 0);
+            blurShader.SetVector("u_QuadSize", new Vector2(w, h));
 
             FrameBuffer readBuffer = target;
             FrameBuffer writeBuffer = pong;
@@ -175,7 +177,7 @@ namespace Easy2D
                 readBuffer.Texture.Bind(0);
 
                 blurShader.SetVector("u_Direction", blurDirection);
-                GLDrawing.DrawQuad(Vector2.Zero, quadSize);
+                GLDrawing.DrawQuad();
 
                 swap(ref writeBuffer, ref readBuffer);
             }

@@ -106,6 +106,8 @@ namespace RTCircles
 
         public static Sound Applause { get; private set; }
 
+        public static Texture CarouselButton { get; private set; }
+
         public static string CurrentPath { get; private set; }
 
         public static void Reload() => Load(CurrentPath);
@@ -119,6 +121,8 @@ namespace RTCircles
             CurrentPath = path;
 
             Config = new SkinConfiguration(File.Exists($"{path}/skin.ini") ? File.OpenRead($"{path}/skin.ini") : Utils.GetResource("Skin.skin.ini"));
+
+            CarouselButton = LoadTexture(path, "menu-button-background");
 
             WarningArrow = LoadTexture(path, "play-warningarrow");
 

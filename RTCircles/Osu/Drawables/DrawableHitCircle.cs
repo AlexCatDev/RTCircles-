@@ -68,12 +68,15 @@ namespace RTCircles
 
         private int colorIndex;
 
+        public double Preempt => OsuContainer.Beatmap.Preempt;
+
+        public double FadeIn => OsuContainer.Beatmap.FadeIn;
+
         public DrawableHitCircle(HitCircle circle, int colorIndex, int combo, int objectIndex)
         {
             this.circle = circle;
             this.combo = combo;
             this.colorIndex = colorIndex;
-
             ObjectIndex = objectIndex;
         }
 
@@ -115,7 +118,7 @@ namespace RTCircles
             if (OsuContainer.Beatmap.Mods.HasFlag(Mods.HD))
                 return;
 
-            double preempt = OsuContainer.Beatmap.Preempt;
+            double preempt = Preempt;
             double songPos = OsuContainer.SongPosition;
             int startTime = circle.StartTime;
 
@@ -132,7 +135,7 @@ namespace RTCircles
             float approachCircleAlpha =
                 (float)Interpolation.ValueAt(songPos, startAlpha, endAlpha,
                 startTime - preempt,
-                Math.Min(startTime, Math.Min(startTime, startTime - preempt + OsuContainer.Beatmap.FadeIn * 2))).Clamp(startAlpha, endAlpha);
+                Math.Min(startTime, Math.Min(startTime, startTime - preempt + FadeIn * 2))).Clamp(startAlpha, endAlpha);
 
             if (IsMissed)
                 approachCircleAlpha *= alpha;
@@ -151,7 +154,7 @@ namespace RTCircles
 
             Position = OsuContainer.MapToPlayfield(circle.Position.X, circle.Position.Y) + shakeOffset;
 
-            double timeElapsed = (OsuContainer.SongPosition - circle.StartTime + OsuContainer.Beatmap.Preempt);
+            double timeElapsed = (OsuContainer.SongPosition - circle.StartTime + Preempt);
 
             hittableTime = OsuContainer.SongPosition - circle.StartTime;
 
@@ -159,13 +162,13 @@ namespace RTCircles
             {
                 if (OsuContainer.Beatmap.Mods.HasFlag(Mods.HD))
                 {
-                    alpha = (float)MathUtils.Map(timeElapsed, 0, OsuContainer.Beatmap.Preempt * 0.4, 0, 1).Clamp(0, 1);
+                    alpha = (float)MathUtils.Map(timeElapsed, 0, Preempt * 0.4, 0, 1).Clamp(0, 1);
 
                     if(alpha == 1)
-                        alpha = (float)MathUtils.Map(timeElapsed, OsuContainer.Beatmap.Preempt * 0.4, OsuContainer.Beatmap.Preempt * 0.4 + OsuContainer.Beatmap.Preempt * 0.3, 1, 0).Clamp(0, 1);
+                        alpha = (float)MathUtils.Map(timeElapsed, Preempt * 0.4, Preempt * 0.4 + Preempt * 0.3, 1, 0).Clamp(0, 1);
                 }
                 else
-                    alpha = (float)MathUtils.Map(timeElapsed, 0, OsuContainer.Beatmap.FadeIn, 0, 1).Clamp(0, 1);
+                    alpha = (float)MathUtils.Map(timeElapsed, 0, FadeIn, 0, 1).Clamp(0, 1);
 
                 if (OsuContainer.CookieziMode && OsuContainer.SongPosition >= circle.StartTime)
                     checkHit();
@@ -210,7 +213,7 @@ namespace RTCircles
          
         private bool checkHit()
         {
-            if (!IsHit && !IsMissed && MathUtils.IsPointInsideRadius(OsuContainer.CursorPosition, Position, OsuContainer.Beatmap.CircleRadius))
+            if (!IsHit && !IsMissed && (OsuContainer.CookieziMode || MathUtils.IsPointInsideRadius(OsuContainer.CursorPosition, Position, OsuContainer.Beatmap.CircleRadius)))
             {
                 //if we're pressing the note and it's further than 300ms away just auto shake it
                 if (OsuContainer.SongPosition < circle.StartTime - 300) 

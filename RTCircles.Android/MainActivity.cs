@@ -10,6 +10,7 @@ using Silk.NET.Input;
 using Silk.NET.OpenGLES;
 using Silk.NET.Windowing;
 using Silk.NET.Windowing.Sdl.Android;
+using Xamarin.Android.Net;
 
 namespace RTCircles.Android
 {
@@ -40,7 +41,16 @@ namespace RTCircles.Android
 
         protected override void OnRun()
         {
-            new MainGame().Run();
+            AndroidMessageHandler handler = new AndroidMessageHandler();
+            handler.ServerCertificateCustomValidationCallback += (s, e, x, y) =>
+            {
+                return true;
+            };
+
+            MainGame game = new MainGame();
+            game.GetHttpClientFunc = () => new HttpClient(handler);
+
+            game.Run();
         }
     }
 }

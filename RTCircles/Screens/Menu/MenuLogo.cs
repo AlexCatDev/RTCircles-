@@ -18,7 +18,7 @@ namespace RTCircles
         private SmoothVector4 colorTransform = new SmoothVector4();
 
         private Vector2 position = new Vector2();
-        private Vector2 size => new Vector2(750) * MainGame.Scale + new Vector2(300) * visualizer.BeatValue;
+        private Vector2 size => new Vector2(750) * MainGame.Scale + new Vector2(300) * (IntroSizeAnimation.HasCompleted ? visualizer.BeatValue : 0);
 
         private Vector2 parallaxPosition => mapBackground.ParallaxPosition * 2f;
         private Vector2 offset = Vector2.Zero;
@@ -185,11 +185,18 @@ namespace RTCircles
         public override void Render(Graphics g)
         {
             colorTransform.Value = new Vector4(1);
-            g.DrawRectangleCentered(visualizer.Position, Bounds.Size, colorTransform, LogoTexture, null, false, rotationTransform);
+
+            Vector4 kiaiFlash = new Vector4(0);
+
+            if(OsuContainer.IsKiaiTimeActive && PostProcessing.Bloom)
+            {
+                kiaiFlash = Vector4.One * (float)OsuContainer.BeatProgressKiai*0.4f;
+            }
+            g.DrawRectangleCentered(visualizer.Position, Bounds.Size, colorTransform + kiaiFlash, LogoTexture, null, false, rotationTransform);
 
             if (!logoExplodeKiaiAnim.HasCompleted)
             {
-                float logoExplodeScale = (float)Interpolation.ValueAt(logoExplodeKiaiAnim, 1, 2.2, 1, 0, EasingTypes.Out);
+                float logoExplodeScale = (float)Interpolation.ValueAt(logoExplodeKiaiAnim, 1, 2, 1, 0, EasingTypes.None);
                 g.DrawRectangleCentered(visualizer.Position, Bounds.Size * logoExplodeScale, new Vector4(colorTransform.Value.Xyz, LogoTextTexture.ImageDoneUploading ? logoExplodeKiaiAnim.Value : 0), LogoTextTexture);
             }
         }

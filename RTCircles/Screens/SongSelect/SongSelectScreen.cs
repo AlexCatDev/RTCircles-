@@ -8,6 +8,8 @@ using OsuParsers.Beatmaps;
 using Easy2D.Game;
 using Silk.NET.Input;
 using Realms;
+using System.Threading;
+using System.IO;
 
 namespace RTCircles
 {
@@ -24,7 +26,7 @@ namespace RTCircles
                 CarouselItem firstItem = null;
                 foreach (var beatmap in set.Beatmaps)
                 {
-                    var itemAdded = AddBeatmapToCarousel(beatmap);
+                    var itemAdded = AddBeatmapToCarousel(beatmap, BeatmapMirror.SongsDirectory);
 
                     if(firstItem == null)
                         firstItem = itemAdded;
@@ -49,14 +51,14 @@ namespace RTCircles
             Add(SongSelector);
         }
 
-        public CarouselItem AddBeatmapToCarousel(DBBeatmapInfo dBBeatmap)
+        public CarouselItem AddBeatmapToCarousel(DBBeatmapInfo dBBeatmap, string songsDirectory)
         {
             //Dont add to carousel if we already have this item
             //Utils.Log($"Adding DBBeatmap: {dBBeatmap.Filename} Current carousel item count: {BeatmapCollection.Items.Count}", LogLevel.Debug);
 
             if (BeatmapCollection.HashedItems.TryGetValue(dBBeatmap.Hash, out var existingItem))
             {
-                existingItem.SetDBBeatmap(dBBeatmap);
+                existingItem.SetDBBeatmap(dBBeatmap, songsDirectory);
                 return existingItem;
             }
 
@@ -67,7 +69,7 @@ namespace RTCircles
             }
 
             CarouselItem newItem = new CarouselItem();
-            newItem.SetDBBeatmap(dBBeatmap);
+            newItem.SetDBBeatmap(dBBeatmap, songsDirectory);
 
             BeatmapCollection.AddItem(newItem);
 
@@ -76,16 +78,53 @@ namespace RTCircles
 
         public void LoadCarouselItems(Realm realm)
         {
-            long startMem = GC.GetTotalMemory(false);
+            
             foreach (var item in realm.All<DBBeatmapInfo>())
             {
-                AddBeatmapToCarousel(item);
-                Utils.Log($"Loaded DBBeatmap: {item.Filename}", LogLevel.Debug);
+                AddBeatmapToCarousel(item, BeatmapMirror.SongsDirectory);
+                //Thread.Sleep(10);
+                //Utils.Log($"Loaded DBBeatmap: {item.Filename}", LogLevel.Debug);
             }
+            
 
-            long endMem = GC.GetTotalMemory(false);
+            if(GlobalOptions.ShowStableMaps.Value)
+            {
+                string file = $"{GlobalOptions.OsuFolder.Value}/osu!.db";
 
-            NotificationManager.ShowMessage($"{BeatmapCollection.Items.Count} beatmaps available {(endMem - startMem) / 1024} kb", new Vector3(0.5f, 1, 0), 2);
+                string songsDirectory = $"{GlobalOptions.OsuFolder.Value}/Songs";
+
+                if (File.Exists(file) && Directory.Exists(songsDirectory))
+                {
+                    var dataBase = OsuParsers.Decoders.DatabaseDecoder.DecodeOsu(file);
+
+                    foreach (var beatmap in dataBase.Beatmaps)
+                    {
+                        if (beatmap.Ruleset != OsuParsers.Enums.Ruleset.Standard)
+                            continue;
+
+                        if (string.IsNullOrEmpty(beatmap.MD5Hash))
+                            continue;
+
+                        DBBeatmapInfo fakeInfo = new DBBeatmapInfo();
+                        fakeInfo.Hash = beatmap.MD5Hash;
+                        fakeInfo.Filename = beatmap.FileName;
+                        fakeInfo.SetInfo = new DBBeatmapSetInfo() { Foldername = beatmap.FolderName };
+
+                        //Console.WriteLine($"Adding {fakeInfo.Filename}");
+                        AddBeatmapToCarousel(fakeInfo, songsDirectory);
+                    }
+
+                    dataBase = null;
+                    GC.Collect();
+                }
+                else
+                {
+                    NotificationManager.ShowMessage($"{GlobalOptions.ShowStableMaps.Name} is on but no valid osu! db found or there were no songs directory",
+                        new(1, 1, 0), 2);
+                }
+            }
+            
+            //NotificationManager.ShowMessage($"{BeatmapCollection.Items.Count} beatmaps available", new Vector3(0.5f, 1, 0), 2);
         }
 
         private static float searchTimer;
@@ -165,14 +204,13 @@ namespace RTCircles
 
         public override void OnEntering()
         {
-            
             ScreenManager.GetScreen<OsuScreen>().EnsureObjectIndexSynchronization();
         }
 
         private FrameBuffer strainFB = new FrameBuffer(1, 1);
         private void drawDifficultyGraph(Graphics g)
         {
-            if (OsuContainer.Beatmap == null || OsuContainer.Beatmap.DifficultyGraph.Count == 0)
+            if (OsuContainer.Beatmap == null || OsuContainer.Beatmap.DifficultyGraph.Count == 0 || MainGame.WindowWidth == 0 || MainGame.WindowHeight == 0)
                 return;
 
             Vector2 size = new Vector2(MainGame.WindowWidth, 100);

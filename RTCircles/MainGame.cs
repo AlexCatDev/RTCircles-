@@ -17,6 +17,7 @@ namespace RTCircles
         public static MainGame Instance { get; private set; }
 
         public MainGame() => Instance = this;
+        public MainGame(Silk.NET.Windowing.IView view) : base(view) => Instance = this;
 
         private Graphics g;
         public static Matrix4 Projection { get; private set; }
@@ -31,20 +32,23 @@ namespace RTCircles
         private SmoothFloat volumeBarFade = new SmoothFloat();
         private Option<double> volumeSource = GlobalOptions.GlobalVolume;
 
+        private bool showTextures = false;
+
+        private string build = "DEBUG";
+
         public override void OnLoad()
         {
+            
             if (View is Silk.NET.Windowing.IWindow)
                 Input.CursorMode = CursorMode.Raw;
+            
 #if RELEASE
             ToggleFullScreen();
 #endif
             Size = new Silk.NET.Maths.Vector2D<int>(1600, 900);
-
-            string build = "RELEASE";
-#if DEBUG
-            build = "DEBUG";
+#if RELEASE
+            build = "RELEASE";
 #endif
-
             //Make some sort of build versioning idk
             Version = $"{new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds()}";
 
@@ -53,7 +57,6 @@ namespace RTCircles
             Utils.IgnoredLogLevels.Add(LogLevel.Info);
             Utils.IgnoredLogLevels.Add(LogLevel.Success);
 #endif
-
             VSync = false;
             MaxAllowedDeltaTime = 0.1;
             Utils.WriteToConsole = true;
@@ -111,8 +114,20 @@ namespace RTCircles
 
             if(ScreenManager.ActiveScreen is not OsuScreen)
                 MenuCursor.Render(g, (float)DeltaTime, Input.MousePosition, Colors.White);
-            //c
-            //g.DrawRectangleCentered(Input.MousePosition, new Vector2(16), Colors.Red);
+
+            drawTextures(g);
+
+            g.DrawString($"RTCircles {build} (it's another osu! clone lmao)", Font.DefaultFont, new Vector2(10), new Vector4(1, 1, 1, 0.5f), Scale*0.5f);
+
+            if (debugCameraActive)
+            {
+                g.DrawLine(Viewport.Area.TopRight, Viewport.Area.TopLeft, Colors.White, 2);
+                g.DrawLine(Viewport.Area.TopLeft, Viewport.Area.BottomLeft, Colors.White, 2);
+                g.DrawLine(Viewport.Area.BottomLeft, Viewport.Area.BottomRight, Colors.White, 2);
+                g.DrawLine(Viewport.Area.BottomRight, Viewport.Area.TopRight, Colors.White, 2);
+            }
+
+            //g.DrawString("たいへん", AnkiCore2K.JapaneseFont, Input.MousePosition, Colors.White);
 
             g.EndDraw();
 
@@ -282,6 +297,40 @@ namespace RTCircles
             }
         }
 
+        private void drawTextures(Graphics g)
+        {
+            if (!showTextures)
+                return;
+
+            Vector2 pos = new Vector2(0);
+            float drawHeight = 64 * Scale;
+
+            for (int i = 0; i < GLObject.AllObjects.Count; i++)
+            {
+                if(GLObject.AllObjects[i].TryGetTarget(out GLObject currentObject))
+                {
+                    Easy2D.Texture targetTex = null;
+
+                    if (currentObject is Easy2D.Texture texture)
+                        targetTex = texture;
+
+                    if(targetTex != null && targetTex.Width > 0 && targetTex.Height > 0)
+                    {
+                        float drawWidth = drawHeight * targetTex.Size.AspectRatio();
+                        g.DrawRectangle(pos, new Vector2(drawWidth, drawHeight), Colors.White, targetTex);
+
+                        pos.X += drawWidth;
+
+                        if(pos.X >= WindowWidth - drawWidth*2)
+                        {
+                            pos.X = 0;
+                            pos.Y += drawHeight;
+                        }
+                    }
+                }
+            }
+        }
+
         private void drawLog(Graphics g)
         {
             if (!GlobalOptions.ShowLogOverlay.Value)
@@ -413,7 +462,7 @@ namespace RTCircles
             }, null);
         }
 
-        private void registerEvents()
+        protected void registerEvents()
         {
             OsuContainer.OnKiai += () =>
             {
@@ -461,6 +510,35 @@ namespace RTCircles
             bool importing = false;
             Input.InputContext.Keyboards[0].KeyDown += (s, e, x) =>
             {
+                if (e == Key.F6)
+                {
+                    if (Input.CursorMode == CursorMode.Normal)
+                        Input.CursorMode = CursorMode.Raw;
+                    else
+                        Input.CursorMode = CursorMode.Normal;
+
+                    NotificationManager.ShowMessage($"Cursor Mode: {Input.CursorMode} (F6 to toggle)", new Vector3(0.8f, 0, 1f), 3);
+                }
+
+
+                if (e == Key.F9)
+                {
+                    showTextures = !showTextures;
+
+                    NotificationManager.ShowMessage($"Showing textures: {showTextures} (F9 to toggle)", new Vector3(0.8f, 0, 1f), 3);
+                }
+
+                if (e == Key.F2 && Input.IsKeyDown(Key.ShiftLeft))
+                {
+                    var glObjectCount = GLObject.AllObjects.Count;
+                    var mem = GC.GetTotalMemory(false);
+                    GC.Collect();
+                    mem = mem - GC.GetTotalMemory(false);
+                    glObjectCount = glObjectCount - GLObject.AllObjects.Count;
+
+                    NotificationManager.ShowMessage($"Full GC Forced {mem/1024} KB GLObjects: {glObjectCount} Cleaned", new Vector3(1, 1, 1f), 5);
+                }
+
                 if (Input.IsKeyDown(Key.ShiftLeft) && Input.IsKeyDown(Key.ShiftRight) && Input.IsKeyDown(Key.Space))
                 {
                     ScreenManager.SetScreen<EasingExplorerScreen>();
@@ -481,7 +559,7 @@ namespace RTCircles
 
                     if (!Directory.Exists(osuSongsFolder))
                     {
-                        NotificationManager.ShowMessage("Can't import maps because i dont know where to look", new Vector3(1, 0, 0), 5);
+                        NotificationManager.ShowMessage("Can't import maps because i dont know where osu! is located.", new Vector3(1, 0, 0), 5);
                         return;
                     }
 

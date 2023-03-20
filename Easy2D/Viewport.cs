@@ -15,6 +15,9 @@ namespace Easy2D
         public static int Width => CurrentViewport.Z;
         public static int Height => CurrentViewport.W;
 
+        public static Vector2i Size => CurrentViewport.Zw;
+        public static Vector2i Position => CurrentViewport.Xy;
+
         public static void SetViewport(int x, int y, int width, int height) => 
             SetViewport(new Vector4i(x, y, width, height));
 

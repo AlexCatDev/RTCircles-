@@ -79,7 +79,7 @@ namespace RTCircles
 
             g.DrawStringCentered(remainingBreakTime.ToString(), Font.DefaultFont, rect.Center, textColor, textScale);
 
-            const string subText = "Gaming";
+            const string subText = "Text =)";
 
             var subTextScale = textScale / 6;
             var subTextSize = Font.DefaultFont.MessureString(subText, subTextScale);

@@ -198,7 +198,7 @@ namespace RTCircles
 
             var hitObjects = OsuContainer.Beatmap.HitObjects;
             var songPos = OsuContainer.SongPosition;
-            var preempt = OsuContainer.Beatmap.Preempt;
+            var preempt = SpawnAhead;
 
             var maxCount = OsuContainer.Beatmap.HitObjects.Count - 1;
 
@@ -346,11 +346,14 @@ namespace RTCircles
             base.Update(delta);
         }
 
+        const float SpawnAhead = 4000;
+
         private void updateSpawnHitObjects()
         {
+
             if (objectIndex < OsuContainer.Beatmap.HitObjects.Count)
             {
-                while (OsuContainer.SongPosition >= (OsuContainer.Beatmap.HitObjects[objectIndex].BaseObject.StartTime - OsuContainer.Beatmap.Preempt))
+                while (OsuContainer.SongPosition >= (OsuContainer.Beatmap.HitObjects[objectIndex].BaseObject.StartTime - SpawnAhead))
                 {
                     var obj = OsuContainer.Beatmap.HitObjects[objectIndex];
 
@@ -443,8 +446,8 @@ namespace RTCircles
             if (OsuContainer.Beatmap is null)
                 return;
 
-            //Check if a slider is on screen, This is to avoid state changes per slider, and just render them all with minimal state changes
-            if (DrawableSlider.SliderOnScreen && !GlobalOptions.UseFastSliders.Value)
+            //Check if a slider is on screen, This is to avoid state changes per slider, and just render them all with minimal state changes (hack)
+            if (DrawableSlider.SliderOnScreen)
             {
                 var prevViewport = Viewport.CurrentViewport;
                 GL.Instance.Enable(Silk.NET.OpenGLES.EnableCap.DepthTest);

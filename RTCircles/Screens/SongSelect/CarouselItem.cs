@@ -32,13 +32,17 @@ namespace RTCircles
 
         private double loadTextureDelay = 0;
 
-        public void SetDBBeatmap(DBBeatmapInfo dbBeatmap)
+        public string SongsDirectory { get; private set; }
+
+        public void SetDBBeatmap(DBBeatmapInfo dbBeatmap, string songsDirectory)
         {
+            SongsDirectory = songsDirectory;
+
             Text = dbBeatmap.Filename.Replace(".osu", "");
             Hash = dbBeatmap.Hash;
             Folder = dbBeatmap.SetInfo.Foldername;
-            FullPath = $"{BeatmapMirror.SongsDirectory}/{dbBeatmap.SetInfo.Foldername}/{dbBeatmap.Filename}";
-            BackgroundPath = dbBeatmap.BackgroundFilename is not null ? $"{BeatmapMirror.SongsDirectory}/{dbBeatmap.SetInfo.Foldername}/{dbBeatmap.BackgroundFilename}" : "";
+            FullPath = $"{songsDirectory}/{dbBeatmap.SetInfo.Foldername}/{dbBeatmap.Filename}";
+            BackgroundPath = dbBeatmap.BackgroundFilename is not null ? $"{songsDirectory}/{dbBeatmap.SetInfo.Foldername}/{dbBeatmap.BackgroundFilename}" : "";
         }
 
         public void Update()

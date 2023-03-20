@@ -4,7 +4,6 @@ using OpenTK.Mathematics;
 using Silk.NET.Input;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -675,8 +674,145 @@ namespace RTCircles
                 drawTrapnation(g);
             */
 
-            //test3(GetMagnitudesForFrequencyRange(80, 150), g, Input.MousePosition, 0, new Vector4(1, 1, 1, 1), BarLength / 4, Thickness / 6, Radius / 7, 0);
+            //test3(GetMagnitudesForFrequencyRange(80, 150), g, Position, 0, new Vector4(1, 1, 1, 1), BarLength, Thickness, Radius);
+            //drawTrapnation(g);
+        }
 
+        private void drawTrapnation(Graphics g)
+        {
+            //This is fine, and way better than before, but it can be even better
+            //stupid floating horn at the top since, the beginning and end arent connected in order so the bspline fails
+            //no matter where will there be a beginning and an end so some where will always be stupid thing
+            //search for better alg
+
+            controlPoints.Clear();
+
+            var buffer = GetMagnitudesForFrequencyRange(40, 250);
+
+            for (int k = 0; k < MirrorCount; k++)
+            {
+                if (k % 2 == 0)
+                {
+                    controlPoints.Add(new Vector2(0, 0));
+                    controlPoints.Add(new Vector2(0, 0));
+                    for (int i = 0; i < buffer.Length; i++)
+                    {
+                        var now = buffer[i];
+
+                        controlPoints.Add(new Vector2(0, now));
+                    }
+                }
+                else
+                {
+                    for (int i = buffer.Length - 1; i >= 0; i--)
+                    {
+                        var now = buffer[i];
+
+                        controlPoints.Add(new Vector2(0, now));
+                    }
+
+                    controlPoints.Add(new Vector2(0, 0));
+                    controlPoints.Add(new Vector2(0, 0));
+                }
+            }
+
+            int slot = g.GetTextureSlot(null);
+
+            var points = PathApproximator.ApproximateBSpline(controlPoints, 2);
+            points = controlPoints;
+            float theta = -MathF.PI / 2;
+            float stepTheta = (MathF.PI * 2) / (points.Count);
+
+            var vertices = g.VertexBatch.GetTriangleStrip(points.Count * 2);
+            int verticesIndex = 0;
+            for (int i = 0; i < points.Count; i++)
+            {
+                float now = points[i].Y;
+
+                Vector2 pos = new Vector2(MathF.Cos(theta), MathF.Sin(theta)) * Radius;
+
+                Vector2 pos2 = new Vector2(MathF.Cos(theta), MathF.Sin(theta)) * (Radius + (now * BarLength));
+
+                float progress = ((float)i / points.Count);
+
+                vertices[verticesIndex].Position = pos + Position;
+                vertices[verticesIndex].Color = ColorAt?.Invoke(progress, now) ?? BarStartColor;
+                vertices[verticesIndex].TextureSlot = slot;
+                vertices[verticesIndex].TexCoord = new Vector2(0, 0);
+
+                verticesIndex++;
+
+                vertices[verticesIndex].Position = pos2 + Position;
+                vertices[verticesIndex].Color = ColorAt?.Invoke(progress, now) ?? BarEndColor;
+                vertices[verticesIndex].TextureSlot = slot;
+                vertices[verticesIndex].TexCoord = new Vector2(1, 1);
+
+                verticesIndex++;
+
+                theta += stepTheta;
+            }
+
+            Vector4 innerColor = Colors.From255RGBA(37, 37, 37, 255);
+            vertices = g.VertexBatch.GetTriangleStrip(points.Count * 2);
+            verticesIndex = 0;
+            for (int i = 0; i < points.Count; i++)
+            {
+                float now = points[i].Y - 0.005f;
+
+                Vector2 pos = new Vector2(MathF.Cos(theta), MathF.Sin(theta)) * Radius;
+
+                Vector2 pos2 = new Vector2(MathF.Cos(theta), MathF.Sin(theta)) * (Radius + (now * BarLength));
+
+                vertices[verticesIndex].Position = pos + Position;
+                vertices[verticesIndex].Color = innerColor;
+                vertices[verticesIndex].TextureSlot = slot;
+                vertices[verticesIndex].TexCoord = new Vector2(0, 0);
+
+                verticesIndex++;
+
+                vertices[verticesIndex].Position = pos2 + Position;
+                vertices[verticesIndex].Color = innerColor;
+                vertices[verticesIndex].TextureSlot = slot;
+                vertices[verticesIndex].TexCoord = new Vector2(1, 1);
+
+                verticesIndex++;
+
+                theta += stepTheta;
+            }
+
+            if (Input.IsKeyDown(Key.Backspace))
+            {
+                theta = -MathF.PI / 2;
+                stepTheta = (MathF.PI * 2) / (controlPoints.Count);
+
+                Vector2? prevPos = null;
+                //Debug control points
+                for (int i = 0; i < controlPoints.Count; i++)
+                {
+                    float volume = controlPoints[i].Y;
+                    Vector2 pos = new Vector2(MathF.Cos(theta), MathF.Sin(theta)) * (Radius + (volume * BarLength));
+                    pos += Position;
+
+                    if (prevPos.HasValue)
+                    {
+                        g.DrawLine(prevPos.Value, pos, Colors.Black, 10f);
+                    }
+
+                    g.DrawRectangleCentered(pos, new Vector2(20), (Vector4)Color4.Red, Texture.WhiteCircle);
+
+                    theta += stepTheta;
+
+                    prevPos = pos;
+                }
+            }
+
+            /*
+            if (PatchEnd)
+            {
+                vertices[^1].Position = vertices[1].Position;
+                vertices[^2].Position = vertices[0].Position;
+            }
+            */
         }
 
         private void test3(Span<float> fft, Graphics g, Vector2 position, float startRotation, Vector4 color, float height, float thickness, float radius, double rotationSpeed = 0.1)

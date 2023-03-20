@@ -33,6 +33,11 @@ namespace RTCircles
 
             Vector2 fromPos;
 
+            var fadeIn = OsuContainer.Beatmap.FadeIn;
+
+            if (OsuContainer.Beatmap.Mods.HasFlag(Mods.HD))
+                fadeIn *= 0.4f;
+
             if (startObject is Slider slider)
             {
                 if (slider.SliderPoints.Count == 0)
@@ -59,7 +64,7 @@ namespace RTCircles
                 return;
             }
 
-            float toProgress = (float)OsuContainer.SongPosition.Map(startObject.EndTime - OsuContainer.Beatmap.FadeIn, endObject.StartTime - OsuContainer.Beatmap.FadeIn, 0, 1).Clamp(0, 1);
+            float toProgress = (float)OsuContainer.SongPosition.Map(startObject.EndTime - fadeIn, endObject.StartTime - fadeIn, 0, 1).Clamp(0, 1);
 
             if (toProgress == 0)
                 return;

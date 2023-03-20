@@ -306,6 +306,8 @@ namespace RTCircles
         private static List<DrawableStoryboardSprite> activeSprites = new List<DrawableStoryboardSprite>();
         private static int spriteIndex = 0;
 
+        public static int ActiveSpriteCount => activeSprites.Count;
+
         public static void Render(Graphics g)
         {
             if(GlobalOptions.EnableStoryboard.Value == false)

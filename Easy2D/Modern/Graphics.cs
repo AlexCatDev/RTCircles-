@@ -329,7 +329,7 @@ namespace Easy2D
         #endregion
 
         #region Text
-        public void DrawString(string text, Font font, Vector2 position, Vector4 color, float scale = 1f, float? spacing = null)
+        public void DrawString(ReadOnlySpan<char> text, Font font, Vector2 position, Vector4 color, float scale = 1f, float? spacing = null)
         {
             Vector2 startPosition = position;
 

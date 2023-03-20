@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
 	  <LangVersion>latest</LangVersion>
 	  <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -116,15 +116,8 @@
     <None Remove="Skin\text-options.png" />
     <None Remove="Skin\text-singleplay.png" />
     <None Remove="Skin\visualizer-bar.png" />
-    <None Remove="Sliders\flatcircle.png" />
-    <None Remove="Sliders\PooledSlider.frag" />
-    <None Remove="Sliders\PooledSlider.vert" />
     <None Remove="Sliders\slider.frag" />
     <None Remove="Sliders\slider.vert" />
-    <None Remove="Sliders\slidergradient.png" />
-    <None Remove="Sliders\sliderGradientDouble.png" />
-    <None Remove="Sliders\sliderPass.frag" />
-    <None Remove="Sliders\sliderPass.vert" />
     <None Remove="UI\Assets\arrowexpand.png" />
     <None Remove="UI\Assets\catjam-spritesheet.png" />
     <None Remove="UI\Assets\hitmarker.png" />
@@ -209,9 +202,8 @@
     <EmbeddedResource Include="Skin\scorebar-colour.png" />
     <EmbeddedResource Include="Skin\scorebar-marker.png" />
     <EmbeddedResource Include="Skin\select-difficulty.wav" />
-    <EmbeddedResource Include="Sliders\PooledSlider.frag" />
-    <EmbeddedResource Include="Sliders\PooledSlider.vert" />
-    <EmbeddedResource Include="Sliders\sliderGradientDouble.png" />
+    <EmbeddedResource Include="Sliders\slider.frag" />
+    <EmbeddedResource Include="Sliders\slider.vert" />
     <EmbeddedResource Include="UI\Assets\hitmarker.png" />
     <EmbeddedResource Include="UI\Assets\menu-flash.png" />
     <EmbeddedResource Include="Skin\message-button.png" />
@@ -253,12 +245,6 @@
     <EmbeddedResource Include="Skin\text-multiplayer.png" />
     <EmbeddedResource Include="Skin\text-options.png" />
     <EmbeddedResource Include="Skin\text-singleplay.png" />
-    <EmbeddedResource Include="Sliders\flatcircle.png" />
-    <EmbeddedResource Include="Sliders\slider.frag" />
-    <EmbeddedResource Include="Sliders\slider.vert" />
-    <EmbeddedResource Include="Sliders\slidergradient.png" />
-    <EmbeddedResource Include="Sliders\sliderPass.frag" />
-    <EmbeddedResource Include="Sliders\sliderPass.vert" />
     <EmbeddedResource Include="UI\Assets\arrowexpand.png" />
     <EmbeddedResource Include="UI\Assets\catjam-spritesheet.png" />
     <EmbeddedResource Include="UI\Assets\LockClosed.png" />
@@ -269,9 +255,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="OsuParsers" Version="1.7.1" />
-    <PackageReference Include="Realm" Version="10.9.0" />
+    <PackageReference Include="Realm" Version="10.19.0" />
   </ItemGroup>
 
   <ItemGroup>

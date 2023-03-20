@@ -2,14 +2,13 @@
 using Silk.NET.Input;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace RTCircles
 {
     public class DrawableContainer : Drawable
     {
         protected List<Drawable> children = new List<Drawable>();
-
-        public IReadOnlyList<Drawable> Children => children.AsReadOnly();
 
         public int ChildrenCount => children.Count;
 
@@ -23,36 +22,33 @@ namespace RTCircles
 
         public void Clear()
         {
-            for (int i = children.Count - 1; i >= 0; i--)
+            var span = CollectionsMarshal.AsSpan(children);
+
+            for (int i = span.Length - 1; i >= 0; i--)
             {
-                children[i].IsDead = true;
+                span[i].IsDead = true;
             }
         }
 
         public void Clear<T>() where T : Drawable
         {
-            for (int i = children.Count - 1; i >= 0; i--)
+            var span = CollectionsMarshal.AsSpan(children);
+
+            for (int i = span.Length - 1; i >= 0; i--)
             {
-                if (children[i] is T)
-                    children[i].IsDead = true;
+                if (span[i] is T)
+                    span[i].IsDead = true;
             }
         }
 
         public void Get<T>(Action<T> onObjectGet) where T : Drawable
         {
-            for (int i = 0; i < children.Count; i++)
-            {
-                if (children[i] is T t)
-                    onObjectGet?.Invoke(t);
-            }
-        }
+            var span = CollectionsMarshal.AsSpan(children);
 
-        public IEnumerable<T> Get<T>() where T : Drawable
-        {
-            for (int i = 0; i < children.Count; i++)
+            for (int i = 0; i < span.Length; i++)
             {
-                if (children[i] is T t)
-                    yield return t;
+                if (span[i] is T t)
+                    onObjectGet?.Invoke(t);
             }
         }
 
@@ -60,72 +56,84 @@ namespace RTCircles
         #region INPUT
         public virtual new void OnTextInput(char args)
         {
-            for (int i = children.Count - 1; i >= 0; i--)
+            var span = CollectionsMarshal.AsSpan(children);
+
+            for (int i = span.Length - 1; i >= 0; i--)
             {
-                if (children[i].IsDead || !children[i].IsAcceptingInput)
+                if (span[i].IsDead || !span[i].IsAcceptingInput)
                     continue;
 
-                if (children[i].OnTextInput(args))
+                if (span[i].OnTextInput(args))
                     break;
             }
         }
 
         public virtual new void OnKeyDown(Key key)
         {
-            for (int i = children.Count - 1; i >= 0; i--)
+            var span = CollectionsMarshal.AsSpan(children);
+
+            for (int i = span.Length - 1; i >= 0; i--)
             {
-                if (children[i].IsDead || !children[i].IsAcceptingInput)
+                if (span[i].IsDead || !span[i].IsAcceptingInput)
                     continue;
 
-                if (children[i].OnKeyDown(key))
+                if (span[i].OnKeyDown(key))
                     break;
             }
         }
 
         public virtual new void OnKeyUp(Key key)
         {
-            for (int i = children.Count - 1; i >= 0; i--)
+            var span = CollectionsMarshal.AsSpan(children);
+
+            for (int i = span.Length - 1; i >= 0; i--)
             {
-                if (children[i].IsDead || !children[i].IsAcceptingInput)
+                if (span[i].IsDead || !span[i].IsAcceptingInput)
                     continue;
 
-                if (children[i].OnKeyUp(key))
+                if (span[i].OnKeyUp(key))
                     break;
             }
         }
 
         public virtual new void OnMouseDown(MouseButton args)
         {
-            for (int i = children.Count - 1; i >= 0; i--)
+            var span = CollectionsMarshal.AsSpan(children);
+
+            for (int i = span.Length - 1; i >= 0; i--)
             {
-                if (children[i].IsDead || !children[i].IsAcceptingInput)
+                if (span[i].IsDead || !span[i].IsAcceptingInput)
                     continue;
 
-                if (children[i].OnMouseDown(args))
+                if (span[i].OnMouseDown(args))
                     break;
             }
         }
 
         public virtual new void OnMouseUp(MouseButton args)
         {
-            for (int i = children.Count - 1; i >= 0; i--)
+            var span = CollectionsMarshal.AsSpan(children);
+
+            for (int i = span.Length - 1; i >= 0; i--)
             {
-                if (children[i].IsDead || !children[i].IsAcceptingInput)
+                if (span[i].IsDead || !span[i].IsAcceptingInput)
                     continue;
 
-                if (children[i].OnMouseUp(args))
+                if (span[i].OnMouseUp(args))
                     break;
             }
         }
 
         public virtual new void OnMouseWheel(float delta)
         {
-            for (int i = children.Count - 1; i >= 0; i--)
+            var span = CollectionsMarshal.AsSpan(children);
+
+            for (int i = span.Length - 1; i >= 0; i--)
             {
-                if (children[i].IsDead || !children[i].IsAcceptingInput)
+                if (span[i].IsDead || !span[i].IsAcceptingInput)
                     continue;
 
-                if (children[i].OnMouseWheel(delta))
+                if (span[i].OnMouseWheel(delta))
                     break;
             }
         }
@@ -137,9 +145,13 @@ namespace RTCircles
             bool requireSorting = false;
             bool requireRemoval = false;
 
-            for (int i = children.Count - 1; i >= 0; i--)
+            long previousDepth = long.MinValue;
+
+            var span = CollectionsMarshal.AsSpan(children);
+
+            for (int i = 0; i < span.Length; i++)
             {
-                var child = children[i];
+                var child = span[i];
 
                 if (child.IsDead)
                 {
@@ -149,14 +161,10 @@ namespace RTCircles
 
                 child.Update(delta);
 
-                if (i > 1)
-                {
-                    var prevDepth = children[i - 1].Layer;
-                    var nowDepth = child.Layer;
+                if (child.Layer < previousDepth)
+                    requireSorting = true;
 
-                    if (prevDepth > nowDepth)
-                        requireSorting = true;
-                }
+                previousDepth = child.Layer;
             }
 
             if (requireRemoval)
@@ -198,22 +206,22 @@ namespace RTCircles
 
         public override void Render(Graphics g)
         {
-            int childCount = children.Count;
+            var span = CollectionsMarshal.AsSpan(children);
 
-            for (int i = 0; i < childCount; i++)
+            for (int i = 0; i < span.Length; i++)
             {
-                if (children[i].IsDead || !children[i].IsVisible)
+                if (span[i].IsDead || !span[i].IsVisible)
                     continue;
 
-                children[i].Render(g);
+                span[i].Render(g);
             }
 
-            for (int i = 0; i < childCount; i++)
+            for (int i = 0; i < span.Length; i++)
             {
-                if (children[i].IsDead)
+                if (span[i].IsDead || !span[i].IsVisible)
                     continue;
 
-                children[i].AfterRender(g);
+                span[i].AfterRender(g);
             }
         }
     }

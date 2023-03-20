@@ -162,6 +162,9 @@ namespace RTCircles
         private List<CarouselItem> viewedItems = new List<CarouselItem>();
         public override void Render(Graphics g)
         {
+            if (Viewport.Width == 0 || Viewport.Height == 0)
+                return;
+
             if (shouldGenBlur)
             {
                 //Todo: Istedet for at resize blur buffer, så have blur bufferen relateret til screen resolution, og så render texture med offset i den og så blur den efterfølgende
@@ -257,7 +260,7 @@ namespace RTCircles
 
                 float bgPadding = (ElementSize.Y - bgSize.Y) / 2;
 
-                g.DrawRectangle(bounds.Position, bounds.Size, color);
+                g.DrawRectangle(bounds.Position, bounds.Size, color, Skin.CarouselButton);
                 g.DrawRectangle(bounds.Position + new Vector2(bgPadding), bgSize, new Vector4(1f, 1f, 1f, selectedItem == currentItem ? textureAlpha : 0.75f*textureAlpha), texture, textureRect, true);
 
                 float textScale = 0.5f * MainGame.Scale;
