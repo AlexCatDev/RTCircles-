@@ -58,6 +58,7 @@ namespace RTCircles
             Utils.IgnoredLogLevels.Add(LogLevel.Success);
 #endif
             VSync = false;
+            //100ms
             MaxAllowedDeltaTime = 0.1;
             Utils.WriteToConsole = true;
             registerEvents();

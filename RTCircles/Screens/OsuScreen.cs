@@ -346,7 +346,7 @@ namespace RTCircles
             base.Update(delta);
         }
 
-        const float SpawnAhead = 4000;
+        private float SpawnAhead => (float?)OsuContainer.Beatmap?.Preempt ?? 0f;
 
         private void updateSpawnHitObjects()
         {
