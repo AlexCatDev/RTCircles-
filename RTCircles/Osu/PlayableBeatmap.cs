@@ -1,6 +1,6 @@
 ﻿using Easy2D;
 using Easy2D.Game;
-using OpenTK.Mathematics;
+using System.Numerics;
 using OsuParsers.Beatmaps;
 using OsuParsers.Beatmaps.Objects;
 using OsuParsers.Database.Objects;
@@ -102,7 +102,7 @@ namespace RTCircles
             }
             else
             {
-                NotificationManager.ShowMessage($"beatmap: '{item.FullPath}' not found", new Vector3(1f, 0.1f, 0.1f), 5f);
+                NotificationManager.ShowMessage($"beatmap: '{item.FullPath}' not found", new Vector4(1f, 0.1f, 0.1f, 1), 5f);
                 return null;
             }
 
@@ -195,9 +195,9 @@ namespace RTCircles
             if (Song != null)
             {
                 if (mods.HasFlag(Mods.DT) || mods.HasFlag(Mods.NC))
-                    Song.PlaybackSpeed = 1.5;
+                    Song.Tempo = 1.5;
                 else
-                    Song.PlaybackSpeed = 1;
+                    Song.Tempo = 1;
 
                 if (mods.HasFlag(Mods.NC))
                     Song.Pitch = 5;

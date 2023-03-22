@@ -1,5 +1,5 @@
 ﻿using Easy2D;
-using OpenTK.Mathematics;
+using System.Numerics;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -35,7 +35,7 @@ namespace RTCircles
                 if (!showNotification)
                     return;
 
-                NotificationManager.ShowMessage($"Imported {firstItem.Folder}", ((Vector4)Color4.LightGreen).Xyz, 3, () => {
+                NotificationManager.ShowMessage($"Imported {firstItem.Folder}", Colors.LightGreen, 3, () => {
                     if (ScreenManager.ActiveScreen is not OsuScreen)
                     {
                         this.SongSelector.SelectBeatmap(firstItem);
@@ -124,7 +124,7 @@ namespace RTCircles
                 else
                 {
                     NotificationManager.ShowMessage($"{GlobalOptions.ShowStableMaps.Name} is on but no valid osu! db found or there were no songs directory",
-                        new(1, 1, 0), 2);
+                        new Vector4(1, 1, 0, 1), 2);
                 }
             }
             
@@ -236,56 +236,57 @@ namespace RTCircles
                     graph.Add(new Vector2(0, (float)item));
                 }
 
-                g.DrawInFrameBuffer(strainFB, () =>
+                shouldGenGraph = false;
+
+                var graphVertices = graph.Count * 2;
+
+                if (graphVertices > 2)
                 {
-                    //graph = PathApproximator.ApproximateCatmull(graph);
-
-                    shouldGenGraph = false;
-
-                    var vertices = g.VertexBatch.GetTriangleStrip(graph.Count * 2);
-
-                    if (vertices.Length == 0)
-                        return;
-
-                    int vertexIndex = 0;
-
-                    int textureSlot = g.GetTextureSlot(null);
-
-                    float stepX = size.X / graph.Count;
-
-                    //Fake anti aliasing, only the tippy top of graph fades to 0 opacity
-                    Vector4 peakColor = new Vector4(1f, 1f, 1f, 0f);
-                    Vector4 bottomColor = new Vector4(1f, 1f, 1f, 10f);
-
-                    Vector2 movingPos = Vector2.Zero;
-
-                    for (int i = 0; i < graph.Count; i++)
+                    g.DrawInFrameBuffer(strainFB, () =>
                     {
-                        //float height = graph[i].Y.Map(0, 10, 0, size.Y);
+                        //graph = PathApproximator.ApproximateCatmull(graph);
 
-                        float height = graph[i].Y.Map(0, 10000, 10, size.Y);
+                        var vertices = g.VertexBuilder.GetTriangleStripSpan((uint)graphVertices);
 
-                        //Grundlinje
-                        vertices[vertexIndex].TextureSlot = textureSlot;
-                        vertices[vertexIndex].Color = bottomColor;
-                        vertices[vertexIndex].Position = movingPos;
+                        int vertexIndex = 0;
 
-                        vertexIndex++;
+                        int textureSlot = g.GetTextureSlot(null);
 
-                        movingPos.Y += height;
+                        float stepX = size.X / graph.Count;
 
-                        //TopLinje
-                        vertices[vertexIndex].TextureSlot = textureSlot;
-                        vertices[vertexIndex].Color = peakColor;
-                        vertices[vertexIndex].Position = movingPos;
+                        //Fake anti aliasing, only the tippy top of graph fades to 0 opacity
+                        Vector4 peakColor = new Vector4(1f, 1f, 1f, 0f);
+                        Vector4 bottomColor = new Vector4(1f, 1f, 1f, 10f);
 
-                        movingPos.Y -= height;
-                        movingPos.X += stepX;
+                        Vector2 movingPos = Vector2.Zero;
 
-                        vertexIndex++;
-                    }
-                });
+                        for (int i = 0; i < graph.Count; i++)
+                        {
+                            //float height = graph[i].Y.Map(0, 10, 0, size.Y);
 
+                            float height = graph[i].Y.Map(0, 10000, 10, size.Y);
+
+                            //Grundlinje
+                            vertices[vertexIndex].TextureSlot = textureSlot;
+                            vertices[vertexIndex].Color = bottomColor;
+                            vertices[vertexIndex].Position = movingPos;
+
+                            vertexIndex++;
+
+                            movingPos.Y += height;
+
+                            //TopLinje
+                            vertices[vertexIndex].TextureSlot = textureSlot;
+                            vertices[vertexIndex].Color = peakColor;
+                            vertices[vertexIndex].Position = movingPos;
+
+                            movingPos.Y -= height;
+                            movingPos.X += stepX;
+
+                            vertexIndex++;
+                        }
+                    });
+                }
                 Utils.EndProfiling("StrainGraphGeneration");
             }
 

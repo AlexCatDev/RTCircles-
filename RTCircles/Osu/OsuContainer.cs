@@ -1,7 +1,7 @@
 ﻿using Easy2D;
 using Easy2D.Game;
 using Newtonsoft.Json;
-using OpenTK.Mathematics;
+using System.Numerics;
 using OsuParsers.Beatmaps;
 using OsuParsers.Beatmaps.Objects;
 using OsuParsers.Database;
@@ -352,9 +352,6 @@ namespace RTCircles
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public static Vector2 MapToPlayfield(Vector2 pos, bool ignoreMods = false) => MapToPlayfield(pos.X, pos.Y, ignoreMods);
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-        public static Vector2 MapToPlayfield(System.Numerics.Vector2 pos, bool ignoreMods = false) => MapToPlayfield(pos.X, pos.Y, ignoreMods);
-
         public static IEnumerable<T> GetFlags<T>(this T en) where T : struct, Enum
         {
             //return Enum.GetValues(typeof(T)).Where(member => en.HasFlag(member));
@@ -393,7 +390,7 @@ namespace RTCircles
             Vector2 objPos = MapToPlayfield(obj.Position.X, obj.Position.Y);
 
             //0 == outer edge, 1 == Spot on.
-            float distanceCenter = (position - objPos).Length.Map(0, Beatmap.CircleRadius, 1, 0);
+            float distanceCenter = (position - objPos).Length().Map(0, Beatmap.CircleRadius, 1, 0);
 
             double timeDiff = Math.Abs(obj.StartTime - SongPosition);
 
@@ -501,13 +498,13 @@ namespace RTCircles
                 if (songPos < totalOffset)
                 {
                     Beatmap.Song.Stop();
-                    songPos = Math.Min(songPos + delta * Beatmap.Song.PlaybackSpeed, totalOffset);
+                    songPos = Math.Min(songPos + delta * Beatmap.Song.Tempo, totalOffset);
                     if (songPos == totalOffset)
                         Beatmap.Song.Play(true);
                 }
-                else if (songPos >= Beatmap.Song.PlaybackLength && Beatmap.Song.IsStopped)
+                else if (songPos >= Beatmap.Song.Duration && Beatmap.Song.IsStopped)
                 {
-                    songPos += delta * Beatmap.Song.PlaybackSpeed;
+                    songPos += delta * Beatmap.Song.Tempo;
                 }
                 else
                 {

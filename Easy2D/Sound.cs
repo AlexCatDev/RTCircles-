@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ManagedBass;
 using ManagedBass.Fx;
+
 namespace Easy2D
 {
     public struct SoundSync
@@ -89,6 +87,9 @@ namespace Easy2D
         #endregion
         public int Handle { get; private set; } = 0;
 
+        /// <summary>
+        /// Returns if the Sound is functional IE. if it has a valid handle, will be null if it fails to load
+        /// </summary>
         public bool IsFunctional => Handle != 0;
 
         public bool IsPlaying => Bass.ChannelIsActive(Handle) == PlaybackState.Playing;
@@ -208,6 +209,9 @@ namespace Easy2D
             }
         }
 
+        /// <summary>
+        /// Playback position in milliseconds
+        /// </summary>
         public double PlaybackPosition
         {
             get
@@ -224,7 +228,10 @@ namespace Easy2D
             }
         }
 
-        public double PlaybackLength
+        /// <summary>
+        /// The duration of the sound in seconds
+        /// </summary>
+        public double Duration
         {
             get
             {
@@ -235,7 +242,7 @@ namespace Easy2D
         /// <summary>
         /// Playback Speed 1 being normal speed, 0.5 being half and 2 being double speed
         /// </summary>
-        public double PlaybackSpeed
+        public double Tempo
         {
             get
             {
@@ -251,12 +258,26 @@ namespace Easy2D
             set
             {
                 if (!SupportsFX)
-                    Frequency = DefaultFrequency * value;
-                else
                 {
-                    double speed = value * 100 - 100;
-                    Bass.ChannelSetAttribute(Handle, ChannelAttribute.Tempo, speed);
+                    Frequency = DefaultFrequency * value;
+                    return;
                 }
+
+                double speed = value * 100 - 100;
+                Bass.ChannelSetAttribute(Handle, ChannelAttribute.Tempo, speed);
+            }
+        }
+
+        /// <summary>
+        /// The real playback speed calculated using tempo and the frequency
+        /// </summary>
+        public double TotalPlaybackSpeed
+        {
+            get
+            {
+                double tempo = (Bass.ChannelGetAttribute(Handle, ChannelAttribute.Tempo) * 0.01) + 1;
+
+                return tempo + Frequency / DefaultFrequency;
             }
         }
 
@@ -286,6 +307,20 @@ namespace Easy2D
             bool success = Bass.StreamFree(Handle);
             if (success == false)
                 Utils.Log($"Bass Sound handle deletion failed! -> {Bass.LastError}", LogLevel.Error);
+        }
+
+        private Sound() { }
+
+        public static Sound FromFile(string file, int? bufferingLength = null)
+        {
+            Sound sound = new();
+
+            sound.Handle = BassFx.TempoCreate(Bass.CreateStream(file, 0, 0, BassFlags.Decode | BassFlags.AsyncFile | BassFlags.Prescan), BassFlags.Default | BassFlags.FxFreeSource);
+
+            if(bufferingLength.HasValue)
+                Bass.ChannelSetAttribute(sound.Handle, ChannelAttribute.Buffer, bufferingLength.Value);
+
+            return sound;
         }
 
         /// <summary>

@@ -1,5 +1,5 @@
 ﻿using OsuParsers.Beatmaps.Objects;
-using OpenTK.Mathematics;
+using System.Numerics;
 using Easy2D;
 
 namespace RTCircles

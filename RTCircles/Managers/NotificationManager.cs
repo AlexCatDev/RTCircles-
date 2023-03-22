@@ -1,6 +1,6 @@
 ﻿using Easy2D;
 using Easy2D.Game;
-using OpenTK.Mathematics;
+using System.Numerics;
 using Silk.NET.Input;
 using System;
 using System.Collections.Generic;
@@ -102,12 +102,12 @@ namespace RTCircles
                     //g.DrawRectangle(clickBox.Position, clickBox.Size, new Vector4(notf.Color, notf.Alpha));
 
 
-                    g.DrawRoundedRect((Vector2i)clickBox.Center, clickBox.Size, new Vector4(notif.Color, notif.Alpha), cornerRadius);
+                    g.DrawRoundedRect(clickBox.Center, clickBox.Size, new Vector4(notif.Color, notif.Alpha), cornerRadius);
 
                     clickBox = new Rectangle(position + textOffset - ((box * border) / 2), textSize + box * border);
                     Vector3 bgColor = (clickBox.IntersectsWith(Input.MousePosition) ? new Vector3(0.1f) : new Vector3(0));
 
-                    g.DrawRoundedRect((Vector2i)clickBox.Center, clickBox.Size, new Vector4(bgColor, notif.Alpha), cornerRadius);
+                    g.DrawRoundedRect(clickBox.Center, clickBox.Size, new Vector4(bgColor, notif.Alpha), cornerRadius);
 
                     g.DrawString(notif.Text, Font.DefaultFont, position + textOffset, new Vector4(notif.Color, notif.Alpha), scale);
                 }
@@ -190,6 +190,9 @@ namespace RTCircles
 
             notifications.Add(notif);
         }
+
+        public static void ShowMessage(string text, Vector4 color, float duration, Action clickAction = null) =>
+            queue.Enqueue(new Notification(text, new Vector3(color.X, color.Y, color.Z), duration, clickAction));
 
         public static void ShowMessage(string text, Vector3 color, float duration, Action clickAction = null) =>
             queue.Enqueue(new Notification(text, color, duration, clickAction));

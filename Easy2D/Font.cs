@@ -1,4 +1,4 @@
-﻿using OpenTK.Mathematics;
+﻿using System.Numerics;
 using SharpFNT;
 using System;
 using System.IO;
@@ -18,6 +18,9 @@ namespace Easy2D
 
         public Vector2 MessureString(ReadOnlySpan<char> text, float scale = 1f, bool includeLastCharAdvance = false)
         {
+            if (text.Length == 0)
+                return Vector2.Zero;
+
             scale = Math.Max(0, scale);
 
             float biggestWidth = 0;
@@ -86,8 +89,8 @@ namespace Easy2D
             return new Vector2(biggestWidth, totalHeight);
         }
 
-        public Font(Stream fontFile, Stream fontImageFile, FormatHint formatHint = FormatHint.Binary) {
-            Info = BitmapFont.FromStream(fontFile, formatHint, false);
+        public Font(Stream fontFile, Stream fontImageFile) {
+            Info = BitmapFont.FromStream(fontFile, FormatHint.Binary, false);
             Texture = new Texture(fontImageFile);
         }
 

@@ -1,6 +1,6 @@
 ﻿using Easy2D;
 using Easy2D.Game;
-using OpenTK.Mathematics;
+using System.Numerics;
 using OsuParsers.Beatmaps.Objects;
 using OsuParsers.Enums.Beatmaps;
 using Silk.NET.Input;

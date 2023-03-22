@@ -1,6 +1,6 @@
 ﻿using Easy2D;
 using Easy2D.Game;
-using OpenTK.Mathematics;
+using System.Numerics;
 using Silk.NET.Input;
 using System;
 using System.Collections.Generic;
@@ -17,7 +17,7 @@ namespace RTCircles
 
         public string Text;
 
-        public Vector4 Color = Colors.DarkPink;
+        public Vector4 Color = Colors.Pink*0.5f;
         public Vector4 HighlightColor = Colors.Pink;
         public Vector4 TextColor = Colors.White;
 

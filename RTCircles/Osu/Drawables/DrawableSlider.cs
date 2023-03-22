@@ -1,5 +1,5 @@
 ﻿using Easy2D;
-using OpenTK.Mathematics;
+using System.Numerics;
 using OsuParsers.Beatmaps.Objects;
 using OsuParsers.Enums.Beatmaps;
 using Silk.NET.Input;
@@ -729,15 +729,15 @@ namespace RTCircles
             }
             else
             {
-                var border = new Vector3(Skin.Config.SliderBorder ?? new Vector3(0.8f, 0.8f, 0.8f));
+                var border = Skin.Config.SliderBorder ?? new Vector3(0.8f, 0.8f, 0.8f);
 
                 borderColorInner = border;
                 borderColorOuter = border;
 
-                var trackOuter = new Vector3(Skin.Config.SliderTrackOverride ?? new Vector3(0));
+                var trackOuter = Skin.Config.SliderTrackOverride ?? new Vector3(0);
 
-                trackColorOuter = Shade(-0.1f, new Vector4(trackOuter, 1.0f)).Xyz;
-                trackColorInner = Shade(0.5f, new Vector4(trackOuter, 1.0f)).Xyz;
+                trackColorOuter = Shade(-0.1f, trackOuter);
+                trackColorInner = Shade(0.5f, trackOuter);
             }
 
             g.BorderColorOuter = Vector3.Lerp(g.BorderColorOuter, borderColorInner, deltaLerp);
@@ -842,7 +842,7 @@ namespace RTCircles
             IsMissed = true;
         }
 
-        public static Vector4 Shade(float amount, Vector4 c)
+        public static Vector3 Shade(float amount, Vector3 c)
         {
             if(amount < 0)
                 return Darken(-amount, c);
@@ -850,23 +850,23 @@ namespace RTCircles
                 return Lighten(amount, c);
         }
 
-        public static Vector4 Darken(float amount, Vector4 c) {
+        public static Vector3 Darken(float amount, Vector3 c) {
             float scale = MathF.Max(1.0f, 1.0f + amount);
 
-            return new Vector4(c.X / scale, c.Y / scale, c.Z / scale, c.W);
+            return new Vector3(c.X / scale, c.Y / scale, c.Z / scale);
         }
 
-        public static Vector4 Lighten(float amount, Vector4 c)
+        public static Vector3 Lighten(float amount, Vector3 c)
         {
             amount *= 0.5f;
 
             float scale = 1.0f + 0.5f * amount;
 
 
-        return new Vector4(
+        return new Vector3(
             MathF.Min(1.0f, c.X * scale + amount),
             MathF.Min(1.0f, c.Y * scale + amount),
-            MathF.Min(1.0f, c.Z * scale + amount), c.W);
+            MathF.Min(1.0f, c.Z * scale + amount));
         }
     }
 }

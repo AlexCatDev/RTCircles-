@@ -1,6 +1,6 @@
 ﻿using Easy2D;
 using Easy2D.Game;
-using OpenTK.Mathematics;
+using System.Numerics;
 using Silk.NET.Input;
 using System;
 using System.Collections.Generic;
@@ -32,7 +32,7 @@ namespace RTCircles
 
             foreach (EasingTypes easing in easingTypes)
             {
-                g.DrawRectangle(startPos, new Vector2(MainGame.WindowWidth / 2 + size.X, size.Y), (Vector4)Color4.SlateGray);
+                g.DrawRectangle(startPos, new Vector2(MainGame.WindowWidth / 2 + size.X, size.Y), Colors.SlateGray);
                 double val = Interpolation.ValueAt(t, 0, 1, 0, 1, easing);
                 Vector2 pos = new Vector2((float)val.Map(0, 1, 0, MainGame.WindowWidth / 2), 0);
                 g.DrawRectangle(pos + startPos, size, Colors.White);
@@ -46,7 +46,7 @@ namespace RTCircles
                 startPos.Y += spacing;
             }
 
-            g.Projection = Matrix4.CreateTranslation(new Vector3(shaker.OutputShake)) * Matrix4.CreateOrthographicOffCenter(0, MainGame.WindowWidth, MainGame.WindowHeight, 0, -1, 1);
+            g.Projection = Matrix4x4.CreateTranslation(new Vector3(shaker.OutputShake, 1)) * Matrix4x4.CreateOrthographicOffCenter(0, MainGame.WindowWidth, MainGame.WindowHeight, 0, -1, 1);
             //g.DrawRectangleCentered(Input.MousePosition + shaker.OutputShake, new Vector2(256), Colors.Red);
 
             base.Render(g);

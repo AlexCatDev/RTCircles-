@@ -1,5 +1,5 @@
-﻿using OpenTK.Mathematics;
-using System.Runtime.InteropServices;
+﻿using System.Numerics;
+using System.Collections.Generic;
 
 namespace Easy2D
 {
@@ -17,6 +17,19 @@ namespace Easy2D
 
         //It's an int here, in the shader it's an int, but if i set the vertex attrib pointer to type int, or uint it doesnt work??? only if float it works???
         public int TextureSlot;
+
+        public static List<VertexMember> GetLayout()
+        {
+            return new()
+            {
+                VertexMember.ParseFromType<Vector2>(),
+                VertexMember.ParseFromType<Vector2>(),
+                VertexMember.ParseFromType<Vector2>(),
+                VertexMember.ParseFromType<Vector4>(),
+                VertexMember.ParseFromType<float>(),
+                VertexMember.ParseFromType<float>()
+            };
+        }
 
         public Vertex(Vector2 position, Vector2 texCoord, int textureSlot)
         {
@@ -38,11 +51,6 @@ namespace Easy2D
             RotationOrigin = Vector2.Zero;
             Rotation = 0;
             TextureSlot = textureSlot;
-        }
-
-        public override string ToString()
-        {
-            return Position.ToString();
         }
     }
 }

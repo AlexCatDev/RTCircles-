@@ -1,5 +1,5 @@
 ﻿using Easy2D;
-using OpenTK.Mathematics;
+using System.Numerics;
 using System;
 using System.Collections.Generic;
 
@@ -449,8 +449,7 @@ namespace RTCircles
 
                 if (Skin.HealthBar_Marker != null)
                 {
-                    Vector4 healthMarkerColor = new Vector4(1, 1, 1, 1);
-                    healthMarkerColor.Xyz += new Vector3(healthbarMarkerScale.Map(1, 2, 0, 0.5f));
+                    Vector4 healthMarkerColor = new Vector4(new Vector3(healthbarMarkerScale.Map(1, 2, 0, 0.5f) + 1), 1);
 
                     Vector2 markerSize = Skin.HealthBar_Marker.Texture.Size * hpScale;
 
@@ -518,7 +517,7 @@ namespace RTCircles
             float size = 65f * MainGame.Scale;
             const float lerpSpeed = 32f;
 
-            Vector4 pressAddBloom = PostProcessing.Bloom ? new Vector4(new Vector3(1)) : Vector4.Zero;
+            Vector4 pressAddBloom = PostProcessing.Bloom ? new Vector4(1) : Vector4.Zero;
             Vector4 pressColor = Colors.Pink;
             //Depression xddd
             Vector4 depressColor = Colors.Black;

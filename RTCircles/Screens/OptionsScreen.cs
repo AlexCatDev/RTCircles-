@@ -1,6 +1,6 @@
 ﻿using Easy2D;
 using Easy2D.Game;
-using OpenTK.Mathematics;
+using System.Numerics;
 using Silk.NET.Input;
 using System;
 using System.Collections.Generic;
@@ -134,12 +134,12 @@ namespace RTCircles
 
             Rectangle buttonMinusRect = new Rectangle(position - new Vector2(0, 80 * MainGame.Scale), buttonSize);
 
-            g.DrawRectangle(buttonMinusRect.Position, buttonMinusRect.Size, (Vector4)Color4.IndianRed);
+            g.DrawRectangle(buttonMinusRect.Position, buttonMinusRect.Size, Colors.IndianRed);
             g.DrawStringCentered("-", Font.DefaultFont, buttonMinusRect.Center, Colors.White, MainGame.Scale * 1.5f);
 
             Rectangle buttonPlusRect = new Rectangle(position + new Vector2(0, 80 * MainGame.Scale), buttonSize);
 
-            g.DrawRectangle(buttonPlusRect.Position, buttonPlusRect.Size, (Vector4)Color4.PaleGreen);
+            g.DrawRectangle(buttonPlusRect.Position, buttonPlusRect.Size, Colors.PaleGreen);
             g.DrawStringCentered("+", Font.DefaultFont, buttonPlusRect.Center, Colors.White, MainGame.Scale * 1.5f);
 
             if (clickedSomewhere)

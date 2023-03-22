@@ -361,6 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/RTCircles.WinForms/RTCircles.WinForms.csproj
-/RTCircles.WinForms/RTCircles.WinForms.csproj
+/RTCircles.WinForms
 /DontTap
+/DontTap.Desktop
+/RTCirclesTests

@@ -1,5 +1,5 @@
 ﻿using Easy2D;
-using OpenTK.Mathematics;
+using System.Numerics;
 using System;
 using System.Collections.Generic;
 
@@ -31,14 +31,14 @@ namespace RTCircles
 
             float blend = Interpolation.ValueAt(time, 0, 1, from.Time, to.Time);
 
-            var easing = ((from.Position - to.Position).Length < OsuContainer.Beatmap.CircleRadiusInOsuPixels * 2 || cursorDance) ? EasingTypes.None : EasingTypes.InOutQuad;
+            var easing = ((from.Position - to.Position).Length() < OsuContainer.Beatmap.CircleRadiusInOsuPixels * 2 || cursorDance) ? EasingTypes.None : EasingTypes.InOutQuad;
 
             var output = Vector2.Lerp(from.Position, to.Position, Interpolation.ValueAt(blend, 0, 1, 0, 1, easing));
 
             if (!cursorDance)
                 return output;
 
-            float length = (from.Position - to.Position).Length / 2;
+            float length = (from.Position - to.Position).Length() / 2;
 
             if (length < OsuContainer.Beatmap.CircleRadiusInOsuPixels)
                 return output;

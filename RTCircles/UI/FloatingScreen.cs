@@ -1,5 +1,5 @@
 ﻿using Easy2D;
-using OpenTK.Mathematics;
+using System.Numerics;
 using System;
 
 namespace RTCircles
@@ -34,7 +34,7 @@ namespace RTCircles
             screenFramebuffer.BindDrawAction(() =>
             {
                 GL.Instance.Clear(Silk.NET.OpenGLES.ClearBufferMask.ColorBufferBit);
-                graphics.Projection = Matrix4.CreateOrthographicOffCenter(0, Size.X, Size.Y, 0, -1, 1);
+                graphics.Projection = Matrix4x4.CreateOrthographicOffCenter(0, Size.X, Size.Y, 0, -1, 1);
 
                 MainGame.Instance.FakeWindowSize(Size, () =>
                 {

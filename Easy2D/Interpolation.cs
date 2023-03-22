@@ -1,15 +1,22 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 
-using OpenTK.Mathematics;
+using System.Numerics;
 using System;
 
 namespace Easy2D
 {
     public static class Interpolation
     {
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static double Lerp(double start, double end, double delta)
+        {
+            return start + (delta * (end - start));
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public static double Damp(double start, double final, double smoothing, double delta)
         {
-            return MathHelper.Lerp(start, final, 1 - (float)Math.Pow(smoothing, delta));
+            return Lerp(start, final, 1 - Math.Pow(smoothing, delta));
         }
 
         public static Vector4 ValueAt(double time, Vector4 val1, Vector4 val2, double startTime, double endTime, EasingTypes easing = EasingTypes.None)

@@ -1,5 +1,5 @@
 ﻿using Easy2D;
-using OpenTK.Mathematics;
+using System.Numerics;
 using OsuParsers.Decoders;
 using OsuParsers.Storyboards.Objects;
 using System;
@@ -182,11 +182,10 @@ namespace RTCircles
                     return;
 
                 Vector4 color = colorAnim.GetOutputAtTime(OsuContainer.SongPosition);
+
+                color = Vector4.Clamp(color * Brightness, Vector4.Zero, Vector4.One);
+
                 color.W = fadeAnim.GetOutputAtTime(OsuContainer.SongPosition) * DrawableStoryboard.Alpha;
-
-                color = Vector4.Clamp(color, Vector4.Zero, Vector4.One);
-
-                color.Xyz *= Brightness;
 
                 if (color.W < 0.001f)
                     return;

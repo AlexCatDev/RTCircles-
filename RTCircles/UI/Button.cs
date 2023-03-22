@@ -4,8 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Easy2D;
 using Easy2D.Game;
-using OpenTK;
-using OpenTK.Mathematics;
+using System.Numerics;
 using Silk.NET.Input;
 
 namespace RTCircles
@@ -31,13 +30,13 @@ namespace RTCircles
 
         public Vector2 TextOffset;
 
-        private Vector2i _size;
+        private Vector2 _size;
         public Vector2 Size 
         { 
             get { return _size; }
             set
             {
-                _size = (Vector2i)value;
+                _size = value;
             }
         }
 
@@ -124,13 +123,13 @@ namespace RTCircles
 
             float textScale = Size.Y / Font.DefaultFont.Size;
 
-            g.DrawRectangle(Position, Size, Disabled ? new Vector4(Color.Xyz, 0.2f) : Color, Texture, TextureRectangle, true, TextureRotation);
+            g.DrawRectangle(Position, Size, Disabled ? new Vector4(Color.X, Color.Y, Color.Z, 0.2f) : Color, Texture, TextureRectangle, true, TextureRotation);
 
             if (!buttonPressAnimation.IsCompleted || !buttonPressFadeAnimation.IsCompleted)
             {
                 g.DrawInFrameBuffer(frameBuffer, () =>
                 {
-                    g.DrawRectangleCentered(buttonPressLocation, new Vector2(buttonPressAnimation.Output * 2), new Vector4(AnimationColor.Xyz, AnimationColor.W * buttonPressFadeAnimation.Output), Texture.WhiteCircle);
+                    g.DrawRectangleCentered(buttonPressLocation, new Vector2(buttonPressAnimation.Output * 2), new Vector4(AnimationColor.X, AnimationColor.Y, AnimationColor.Z, AnimationColor.W * buttonPressFadeAnimation.Output), Texture.WhiteCircle);
                 });
             }
 

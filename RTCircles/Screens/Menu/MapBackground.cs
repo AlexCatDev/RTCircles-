@@ -1,6 +1,6 @@
 ﻿using Easy2D;
 using Easy2D.Game;
-using OpenTK.Mathematics;
+using System.Numerics;
 using System;
 
 namespace RTCircles
@@ -68,7 +68,7 @@ namespace RTCircles
             fb.BindDrawAction(() =>
             {
                 GL.Instance.Clear(Silk.NET.OpenGLES.ClearBufferMask.ColorBufferBit);
-                blurGraphics.Projection = Matrix4.CreateOrthographicOffCenter(0, fb.Width, 0, fb.Height, -1, 1);
+                blurGraphics.Projection = Matrix4x4.CreateOrthographicOffCenter(0, fb.Width, 0, fb.Height, -1, 1);
                 MainGame.Instance.FakeWindowSize(fb.Texture.Size, () =>
                 {
                     osuScreen.EnsureObjectIndexSynchronization();
@@ -95,7 +95,9 @@ namespace RTCircles
             if (UseBluredGameplayAsBackgroundSource)
             {
                 drawBluredGameplay();
-                color.Xyz *= 2;
+                color.X *= 2;
+                color.Y *= 2;
+                color.Z *= 2;
 
                 tex = fb.Texture;
             }

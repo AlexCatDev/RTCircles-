@@ -1,5 +1,5 @@
 ﻿using Easy2D;
-using OpenTK.Mathematics;
+using System.Numerics;
 using Realms;
 using Silk.NET.Input;
 using System.Collections.Generic;
@@ -57,7 +57,7 @@ namespace RTCircles
                                  new Sound(Utils.GetResource("Maps.BuildIn.audio.mp3"), true, false, ManagedBass.BassFlags.Prescan),
                                  new Texture(Utils.GetResource("Maps.BuildIn.bg.jpg")));
 
-                             NotificationManager.ShowMessage("You don't to have have any maps. Click here to get some", ((Vector4)Color4.Violet).Xyz, 10, () =>
+                             NotificationManager.ShowMessage("You don't to have have any maps. Click here to get some", Colors.Violet, 10, () =>
                              {
                                  ScreenManager.SetScreen<DownloadScreen>();
                              });

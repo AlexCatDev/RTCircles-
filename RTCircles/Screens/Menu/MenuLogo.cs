@@ -1,6 +1,6 @@
 ﻿using Easy2D;
 using Easy2D.Game;
-using OpenTK.Mathematics;
+using System.Numerics;
 using Silk.NET.Input;
 using System;
 
@@ -81,7 +81,7 @@ namespace RTCircles
             //Rainbow color wow
             visualizer.ColorAt += (progress, volume) =>
             {
-                var c = (Vector4)Color4.Crimson * volume * 25;
+                var c = Colors.Crimson * volume * 25;
                 c.W = 1f;
                 return c;
 
@@ -197,7 +197,7 @@ namespace RTCircles
             if (!logoExplodeKiaiAnim.HasCompleted)
             {
                 float logoExplodeScale = (float)Interpolation.ValueAt(logoExplodeKiaiAnim, 1, 2, 1, 0, EasingTypes.None);
-                g.DrawRectangleCentered(visualizer.Position, Bounds.Size * logoExplodeScale, new Vector4(colorTransform.Value.Xyz, LogoTextTexture.ImageDoneUploading ? logoExplodeKiaiAnim.Value : 0), LogoTextTexture);
+                g.DrawRectangleCentered(visualizer.Position, Bounds.Size * logoExplodeScale, new Vector4(colorTransform.Value.X, colorTransform.Value.Y, colorTransform.Value.Z, LogoTextTexture.ImageDoneUploading ? logoExplodeKiaiAnim.Value : 0), LogoTextTexture);
             }
         }
 

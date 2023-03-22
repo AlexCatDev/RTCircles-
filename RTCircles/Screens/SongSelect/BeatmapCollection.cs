@@ -1,8 +1,9 @@
-﻿using OpenTK.Mathematics;
+﻿using System.Numerics;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Easy2D;
 
 namespace RTCircles
 {
@@ -57,7 +58,7 @@ namespace RTCircles
                 });
             });
 
-            NotificationManager.ShowMessage($"Beatmap with hash: {item.Hash} deleted", ((Vector4)Color4.CornflowerBlue).Xyz, 5f);
+            NotificationManager.ShowMessage($"Beatmap with hash: {item.Hash} deleted", Colors.CornflowerBlue, 5f);
         }
 
         public static void FindText(string text, bool invokeSearchResultChange = true)

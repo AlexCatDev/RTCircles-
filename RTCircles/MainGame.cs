@@ -1,6 +1,6 @@
 ﻿using Easy2D;
 using Easy2D.Game;
-using OpenTK.Mathematics;
+using System.Numerics;
 using Silk.NET.Input;
 using Silk.NET.SDL;
 using System;
@@ -20,12 +20,12 @@ namespace RTCircles
         public MainGame(Silk.NET.Windowing.IView view) : base(view) => Instance = this;
 
         private Graphics g;
-        public static Matrix4 Projection { get; private set; }
+        public static Matrix4x4 Projection { get; private set; }
 
         private SmoothFloat kiaiAnimation = new SmoothFloat();
 
         public Shaker Shaker = new Shaker() { Duration = 1.5f, Radius = 125, Speed = 100, Easing = EasingTypes.OutQuint };
-        private Matrix4 shakeMatrix => Matrix4.CreateTranslation(new Vector3(Shaker.OutputShake * MainGame.Scale)) * Projection;
+        private Matrix4x4 shakeMatrix => Matrix4x4.CreateTranslation(new Vector3(Shaker.OutputShake * MainGame.Scale, 0)) * Projection;
 
         private bool debugCameraActive = false;
 
@@ -103,7 +103,7 @@ namespace RTCircles
                 g.Projection = debugCamera.Projection;
             }
 
-            PostProcessing.Use(new Vector2i((int)WindowWidth, (int)WindowHeight), new Vector2i((int)WindowWidth, (int)WindowHeight));
+            PostProcessing.Use(new Vector2((int)WindowWidth, (int)WindowHeight), new Vector2((int)WindowWidth, (int)WindowHeight));
             ScreenManager.Render(g);
             drawFPSGraph(g);
             drawLog(g);
@@ -147,7 +147,9 @@ namespace RTCircles
         {
             float mult = kiaiAnimation.Value * 1;
             float finalScale = ScreenManager.ActiveScreen is OsuScreen or MenuScreen ? 1 : 0.2f;
-            g.FinalColorMult.Xyz = new Vector3(1 + mult * finalScale);
+            g.FinalColorMult.X = 1 + mult * finalScale;
+            g.FinalColorMult.Y = 1 + mult * finalScale;
+            g.FinalColorMult.Z = 1 + mult * finalScale;
 
             kiaiAnimation.Update((float)DeltaTime);
             Shaker.Update((float)DeltaTime);
@@ -426,7 +428,7 @@ namespace RTCircles
             GPUSched.Instance.Enqueue(() =>
             {
                 Viewport.SetViewport(0, 0, width, height);
-                Projection = Matrix4.CreateOrthographicOffCenter(0, width, height, 0, -1, 1);
+                Projection = Matrix4x4.CreateOrthographicOffCenter(0, width, height, 0, -1, 1);
             });
         }
 
@@ -518,7 +520,7 @@ namespace RTCircles
                     else
                         Input.CursorMode = CursorMode.Normal;
 
-                    NotificationManager.ShowMessage($"Cursor Mode: {Input.CursorMode} (F6 to toggle)", new Vector3(0.8f, 0, 1f), 3);
+                    NotificationManager.ShowMessage($"Cursor Mode: {Input.CursorMode} (F6 to toggle)", new Vector4(0.8f, 0, 1f, 1), 3);
                 }
 
 
@@ -526,7 +528,7 @@ namespace RTCircles
                 {
                     showTextures = !showTextures;
 
-                    NotificationManager.ShowMessage($"Showing textures: {showTextures} (F9 to toggle)", new Vector3(0.8f, 0, 1f), 3);
+                    NotificationManager.ShowMessage($"Showing textures: {showTextures} (F9 to toggle)", new Vector4(0.8f, 0, 1f, 1), 3);
                 }
 
                 if (e == Key.F2 && Input.IsKeyDown(Key.ShiftLeft))
@@ -537,7 +539,7 @@ namespace RTCircles
                     mem = mem - GC.GetTotalMemory(false);
                     glObjectCount = glObjectCount - GLObject.AllObjects.Count;
 
-                    NotificationManager.ShowMessage($"Full GC Forced {mem/1024} KB GLObjects: {glObjectCount} Cleaned", new Vector3(1, 1, 1f), 5);
+                    NotificationManager.ShowMessage($"Full GC Forced {mem/1024} KB GLObjects: {glObjectCount} Cleaned", new Vector4(1, 1, 1f, 1), 5);
                 }
 
                 if (Input.IsKeyDown(Key.ShiftLeft) && Input.IsKeyDown(Key.ShiftRight) && Input.IsKeyDown(Key.Space))
@@ -560,7 +562,7 @@ namespace RTCircles
 
                     if (!Directory.Exists(osuSongsFolder))
                     {
-                        NotificationManager.ShowMessage("Can't import maps because i dont know where osu! is located.", new Vector3(1, 0, 0), 5);
+                        NotificationManager.ShowMessage("Can't import maps because i dont know where osu! is located.", new Vector4(1, 0, 0, 1), 5);
                         return;
                     }
 
@@ -573,7 +575,7 @@ namespace RTCircles
                     importing = true;
 
                     new System.Threading.Thread(() => {
-                        NotificationManager.ShowMessage("Started import process! press f3 to abort", new Vector3(0.5f, 0.5f, 0.5f), 2f);
+                        NotificationManager.ShowMessage("Started import process! press f3 to abort", new Vector4(0.5f, 0.5f, 0.5f, 1), 2f);
 
                         byte[] buffer = new byte[1024];
 
@@ -593,7 +595,7 @@ namespace RTCircles
                         }
                         int endCount = BeatmapCollection.Items.Count;
 
-                        NotificationManager.ShowMessage($"Import finished! Imported: {endCount - startCount} maps.", new Vector3(0.5f, 1, 0.5f), 10f);
+                        NotificationManager.ShowMessage($"Import finished! Imported: {endCount - startCount} maps.", new Vector4(0.5f, 1, 0.5f, 1), 10f);
                     }).Start();
 
                     return;
@@ -603,7 +605,7 @@ namespace RTCircles
                 if (Input.IsKeyDown(Key.S) && Input.IsKeyDown(Key.ControlLeft) && Input.IsKeyDown(Key.ShiftLeft) && Input.IsKeyDown(Key.AltLeft))
                 {
                     Skin.Reload();
-                    NotificationManager.ShowMessage($"Reloaded skin!", new Vector3(0.4f, 0.4f, 1f), 2f);
+                    NotificationManager.ShowMessage($"Reloaded skin!", new Vector4(0.4f, 0.4f, 1f, 1), 2f);
 
                     return;
                 }
@@ -621,7 +623,7 @@ namespace RTCircles
                 {
                     GlobalOptions.EnableMouseButtons.Value = !GlobalOptions.EnableMouseButtons.Value;
 
-                    NotificationManager.ShowMessage($"Mousebuttons: {GlobalOptions.EnableMouseButtons.Value}", ((Vector4)Color4.Violet).Xyz, 2f);
+                    NotificationManager.ShowMessage($"Mousebuttons: {GlobalOptions.EnableMouseButtons.Value}", Colors.Violet, 2f);
                 }
 
                 if (debugCameraActive)

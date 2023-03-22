@@ -98,18 +98,33 @@ namespace Easy2D.Game
             };
 
             Silk.NET.Windowing.Sdl.SdlWindowing.Use();
+            Silk.NET.Windowing.Sdl.SdlWindowing.RegisterPlatform();
+            Silk.NET.Input.Sdl.SdlInput.RegisterPlatform();
             //Silk.NET.Windowing.Glfw.GlfwWindowing.Use();
+            /*
+            WindowOptions windowOptions = new WindowOptions();
+            windowOptions.Samples = 0;
+            windowOptions.API = new GraphicsAPI(ContextAPI.OpenGL, ContextProfile.Core, ContextFlags.Default, new APIVersion(3, 3));
+            windowOptions.PreferredBitDepth = new Silk.NET.Maths.Vector4D<int>(8, 8, 8, 8);
+            windowOptions.Title = "Game";
+            windowOptions.Size = new Vector2D<int>(1280, 720);
+            windowOptions.IsVisible = true;
+            windowOptions.ShouldSwapAutomatically = false;
+            windowOptions.IsContextControlDisabled = true;
+            windowOptions.WindowBorder = WindowBorder.Resizable;
 
-            ViewOptions options = ViewOptions.Default;
-            options.Samples = 0;
-            //TODO: 
-            //Event driven is actually slower than just inserting a threadsleep LMAO
-            //options.IsEventDriven = true;
-            //options.API = new GraphicsAPI(ContextAPI.OpenGL, ContextProfile.Core, ContextFlags.Default, new APIVersion(3, 0));
-            options.API = new GraphicsAPI(ContextAPI.OpenGLES, ContextProfile.Core, ContextFlags.Default, new APIVersion(3, 0));
-            options.PreferredBitDepth = new Silk.NET.Maths.Vector4D<int>(8, 8, 8, 8);
+            var view = Silk.NET.Windowing.Window.Create(windowOptions);
+            */
             
-            var view = Silk.NET.Windowing.Window.GetView(options);
+            ViewOptions viewOptions = new ViewOptions();
+
+            viewOptions.Samples = 0;
+            viewOptions.API = new GraphicsAPI(ContextAPI.OpenGLES, ContextProfile.Core, ContextFlags.Default, new APIVersion(3, 0));
+            viewOptions.ShouldSwapAutomatically = false;
+            viewOptions.IsContextControlDisabled = true;
+
+            var view = Silk.NET.Windowing.Window.GetView(viewOptions);
+            
 
             View = view;
 

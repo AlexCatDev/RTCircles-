@@ -1,5 +1,5 @@
 ﻿using Easy2D;
-using OpenTK.Mathematics;
+using System.Numerics;
 using OsuParsers.Beatmaps.Objects;
 using System;
 using System.Collections.Generic;
@@ -81,7 +81,7 @@ namespace RTCircles
 
         public override void Render(Graphics g)
         {
-            Vector4 colorBoost = rotationCounter > 0 ? new Vector4(new Vector3(0.3f)) : Vector4.Zero;
+            Vector4 colorBoost = rotationCounter > 0 ? new Vector4(new Vector3(0.3f), 1) : Vector4.Zero;
 
             float approachScale = (float)MathUtils.Map(OsuContainer.SongPosition, spinner.StartTime, spinner.EndTime, 1, 0).Clamp(0, 1);
 

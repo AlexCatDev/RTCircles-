@@ -219,7 +219,7 @@ namespace Easy2D
             ibo.Bind();
 
             //????? Finish because async transfer?
-            GL.DrawElements(PrimitiveType.Triangles, IndexRenderCount, DrawElementsType.UnsignedInt, null);
+            GL.DrawElements(PrimitiveType.Triangles, IndexRenderCount, DrawElementsType.UnsignedInt);
             //GL.Instance.Finish();
             IndexRenderCount = 0;
             VertexRenderCount = 0;

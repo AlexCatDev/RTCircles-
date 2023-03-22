@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Silk.NET.OpenGLES;
-using OpenTK.Mathematics;
+using System.Numerics;
 
 namespace Easy2D
 {
@@ -13,7 +13,7 @@ namespace Easy2D
     {
         private Dictionary<string, int> uniformLocationCache = new Dictionary<string, int>();
 
-        private Dictionary<ShaderType, Stream> shaderFiles = new Dictionary<ShaderType, Stream>();
+        private Dictionary<ShaderType, Stream> shaderStreams = new Dictionary<ShaderType, Stream>();
 
         private Dictionary<ShaderType, Dictionary<string, string>> preprocessors = new Dictionary<ShaderType, Dictionary<string, string>>();
 
@@ -22,16 +22,31 @@ namespace Easy2D
             if (shader is null)
                 throw new Exception($"Shader stream was null type: {shaderType}");
 
-            if(shaderFiles.ContainsKey(shaderType))
+            if(shaderStreams.ContainsKey(shaderType))
                 throw new Exception($"Shader already have type: {shaderType} attached to it");
 
-            shaderFiles.Add(shaderType, shader);
+            shaderStreams.Add(shaderType, shader);
         }
-        
+
+        public void AttachShader(ShaderType shaderType, string shaderSrc)
+        {
+            MemoryStream ms = new MemoryStream();
+
+            var writer = new StreamWriter(ms);
+
+            writer.Write(shaderSrc);
+
+            writer.Flush();
+
+            ms.Position = 0;
+
+            AttachShader(shaderType, ms);
+        }
+
         /// <summary>
         /// Attach a preprocessor to the respected shadertype.
         /// A preprocessor is just a string replacement mechanic
-        /// Example: { "//replaceme", "FragColor = vec4(1.0); "}, { "ThisCouldBeAnything", "Same here" }
+        /// Example: { "//replaceme", "FragColor = vec4(1.0); "}, { "//putuniform", "uniform sampler2D u_SexyUniform" }
         /// </summary>
         /// <param name="shaderType"></param>
         /// <param name="preprocessor"></param>
@@ -45,10 +60,13 @@ namespace Easy2D
 
         private void compileShaderFiles()
         {
+            if (shaderStreams.Count == 0)
+                throw new Exception("No shader source streams attached: AttachShader()");
+
             //Process and compile shader files
-            foreach (KeyValuePair<ShaderType, Stream> shaderInfo in shaderFiles)
+            foreach (KeyValuePair<ShaderType, Stream> shaderInfo in shaderStreams)
             {
-                string shaderText = readShaderFromFile(shaderInfo.Value, shaderInfo.Key);
+                string shaderText = readShaderFromStream(shaderInfo.Value, shaderInfo.Key);
 
                 uint shaderID = GL.Instance.CreateShader(shaderInfo.Key);
                 if (shaderID == 0)
@@ -151,7 +169,7 @@ namespace Easy2D
             GL.Instance.Uniform1(GetUniformLocation(uniformName), value ? 1 : 0);
         }
 
-        public void SetMatrix(string uniformName, Matrix4 value, bool transpose = true)
+        public void SetMatrix(string uniformName, Matrix4x4 value, bool transpose = true)
         {
             unsafe
             {
@@ -164,13 +182,13 @@ namespace Easy2D
             GL.Instance.Uniform1(GetUniformLocation(uniformName), values);
         }
 
-        private string readShaderFromFile(Stream fileName, ShaderType shaderType)
+        private string readShaderFromStream(Stream stream, ShaderType shaderType)
         {
             StringBuilder shader = new StringBuilder();
 
             try
             {
-                using (StreamReader reader = new StreamReader(fileName))
+                using (StreamReader reader = new StreamReader(stream))
                 {
                     string line;
                     while ((line = reader.ReadLine()) != null)
@@ -205,7 +223,7 @@ namespace Easy2D
             }
             else
             {
-                bind(null);
+                //bind(null);
                 compileShaderFiles();
             }
         }
@@ -218,7 +236,10 @@ namespace Easy2D
         protected override void delete()
         {
             GL.Instance.DeleteProgram(Handle);
-            Handle = uint.MaxValue;
+            Handle = UninitializedHandle;
+
+            uniformLocationCache.Clear();
+            shaderStreams.Clear();
         }
     }
 }

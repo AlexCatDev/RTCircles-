@@ -1,5 +1,5 @@
 ﻿using Easy2D;
-using OpenTK.Mathematics;
+using System.Numerics;
 
 namespace RTCircles
 {
@@ -92,7 +92,7 @@ namespace RTCircles
             speedSliderBar.ValueChanged += (speedValue) =>
             {
                 if(OsuContainer.Beatmap != null)
-                    OsuContainer.Beatmap.Song.PlaybackSpeed = speedValue;
+                    OsuContainer.Beatmap.Song.Tempo = speedValue;
             };
 
             Container.Add(speedSliderBar);
@@ -224,7 +224,7 @@ namespace RTCircles
                 hpSliderBar.Value = OsuContainer.Beatmap.HP;
                 hpSliderBar.Render(g);
 
-                speedSliderBar.Value = OsuContainer.Beatmap.Song.PlaybackSpeed;
+                speedSliderBar.Value = OsuContainer.Beatmap.Song.Tempo;
                 speedSliderBar.Render(g);
 
                 g.DrawStringCentered($"CS: {OsuContainer.Beatmap.CS}", Font.DefaultFont, csSliderBar.Position + csSliderBar.Size / 2, Colors.White, textScale);
@@ -232,7 +232,7 @@ namespace RTCircles
                 g.DrawStringCentered($"OD: {OsuContainer.Beatmap.OD}", Font.DefaultFont, odSliderBar.Position + odSliderBar.Size / 2, Colors.White, textScale);
                 g.DrawStringCentered($"HP: {OsuContainer.Beatmap.HP}", Font.DefaultFont, hpSliderBar.Position + hpSliderBar.Size / 2, Colors.White, textScale);
 
-                var playbackSpeed = OsuContainer.Beatmap.Song.PlaybackSpeed;
+                var playbackSpeed = OsuContainer.Beatmap.Song.Tempo;
                 var currentBPM = (60000 / OsuContainer.CurrentBeatTimingPoint?.BeatLength) * playbackSpeed;
 
                 g.DrawStringCentered($"Song Speed: {playbackSpeed:F2}x ({currentBPM:F0} BPM)", Font.DefaultFont, speedSliderBar.Position + speedSliderBar.Size / 2, Colors.White, textScale);

@@ -1,6 +1,6 @@
 ﻿using Easy2D;
 using Silk.NET.OpenGLES;
-using OpenTK.Mathematics;
+using System.Numerics;
 using System.Collections.Generic;
 using System;
 
@@ -43,9 +43,9 @@ namespace RTCircles
             {
                 int slot = g.GetTextureSlot(Easy2D.Texture.WhiteSquare);
 
-                var triangle = g.VertexBatch.GetTriangleStrip(3);
+                var triangle = g.VertexBuilder.GetTriangleSpan();
 
-                var col = new Vector4(parent.BaseColor.Xyz * colorOffset, 1);
+                var col = new Vector4(parent.BaseColor.Xyz() * colorOffset, 1);
 
                 triangle[0].Position = pos;
                 triangle[0].Color = col + parent.TriangleAdditive;
@@ -111,6 +111,7 @@ namespace RTCircles
             graphics.DrawInFrameBuffer(triangleFramebuffer, () =>
             {
                 graphics.DrawRectangle(Vector2.Zero, triangleFramebuffer.Texture.Size, BackgroundColor ?? BaseColor);
+
                 for (int i = triangles.Count - 1; i >= 0; i--)
                 {
                     triangles[i].Render(graphics);

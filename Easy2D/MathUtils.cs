@@ -1,4 +1,4 @@
-﻿using OpenTK.Mathematics;
+﻿using System.Numerics;
 using System;
 using System.Runtime.InteropServices;
 
@@ -6,58 +6,53 @@ namespace Easy2D
 {
     public static class MathUtils
     {
-        public static Vector3 RainbowColor(double time, float saturation = 1, float brightness = 1)
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static Vector3 RainbowColor(double progress, float saturation = 1, float brightness = 1)
         {
-            time /= 10;
-            float hue = (float)(time % 1);
+            float hue = (float)(progress % 1);
 
-            var color = (Vector4)Color4.FromHsv(new Vector4(hue, saturation, brightness, 1));
-            return color.Xyz;
+            return Colors.FromHsv(new Vector3(hue, saturation, brightness));
         }
 
-        public static float ToDegrees(float radians)
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static float ToDegrees(this float radians)
         {
             return radians * 57.2957795131f;
         }
 
-        public static float ToRadians(float degrees)
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static float ToRadians(this float degrees)
         {
             return degrees * 0.01745329251f;
         }
 
-        public static double ToDegrees(double radians)
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static double ToDegrees(this double radians)
         {
             return radians * 57.2957795131;
         }
 
-        public static double ToRadians(double degrees)
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static double ToRadians(this double degrees)
         {
-            return degrees *0.01745329251;
+            return degrees * 0.01745329251;
         }
 
-        public static int GetSize<T>(this T t) where T : unmanaged
-        {
-            return Marshal.SizeOf<T>();
-        }
-
-        public static int GetSize<T>(this T[] t) where T : unmanaged
-        {
-            return Marshal.SizeOf<T>() * t.Length;
-        }
-
-        public static float OscillateValue(float input, float min, float max)
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static float OscillateValue(this float input, float min, float max)
         {
             var range = max - min;
             return min + MathF.Abs(((input + range) % (range * 2)) - range);
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public static double OscillateValue(this double input, double min, double max)
         {
             var range = max - min;
             return min + Math.Abs(((input + range) % (range * 2)) - range);
         }
 
-        public static bool IsPointInsideRadius(Vector2 point1, Vector2 point2, float radius) => (point1 - point2).LengthFast < radius;
+        public static bool IsPointInsideRadius(Vector2 point1, Vector2 point2, float radius) => (point1 - point2).Length() < radius;
 
         public static float AtanVec(Vector2 pos1, Vector2 pos2) => MathF.Atan2(pos1.Y - pos2.Y, pos1.X - pos2.X); 
 
@@ -115,6 +110,7 @@ namespace Easy2D
             return (value - fromSource) / (toSource - fromSource) * (toTarget - fromTarget) + fromTarget;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public static float Clamp(this float value, float min, float max)
         {
             if (value > max)
@@ -125,20 +121,22 @@ namespace Easy2D
             return value;
         }
 
-
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public static void ClampRef(this ref float value, float min, float max)
         {
             if (value < min)
                 value = min;
-            if(value > max)
+            else if(value > max)
                 value = max;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public static void MapRef(this ref float value, float fromSource, float toSource, float fromTarget, float toTarget)
         {
             value = (value - fromSource) / (toSource - fromSource) * (toTarget - fromTarget) + fromTarget;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public static double Clamp(this double value, double min, double max)
         {
             if (value > max)
@@ -149,6 +147,7 @@ namespace Easy2D
             return value;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public static int Clamp(this int value, int min, int max)
         {
             if (value > max)
@@ -158,5 +157,8 @@ namespace Easy2D
 
             return value;
         }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static Vector3 Xyz(this Vector4 value) => new Vector3(value.X, value.Y, value.Z);
     }
 }

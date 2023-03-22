@@ -1,4 +1,4 @@
-﻿using OpenTK.Mathematics;
+﻿using System.Numerics;
 using Silk.NET.OpenGLES;
 
 namespace Easy2D
@@ -106,7 +106,7 @@ namespace Easy2D
             texture.Bind(0);
 
             blurShader.Bind();
-            blurShader.SetMatrix("u_Projection", Matrix4.CreateOrthographicOffCenter(0, w, h, 0, -1, 1));
+            blurShader.SetMatrix("u_Projection", Matrix4x4.CreateOrthographicOffCenter(0, w, h, 0, -1, 1));
             blurShader.SetInt("u_SrcTexture", 0);
 
             blurShader.SetVector("u_Direction", horizontalBlur);
@@ -159,7 +159,7 @@ namespace Easy2D
             Vector2 verticalBlur = new Vector2(0, radius);
 
             blurShader.Bind();
-            blurShader.SetMatrix("u_Projection", Matrix4.CreateOrthographicOffCenter(0, w, h, 0, -1, 1));
+            blurShader.SetMatrix("u_Projection", Matrix4x4.CreateOrthographicOffCenter(0, w, h, 0, -1, 1));
             blurShader.SetInt("u_SrcTexture", 0);
             blurShader.SetVector("u_QuadSize", new Vector2(w, h));
 

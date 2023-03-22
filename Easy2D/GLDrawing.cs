@@ -1,6 +1,5 @@
-﻿using OpenTK.Mathematics;
+﻿using System.Numerics;
 using Silk.NET.OpenGLES;
-using SixLabors.ImageSharp.PixelFormats;
 
 namespace Easy2D
 {

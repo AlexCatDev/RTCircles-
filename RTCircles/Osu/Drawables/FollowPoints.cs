@@ -1,5 +1,5 @@
 ﻿using Easy2D;
-using OpenTK.Mathematics;
+using System.Numerics;
 using OsuParsers.Beatmaps.Objects;
 using System;
 
@@ -58,7 +58,7 @@ namespace RTCircles
          
             Vector2 toPos = OsuContainer.MapToPlayfield(endObject.Position);
 
-            if ((toPos - fromPos).Length < OsuContainer.Beatmap.CircleRadius * 4)
+            if ((toPos - fromPos).Length() < OsuContainer.Beatmap.CircleRadius * 4)
             {
                 IsDead = true;
                 return;
@@ -85,7 +85,7 @@ namespace RTCircles
                 return;
             }
 
-            Vector3 color = from.CurrentColor.Xyz;
+            Vector3 color = from.CurrentColor.Xyz();
 
             g.DrawLine(fromPos, toPos, new Vector4(color, alpha), OsuContainer.Beatmap.CircleRadius / 14);
             /*

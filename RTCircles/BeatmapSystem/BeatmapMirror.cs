@@ -13,7 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Easy2D;
 using Newtonsoft.Json;
-using OpenTK.Mathematics;
+using System.Numerics;
 using OsuParsers.Beatmaps;
 using OsuParsers.Decoders;
 using Realms;
@@ -385,7 +385,7 @@ namespace RTCircles
                 });
             }catch (Exception ex)
             {
-                NotificationManager.ShowMessage($"Something went horrible wrong when importing beatmap\n{ex.Message}", Colors.Red.Xyz, 20);
+                NotificationManager.ShowMessage($"Something went horrible wrong when importing beatmap\n{ex.Message}", Colors.Red, 20);
             }
         }
 

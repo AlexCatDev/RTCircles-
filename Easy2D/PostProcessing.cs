@@ -1,11 +1,5 @@
-﻿using OpenTK.Mathematics;
+﻿using System.Numerics;
 using Silk.NET.OpenGLES;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Easy2D
 {
@@ -33,11 +27,11 @@ namespace Easy2D
 
         private static bool Enabled => MotionBlur || Bloom;
 
-        private static Vector2i drawSize;
+        private static Vector2 drawSize;
 
         public static float BloomThreshold = 1f;
 
-        private static Vector4i viewPort;
+        private static Vector4 viewPort;
 
         static PostProcessing()
         {
@@ -48,7 +42,7 @@ namespace Easy2D
             motionBlurShader.AttachShader(ShaderType.FragmentShader, Utils.GetInternalResource("Shaders.MotionBlur.frag"));
         }
 
-        public static void Use(Vector2i windowSize, Vector2i drawSize)
+        public static void Use(Vector2 windowSize, Vector2 drawSize)
         {
             if (Enabled == false)
             {
@@ -73,7 +67,7 @@ namespace Easy2D
 
             if (dst is not null)
             {
-                bloomShader.SetMatrix("u_Projection", Matrix4.CreateOrthographicOffCenter(0, dst.Width, dst.Height, 0, -1f, 1f));
+                bloomShader.SetMatrix("u_Projection", Matrix4x4.CreateOrthographicOffCenter(0, dst.Width, dst.Height, 0, -1f, 1f));
                 bloomShader.SetVector("u_QuadSize", new Vector2(dst.Width, dst.Height));
                 dst.Bind();
                 Viewport.SetViewport(0, 0, dst.Width, dst.Height);
@@ -82,7 +76,7 @@ namespace Easy2D
             }
             else
             {
-                bloomShader.SetMatrix("u_Projection", Matrix4.CreateOrthographicOffCenter(0, drawSize.X, drawSize.Y, 0, -1f, 1f));
+                bloomShader.SetMatrix("u_Projection", Matrix4x4.CreateOrthographicOffCenter(0, drawSize.X, drawSize.Y, 0, -1f, 1f));
                 bloomShader.SetVector("u_QuadSize", new Vector2(drawSize.X, drawSize.Y));
                 FrameBuffer.BindDefault(forceUseScreen: true);
                 Viewport.SetViewport(viewPort);
@@ -208,7 +202,7 @@ namespace Easy2D
             motionBlurBuffer.Texture.Bind(0);
             MainFrameBuffer.Texture.Bind(5);
 
-            motionBlurShader.SetMatrix("u_Projection", Matrix4.CreateOrthographicOffCenter(0, motionBlurBuffer.Width, motionBlurBuffer.Height, 0, -1f, 1f));
+            motionBlurShader.SetMatrix("u_Projection", Matrix4x4.CreateOrthographicOffCenter(0, motionBlurBuffer.Width, motionBlurBuffer.Height, 0, -1f, 1f));
             motionBlurShader.SetVector("u_QuadSize", new Vector2(motionBlurBuffer.Width, motionBlurBuffer.Height));
             Viewport.SetViewport(0, 0, motionBlurBuffer.Width, motionBlurBuffer.Height);
             GLDrawing.DrawQuad();

@@ -141,20 +141,20 @@ public unsafe class Benchmarks
             var quad = safePrimitiveBatch.GetTriangleStrip(4);
 
             quad[0].TextureSlot = 0;
-            quad[0].Position = new OpenTK.Mathematics.Vector2(0, 0);
-            quad[0].Color = new OpenTK.Mathematics.Vector4(1, 1, 1, 1);
+            quad[0].Position = new Vector2(0, 0);
+            quad[0].Color = new Vector4(1, 1, 1, 1);
 
             quad[1].TextureSlot = 0;
-            quad[1].Position = new OpenTK.Mathematics.Vector2(100, 0);
-            quad[1].Color = new OpenTK.Mathematics.Vector4(1, 1, 1, 1);
+            quad[1].Position = new Vector2(100, 0);
+            quad[1].Color = new Vector4(1, 1, 1, 1);
 
             quad[2].TextureSlot = 0;
-            quad[2].Position = new OpenTK.Mathematics.Vector2(100, 100);
-            quad[2].Color = new OpenTK.Mathematics.Vector4(1, 1, 1, 1);
+            quad[2].Position = new Vector2(100, 100);
+            quad[2].Color = new Vector4(1, 1, 1, 1);
 
             quad[3].TextureSlot = 0;
-            quad[3].Position = new OpenTK.Mathematics.Vector2(0, 100);
-            quad[3].Color = new OpenTK.Mathematics.Vector4(1, 1, 1, 1);
+            quad[3].Position = new Vector2(0, 100);
+            quad[3].Color = new Vector4(1, 1, 1, 1);
         }
 
         safePrimitiveBatch.Reset();
@@ -168,23 +168,23 @@ public unsafe class Benchmarks
             var quad = unsafePrimitiveBatch.GetTriangleStrip(4);
 
             quad->TextureSlot = 0;
-            quad->Position = new OpenTK.Mathematics.Vector2(0, 0);
-            quad->Color = new OpenTK.Mathematics.Vector4(1, 1, 1, 1);
+            quad->Position = new Vector2(0, 0);
+            quad->Color = new Vector4(1, 1, 1, 1);
             ++quad;
 
             quad->TextureSlot = 0;
-            quad->Position = new OpenTK.Mathematics.Vector2(100, 0);
-            quad->Color = new OpenTK.Mathematics.Vector4(1, 1, 1, 1);
+            quad->Position = new Vector2(100, 0);
+            quad->Color = new Vector4(1, 1, 1, 1);
             ++quad;
 
             quad->TextureSlot = 0;
-            quad->Position = new OpenTK.Mathematics.Vector2(100, 100);
-            quad->Color = new OpenTK.Mathematics.Vector4(1, 1, 1, 1);
+            quad->Position = new Vector2(100, 100);
+            quad->Color = new Vector4(1, 1, 1, 1);
             ++quad;
 
             quad->TextureSlot = 0;
-            quad->Position = new OpenTK.Mathematics.Vector2(0, 100);
-            quad->Color = new OpenTK.Mathematics.Vector4(1, 1, 1, 1);
+            quad->Position = new Vector2(0, 100);
+            quad->Color = new Vector4(1, 1, 1, 1);
         }
 
         unsafePrimitiveBatch.Reset();
@@ -198,20 +198,20 @@ public unsafe class Benchmarks
             var quad = unsafePrimitiveBatch.GetTriangleStrip(4);
 
             quad[0].TextureSlot = 0;
-            quad[0].Position = new OpenTK.Mathematics.Vector2(0, 0);
-            quad[0].Color = new OpenTK.Mathematics.Vector4(1, 1, 1, 1);
+            quad[0].Position = new Vector2(0, 0);
+            quad[0].Color = new Vector4(1, 1, 1, 1);
 
             quad[1].TextureSlot = 0;
-            quad[1].Position = new OpenTK.Mathematics.Vector2(100, 0);
-            quad[1].Color = new OpenTK.Mathematics.Vector4(1, 1, 1, 1);
+            quad[1].Position = new Vector2(100, 0);
+            quad[1].Color = new Vector4(1, 1, 1, 1);
 
             quad[2].TextureSlot = 0;
-            quad[2].Position = new OpenTK.Mathematics.Vector2(100, 100);
-            quad[2].Color = new OpenTK.Mathematics.Vector4(1, 1, 1, 1);
+            quad[2].Position = new Vector2(100, 100);
+            quad[2].Color = new Vector4(1, 1, 1, 1);
 
             quad[3].TextureSlot = 0;
-            quad[3].Position = new OpenTK.Mathematics.Vector2(0, 100);
-            quad[3].Color = new OpenTK.Mathematics.Vector4(1, 1, 1, 1);
+            quad[3].Position = new Vector2(0, 100);
+            quad[3].Color = new Vector4(1, 1, 1, 1);
         }
 
         unsafePrimitiveBatch.Reset();

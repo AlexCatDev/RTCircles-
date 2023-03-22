@@ -82,6 +82,25 @@ namespace Easy2D
         /// <param name="startIndex"></param>
         /// <param name="objectCount"></param>
         /// <param name="objects"></param>
+        public void UploadData(uint startIndex, ReadOnlySpan<T> data)
+        {
+            unsafe
+            {
+                Bind();
+
+                uint sizeInBytes = (uint)data.Length * SizeOfTypeInBytes;
+                uint offsetInBytes = startIndex * SizeOfTypeInBytes;
+
+                GL.Instance.BufferSubData(bufferType, (IntPtr)offsetInBytes, sizeInBytes, data);
+            }
+        }
+
+        /// <summary>
+        /// Will bind and upload data to GPU
+        /// </summary>
+        /// <param name="startIndex"></param>
+        /// <param name="objectCount"></param>
+        /// <param name="objects"></param>
         public unsafe void UploadData(uint startIndex, uint objectCount, T* data)
         {
             Bind();

@@ -1,6 +1,6 @@
 ﻿using Easy2D;
 using Easy2D.Game;
-using OpenTK.Mathematics;
+using System.Numerics;
 using Silk.NET.Input;
 using System;
 using System.Collections.Generic;
@@ -37,7 +37,9 @@ namespace RTCircles
             pos = visualizer.Position + new Vector2(MathF.Cos(theta), MathF.Sin(theta)) * visualizer.Radius;
 
             Layer = visualizer.Layer - 1;
-            color.Xyz = new Vector3(1);
+            color.X = 1;
+            color.Y = 1;
+            color.Z = 1;
 
             size.X = RNG.Next(16, 32);
             size.Y = size.X;
@@ -61,7 +63,7 @@ namespace RTCircles
             pos += velocity * delta * (visualizer.BeatValue + 0.05f);
 
             angle += 2500 * scale * delta * (visualizer.BeatValue + 0.05f) * angleDir;
-            color.W = Interpolation.ValueAt((pos - MainGame.WindowCenter).Length, 0, 1, 0, 1200 * MainGame.Scale, EasingTypes.InExpo).Clamp(0, 1);
+            color.W = Interpolation.ValueAt((pos - MainGame.WindowCenter).Length(), 0, 1, 0, 1200 * MainGame.Scale, EasingTypes.InExpo).Clamp(0, 1);
 
             if (new Rectangle(new Vector2(-100), new Vector2(MainGame.WindowWidth + 100, MainGame.WindowHeight + 100)).IntersectsWith(Bounds) == false)
                 IsDead = true;
@@ -667,12 +669,9 @@ namespace RTCircles
         {
             if (Sound is null)
                 return;
-            /*
-            if (Style == VisualizerStyle.Bars)
-                drawCircle(g);
-            else
+            
                 drawTrapnation(g);
-            */
+            
 
             //test3(GetMagnitudesForFrequencyRange(80, 150), g, Position, 0, new Vector4(1, 1, 1, 1), BarLength, Thickness, Radius);
             //drawTrapnation(g);
@@ -687,7 +686,7 @@ namespace RTCircles
 
             controlPoints.Clear();
 
-            var buffer = GetMagnitudesForFrequencyRange(40, 250);
+            var buffer = GetMagnitudesForFrequencyRange(0, 280);
 
             for (int k = 0; k < MirrorCount; k++)
             {
@@ -718,12 +717,11 @@ namespace RTCircles
 
             int slot = g.GetTextureSlot(null);
 
-            var points = PathApproximator.ApproximateBSpline(controlPoints, 2);
-            points = controlPoints;
+            var points = PathApproximator.ApproximateBSpline(controlPoints, 6);
             float theta = -MathF.PI / 2;
             float stepTheta = (MathF.PI * 2) / (points.Count);
 
-            var vertices = g.VertexBatch.GetTriangleStrip(points.Count * 2);
+            var vertices = g.VertexBuilder.GetTriangleStripSpan((uint)points.Count * 2);
             int verticesIndex = 0;
             for (int i = 0; i < points.Count; i++)
             {
@@ -753,7 +751,7 @@ namespace RTCircles
             }
 
             Vector4 innerColor = Colors.From255RGBA(37, 37, 37, 255);
-            vertices = g.VertexBatch.GetTriangleStrip(points.Count * 2);
+            vertices = g.VertexBuilder.GetTriangleStripSpan((uint)points.Count * 2);
             verticesIndex = 0;
             for (int i = 0; i < points.Count; i++)
             {
@@ -798,7 +796,7 @@ namespace RTCircles
                         g.DrawLine(prevPos.Value, pos, Colors.Black, 10f);
                     }
 
-                    g.DrawRectangleCentered(pos, new Vector2(20), (Vector4)Color4.Red, Texture.WhiteCircle);
+                    g.DrawRectangleCentered(pos, new Vector2(20), Colors.Red, Texture.WhiteCircle);
 
                     theta += stepTheta;
 

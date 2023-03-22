@@ -1,6 +1,4 @@
-﻿using OpenTK.Mathematics;
-using System;
-using System.Collections.Concurrent;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -11,9 +9,11 @@ namespace Easy2D
     /// </summary>
     public abstract class GLObject
     {
-        public uint Handle { get; protected set; } = UInt32.MaxValue;
+        public const UInt32 UninitializedHandle = UInt32.MaxValue;
 
-        public bool IsInitialized => Handle != UInt32.MaxValue;
+        public uint Handle { get; protected set; } = UninitializedHandle;
+
+        public bool IsInitialized => Handle != UninitializedHandle;
 
         protected WeakReference<GLObject> weakReference;
 

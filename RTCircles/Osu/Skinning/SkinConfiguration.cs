@@ -1,5 +1,5 @@
 ﻿using Easy2D;
-using OpenTK.Mathematics;
+using System.Numerics;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,12 +8,12 @@ namespace RTCircles
 {
     public class SkinConfiguration
     {
-        public List<Vector3> ComboColors = new List<Vector3>() {  Colors.From255RGBA(139, 233, 253, 255).Xyz,
-                                                                  Colors.From255RGBA(80, 250, 123, 255).Xyz,
-                                                                  Colors.From255RGBA(255, 121, 198, 255).Xyz,
-                                                                  Colors.From255RGBA(189, 147, 249, 255).Xyz,
-                                                                  Colors.From255RGBA(241, 250, 140, 255).Xyz,
-                                                                  Colors.From255RGBA(255, 255, 255, 255).Xyz
+        public List<Vector3> ComboColors = new List<Vector3>() {  Colors.From255RGBA(139, 233, 253, 255).Xyz(),
+                                                                  Colors.From255RGBA(80, 250, 123, 255).Xyz(),
+                                                                  Colors.From255RGBA(255, 121, 198, 255).Xyz(),
+                                                                  Colors.From255RGBA(189, 147, 249, 255).Xyz(),
+                                                                  Colors.From255RGBA(241, 250, 140, 255).Xyz(),
+                                                                  Colors.From255RGBA(255, 255, 255, 255).Xyz()
         };
 
         public Vector3 ColorFromIndex(int index) {
@@ -77,10 +77,10 @@ namespace RTCircles
 
             if (ComboColors.Count == 0)
             {
-                ComboColors.Add(Colors.From255RGBA(255, 150, 0, 255).Xyz);
-                ComboColors.Add(Colors.From255RGBA(5, 240, 5, 255).Xyz);
-                ComboColors.Add(Colors.From255RGBA(5, 5, 240, 255).Xyz);
-                ComboColors.Add(Colors.From255RGBA(240, 5, 5, 255).Xyz);
+                ComboColors.Add(Colors.From255RGBA(255, 150, 0, 255).Xyz());
+                ComboColors.Add(Colors.From255RGBA(5, 240, 5, 255).Xyz());
+                ComboColors.Add(Colors.From255RGBA(5, 5, 240, 255).Xyz());
+                ComboColors.Add(Colors.From255RGBA(240, 5, 5, 255).Xyz());
                 Utils.Log($"Skin.ini parsing completed with 0 combo colors ???", LogLevel.Error);
             }
         }

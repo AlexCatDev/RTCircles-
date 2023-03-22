@@ -1,5 +1,5 @@
 ﻿using Silk.NET.OpenGLES;
-using OpenTK.Mathematics;
+using System.Numerics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +22,7 @@ namespace Easy2D
         static Graphics()
         {
             MaxTextureSlots = GL.MaxTextureSlots;
+            //MaxTextureSlots = 8;
             /*
             if (MaxTextureSlots == 0)
                 MaxTextureSlots = 8;
@@ -31,7 +32,7 @@ namespace Easy2D
             Utils.Log($"Max Available Texture Slots: {MaxTextureSlots}", LogLevel.Important);
 
             textureSlots = new int[MaxTextureSlots];
-
+            
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("switch(v_TextureSlot) {");
             for (int i = 0; i < MaxTextureSlots; i++)
@@ -53,10 +54,13 @@ namespace Easy2D
 
         private Dictionary<Texture, int> texturesToBind = new Dictionary<Texture, int>();
 
-        public Matrix4 Projection;
+        public Matrix4x4 Projection;
 
         public readonly Shader Shader = new Shader();
-        public readonly PrimitiveBatch<Vertex> VertexBatch;
+        private readonly GLBuffer<Vertex> VertexBuffer;
+        private readonly GLBuffer<uint> IndexBuffer;
+        private readonly VertexArray VertexArray;
+        public readonly PrimitiveBuilder<Vertex> VertexBuilder;
 
         public ulong VerticesDrawn { get; private set; }
         public ulong IndicesDrawn { get; private set; }
@@ -78,12 +82,23 @@ namespace Easy2D
 
         public Graphics(int vertexCount = 40_000, int indexCount = 60_000)
         {
-            VertexBatch = new PrimitiveBatch<Vertex>(vertexCount, indexCount);
+            VertexBuilder = new PrimitiveBuilder<Vertex>((uint)vertexCount, (uint)indexCount);
+
+            VertexBuffer = new GLBuffer<Vertex>(BufferTargetARB.ArrayBuffer, BufferUsageARB.DynamicDraw, vertexCount);
+            IndexBuffer = new GLBuffer<uint>(BufferTargetARB.ElementArrayBuffer, BufferUsageARB.DynamicDraw, indexCount);
+
+            VertexArray = new VertexArray();
+            VertexArray.AddBuffer(VertexBuffer, Vertex.GetLayout());
 
             Shader.AttachShader(ShaderType.VertexShader, Utils.GetInternalResource("Shaders.Default.vert"));
             Shader.AttachShader(ShaderType.FragmentShader, Utils.GetInternalResource("Shaders.Default.frag"));
 
             Shader.AttachPreprocessor(ShaderType.FragmentShader, fragmentPreprocessor);
+
+            VertexBuilder.RanOutOfMemory += () =>
+            {
+                EndDraw();
+            };
         }
 
         public void Recompile()
@@ -121,7 +136,7 @@ namespace Easy2D
             Vector2 difference = endPosition - startPosition;
             Vector2 perpen = new Vector2(difference.Y, -difference.X);
 
-            perpen.Normalize();
+            perpen = Vector2.Normalize(perpen);
 
             Vector2 topRight = new Vector2(startPosition.X + perpen.X * thickness,
                 startPosition.Y + perpen.Y * thickness);
@@ -133,7 +148,7 @@ namespace Easy2D
 
             Vector2 bottomLeft = endPosition;
 
-            var quad = VertexBatch.GetQuad();
+            var quad = VertexBuilder.GetQuadSpan();
 
             int slot = GetTextureSlot(texture);
 
@@ -167,7 +182,7 @@ namespace Easy2D
             bottomLeft = new Vector2(endPosition.X - perpen.X * thickness,
                                              endPosition.Y - perpen.Y * thickness);
 
-            quad = VertexBatch.GetQuad();
+            quad = VertexBuilder.GetQuadSpan();
 
             quad[0].Color = color;
             quad[0].Position = topRight;
@@ -200,7 +215,7 @@ namespace Easy2D
             Vector2 difference = endPosition - startPosition;
             Vector2 perpen = new Vector2(difference.Y, -difference.X);
 
-            perpen.Normalize();
+            perpen = Vector2.Normalize(perpen);
 
             Vector2 topLeft = new Vector2(endPosition.X + perpen.X * thickness,
                 endPosition.Y + perpen.Y * thickness);
@@ -212,7 +227,7 @@ namespace Easy2D
 
             Vector2 bottomRight = startPosition;
 
-            var quad = VertexBatch.GetQuad();
+            var quad = VertexBuilder.GetQuadSpan();
 
             int slot = GetTextureSlot(texture);
 
@@ -246,7 +261,7 @@ namespace Easy2D
             Vector2 difference = endPosition - startPosition;
             Vector2 perpen = new Vector2(difference.Y, -difference.X);
 
-            perpen.Normalize();
+            perpen = Vector2.Normalize(perpen);
 
             Vector2 topLeft = new Vector2(startPosition.X + perpen.X * thickness / 2f,
                 startPosition.Y + perpen.Y * thickness / 2f);
@@ -260,7 +275,7 @@ namespace Easy2D
             Vector2 bottomRight = new Vector2(endPosition.X + perpen.X * thickness / 2f,
                 endPosition.Y + perpen.Y * thickness / 2f);
 
-            var quad = VertexBatch.GetQuad();
+            var quad = VertexBuilder.GetQuadSpan();
 
             int slot = GetTextureSlot(texture);
 
@@ -297,7 +312,7 @@ namespace Easy2D
             float sin = MathF.Sin(angle);
             Vector2 step = new Vector2(cos, sin) * spacing;
 
-            float degrees = MathHelper.RadiansToDegrees(angle);
+            float degrees = MathUtils.ToDegrees(angle);
 
             if (centeredDots == false)
             {
@@ -331,6 +346,9 @@ namespace Easy2D
         #region Text
         public void DrawString(ReadOnlySpan<char> text, Font font, Vector2 position, Vector4 color, float scale = 1f, float? spacing = null)
         {
+            if (text.Length == 0)
+                return;
+
             Vector2 startPosition = position;
 
             scale = Math.Max(0, scale);
@@ -592,7 +610,7 @@ namespace Easy2D
 
             frameBuffer.Bind();
 
-            var newProj = Matrix4.CreateOrthographicOffCenter(0, frameBuffer.Width, frameBuffer.Height, 0, -10, 10);
+            var newProj = Matrix4x4.CreateOrthographicOffCenter(0, frameBuffer.Width, frameBuffer.Height, 0, -10, 10);
 
             Projection = newProj;
 
@@ -659,7 +677,7 @@ namespace Easy2D
         public void DrawQuadrilateral(Vector2 topLeft, Vector2 topRight, Vector2 bottomLeft, Vector2 bottomRight, Vector4 color)
         {
             int slot = GetTextureSlot(null);
-            var quad = VertexBatch.GetQuad();
+            var quad = VertexBuilder.GetQuadSpan();
 
             quad[0].Position = topLeft;
             quad[0].TextureSlot = slot;
@@ -689,7 +707,7 @@ namespace Easy2D
         public void DrawTriangle(Vector2 p1, Vector2 p2, Vector2 p3, Vector4 color)
         {
             int slot = GetTextureSlot(null);
-            var tri = VertexBatch.GetTriangle();
+            var tri = VertexBuilder.GetTriangleSpan();
 
             tri[0].TextureSlot = slot;
             tri[0].Position = p1;
@@ -735,13 +753,13 @@ namespace Easy2D
                 }
             }
 
-            float rotation = (float)MathUtils.ToRadians(rotDegrees);
+            float rotation = MathUtils.ToRadians(rotDegrees);
 
             Vector2 center = position + size / 2f;
 
             int slot = GetTextureSlot(texture);
 
-            var quad = VertexBatch.GetQuad();
+            var quad = VertexBuilder.GetQuadSpan();
 
             quad[0].Position = position;
             quad[0].TexCoord = new Vector2(texX, texY);
@@ -781,7 +799,7 @@ namespace Easy2D
         {
             int slot = GetTextureSlot(texture);
 
-            var quad = VertexBatch.GetQuad();
+            var quad = VertexBuilder.GetQuadSpan();
 
             quad[0].Position = position;
             quad[0].TexCoord = textureRectangle.TopLeft;
@@ -812,10 +830,10 @@ namespace Easy2D
             quad[3].Rotation = rotation;
         }
 
-        public void DrawEllipse(Vector2 position, float startAngle, float endAngle, float outerRadius, float innerRadius, Vector4 color, Texture texture = null, int segments = 50, bool wrapUV = true, Rectangle? textureCoords = null)
+        public void DrawEllipse(Vector2 position, float startAngle, float endAngle, float outerRadius, float innerRadius, Vector4 color, Texture texture = null, uint segments = 50, bool wrapUV = true, Rectangle? textureCoords = null)
         {
-            startAngle = MathHelper.DegreesToRadians(startAngle);
-            endAngle = MathHelper.DegreesToRadians(endAngle);
+            startAngle = MathUtils.ToRadians(startAngle);
+            endAngle = MathUtils.ToRadians(endAngle);
 
             int slot = GetTextureSlot(texture);
 
@@ -828,7 +846,7 @@ namespace Easy2D
 
             float cos, sin;
 
-            var vertices = VertexBatch.GetTriangleStrip(segments * 2);
+            var vertices = VertexBuilder.GetTriangleStripSpan(segments * 2);
 
             for (int i = 0; i < vertices.Length; i++)
             {
@@ -914,7 +932,7 @@ namespace Easy2D
 
             Shader.SetVector("u_FinalColorMult", FinalColorMult);
             Shader.SetVector("u_FinalColorAdd", FinalColorAdd);
-
+            
             #region SliderUniforms
             Shader.SetFloat("u_BorderWidth", BorderWidth);
 
@@ -926,16 +944,24 @@ namespace Easy2D
 
             Shader.SetVector("u_ShadowColor", ShadowColor);
             #endregion
+            
 
             Shader.SetMatrix("u_Projection", Projection);
 
             TexturesBound += (ulong)texturesToBind.Count;
-            VerticesDrawn += (ulong)VertexBatch.VertexRenderCount;
-            IndicesDrawn += (ulong)VertexBatch.IndexRenderCount;
-            TrianglesDrawn += (ulong)VertexBatch.TriangleRenderCount;
+            VerticesDrawn += (ulong)VertexBuilder.VerticesPending;
+            IndicesDrawn += (ulong)VertexBuilder.IndicesPending;
+            //TrianglesDrawn += (ulong)VertexBuilder.TriangleRenderCount;
             DrawCalls++;
 
-            VertexBatch.Draw();
+            VertexArray.Bind();
+
+            VertexBuffer.UploadData(0, VertexBuilder.GetWrittenVerticesSpan());
+            IndexBuffer.UploadData(0, VertexBuilder.GetWrittenIndicesSpan());
+
+            GL.DrawElements(PrimitiveType.Triangles, VertexBuilder.IndicesPending, DrawElementsType.UnsignedInt);
+
+            VertexBuilder.Reset();
 
             //Todo dont rebind textures every frame, needs some kind of texture manager
             texturesToBind.Clear();

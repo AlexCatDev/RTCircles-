@@ -1,6 +1,6 @@
 ﻿using Easy2D;
 
-using OpenTK.Mathematics;
+using System.Numerics;
 using System.Collections.Generic;
 
 namespace RTCircles

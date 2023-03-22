@@ -56,16 +56,17 @@
     <EmbeddedResource Include="Textures\circle.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
-    <EmbeddedResource Include="Textures\flatcircle.png" />
+    <EmbeddedResource Include="Textures\flatcircle.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Include="Textures\square.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="ManagedBass" Version="3.1.0" />
-    <PackageReference Include="ManagedBass.Fx" Version="3.1.0" />
-    <PackageReference Include="OpenTK.Mathematics" Version="4.7.5" />
+    <PackageReference Include="ManagedBass" Version="3.1.1" />
+    <PackageReference Include="ManagedBass.Fx" Version="3.1.1" />
     <PackageReference Include="SharpFNT" Version="2.0.0" />
     <PackageReference Include="Silk.NET.OpenGLES" Version="2.16.0" />
     <PackageReference Include="Silk.NET.OpenGLES.Extensions.EXT" Version="2.16.0" />

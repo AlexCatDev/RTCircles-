@@ -1,9 +1,11 @@
 ﻿using Easy2D;
-using OpenTK.Mathematics;
+using System.Numerics;
 using Silk.NET.OpenGLES;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Silk.NET.Input;
+using Silk.NET.Core.Native;
 
 namespace RTCircles
 {
@@ -35,18 +37,18 @@ namespace RTCircles
             Vector2 difference = endPosition - startPosition;
             Vector2 perpen = new Vector2(difference.Y, -difference.X);
 
-            perpen.Normalize();
+            perpen = Vector2.Normalize(perpen);
 
             //First line top
             Vector3 topRight = new Vector3(startPosition.X + perpen.X * radius,
-                startPosition.Y + perpen.Y * radius, 1);
+                startPosition.Y + perpen.Y * radius, -1);
 
             Vector3 topLeft = new Vector3(endPosition.X + perpen.X * radius,
-                endPosition.Y + perpen.Y * radius, 1);
+                endPosition.Y + perpen.Y * radius, -1);
 
-            Vector3 bottomRight = new Vector3(startPosition.X, startPosition.Y, 0);
+            Vector3 bottomRight = new Vector3(startPosition.X, startPosition.Y, 0f);
 
-            Vector3 bottomLeft = new Vector3(endPosition.X, endPosition.Y, 0); ;
+            Vector3 bottomLeft = new Vector3(endPosition.X, endPosition.Y, 0f);
 
             unsafe
             {
@@ -64,10 +66,10 @@ namespace RTCircles
                 topLeft = bottomLeft;
 
                 bottomRight = new Vector3(startPosition.X - perpen.X * radius,
-                                                 startPosition.Y - perpen.Y * radius, 1);
+                                                 startPosition.Y - perpen.Y * radius, -1);
 
                 bottomLeft = new Vector3(endPosition.X - perpen.X * radius,
-                                                 endPosition.Y - perpen.Y * radius, 1);
+                                                 endPosition.Y - perpen.Y * radius, -1);
 
                 quad = sliderBatch.GetQuad();
 
@@ -78,19 +80,19 @@ namespace RTCircles
             }
         }
 
-        //Circles can be pregenerated, optimize circle resolution for the radius
+        //Draw circles as instances in another drawcall l8tr
         private void drawCircle(Vector2 pos, float radius)
         {
             unsafe
             {
                 var verts = sliderBatch.GetTriangleFan(CIRCLE_RESOLUTION);
 
-                verts[0] = new Vector3(pos.X, pos.Y, 0f);
+                verts[0] = new Vector3(pos.X, pos.Y, 0);
 
                 float theta = 0;
                 const float stepTheta = (MathF.PI * 2) / (CIRCLE_RESOLUTION - 2);
 
-                Vector3 vertPos = new Vector3(0, 0, 1f);
+                Vector3 vertPos = new Vector3(0, 0, -1);
 
                 for (int i = 1; i < CIRCLE_RESOLUTION; i++)
                 {
@@ -174,10 +176,9 @@ namespace RTCircles
                 //Make framebuffer the size of the slider bounding box, + the circle radius (circle radius and size is in osu pixels)
                 frameBuffer.EnsureSize(Path.Bounds.Width + radius * 2, Path.Bounds.Height + radius * 2);
 
-                //Cant really rely on a float comparison
                 if (beforeWidth != frameBuffer.Width || beforeHeight != frameBuffer.Height)
                 {
-                    projectionMatrix = Matrix4.CreateOrthographicOffCenter(0, frameBuffer.Width, frameBuffer.Height, 0, 1f, -1f);
+                    projectionMatrix = Matrix4x4.CreateOrthographicOffCenter(0, frameBuffer.Width, frameBuffer.Height, 0, 0f, 1f);
                     hasBeenUpdated = true;
                 }
             }
@@ -202,7 +203,7 @@ namespace RTCircles
 
         private bool hasBeenUpdated = true;
 
-        private Matrix4 projectionMatrix;
+        private Matrix4x4 projectionMatrix;
 
         public Path Path => path;
 
@@ -230,7 +231,7 @@ namespace RTCircles
             Viewport.SetViewport(0, 0, frameBuffer.Width, frameBuffer.Height);
             GL.Instance.Clear(ClearBufferMask.DepthBufferBit);
             sliderShader.Bind();
-            sliderShader.SetMatrix("u_Projection", projectionMatrix);
+            sliderShader.SetMatrix("u_Projection", projectionMatrix, false);
             drawSlider();
         }
 
@@ -242,7 +243,7 @@ namespace RTCircles
                 return;
             }
 
-            if (Precision.AlmostEquals(Alpha, 0))
+            if (Alpha < 0.01)
                 return;
 
             Rectangle bounds = Path.Bounds;

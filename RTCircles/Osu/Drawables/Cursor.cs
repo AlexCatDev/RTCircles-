@@ -1,6 +1,6 @@
 ﻿using Easy2D;
 using Easy2D.Game;
-using OpenTK.Mathematics;
+using System.Numerics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -58,7 +58,7 @@ namespace RTCircles
             {
                 if (trailPieces.Count > 2)
                 {
-                    var verts = g.VertexBatch.GetTriangleStrip((trailPieces.Count * 2) - 2);
+                    var verts = g.VertexBuilder.GetTriangleStripSpan((uint)(trailPieces.Count * 2) - 2);
 
                     //Some weird ass artificating happening here lol!
                     if (verts != null)
@@ -70,7 +70,7 @@ namespace RTCircles
                             Vector2 difference = trailPieces[i].Position - trailPieces[i - 1].Position;
                             Vector2 perpen = new Vector2(difference.Y, -difference.X);
 
-                            perpen.Normalize();
+                            perpen = Vector2.Normalize(perpen);
 
                             verts[vertIndex].Position = trailPieces[i - 1].Position - perpen * trailPieces[i - 1].Width;
                             verts[vertIndex].Color = trailPieces[i - 1].Color;
@@ -111,7 +111,7 @@ namespace RTCircles
             if (lastMousePos == Vector2.Zero)
                 lastMousePos = mousePos;
 
-            var length = (mousePos - lastMousePos).Length;
+            var length = (mousePos - lastMousePos).Length();
 
             if (length >= 5)
             {
@@ -254,7 +254,7 @@ namespace RTCircles
                     float sin = MathF.Sin(angle);
                     Vector2 step = new Vector2(cos, sin) * (TrailSize.Y / 2);
 
-                    while (previousPosition != position && diff.LengthSquared >= step.LengthSquared)
+                    while (previousPosition != position && diff.LengthSquared() >= step.LengthSquared())
                     {
                         if(trailPieces.Count > 4000)
                         {

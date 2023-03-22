@@ -1,4 +1,4 @@
-﻿using OpenTK.Mathematics;
+﻿using System.Numerics;
 using Silk.NET.OpenGLES;
 using System;
 
@@ -74,14 +74,14 @@ namespace Easy2D
         /// </summary>
         /// <param name="a"></param>
         /// <param name="viewportOverride"></param>
-        public void BindDrawAction(Action a, Vector4i? viewportOverride = null)
+        public void BindDrawAction(Action a, Vector4? viewportOverride = null)
         {
             var startViewport = Viewport.CurrentViewport;
             DefaultFrameBuffer.TryGetTarget(out var prevDefault);
 
             Bind();
             DefaultFrameBuffer.SetTarget(this);
-            Viewport.SetViewport(viewportOverride ?? new Vector4i(0, 0, Width, Height));
+            Viewport.SetViewport(viewportOverride ?? new Vector4(0, 0, Width, Height));
 
             a();
 
@@ -122,7 +122,7 @@ namespace Easy2D
         {
             //Native symbol not found? Multithreading bug
             GL.Instance.DeleteFramebuffer(Handle);
-            Handle = uint.MaxValue;
+            Handle = UninitializedHandle;
             Texture.Delete();
         }
     }

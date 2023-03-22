@@ -1,6 +1,6 @@
 ﻿using Easy2D;
 using Easy2D.Game;
-using OpenTK.Mathematics;
+using System.Numerics;
 using OsuParsers.Beatmaps;
 using OsuParsers.Beatmaps.Objects;
 using OsuParsers.Decoders;
@@ -501,7 +501,7 @@ namespace RTCircles
         {
             Vector2 smokeParticleSize = new Vector2(32f) * MainGame.Scale;
 
-            if ((lastPos - Input.MousePosition).Length > smokeParticleSize.X / 2)
+            if ((lastPos - Input.MousePosition).Length() > smokeParticleSize.X / 2)
             {
                 lastPos = Input.MousePosition;
                 if (Input.IsKeyDown(OsuContainer.SmokeKey))
@@ -629,7 +629,7 @@ namespace RTCircles
                 {
                     if (!showedPauseMessage)
                     {
-                        NotificationManager.ShowMessage("Please wait atleast 2 seconds between pauses", ((Vector4)Color4.SteelBlue).Xyz, 5);
+                        NotificationManager.ShowMessage("Please wait atleast 2 seconds between pauses", Colors.SteelBlue, 5);
                         showedPauseMessage = true;
                     }
                 }

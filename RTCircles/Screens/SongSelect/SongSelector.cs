@@ -1,5 +1,5 @@
 ﻿using Easy2D;
-using OpenTK.Mathematics;
+using System.Numerics;
 using System;
 using System.IO;
 using Easy2D.Game;
@@ -36,7 +36,7 @@ namespace RTCircles
 
         public int ElementSpacing => (int)(8f * MainGame.Scale);
 
-        public Vector2i ElementSize => (Vector2i)(new Vector2(950, 140) * MainGame.Scale);
+        public Vector2 ElementSize => new Vector2((int)(950 * MainGame.Scale), (int)(140 * MainGame.Scale));
         public Rectangle SongInfoBounds => new Rectangle(new Vector2(0, HeaderSize.Y), new Vector2(600 * MainGame.Scale, MainGame.WindowHeight - HeaderSize.Y));
 
         public Rectangle SongsBounds => new Rectangle(MainGame.WindowWidth - ElementSize.X, HeaderSize.Y, ElementSize.X, MainGame.WindowHeight);
@@ -52,7 +52,7 @@ namespace RTCircles
         {
             get
             {
-                int itemSize = ElementSize.Y + ElementSpacing;
+                int itemSize = (int)ElementSize.Y + ElementSpacing;
 
                 int min = -((BeatmapCollection.SearchItems.Count * itemSize)) + itemSize / 2 + (int)HeaderSize.Y;
                 min = Math.Min(0, min);
@@ -157,7 +157,7 @@ namespace RTCircles
 
         private Rectangle searchRect => new Rectangle(SongsBounds.Position, new Vector2(ElementSize.X, ElementSize.Y / 2.3f));
 
-        private Vector2i prevViewport;
+        private Vector2 prevViewport;
         private List<CarouselItem> lastViewedItems = new List<CarouselItem>();
         private List<CarouselItem> viewedItems = new List<CarouselItem>();
         public override void Render(Graphics g)
@@ -177,9 +177,9 @@ namespace RTCircles
                 }
             }
 
-            if(prevViewport != (Vector2i)Viewport.Area.Size)
+            if(prevViewport != Viewport.Area.Size)
             {
-                prevViewport = (Vector2i)Viewport.Area.Size;
+                prevViewport = Viewport.Area.Size;
 
                 if (selectedItem == null)
                     TryScrollToItemAtIndex(0, instant: true);
@@ -319,7 +319,7 @@ namespace RTCircles
             searchForStringPos.X += 15f * MainGame.Scale;
             searchForStringPos.Y -= 5f * MainGame.Scale;
 
-            g.DrawStringNoAlign(searchForString, Font.DefaultFont, searchForStringPos, (Vector4)Color4.LawnGreen, searchForStringScale);
+            g.DrawStringNoAlign(searchForString, Font.DefaultFont, searchForStringPos, Colors.LawnGreen, searchForStringScale);
 
             if (SongSelectScreen.SearchText != null)
                 g.DrawStringNoAlign(SongSelectScreen.SearchText, Font.DefaultFont, searchForStringPos + new Vector2(searchForStringSize.X, 0), Colors.White, searchForStringScale);
@@ -483,7 +483,7 @@ namespace RTCircles
 
         public override bool OnMouseWheel(float delta)
         {
-            scrollMomentum += 800 * delta;
+            scrollMomentum += 1200 * delta;
             scrollTo = null;
             return true;
         }

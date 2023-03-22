@@ -2,7 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using Easy2D;
-using OpenTK.Mathematics;
+using System.Numerics;
 using System;
 
 namespace RTCircles

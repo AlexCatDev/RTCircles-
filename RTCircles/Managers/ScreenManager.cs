@@ -1,5 +1,5 @@
 ﻿using Easy2D;
-using OpenTK.Mathematics;
+using System.Numerics;
 using Silk.NET.Input;
 using System;
 using System.Collections.Generic;
@@ -181,7 +181,7 @@ namespace RTCircles
                 {
                     var startProj = g.Projection;
 
-                    g.Projection = Matrix4.CreateTranslation((isBackwards ? progress - 1 : 1 - progress) * MainGame.WindowWidth, 0, 0) * startProj;
+                    g.Projection = Matrix4x4.CreateTranslation((isBackwards ? progress - 1 : 1 - progress) * MainGame.WindowWidth, 0, 0) * startProj;
                     currentScreen.Render(g);
 
                     //g.Projection = Matrix4.CreateTranslation((isBackwards ? progress : -progress) * MainGame.WindowWidth, 0, 0) * startProj;

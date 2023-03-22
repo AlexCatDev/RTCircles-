@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using OpenTK.Mathematics;
+using System.Numerics;
 using Silk.NET.OpenGLES;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -39,7 +39,7 @@ namespace Easy2D
         public TextureWrapMode WrapS { get; set; } = TextureWrapMode.ClampToEdge;
         public TextureWrapMode WrapT { get; set; } = TextureWrapMode.ClampToEdge;
 
-        public bool ImageDoneUploading { get; private set; } 
+        public bool ImageDoneUploading { get; private set; }
 
         //Default = true
         /// <summary>
@@ -212,7 +212,10 @@ namespace Easy2D
             Width = image.Width;
             Height = image.Height;
 
-            image.TryGetSinglePixelSpan(out Span<Rgba32> imageData);
+            bool singleSpan = image.TryGetSinglePixelSpan(out Span<Rgba32> imageData);
+
+            if (!singleSpan)
+                throw new Exception("Get Single Pixel Span Failed");
 
             unsafe
             {
@@ -231,7 +234,7 @@ namespace Easy2D
                 GL.Instance.GenerateMipmap(TextureTarget.Texture2D);
             }
 
-            Utils.Log($"Loaded texture [{Handle}] {Width}x{Height} {GetMemoryUsage()} mb  Mipmaps: {GenerateMipmaps} Async: {UseAsyncLoading} Stream: {stream is null}", LogLevel.Debug);
+            Utils.Log($"Loaded texture [{Handle}] {Width}x{Height} {GetMemoryUsage()} mb  Mipmaps: {GenerateMipmaps} Async: {UseAsyncLoading} StreamExists: {stream is not null}", LogLevel.Debug);
             image.Dispose();
 
             if (AutoDisposeStream)

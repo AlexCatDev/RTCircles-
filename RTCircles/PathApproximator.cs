@@ -1,7 +1,7 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 
 using Easy2D;
-using OpenTK.Mathematics;
+using System.Numerics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -341,9 +341,9 @@ namespace RTCircles
 
             // See: https://en.wikipedia.org/wiki/Circumscribed_circle#Cartesian_coordinates_2
             float d = 2 * (a.X * (b - c).Y + b.X * (c - a).Y + c.X * (a - b).Y);
-            float aSq = a.LengthSquared;
-            float bSq = b.LengthSquared;
-            float cSq = c.LengthSquared;
+            float aSq = a.LengthSquared();
+            float bSq = b.LengthSquared();
+            float cSq = c.LengthSquared();
 
             Vector2 centre = new Vector2(
                 aSq * (b - c).Y + bSq * (c - a).Y + cSq * (a - b).Y,
@@ -352,7 +352,7 @@ namespace RTCircles
             Vector2 dA = a - centre;
             Vector2 dC = c - centre;
 
-            float r = dA.Length;
+            float r = dA.Length();
 
             double thetaStart = Math.Atan2(dA.Y, dA.X);
             double thetaEnd = Math.Atan2(dC.Y, dC.X);
@@ -389,7 +389,7 @@ namespace RTCircles
         {
             for (int i = 1; i < controlPoints.Length - 1; i++)
             {
-                if ((controlPoints[i - 1] - 2 * controlPoints[i] + controlPoints[i + 1]).LengthSquared > bezier_tolerance * bezier_tolerance * 4)
+                if ((controlPoints[i - 1] - 2 * controlPoints[i] + controlPoints[i + 1]).LengthSquared() > bezier_tolerance * bezier_tolerance * 4)
                     return false;
             }
 

@@ -1,10 +1,12 @@
-﻿using OpenTK.Mathematics;
+﻿using System.Numerics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Text;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Easy2D
@@ -74,9 +76,11 @@ namespace Easy2D
 
         private static Assembly easy2dAssembly;
 
-        public static bool WriteToConsole = false;
+        public static bool WriteToConsole = true;
 
         public static HashSet<LogLevel> IgnoredLogLevels = new HashSet<LogLevel>();
+
+        public static bool SupportsReflection { get; private set; } = true;
 
         static Utils()
         {
@@ -84,10 +88,21 @@ namespace Easy2D
 
             easy2dAssembly = Assembly.GetExecutingAssembly();
 
-            foreach (var item in easy2dAssembly.GetManifestResourceNames())
+            try
             {
-                Log($"Internal Resource: {item}", LogLevel.Debug);
+                var assembly = Assembly.GetCallingAssembly();
+
+                foreach (var resName in easy2dAssembly.GetManifestResourceNames())
+                {
+                    Log(resName, LogLevel.Debug);
+                }
             }
+            catch
+            {
+                SupportsReflection = false;
+            }
+
+            Console.WriteLine($"Supports Reflection: {(SupportsReflection ? "Yes" : "No (Native)")}");
 
             OnLog += (s) =>
             {
@@ -110,43 +125,75 @@ namespace Easy2D
 
         internal static Stream GetInternalResource(string name)
         {
-            string fullname = $"Easy2D.{name}";
-            Stream stream = easy2dAssembly.GetManifestResourceStream(fullname);
+            if (SupportsReflection)
+            {
+                string fullname = $"Easy2D.{name}";
+                Stream stream = easy2dAssembly.GetManifestResourceStream(fullname);
 
-            return stream;
+                return stream;
+            }
+
+            StringBuilder sb = new StringBuilder(name.Replace('.', '/'));
+
+            sb[name.LastIndexOf('.')] = '.';
+
+            name = sb.ToString();
+
+            Log($"Reflection unsupported! trying to load InternalResource from disk instead: {name}", LogLevel.Info);
+
+            return File.OpenRead($"./{name}");
+
         }
 
         public static Stream GetResource(string name)
         {
-            var callingAssembly = Assembly.GetCallingAssembly();
-            string fullname = $"{callingAssembly.GetName().Name}.{name}";
-            Stream stream = callingAssembly.GetManifestResourceStream(fullname);
+            if (SupportsReflection)
+            {
+                var callingAssembly = Assembly.GetCallingAssembly();
+                string fullname = $"{callingAssembly.GetName().Name}.{name}";
+                Stream stream = callingAssembly.GetManifestResourceStream(fullname);
 
-            return stream;
+                return stream;
+            }
+
+            StringBuilder sb = new StringBuilder(name.Replace('.', '/'));
+
+            sb[name.LastIndexOf('.')] = '.';
+
+            name = sb.ToString();
+
+            Log($"Reflection unsupported! trying to load resource from disk instead: {name}", LogLevel.Info);
+
+            return File.OpenRead($"./{name}");
         }
 
         public static void Log(string message, LogLevel level)
         {
+            if (string.IsNullOrEmpty(message))
+                return;
+
             if (IgnoredLogLevels.Contains(level))
                 return;
 
-            var callingMethod = new StackTrace().GetFrame(1).GetMethod();
-
-            string method = $"{callingMethod.DeclaringType.Name}.{callingMethod.Name}";
-
             LogDetails details = new LogDetails();
+            details.Level = level;
 
-            details.Add("[", ConsoleColor.DarkGray, (Vector4)Color4.Gray);
-            details.Add($"{DateTime.Now.ToString("HH:mm:ss")} ", ConsoleColor.Gray, (Vector4)Color4.LightGray);
+            details.Add("[", ConsoleColor.DarkGray, Colors.Gray);
+            details.Add($"{DateTime.Now.ToString("HH:mm:ss")} ", ConsoleColor.Gray, Colors.LightGray);
             details.Add($"{level} ", logLevelToConsoleColor(level), (Vector4)logLevelToColor(level));
 
-            details.Add(method, ConsoleColor.Blue, (Vector4)Color4.BlueViolet);
+            if (SupportsReflection)
+            {
+                var callingMethod = new StackTrace().GetFrame(1).GetMethod();
 
-            details.Add($"] ", ConsoleColor.DarkGray, (Vector4)Color4.Gray);
+                string method = $"{callingMethod.DeclaringType.Name}.{callingMethod.Name}";
 
-            details.Add($"{message}\n", ConsoleColor.White, (Vector4)Color4.White);
+                details.Add(method, ConsoleColor.Blue, Colors.BlueViolet);
 
-            details.Level = level;
+                details.Add($"] ", ConsoleColor.DarkGray, Colors.Gray);
+            }
+
+            details.Add($"{message}\n", ConsoleColor.White, Colors.White);
 
             OnLog?.Invoke(details);
         }
@@ -179,29 +226,31 @@ namespace Easy2D
                     return ConsoleColor.White;
                 case LogLevel.Important:
                     return ConsoleColor.Magenta;
+                case LogLevel.Performance:
+                    return ConsoleColor.DarkMagenta;
                 default:
                     return ConsoleColor.DarkGray;
             }
         }
 
-        private static Color4 logLevelToColor(LogLevel level)
+        private static Vector4 logLevelToColor(LogLevel level)
         {
             switch (level)
             {
                 case LogLevel.Info:
-                    return Color4.Cyan;
+                    return Colors.Cyan;
                 case LogLevel.Warning:
-                    return Color4.Yellow;
+                    return Colors.Yellow;
                 case LogLevel.Error:
-                    return Color4.Red;
+                    return Colors.Red;
                 case LogLevel.Success:
-                    return Color4.LawnGreen;
+                    return Colors.LawnGreen;
                 case LogLevel.Debug:
-                    return Color4.White;
+                    return Colors.White;
                 case LogLevel.Important:
-                    return Color4.Magenta;
+                    return Colors.Magenta;
                 default:
-                    return Color4.DarkGray;
+                    return Colors.DarkGray;
             }
         }
 
@@ -238,12 +287,13 @@ namespace Easy2D
         private static Dictionary<string, Stopwatch> benchmarks = new Dictionary<string, Stopwatch>();
         public static void BeginProfiling(string name) => benchmarks.Add(name, Stopwatch.StartNew());
 
-        public static double EndProfiling(string name)
+        public static double EndProfiling(string name, bool log = true)
         {
             var time = ((double)benchmarks[name].ElapsedTicks / Stopwatch.Frequency) * 1000.0;
             benchmarks.Remove(name);
 
-            Utils.Log($"{name} took {time} milliseconds", LogLevel.Performance);
+            if(log)
+                Log($"{name} took {time} milliseconds", LogLevel.Performance);
 
             return time;
         }
