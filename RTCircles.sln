@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RTCircles.WinForms", "RTCir
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RTCircles.Android", "RTCircles.Android\RTCircles.Android.csproj", "{D85F0185-272E-4DF1-9D36-137ED2CF2330}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DontTap", "DontTap\DontTap.csproj", "{BB74C2EC-C811-462D-AD89-6FDD6E60A5CA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,12 +57,17 @@ Global
 		{D85F0185-272E-4DF1-9D36-137ED2CF2330}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D85F0185-272E-4DF1-9D36-137ED2CF2330}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D85F0185-272E-4DF1-9D36-137ED2CF2330}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{BB74C2EC-C811-462D-AD89-6FDD6E60A5CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB74C2EC-C811-462D-AD89-6FDD6E60A5CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB74C2EC-C811-462D-AD89-6FDD6E60A5CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB74C2EC-C811-462D-AD89-6FDD6E60A5CA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{9FD5E183-F6F9-4E29-8060-CE8A09DB5B61} = {EFA1D1DC-7B59-41BB-99D9-6F24630BF309}
+		{BB74C2EC-C811-462D-AD89-6FDD6E60A5CA} = {EFA1D1DC-7B59-41BB-99D9-6F24630BF309}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {24529B86-75F8-460F-A2DE-1C9C2A6EF89A}
